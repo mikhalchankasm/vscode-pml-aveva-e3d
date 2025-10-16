@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.4] - 2025-10-16
+
+### Fixed
+- **Formatter: Fixed incorrect indentation for elseif/else blocks**
+  - Multiple elseif/else now properly aligned with their parent if
+  - Nested if/elseif/else blocks maintain correct indentation levels
+  - Content inside elseif/else blocks receives proper increased indentation
+  - Fixed bug where currentIndent was incorrectly decreased for elseif/else
+
 ## [0.4.3] - 2025-10-16
 
 ### Added
@@ -8,6 +17,7 @@
 ### Changed
 - npm run pack удаляет старые .vsix перед упаковкой.
 - reinstall.ps1 при -Pack также чистит старые .vsix перед сборкой.
+
 ## [0.4.1] - 2025-10-16
 
 ### Added

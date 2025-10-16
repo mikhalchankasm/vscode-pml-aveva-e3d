@@ -93,4 +93,3 @@ See docs/CHANGELOG.md (and GitHub Releases).
 ## License
 
 MIT (see LICENSE).
-
