@@ -7,14 +7,6 @@
   "engines": {
     "vscode": "^1.80.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/issues"
-  },
-  "homepage": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d",
   "categories": [
     "Programming Languages",
     "Formatters",
@@ -28,6 +20,7 @@
     "macro"
   ],
   "main": "./out/extension.js",
+  "icon": "./icons/pml-icon.png",
   "activationEvents": [
     "onLanguage:pml"
   ],
@@ -75,7 +68,11 @@
           ".pmlmac",
           ".pmlcmd"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/pml-icon.png",
+          "dark": "./icons/pml-icon.png"
+        }
       }
     ],
     "grammars": [
@@ -324,11 +321,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/vscode-pml-extension.git"
+    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/vscode-pml-extension/issues"
+    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/issues"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/vscode-pml-extension#readme",
+  "homepage": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d",
   "license": "MIT"
 }

@@ -363,3 +363,6 @@ MIT License - See LICENSE file for details
 **Enjoy coding in PML!** 🚀
 
 *Если расширение помогло тебе — поставь ⭐ на GitHub!*
+
+## Documentation
+See docs/README.md for the full documentation index.

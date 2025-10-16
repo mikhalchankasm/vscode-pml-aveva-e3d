@@ -18,3 +18,9 @@ DEVELOPMENT.md
 GITHUB_SETUP.md
 QUICK_REFERENCE.md
 START_HERE.md
+docs/**
+examples/**
+*.vsix
+docs/**
+examples/**
+*.vsix
