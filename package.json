@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
-  "version": "0.4.0",
+  "version": "$10.4.1",
   "publisher": "mikhalchankasm",
   "engines": {
     "vscode": "^1.80.0"
@@ -329,5 +329,6 @@
   "homepage": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d",
   "license": "MIT"
 }
+
 
 
