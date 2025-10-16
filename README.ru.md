@@ -57,7 +57,43 @@
 - PML Tools: Extract Variables / Extract Methods / Remove Comments
 - Показать методы STRING/REAL/ARRAY/DBREF, Показать все методы
 
-## Разработка
+## Быстрая локальная установка (Windows)
+
+- Вариант 1 (собрать и установить последнюю сборку):
+  ```powershell
+  npm run pack:install
+  ```
+- Вариант 2 (переустановить последнюю сборку без сборки):
+  ```powershell
+  npm run install:local
+  ```
+- Вариант 3 (конкретная версия):
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\reinstall.ps1 -Pack -Version 0.4.1
+  ```
+
+Скрипт `scripts/reinstall.ps1`:
+- Ищет последний `pml-aveva-e3d-*.vsix` (или `pml-aveva-e3d-<Version>.vsix` при `-Version`).
+- Удаляет ранее установленные расширения `mikhalchankasm.pml-aveva-e3d` и `your-publisher-name.pml-aveva-e3d` из VS Code и Cursor (если установлен CLI), затем устанавливает выбранный `.vsix` с `--force`.
+- Параметр `-Pack` перед установкой вызывает сборку VSIX (`npx @vscode/vsce package --no-yarn`).
+
+Прямые команды (без npm‑скриптов):
+```powershell
+# VS Code
+code --uninstall-extension mikhalchankasm.pml-aveva-e3d 2>$null
+code --uninstall-extension your-publisher-name.pml-aveva-e3d 2>$null
+code --install-extension pml-aveva-e3d-0.4.1.vsix --force
+
+# Если установлен Cursor CLI, можно продублировать команды с cursor:
+cursor --uninstall-extension mikhalchankasm.pml-aveva-e3d 2>$null
+cursor --uninstall-extension your-publisher-name.pml-aveva-e3d 2>$null
+cursor --install-extension pml-aveva-e3d-0.4.1.vsix --force
+```
+
+Примечания:
+- Если команда `code` недоступна в PowerShell, откройте терминал из VS Code (Terminal → New Terminal) или добавьте VS Code в PATH, затем перезапустите оболочку.
+- `cursor` используется только если установлен Cursor CLI и присутствует в PATH — иначе скрипт пропустит шаги для Cursor автоматически.
+
 
 - Линт: `npm run lint`
 - Сборка: `npm run compile`
@@ -83,3 +119,4 @@
 ## Лицензия
 
 - MIT (см. LICENSE).
+
