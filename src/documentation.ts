@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 
 /**
- * JSDoc-style documentation for PML methods для PML методов
+ * JSDoc-style documentation model for PML methods
  */
 export interface MethodDocumentation {
     description: string;
     params: Array<{ name: string; description: string }>;
     returnValue?: string;
     examples: string[];
-    **Deprecated:**
+    deprecated?: string;
     author?: string;
     since?: string;
     see?: string[];
@@ -17,166 +17,89 @@ export interface MethodDocumentation {
 }
 
 export class PMLDocumentationParser {
-    /**
-     * Извлекает комментарии перед методом
-     */
+    /** Extract leading line comments above a method definition */
     static getMethodDocumentation(document: vscode.TextDocument, methodLine: number): MethodDocumentation | undefined {
         const commentLines: string[] = [];
-        
-        // Читаем строки назад от метода, собирая комментарии
         for (let i = methodLine - 1; i >= 0; i--) {
-            const line = document.lineAt(i).text;
-            const trimmed = line.trim();
-            
-            // Если пустая строка - продолжаем
-            if (trimmed === '') {
-                continue;
-            }
-            
-            // Если комментарий - добавляем
+            const text = document.lineAt(i).text;
+            const trimmed = text.trim();
+            if (trimmed === '') continue; // skip empty lines
             if (trimmed.startsWith('--')) {
                 commentLines.unshift(trimmed.substring(2).trim());
             } else {
-                // Наткнулись на код - прекращаем
-                break;
+                break; // stop at first non-comment
             }
         }
-        
-        if (commentLines.length === 0) {
-            return undefined;
-        }
-        
-        // Парсим комментарии
+        if (commentLines.length === 0) return undefined;
         return this.parseDocComments(commentLines);
     }
-    
-    /**
-     * Парсит массив строк комментариев в структурированную документацию
-     */
+
+    /** Parse doc-comment lines into documentation model */
     private static parseDocComments(lines: string[]): MethodDocumentation {
-        const doc: MethodDocumentation = {
-            description: '',
-            params: [],
-            examples: [],
-            see: []
-        };
-        
-        let currentSection: 'description' | 'other' = 'description';
-        const descriptionLines: string[] = [];
-        
-        for (const line of lines) {
-            // Проверяем теги
+        const doc: MethodDocumentation = { description: '', params: [], examples: [], see: [] };
+        let current: 'description' | 'other' = 'description';
+        const desc: string[] = [];
+
+        for (const raw of lines) {
+            const line = raw.trim();
             if (line.startsWith('@param')) {
-                currentSection = 'other';
-                const paramMatch = line.match(/@param\s+(!{1,2}\w+)\s*-?\s*(.*)$/);
-                if (paramMatch) {
-                    doc.params.push({
-                        name: paramMatch[1],
-                        description: paramMatch[2]
-                    });
-                }
+                current = 'other';
+                const m = line.match(/@param\s+(!{1,2}\w+)\s*-?\s*(.*)$/);
+                if (m) doc.params.push({ name: m[1], description: m[2] });
             } else if (line.startsWith('@return')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.returnValue = line.substring(7).trim();
             } else if (line.startsWith('@example')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.examples.push(line.substring(8).trim());
-            } else if (line.startsWith('@**Deprecated:**
-                currentSection = 'other';
-                doc.**Deprecated:**
+            } else if (line.startsWith('@deprecated')) {
+                current = 'other';
+                doc.deprecated = line.substring(11).trim();
             } else if (line.startsWith('@author')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.author = line.substring(7).trim();
             } else if (line.startsWith('@since')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.since = line.substring(6).trim();
             } else if (line.startsWith('@see')) {
-                currentSection = 'other';
-                doc.see?.push(line.substring(4).trim());
+                current = 'other';
+                (doc.see ??= []).push(line.substring(4).trim());
             } else if (line.startsWith('@form')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.form = line.substring(5).trim();
             } else if (line.startsWith('@callback')) {
-                currentSection = 'other';
+                current = 'other';
                 doc.callback = line.substring(9).trim();
             } else {
-                // Обычная строка комментария
-                if (currentSection === 'description') {
-                    descriptionLines.push(line);
-                }
+                if (current === 'description') desc.push(line);
             }
         }
-        
-        doc.description = descriptionLines.join('\n');
-        
+        doc.description = desc.join('\n');
         return doc;
     }
-    
-    /**
-     * Форматирует документацию в MarkdownString для hover
-     */
+
+    /** Render documentation as MarkdownString for hover */
     static formatAsMarkdown(methodName: string, doc: MethodDocumentation): vscode.MarkdownString {
         const md = new vscode.MarkdownString();
-        
-        // Сигнатура метода
         md.appendCodeblock(`define method ${methodName}()`, 'pml');
-        
-        // Описание
-        if (doc.description) {
-            md.appendMarkdown('\n' + doc.description + '\n');
-        }
-        
-        // **Deprecated:**
-        if (doc.**Deprecated:**
-            md.appendMarkdown('\n⚠️ ****Deprecated:**
-        }
-        
-        // Параметры
+        if (doc.description) md.appendMarkdown('\n' + doc.description + '\n');
+        if (doc.deprecated) md.appendMarkdown('\n**Deprecated:** ' + doc.deprecated + '\n');
         if (doc.params.length > 0) {
-            md.appendMarkdown('\n**Параметры:**\n');
-            for (const param of doc.params) {
-                md.appendMarkdown(`- \`${param.name}\` — ${param.description}\n`);
-            }
+            md.appendMarkdown('\n**Parameters:**\n');
+            for (const p of doc.params) md.appendMarkdown(`- \`${p.name}\` - ${p.description}\n`);
         }
-        
-        // Возвращаемое значение
-        if (doc.returnValue) {
-            md.appendMarkdown('\n**Возвращает:** ' + doc.returnValue + '\n');
-        }
-        
-        // Примеры
+        if (doc.returnValue) md.appendMarkdown('\n**Returns:** ' + doc.returnValue + '\n');
         if (doc.examples.length > 0) {
-            md.appendMarkdown('\n**Примеры:**\n');
-            for (const example of doc.examples) {
-                md.appendCodeblock(example, 'pml');
-            }
+            md.appendMarkdown('\n**Examples:**\n');
+            for (const ex of doc.examples) md.appendCodeblock(ex, 'pml');
         }
-        
-        // Дополнительная информация
-        if (doc.form) {
-            md.appendMarkdown(`\n**Form:** \`${doc.form}\`\n`);
-        }
-        
-        if (doc.callback) {
-            md.appendMarkdown(`\n**Callback:** \`${doc.callback}\`\n`);
-        }
-        
-        if (doc.author) {
-            md.appendMarkdown(`\n*Автор: ${doc.author}*\n`);
-        }
-        
-        if (doc.since) {
-            md.appendMarkdown(`\n*С версии: ${doc.since}*\n`);
-        }
-        
-        // Связанные методы
-        if (doc.see && doc.see.length > 0) {
-            md.appendMarkdown('\n**См. также:** ' + doc.see.join(', ') + '\n');
-        }
-        
+        if (doc.form) md.appendMarkdown(`\n**Form:** \`${doc.form}\`\n`);
+        if (doc.callback) md.appendMarkdown(`\n**Callback:** \`${doc.callback}\`\n`);
+        if (doc.author) md.appendMarkdown(`\n*Author: ${doc.author}*\n`);
+        if (doc.since) md.appendMarkdown(`\n*Since: ${doc.since}*\n`);
+        if (doc.see && doc.see.length > 0) md.appendMarkdown('\n**See also:** ' + doc.see.join(', ') + '\n');
         md.isTrusted = true;
         return md;
     }
 }
-
 
