@@ -38,6 +38,10 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
                     completions.push(...allMethods);
                 }
                 
+                // Также добавляем слова из документа (могут быть методы/атрибуты)
+                const wordCompletions = this.getWordsFromDocument(document, position);
+                completions.push(...wordCompletions);
+                
                 return completions;
             }
         }
@@ -58,7 +62,15 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
         completions.push(...this.getAttributeCompletions());
 
         // Слова из текущего документа (как в Notepad++)
-        completions.push(...this.getWordsFromDocument(document, position));
+        const wordCompletions = this.getWordsFromDocument(document, position);
+        
+        // Отладка
+        const trace = vscode.workspace.getConfiguration('pml').get<string>('trace', 'off');
+        if (trace !== 'off' && wordCompletions.length > 0) {
+            console.log(`PML Word Completion: Found ${wordCompletions.length} words from document`);
+        }
+        
+        completions.push(...wordCompletions);
 
         return completions;
     }
@@ -193,9 +205,8 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
             .join('\n');
 
         // Regex для поиска слов: буквы, цифры, подчеркивания, восклицательные знаки
-        // Минимум 3 символа
-        // Теперь ищем во всем тексте, включая строки
-        const wordRegex = /[a-zA-Z0-9_!]{3,}/g;
+        // Минимум 2 символа для более ранней подсказки
+        const wordRegex = /[a-zA-Z0-9_!]{2,}/g;
         const matches = codeWithoutComments.matchAll(wordRegex);
         
         const uniqueWords = new Set<string>();
@@ -229,8 +240,8 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
         
         for (const word of uniqueWords) {
             const item = new vscode.CompletionItem(word, vscode.CompletionItemKind.Text);
-            item.detail = 'From document';
-            item.sortText = `~${word}`; // Сортировка: показывать после основных предложений
+            item.detail = 'Word from document';
+            item.sortText = `z${word}`; // Показывать после ключевых слов, но выше встроенных VS Code
             
             // Определяем тип по префиксу
             if (word.startsWith('!!')) {
@@ -242,7 +253,7 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
             } else if (word.startsWith('.')) {
                 item.kind = vscode.CompletionItemKind.Method;
                 item.detail = 'From document';
-            } else if (word === word.toUpperCase() && word.length > 3) {
+            } else if (word === word.toUpperCase() && word.length > 2) {
                 // Вероятно константа или атрибут
                 item.kind = vscode.CompletionItemKind.Constant;
                 item.detail = 'From document';

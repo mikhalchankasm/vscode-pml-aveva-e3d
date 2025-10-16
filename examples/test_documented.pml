@@ -97,5 +97,8 @@ define method .testHover()
         break  ← без отступа
     enddo
 
+DRAWLIST
+
+elem.DRA
 endmethod
 
