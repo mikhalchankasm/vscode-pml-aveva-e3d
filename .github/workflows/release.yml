@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20.18.1
       - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
       - run: npm run compile
       - name: Compute release tag
@@ -56,7 +56,7 @@ jobs:
             git push origin "refs/tags/$TAG"
           fi
       - name: Package VSIX
-        run: npx vsce package --no-yarn
+        run: npx @vscode/vsce package --no-yarn
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
@@ -92,6 +92,7 @@ jobs:
         if: ${{ steps.vsce.outputs.pat != '' }}
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
-        run: npx vsce publish --packagePath *.vsix --no-yarn
+        run: npx @vscode/vsce publish --packagePath *.vsix --no-yarn
+
 
 
