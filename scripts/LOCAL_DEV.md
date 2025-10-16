@@ -11,7 +11,7 @@
   ```
 - Собрать и установить конкретную версию:
   ```powershell
-  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\reinstall.ps1 -Pack -Version 0.4.2
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\reinstall.ps1 -Pack -Version 0.4.3
   ```
 
 ## Что делает `scripts/reinstall.ps1`
@@ -24,19 +24,19 @@
 # VS Code
 code --uninstall-extension mikhalchankasm.pml-aveva-e3d 2>$null
 code --uninstall-extension your-publisher-name.pml-aveva-e3d 2>$null
-code --install-extension pml-aveva-e3d-0.4.2.vsix --force
+code --install-extension pml-aveva-e3d-0.4.3.vsix --force
 
 # Cursor (если установлен CLI)
 cursor --uninstall-extension mikhalchankasm.pml-aveva-e3d 2>$null
 cursor --uninstall-extension your-publisher-name.pml-aveva-e3d 2>$null
-cursor --install-extension pml-aveva-e3d-0.4.2.vsix --force
+cursor --install-extension pml-aveva-e3d-0.4.3.vsix --force
 ```
 
 ## Версии и релизы
 - Версия хранится в `package.json: version` и используется для имени `.vsix`.
 - Бамп версии:
   ```powershell
-  npm run bump:patch   # 0.4.1 -> 0.4.2
+  npm run bump:patch   # 0.4.1 -> 0.4.3
   npm run bump:minor   # 0.4.x -> 0.5.0
   npm run bump:major   # x.y.z -> (x+1).0.0
   ```
@@ -52,3 +52,4 @@ cursor --install-extension pml-aveva-e3d-0.4.2.vsix --force
 - Если `code` не в PATH: запустите терминал из VS Code (Terminal → New Terminal) или установите команду в PATH (Command Palette: "Shell Command: Install 'code' command in PATH" — на Windows обычно уже доступна).
 - `cursor` используется только если установлен Cursor CLI и присутствует в PATH: шаги для Cursor пропускаются автоматически, если команды нет.
 - Пакет `scripts/**` исключён из `.vscodeignore` и не попадёт в публикуемый `.vsix`.
+
