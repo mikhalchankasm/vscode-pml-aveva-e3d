@@ -37,7 +37,7 @@ jobs:
             TAG="v$(node -p "require('./package.json').version")"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-            - name: Ensure tag exists on origin
+      - name: Ensure tag exists on origin
         shell: bash
         env:
           TAG: ${{ steps.vars.outputs.tag }}
@@ -71,7 +71,8 @@ jobs:
           name: ${{ steps.vars.outputs.tag }}
           files: |
             *.vsix
-          generate_release_notes: true\n          body_path: docs/CHANGELOG.md
+          generate_release_notes: true
+          body_path: docs/CHANGELOG.md
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       - name: Determine VSCE PAT
         id: vsce
