@@ -15,8 +15,7 @@ function Find-Vsix {
 }
 
 if ($Pack) {
-  Write-Host 'Packing VSIX...'
-  npx @vscode/vsce package --no-yarn | Out-Host
+  Write-Host 'Packing VSIX...'`n  Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix`n  npx @vscode/vsce package --no-yarn | Out-Host
 }
 
 $vsixPath = Find-Vsix -Version $Version
@@ -39,3 +38,4 @@ if (Get-Command cursor -ErrorAction SilentlyContinue) {
 }
 
 Write-Host 'Done.'
+
