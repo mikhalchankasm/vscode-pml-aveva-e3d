@@ -1,19 +1,21 @@
-PML для AVEVA E3D — расширение VS Code
+# PML для AVEVA E3D — расширение VS Code
 
 Подсветка синтаксиса и инструменты для языка PML (Programmable Macro Language) AVEVA E3D в Visual Studio Code.
 
-Возможности
+## Возможности
+
 - Подсветка синтаксиса (TextMate)
 - Конфигурация языка (комментарии, скобки, правила отступов при Enter)
 - Форматирование (отступы, пустые строки, блоки method/form/frame, выравнивание присваиваний)
-- IntelliSense: автодополнение (ключевые слова, типы, атрибуты, методы), подсказки параметров
+- IntelliSense: автодополнение (ключевые слова, типы, атрибуты, методы), подсказки параметров (Signature Help)
 - Hover‑документация (JSDoc‑комментарии над методами)
 - Outline (обзор документа): методы, объекты, формы, фреймы
 - Диагностика: незакрытые блоки, базовые проверки
 - Инструменты (Command Palette): сортировка строк, обрезка пробелов, удаление дублей, извлечение переменных/методов
 - Переход к определению / Поиск ссылок / Переименование (методы)
 
-Установка
+## Установка
+
 1) Из VSIX (локальная сборка):
    - `npm install`
    - `npm run compile`
@@ -23,15 +25,18 @@ PML для AVEVA E3D — расширение VS Code
 2) Из исходников (отладка):
    - Откройте папку в VS Code и нажмите `F5` для Extension Development Host
 
-Типы файлов
+## Типы файлов
+
 - `.pml`, `.pmlobj`, `.pmlfnc`, `.pmlfrm`, `.pmlmac`, `.pmlcmd`
 
-Сниппеты
+## Сниппеты
+
 - Управляющие конструкции (if/then/else, циклы)
 - Заготовки для UI (form/frame)
 - Объявления переменных и помощники
 
-Настройки форматтера (`settings.json`)
+## Настройки форматтера (`settings.json`)
+
 - `pml.formatter.indentSize` (число, по умолчанию 4)
 - `pml.formatter.removeMultipleEmptyLines` (boolean)
 - `pml.formatter.formatMethodBlocks` (boolean)
@@ -39,45 +44,42 @@ PML для AVEVA E3D — расширение VS Code
 - `pml.formatter.alignAssignments` (boolean)
 - `pml.formatter.fixIndentation` (boolean)
 
-JSDoc‑документация
+## JSDoc‑документация
+
 - Размещайте строки `--` над `define method .name()`
 - Теги: `@param`, `@return`, `@example`, `@deprecated`, `@author`, `@since`, `@see`, `@form`, `@callback`
 
-Команды (Command Palette)
+## Команды (Command Palette)
+
 - PML: Format PML Document
 - PML Tools: Sort Lines A‑Z / Z‑A / by Length / Smart Natural Sort
 - PML Tools: Remove Duplicates / Consecutive Duplicates / Empty Lines / Whitespace‑only Lines / Trim Trailing Whitespace / Tabs ↔ Spaces
 - PML Tools: Extract Variables / Extract Methods / Remove Comments
 - Показать методы STRING/REAL/ARRAY/DBREF, Показать все методы
 
-Разработка
+## Разработка
+
 - Линт: `npm run lint`
 - Сборка: `npm run compile`
 - CI: GitHub Actions (lint + build при push/PR)
-- Релиз: пушьте тег `v*` (например, `v0.4.0`) — создастся GitHub Release с VSIX
+- Релиз: пушьте тег `v*` (например, `v0.4.1`) — создастся GitHub Release с VSIX
 
-Документация
+## Документация
+
 - Полный индекс — в `docs/README.md`.
 
-
 ## Требования
+
 - Visual Studio Code 1.80.0+
 
-## Настройки расширения
-- pml.formatter.indentSize
-- pml.formatter.removeMultipleEmptyLines
-- pml.formatter.formatMethodBlocks
-- pml.formatter.formatFormBlocks
-- pml.formatter.alignAssignments
-- pml.formatter.fixIndentation
-- pml.trace
-
 ## Известные проблемы
-- Языковые функции эвристические в сложном PML; сообщайте о ложных срабатываниях.
+
+- Языковые функции частично эвристические; сообщайте о ложных срабатываниях в Issues.
 
 ## История версий
-См. docs/CHANGELOG.md и GitHub Releases.
+
+- См. `docs/CHANGELOG.md` и GitHub Releases.
 
 ## Лицензия
-MIT (см. LICENSE).
 
+- MIT (см. LICENSE).
