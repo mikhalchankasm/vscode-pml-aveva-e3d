@@ -3,7 +3,7 @@ import { PMLDocumentationParser } from './documentation';
 
 export class PMLDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
     // Кэш документации методов для использования в hover
-    private static methodDocsCache = new Map<string, { line: number; doc: any }>();
+    private static methodDocsCache = new Map<string, { line: number; doc: ReturnType<typeof PMLDocumentationParser.getMethodDocumentation> }>();
 
     static getMethodDocs(documentUri: string) {
         return this.methodDocsCache.get(documentUri);
@@ -169,4 +169,5 @@ export class PMLDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
         return symbols;
     }
 }
+
 
