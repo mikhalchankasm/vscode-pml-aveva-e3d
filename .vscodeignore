@@ -24,3 +24,4 @@ examples/**
 docs/**
 examples/**
 *.vsix
+scripts/**
