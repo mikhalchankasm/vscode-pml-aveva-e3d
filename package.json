@@ -7,6 +7,14 @@
   "engines": {
     "vscode": "^1.80.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/issues"
+  },
+  "homepage": "https://github.com/mikhalchankasm/vscode-pml-aveva-e3d",
   "categories": [
     "Programming Languages",
     "Formatters",
