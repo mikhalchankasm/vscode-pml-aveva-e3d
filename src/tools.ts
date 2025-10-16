@@ -254,11 +254,14 @@ export class PMLToolsProvider implements vscode.Disposable {
     private extractVariables = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
         const variables = new Set<string>();
         const varRegex = /!{1,2}[a-zA-Z_][a-zA-Z0-9_]*/g;
         let match: RegExpExecArray | null;
-        while ((match = varRegex.exec(text)) !== null) {
+        while ((match = varRegex.exec(selected.text)) !== null) {
             variables.add(match[0]);
         }
         const varList = Array.from(variables).sort();
@@ -276,11 +279,14 @@ export class PMLToolsProvider implements vscode.Disposable {
     private extractMethods = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
         const methods = new Set<string>();
         const methodRegex = /define\s+method\s+\.?([a-zA-Z_][a-zA-Z0-9_]*)/gi;
         let match: RegExpExecArray | null;
-        while ((match = methodRegex.exec(text)) !== null) {
+        while ((match = methodRegex.exec(selected.text)) !== null) {
             methods.add(match[1]);
         }
         const list = Array.from(methods).sort();
@@ -298,14 +304,17 @@ export class PMLToolsProvider implements vscode.Disposable {
     private removeComments = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        let newText = text;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        let newText = selected.text;
         // remove comments: lines starting with -- and $*
         newText = newText.replace(/--.*$/gm, '');
         newText = newText.replace(/\$\*.*$/gm, '');
         // collapse multiple blank lines introduced by stripping comments
         const filtered = newText.split('\n').filter(line => line.trim() !== '');
-        this.applyChanges(editor, filtered.join('\n'), 'Removed comments');
+        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), 'Removed comments');
     };
 
     // Form helpers

@@ -85,9 +85,9 @@ define method .processCollection(!collection)
         !results.append(!name.trim().upcase())
     enddo
 
-!count = !results.size()
-!count.   ← REAL методы
+    !count = !results.size()
+    !count.   ← REAL методы
 
-return !results
+    return !results
 
 endmethod
