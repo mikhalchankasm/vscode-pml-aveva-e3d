@@ -55,8 +55,22 @@ jobs:
             *.vsix
           generate_release_notes: true
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
-      - name: Publish to VS Code Marketplace (optional)
-        if: ${{ secrets.VSCE_TOKEN != '' || secrets.VSCE_PAT != '' }}
+      - name: Determine VSCE PAT
+        id: vsce
+        shell: bash
         env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN != '' && secrets.VSCE_TOKEN || secrets.VSCE_PAT }}
+          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -n "$VSCE_TOKEN" ]; then
+            echo "pat=$VSCE_TOKEN" >> $GITHUB_OUTPUT
+          elif [ -n "$VSCE_PAT" ]; then
+            echo "pat=$VSCE_PAT" >> $GITHUB_OUTPUT
+          else
+            echo "pat=" >> $GITHUB_OUTPUT
+          fi
+      - name: Publish to VS Code Marketplace (optional)
+        if: ${{ steps.vsce.outputs.pat != '' }}
+        env:
+          VSCE_PAT: ${{ steps.vsce.outputs.pat }}
         run: npx vsce publish --packagePath *.vsix --no-yarn
