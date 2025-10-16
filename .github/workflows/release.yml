@@ -33,3 +33,8 @@ jobs:
           files: |
             *.vsix
           generate_release_notes: true
+      - name: Publish to VS Code Marketplace (optional)
+        if: ${{ secrets.VSCE_TOKEN != '' || secrets.VSCE_PAT != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN != '' && secrets.VSCE_TOKEN || secrets.VSCE_PAT }}
+        run: npx vsce publish --packagePath *.vsix --no-yarn
