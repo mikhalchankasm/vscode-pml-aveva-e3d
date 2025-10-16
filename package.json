@@ -1,0 +1,326 @@
+{
+  "name": "pml-aveva-e3d",
+  "displayName": "PML for AVEVA E3D",
+  "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
+  "version": "0.3.9",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Snippets"
+  ],
+  "keywords": [
+    "pml",
+    "aveva",
+    "e3d",
+    "pdms",
+    "macro"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:pml"
+  ],
+  "contributes": {
+    "keybindings": [
+      {
+        "command": "pml.showStringMethods",
+        "key": "ctrl+shift+s",
+        "when": "editorTextFocus && resourceExtname == '.pml'"
+      },
+      {
+        "command": "pml.showRealMethods",
+        "key": "ctrl+shift+r",
+        "when": "editorTextFocus && resourceExtname == '.pml'"
+      },
+      {
+        "command": "pml.showArrayMethods",
+        "key": "ctrl+shift+a",
+        "when": "editorTextFocus && resourceExtname == '.pml'"
+      },
+      {
+        "command": "pml.showDbrefMethods",
+        "key": "ctrl+shift+d",
+        "when": "editorTextFocus && resourceExtname == '.pml'"
+      },
+      {
+        "command": "pml.showAllMethods",
+        "key": "ctrl+shift+m",
+        "when": "editorTextFocus && resourceExtname == '.pml'"
+      }
+    ],
+    "languages": [
+      {
+        "id": "pml",
+        "aliases": [
+          "PML",
+          "pml",
+          "Programmable Macro Language"
+        ],
+        "extensions": [
+          ".pml",
+          ".pmlobj",
+          ".pmlfnc",
+          ".pmlfrm",
+          ".pmlmac",
+          ".pmlcmd"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "pml",
+        "scopeName": "source.pml",
+        "path": "./syntaxes/pml.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "pml",
+        "path": "./snippets/pml.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "pml.formatDocument",
+        "title": "Format PML Document",
+        "category": "PML"
+      },
+      {
+        "command": "pml.sortLinesAsc",
+        "title": "Sort Lines A-Z",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.sortLinesDesc",
+        "title": "Sort Lines Z-A",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.sortLinesLength",
+        "title": "Sort Lines by Length",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.sortLinesSmart",
+        "title": "Smart Natural Sort",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.removeDuplicates",
+        "title": "Remove Duplicate Lines",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.removeConsecutiveDuplicates",
+        "title": "Remove Consecutive Duplicates",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.removeEmptyLines",
+        "title": "Remove Empty Lines",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.removeWhitespaceLines",
+        "title": "Remove Whitespace-Only Lines",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.trimWhitespace",
+        "title": "Trim Trailing Whitespace",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.tabsToSpaces",
+        "title": "Convert Tabs to Spaces",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.spacesToTabs",
+        "title": "Convert Spaces to Tabs",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.extractVariables",
+        "title": "Extract Variables",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.extractMethods",
+        "title": "Extract Methods",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.removeComments",
+        "title": "Remove Comments",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.showStringMethods",
+        "title": "Show STRING Methods",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.showRealMethods",
+        "title": "Show REAL Methods",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.showArrayMethods",
+        "title": "Show ARRAY Methods",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.showDbrefMethods",
+        "title": "Show DBREF Methods",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.showAllMethods",
+        "title": "Show All Methods",
+        "category": "PML Tools"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "PML Configuration",
+      "properties": {
+        "pml.formatter.indentSize": {
+          "type": "number",
+          "default": 4,
+          "description": "Number of spaces for indentation"
+        },
+        "pml.formatter.removeMultipleEmptyLines": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove multiple consecutive empty lines"
+        },
+        "pml.formatter.formatMethodBlocks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-format method blocks"
+        },
+        "pml.formatter.formatFormBlocks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-format form/frame blocks"
+        },
+        "pml.formatter.alignAssignments": {
+          "type": "boolean",
+          "default": true,
+          "description": "Align assignment operators (=) in consecutive lines"
+        },
+        "pml.formatter.fixIndentation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-fix basic indentation (tabs to spaces, correct nesting)"
+        },
+        "pml.trace": {
+          "description": "Enable trace logging for PML extension (completion, etc.).",
+          "default": "off",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ]
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "pml.formatDocument",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "pml.sortLinesAsc",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.sortLinesDesc",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.sortLinesLength",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.sortLinesSmart",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.removeDuplicates",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.removeConsecutiveDuplicates",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.removeEmptyLines",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.removeWhitespaceLines",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.trimWhitespace",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.tabsToSpaces",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.spacesToTabs",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.extractVariables",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.extractMethods",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.removeComments",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.1.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/vscode-pml-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/vscode-pml-extension/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/vscode-pml-extension#readme",
+  "license": "MIT"
+}

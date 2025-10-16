@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PML",
+  "scopeName": "source.pml",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#storage-types" },
+    { "include": "#operators" },
+    { "include": "#variables" },
+    { "include": "#numbers" },
+    { "include": "#methods" },
+    { "include": "#constants" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-dash.pml",
+          "match": "--.*$"
+        },
+        {
+          "name": "comment.line.dollar-asterisk.pml",
+          "match": "\\$\\*.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.pipe.pml",
+          "begin": "\\|",
+          "end": "\\|",
+          "patterns": [
+            {
+              "name": "constant.character.escape.pml",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.pml",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.pml",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.pml",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.pml",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.pml",
+          "match": "\\b(if|then|else|elseif|endif|do|while|for|to|from|by|values|index|enddo|break|return|goto|label|skip|quit|continue|handle|endhandle|elsehandle|any)\\b"
+        },
+        {
+          "name": "keyword.other.define.pml",
+          "match": "\\b(define|endmethod|endobject|endfunction|endform)\\b"
+        },
+        {
+          "name": "keyword.other.pml",
+          "match": "\\b(method|object|function|setup|form|frame|exit|using|namespace|import|export|member|is|callback|dialog|docking|width|height|text|options|override)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.pml",
+          "match": "\\b(and|or|not|eq|ne|gt|lt|ge|le|mod|div)\\b"
+        }
+      ]
+    },
+    "storage-types": {
+      "patterns": [
+        {
+          "name": "storage.type.pml",
+          "match": "\\b(STRING|REAL|BOOLEAN|ARRAY|INTEGER|DBREF|ANY)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arithmetic.pml",
+          "match": "\\+|\\-|\\*|\\/|\\*\\*|mod|div"
+        },
+        {
+          "name": "keyword.operator.comparison.pml",
+          "match": "==|!=|>|<|>=|<="
+        },
+        {
+          "name": "keyword.operator.assignment.pml",
+          "match": "="
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.language.global.pml",
+          "match": "!!\\w+"
+        },
+        {
+          "name": "variable.other.local.pml",
+          "match": "!\\w+"
+        },
+        {
+          "name": "variable.parameter.pml",
+          "match": "\\b[A-Z_][A-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.pml",
+          "match": "\\b\\d+\\.\\d+([eE][+-]?\\d+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.pml",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "methods": {
+      "patterns": [
+        {
+          "name": "entity.name.function.pml",
+          "match": "\\.\\w+(?=\\()"
+        },
+        {
+          "name": "support.function.builtin.pml",
+          "match": "\\b(var|object|Block|Evaluate|size|length|type|gettype|new|delete|collect|collectallfor|FILE|ERROR|alert|query|output|show|close|open|read|write|writeline|readline|append|message|position|direction|orientation|owner|world|current|ce|element|create|modify|remove|copy|move|rotate|scale|transform|isValid|isEmpty|isSet|toUpper|toLower|trim|split|join|replace|substring|indexOf|lastIndexOf|startsWith|endsWith|format|value|string|real|integer|boolean|array|dbref|handle|getvalue|setvalue)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.pml",
+          "match": "\\b(TRUE|FALSE|UNSET|PI|E|NULL)\\b"
+        },
+        {
+          "name": "variable.language.pml",
+          "match": "\\b(!!ce|!!FMSYS|!!error|!!currentelement|!!owner|!!world)\\b"
+        }
+      ]
+    }
+  }
+}
+
+

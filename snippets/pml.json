@@ -1,0 +1,362 @@
+{
+  "Define Method": {
+    "prefix": "method",
+    "body": [
+      "define method .${1:methodName}()",
+      "    ${2:-- Method body}",
+      "    $0",
+      "endmethod"
+    ],
+    "description": "Create a new method definition"
+  },
+  "If-Then-Else": {
+    "prefix": "if",
+    "body": [
+      "if (${1:condition}) then",
+      "    ${2:-- true branch}",
+      "else",
+      "    ${3:-- false branch}",
+      "endif"
+    ],
+    "description": "If-then-else statement"
+  },
+  "If-Then": {
+    "prefix": "ifthen",
+    "body": [
+      "if (${1:condition}) then",
+      "    ${2:-- code}",
+      "endif"
+    ],
+    "description": "If-then statement"
+  },
+  "Do Values Loop": {
+    "prefix": "dovalues",
+    "body": [
+      "do !${1:item} values !${2:list}",
+      "    ${3:-- loop body}",
+      "    $0",
+      "enddo"
+    ],
+    "description": "Loop over collection values"
+  },
+  "Do Index Loop": {
+    "prefix": "doindex",
+    "body": [
+      "do !${1:i} index !${2:list}",
+      "    !${3:item} = !${2:list}[!${1:i}]",
+      "    ${4:-- loop body}",
+      "    $0",
+      "enddo"
+    ],
+    "description": "Loop over collection with index"
+  },
+  "Do Index with Progress": {
+    "prefix": "doindexprogress",
+    "body": [
+      "do !${1:i} index !${2:list}",
+      "    !${3:item} = !${2:list}[!${1:i}]",
+      "    ${4:-- loop body}",
+      "    !!FMSYS.setProgress(100 / !${2:list}.size() * !${1:i})",
+      "    $0",
+      "enddo",
+      "!!FMSYS.setProgress(0)"
+    ],
+    "description": "Loop with progress indicator"
+  },
+  "Do From-To Loop": {
+    "prefix": "dofromto",
+    "body": [
+      "do !${1:i} from ${2:1} to ${3:10}",
+      "    ${4:-- loop body}",
+      "    $0",
+      "enddo"
+    ],
+    "description": "Loop from number to number"
+  },
+  "Setup Form": {
+    "prefix": "form",
+    "body": [
+      "setup form !!${1:FormName} dialog docking ${2:right}",
+      "    ${3:-- form content}",
+      "    $0",
+      "exit"
+    ],
+    "description": "Create a form"
+  },
+  "Frame": {
+    "prefix": "frame",
+    "body": [
+      "frame .${1:frameName} width ${2:50}",
+      "    ${3:-- frame content}",
+      "    $0",
+      "exit"
+    ],
+    "description": "Create a frame"
+  },
+  "NewList Evaluate": {
+    "prefix": "evaluate",
+    "body": [
+      "!new${1:List} = !${1:List}.Evaluate(object Block(|!${1:List}[!evalIndex].${2:XXXX}|))"
+    ],
+    "description": "Create evaluated list"
+  },
+  "Collect All For": {
+    "prefix": "collectallfor",
+    "body": [
+      "!types = |${1:}|",
+      "!filt  = |${2:}|",
+      "!place = ${3:!!ce}",
+      "!elements = !!collectallfor(!types, !filt, !place)"
+    ],
+    "description": "Collect elements from database"
+  },
+  "Define Object": {
+    "prefix": "object",
+    "body": [
+      "define object ${1:OBJECTNAME}",
+      "    ${2:-- object members}",
+      "    $0",
+      "endobject"
+    ],
+    "description": "Define a new object"
+  },
+  "Variable Declaration": {
+    "prefix": "var",
+    "body": [
+      "!${1:varName} = ${2:value}"
+    ],
+    "description": "Declare a local variable"
+  },
+  "Global Variable Declaration": {
+    "prefix": "gvar",
+    "body": [
+      "!!${1:varName} = ${2:value}"
+    ],
+    "description": "Declare a global variable"
+  },
+  "Comment Header": {
+    "prefix": "header",
+    "body": [
+      "-- ============================================",
+      "-- ${1:Section Name}",
+      "-- ============================================",
+      "$0"
+    ],
+    "description": "Comment section header"
+  },
+  "Try-Catch": {
+    "prefix": "try",
+    "body": [
+      "!error = object ERROR()",
+      "handle any",
+      "    ${1:-- code that might fail}",
+      "    $0",
+      "elsehandle",
+      "    !error = !!error",
+      "    |Error: | & !error.message().output()",
+      "endhandle"
+    ],
+    "description": "Error handling block"
+  },
+  "String Variable": {
+    "prefix": "str",
+    "body": [
+      "!${1:varName} = STRING()"
+    ],
+    "description": "String variable declaration"
+  },
+  "Real Variable": {
+    "prefix": "real",
+    "body": [
+      "!${1:varName} = REAL()"
+    ],
+    "description": "Real number variable declaration"
+  },
+  "Boolean Variable": {
+    "prefix": "bool",
+    "body": [
+      "!${1:varName} = BOOLEAN()"
+    ],
+    "description": "Boolean variable declaration"
+  },
+  "Array Variable": {
+    "prefix": "array",
+    "body": [
+      "!${1:varName} = ARRAY()"
+    ],
+    "description": "Array variable declaration"
+  },
+  "Output Message": {
+    "prefix": "out",
+    "body": [
+      "|${1:message}|.output()"
+    ],
+    "description": "Output a message"
+  },
+  "Alert Message": {
+    "prefix": "alert",
+    "body": [
+      "!alert(|${1:message}|)"
+    ],
+    "description": "Show alert dialog"
+  },
+  "Using Namespace": {
+    "prefix": "using",
+    "body": [
+      "using namespace '${1:namespace}'"
+    ],
+    "description": "Import namespace"
+  },
+  "Button": {
+    "prefix": "button",
+    "body": [
+      "button .${1:btnName} text |${2:Button Text}| callback .${3:callbackMethod}()"
+    ],
+    "description": "Create a button"
+  },
+  "Text Field": {
+    "prefix": "textfield",
+    "body": [
+      "textfield .${1:fieldName} text |${2:Default Text}| callback .${3:callbackMethod}()"
+    ],
+    "description": "Create a text field"
+  },
+  "Toggle": {
+    "prefix": "toggle",
+    "body": [
+      "toggle .${1:toggleName} text |${2:Toggle Text}| callback .${3:callbackMethod}()"
+    ],
+    "description": "Create a toggle"
+  },
+  "Option List": {
+    "prefix": "optionlist",
+    "body": [
+      "optionlist .${1:listName} options |${2:Option1}| |${3:Option2}| callback .${4:callbackMethod}()"
+    ],
+    "description": "Create an option list"
+  },
+  "Member Variable": {
+    "prefix": "member",
+    "body": [
+      "member .${1:memberName} is ${2:STRING}"
+    ],
+    "description": "Define object member variable"
+  },
+  "Constructor": {
+    "prefix": "constructor",
+    "body": [
+      "define method .${1:ObjectName}()",
+      "    ${2:-- Initialize object}",
+      "    $0",
+      "endmethod"
+    ],
+    "description": "Define constructor method"
+  },
+  "Callback Method": {
+    "prefix": "callback",
+    "body": [
+      "define method .${1:callbackName}()",
+      "    ${2:-- Callback code}",
+      "    $0",
+      "endmethod"
+    ],
+    "description": "Define callback method"
+  },
+  "File Read": {
+    "prefix": "fileread",
+    "body": [
+      "!file = object FILE(|${1:filepath}|)",
+      "!file.open('read')",
+      "do !line values !file",
+      "    ${2:-- process line}",
+      "    $0",
+      "enddo",
+      "!file.close()"
+    ],
+    "description": "Read file line by line"
+  },
+  "File Write": {
+    "prefix": "filewrite",
+    "body": [
+      "!file = object FILE(|${1:filepath}|)",
+      "!file.open('write')",
+      "!file.writeline(|${2:content}|)",
+      "!file.close()"
+    ],
+    "description": "Write to file"
+  },
+  "Skip to Next": {
+    "prefix": "skip",
+    "body": [
+      "skip to next"
+    ],
+    "description": "Skip to next iteration"
+  },
+  "Break Loop": {
+    "prefix": "break",
+    "body": [
+      "break"
+    ],
+    "description": "Break from loop"
+  },
+  "Return Value": {
+    "prefix": "return",
+    "body": [
+      "return ${1:value}"
+    ],
+    "description": "Return from method"
+  },
+  "Query Object": {
+    "prefix": "query",
+    "body": [
+      "!${1:result} = !${2:object}.query(|${3:attribute}|)"
+    ],
+    "description": "Query object attribute"
+  },
+  "Handle Form Events": {
+    "prefix": "handleform",
+    "body": [
+      "handle (!!${1:FormName}.show())",
+      "    ${2:-- handle events}",
+      "    $0",
+      "endhandle"
+    ],
+    "description": "Handle form events"
+  },
+  "Elseif": {
+    "prefix": "elseif",
+    "body": [
+      "elseif (${1:condition}) then",
+      "    ${2:-- code}",
+      "    $0"
+    ],
+    "description": "Else-if branch"
+  },
+  "Case Statement": {
+    "prefix": "case",
+    "body": [
+      "if (!${1:var} eq ${2:value1}) then",
+      "    ${3:-- case 1}",
+      "elseif (!${1:var} eq ${4:value2}) then",
+      "    ${5:-- case 2}",
+      "else",
+      "    ${6:-- default}",
+      "endif"
+    ],
+    "description": "Case-like statement"
+  },
+  "Progress Bar": {
+    "prefix": "progress",
+    "body": [
+      "!!FMSYS.setProgress(${1:percent})"
+    ],
+    "description": "Set progress bar"
+  },
+  "Element Name": {
+    "prefix": "name",
+    "body": [
+      "!${1:element}.query(|NAME|)"
+    ],
+    "description": "Get element name"
+  }
+}

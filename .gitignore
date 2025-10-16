@@ -1,0 +1,16 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# Build output
+out/
+
+# VSIX packages
+pml-aveva-e3d-*.vsix
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
