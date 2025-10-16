@@ -5,6 +5,14 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag name for release (e.g., v0.4.0). If empty, uses package.json version.'
+        required: false
+      prerelease:
+        description: 'Mark as prerelease'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -19,6 +27,16 @@ jobs:
           node-version: 18
       - run: npm ci || npm install
       - run: npm run compile
+      - name: Compute release tag
+        id: vars
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Package VSIX
         run: npx vsce package --no-yarn
       - name: Upload VSIX artifact
@@ -31,9 +49,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: ${{ steps.vars.outputs.tag }}
           files: |
             *.vsix
           generate_release_notes: true
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       - name: Publish to VS Code Marketplace (optional)
         if: ${{ secrets.VSCE_TOKEN != '' || secrets.VSCE_PAT != '' }}
         env:
