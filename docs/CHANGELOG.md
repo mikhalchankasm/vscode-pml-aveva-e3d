@@ -1,5 +1,24 @@
 # Change Log
 
+## [0.4.7] - 2025-10-16
+
+### Added
+- **Forms: Reload Form command**
+  - New "PML Tools > Forms > Reload Form" command
+  - Automatically extracts form name from `setup form` or `layout form`
+  - Copies `kill !!formName` and `show !!formName` to clipboard
+  - Shows error if file is not a form
+
+### Changed
+- **PML Tools: All commands now work with selected text only**
+  - Sort Lines (A-Z, Z-A, by Length, Smart)
+  - Remove Duplicates (all, consecutive)
+  - Whitespace operations (remove empty lines, trim, tabs/spaces conversion)
+  - Shows error if no text is selected
+- **UI: Added icon to PML Tools submenu in editor title**
+  - Tools icon ($(tools)) visible in top-right editor menu
+  - Added "PML Tools" to editor title menu for quick access
+
 ## [0.4.6] - 2025-10-16
 
 ### Added

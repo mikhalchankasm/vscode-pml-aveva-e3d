@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "publisher": "mikhalchankasm",
   "engines": {
     "vscode": "^1.80.0"
@@ -188,12 +188,22 @@
         "command": "pml.showAllMethods",
         "title": "Show All Methods",
         "category": "PML Tools"
+      },
+      {
+        "command": "pml.reloadForm",
+        "title": "Reload Form",
+        "category": "PML Forms"
       }
     ],
     "submenus": [
       {
         "id": "pml.tools",
-        "label": "PML Tools"
+        "label": "PML Tools",
+        "icon": "$(tools)"
+      },
+      {
+        "id": "pml.forms",
+        "label": "Forms"
       }
     ],
     "configuration": {
@@ -306,6 +316,16 @@
         {
           "command": "pml.removeComments",
           "group": "4_extract@3"
+        },
+        {
+          "submenu": "pml.forms",
+          "group": "5_forms"
+        }
+      ],
+      "pml.forms": [
+        {
+          "command": "pml.reloadForm",
+          "group": "1_forms@1"
         }
       ],
       "editor/title": [
@@ -376,6 +396,30 @@
         {
           "command": "pml.removeComments",
           "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.reloadForm",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.showStringMethods",
+          "when": "editorTextFocus && resourceExtname == .pml"
+        },
+        {
+          "command": "pml.showRealMethods",
+          "when": "editorTextFocus && resourceExtname == .pml"
+        },
+        {
+          "command": "pml.showArrayMethods",
+          "when": "editorTextFocus && resourceExtname == .pml"
+        },
+        {
+          "command": "pml.showDbrefMethods",
+          "when": "editorTextFocus && resourceExtname == .pml"
+        },
+        {
+          "command": "pml.showAllMethods",
+          "when": "editorTextFocus && resourceExtname == .pml"
         }
       ]
     }

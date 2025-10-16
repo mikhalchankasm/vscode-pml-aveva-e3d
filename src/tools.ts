@@ -33,6 +33,9 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.extractVariables', 'Extract Variables', this.extractVariables);
         this.registerCommand('pml.extractMethods', 'Extract Methods', this.extractMethods);
         this.registerCommand('pml.removeComments', 'Remove Comments', this.removeComments);
+
+        // Form helpers
+        this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
     }
 
     private registerCommand(command: string, _title: string, callback: () => void) {
@@ -54,6 +57,16 @@ export class PMLToolsProvider implements vscode.Disposable {
         return editor;
     }
 
+    private getSelectedTextOrShowError(editor: vscode.TextEditor): { text: string; range: vscode.Range } | undefined {
+        const selection = editor.selection;
+        if (selection.isEmpty) {
+            vscode.window.showErrorMessage('Выделите текст для применения команды');
+            return undefined;
+        }
+        const text = editor.document.getText(selection);
+        return { text, range: selection };
+    }
+
     private async applyChanges(editor: vscode.TextEditor, newText: string, message: string) {
         const edit = new vscode.WorkspaceEdit();
         const fullRange = new vscode.Range(
@@ -70,119 +83,161 @@ export class PMLToolsProvider implements vscode.Disposable {
         }
     }
 
+    private async applyChangesToSelection(editor: vscode.TextEditor, range: vscode.Range, newText: string, message: string) {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(editor.document.uri, range, newText);
+        
+        const success = await vscode.workspace.applyEdit(edit);
+        if (success) {
+            vscode.window.showInformationMessage(message);
+        } else {
+            vscode.window.showErrorMessage('Failed to apply changes');
+        }
+    }
+
     // Sorting
     private sortLinesAsc = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
 
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const sortedLines = [...lines].sort((a, b) => a.localeCompare(b));
         const newText = sortedLines.join('\n');
         
-        this.applyChanges(editor, newText, 'Sorted lines A-Z');
+        this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines A-Z');
     };
 
     private sortLinesDesc = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
 
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const sortedLines = [...lines].sort((a, b) => b.localeCompare(a));
         const newText = sortedLines.join('\n');
         
-        this.applyChanges(editor, newText, 'Sorted lines Z-A');
+        this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines Z-A');
     };
 
     private sortLinesLength = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
 
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const sortedLines = [...lines].sort((a, b) => a.length - b.length);
         const newText = sortedLines.join('\n');
         
-        this.applyChanges(editor, newText, 'Sorted lines by length');
+        this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines by length');
     };
 
     private sortLinesSmart = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const sorted = [...lines].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-        this.applyChanges(editor, sorted.join('\n'), 'Smart sorted lines');
+        this.applyChangesToSelection(editor, selected.range, sorted.join('\n'), 'Smart sorted lines');
     };
 
     // Duplicates & whitespace
     private removeDuplicates = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const seen = new Set<string>();
         const filtered = lines.filter(l => (seen.has(l) ? false : (seen.add(l), true)));
-        this.applyChanges(editor, filtered.join('\n'), `Removed ${lines.length - filtered.length} duplicate lines`);
+        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} duplicate lines`);
     };
 
     private removeConsecutiveDuplicates = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const filtered: string[] = [];
         for (const line of lines) {
             if (filtered.length === 0 || filtered[filtered.length - 1] !== line) {
                 filtered.push(line);
             }
         }
-        this.applyChanges(editor, filtered.join('\n'), `Removed ${lines.length - filtered.length} consecutive duplicates`);
+        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} consecutive duplicates`);
     };
 
     private removeEmptyLines = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const filtered = lines.filter(line => line.length > 0);
-        this.applyChanges(editor, filtered.join('\n'), `Removed ${lines.length - filtered.length} empty lines`);
+        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} empty lines`);
     };
 
     private removeWhitespaceLines = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const filtered = lines.filter(line => !/^\s+$/.test(line));
-        this.applyChanges(editor, filtered.join('\n'), `Removed ${lines.length - filtered.length} whitespace-only lines`);
+        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} whitespace-only lines`);
     };
 
     private trimWhitespace = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const trimmed = lines.map(line => line.replace(/[ \t]+$/g, ''));
-        this.applyChanges(editor, trimmed.join('\n'), 'Trimmed trailing whitespace');
+        this.applyChangesToSelection(editor, selected.range, trimmed.join('\n'), 'Trimmed trailing whitespace');
     };
 
     private tabsToSpaces = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
         const indentSize = vscode.workspace.getConfiguration('pml.formatter').get<number>('indentSize', 4);
         const spaces = ' '.repeat(indentSize);
-        const newText = text.replace(/\t/g, spaces);
-        this.applyChanges(editor, newText, 'Converted tabs to spaces');
+        const newText = selected.text.replace(/\t/g, spaces);
+        this.applyChangesToSelection(editor, selected.range, newText, 'Converted tabs to spaces');
     };
 
     private spacesToTabs = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
-        const text = editor.document.getText();
-        const lines = text.split('\n');
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
         const indentSize = vscode.workspace.getConfiguration('pml.formatter').get<number>('indentSize', 4);
         const converted = lines.map(line => {
             const m = line.match(/^( +)/);
@@ -192,7 +247,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             const rest = ' '.repeat(len % indentSize);
             return tabs + rest + line.slice(len);
         });
-        this.applyChanges(editor, converted.join('\n'), 'Converted spaces to tabs');
+        this.applyChangesToSelection(editor, selected.range, converted.join('\n'), 'Converted spaces to tabs');
     };
 
     // PML helpers
@@ -251,6 +306,30 @@ export class PMLToolsProvider implements vscode.Disposable {
         // collapse multiple blank lines introduced by stripping comments
         const filtered = newText.split('\n').filter(line => line.trim() !== '');
         this.applyChanges(editor, filtered.join('\n'), 'Removed comments');
+    };
+
+    // Form helpers
+    private reloadForm = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const text = editor.document.getText();
+        
+        // Ищем setup form или layout form
+        const formRegex = /(?:setup|layout)\s+form\s+(!!?[a-zA-Z_][a-zA-Z0-9_]*)/i;
+        const match = text.match(formRegex);
+
+        if (!match) {
+            vscode.window.showErrorMessage('Это не файл формы. Не найдено "setup form" или "layout form".');
+            return;
+        }
+
+        const formName = match[1];
+        const reloadCommand = `kill  ${formName}\nshow  ${formName}`;
+
+        // Копируем в буфер обмена
+        await vscode.env.clipboard.writeText(reloadCommand);
+        vscode.window.showInformationMessage(`Команда перезагрузки формы ${formName} скопирована в буфер обмена`);
     };
 }
 
