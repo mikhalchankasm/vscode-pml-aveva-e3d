@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.4.1] - 2025-10-16
+
+### Added
+- Definition, References, Rename providers for methods (.methodName()).
+- Signature Help for methods based on pmlTypes.
+- Release workflow: builds VSIX on tag/workflow_dispatch, creates GitHub Release, attaches VSIX, uses docs/CHANGELOG.md as body.
+- Readme split EN/RU; badges (CI/Release/Downloads/License).
+
+### Changed
+- UI strings cleaned up; neutral icon added and wired.
+- TextMate grammar/operator fixes; language configuration on-enter rules.
+- Formatter reads indent size from settings, tools rewritten and stabilized.
+- Documentation/hover content normalized to English headings.
+
+### Infrastructure
+- CI lint+build; ESLint rules tuned to avoid CI failures (no-explicit-any, no-console).
 Все изменения расширения "PML for AVEVA E3D" документируются в этом файле.
 
 ## [0.2.4] - 2025-10-14
@@ -361,3 +377,4 @@ endmethod
 - **Удалено** - удаленная функциональность
 - **Исправлено** - исправления багов
 - **Безопасность** - исправления уязвимостей
+
