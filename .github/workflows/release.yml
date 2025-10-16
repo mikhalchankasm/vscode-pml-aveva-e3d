@@ -5,8 +5,11 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
-  package:
+  package-and-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,10 +18,18 @@ jobs:
           node-version: 18
       - run: npm ci || npm install
       - run: npm run compile
-      - run: npx vsce package --no-yarn
+      - name: Package VSIX
+        run: npx vsce package --no-yarn
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: vsix
           path: '*.vsix'
-
+      - name: Create GitHub Release and upload VSIX
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            *.vsix
+          generate_release_notes: true
