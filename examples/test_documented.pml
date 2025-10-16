@@ -99,6 +99,8 @@ define method .testHover()
 
 DRAWLIST
 
-elem.DRA
+elem.DRAWLIST
+
+
 endmethod
 

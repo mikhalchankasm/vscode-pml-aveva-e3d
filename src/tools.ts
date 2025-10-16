@@ -36,6 +36,11 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         // Form helpers
         this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
+
+        // Array helpers
+        this.registerCommand('pml.makeListPath', 'Make List (Path)', this.makeListPath);
+        this.registerCommand('pml.makeListString', 'Make List (String)', this.makeListString);
+        this.registerCommand('pml.makeListPathString', 'Make List (Path String)', this.makeListPathString);
     }
 
     private registerCommand(command: string, _title: string, callback: () => void) {
@@ -339,6 +344,72 @@ export class PMLToolsProvider implements vscode.Disposable {
         // Копируем в буфер обмена
         await vscode.env.clipboard.writeText(reloadCommand);
         vscode.window.showInformationMessage(`Команда перезагрузки формы ${formName} скопирована в буфер обмена`);
+    };
+
+    // Array helpers
+    private makeListPath = async () => {
+        await this.makeListHelper('/');
+    };
+
+    private makeListString = async () => {
+        await this.makeListHelper("'");
+    };
+
+    private makeListPathString = async () => {
+        await this.makeListHelper("'/");
+    };
+
+    private makeListHelper = async (prefix: string) => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        // Запрашиваем имя переменной
+        const varName = await vscode.window.showInputBox({
+            prompt: 'Введите имя переменной для массива',
+            placeHolder: 'list',
+            value: 'list'
+        });
+
+        if (!varName) {
+            return; // Пользователь отменил ввод
+        }
+
+        // Обработка строк
+        const lines = selected.text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0); // Убираем пустые строки
+
+        if (lines.length === 0) {
+            vscode.window.showErrorMessage('Нет строк для обработки');
+            return;
+        }
+
+        // Определяем максимальную длину индекса для выравнивания
+        const maxIndexLength = lines.length.toString().length;
+
+        // Генерируем массив
+        const result = lines.map((line, index) => {
+            const idx = (index + 1).toString().padEnd(maxIndexLength);
+            
+            // Определяем формат значения
+            let value: string;
+            if (prefix === '/') {
+                value = `/${line}`;
+            } else if (prefix === "'") {
+                value = `'${line}'`;
+            } else if (prefix === "'/") {
+                value = `'/${line}'`;
+            } else {
+                value = line;
+            }
+
+            return `!${varName}[${idx}] = ${value}`;
+        });
+
+        this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Created array list');
     };
 }
 

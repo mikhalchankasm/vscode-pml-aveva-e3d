@@ -7,16 +7,18 @@ define method .initbran(!pipelist is array)
         !branlist.appendarray(  !!collectallfor('BRAN', 'Lissue eq false' , !pipe ) )
     enddo
 
-!outlist = object array()
+    !outlist = object array()
 
-do !bran values !branlist
+    do !bran values !branlist
 
-    !obj = object bdpipe(!bran)
-    !obj = object bdpipe(!bran)
-    !outlist.append(!obj.finishcalc())
+        !obj = object bdpipe(!bran)
+        !obj = object bdpipe(!bran)
+        !outlist.append(!obj.finishcalc())
 
-enddo
+    enddo
 
-!this.export(!outlist)
+    !this.export(!outlist)
 
 endmethod
+
+!this.export(!sometext)

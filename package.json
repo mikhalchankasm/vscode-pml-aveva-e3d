@@ -193,6 +193,21 @@
         "command": "pml.reloadForm",
         "title": "Reload Form",
         "category": "PML Forms"
+      },
+      {
+        "command": "pml.makeListPath",
+        "title": "Make List (Path)",
+        "category": "PML Array"
+      },
+      {
+        "command": "pml.makeListString",
+        "title": "Make List (String)",
+        "category": "PML Array"
+      },
+      {
+        "command": "pml.makeListPathString",
+        "title": "Make List (Path String)",
+        "category": "PML Array"
       }
     ],
     "submenus": [
@@ -204,6 +219,10 @@
       {
         "id": "pml.forms",
         "label": "Forms"
+      },
+      {
+        "id": "pml.array",
+        "label": "Array"
       }
     ],
     "configuration": {
@@ -320,12 +339,30 @@
         {
           "submenu": "pml.forms",
           "group": "5_forms"
+        },
+        {
+          "submenu": "pml.array",
+          "group": "6_array"
         }
       ],
       "pml.forms": [
         {
           "command": "pml.reloadForm",
           "group": "1_forms@1"
+        }
+      ],
+      "pml.array": [
+        {
+          "command": "pml.makeListPath",
+          "group": "1_array@1"
+        },
+        {
+          "command": "pml.makeListString",
+          "group": "1_array@2"
+        },
+        {
+          "command": "pml.makeListPathString",
+          "group": "1_array@3"
         }
       ],
       "editor/title": [
@@ -399,6 +436,18 @@
         },
         {
           "command": "pml.reloadForm",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.makeListPath",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.makeListString",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.makeListPathString",
           "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
         },
         {
