@@ -53,7 +53,7 @@ jobs:
           name: ${{ steps.vars.outputs.tag }}
           files: |
             *.vsix
-          generate_release_notes: true
+          generate_release_notes: true\n          body_path: docs/CHANGELOG.md
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       - name: Determine VSCE PAT
         id: vsce
@@ -74,3 +74,4 @@ jobs:
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
         run: npx vsce publish --packagePath *.vsix --no-yarn
+
