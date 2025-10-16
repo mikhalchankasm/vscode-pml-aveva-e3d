@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-      - run: npm ci || npm install
+      - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
       - run: npm run compile
       - name: Compute release tag
         id: vars
@@ -37,6 +37,24 @@ jobs:
             TAG="v$(node -p "require('./package.json').version")"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
+            - name: Ensure tag exists on origin
+        shell: bash
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          git fetch --tags --force
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally"
+          else
+            git tag "$TAG"
+            echo "Created tag $TAG"
+          fi
+          # Push tag if missing on remote
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+            echo "Tag $TAG already exists on origin"
+          else
+            git push origin "refs/tags/$TAG"
+          fi
       - name: Package VSIX
         run: npx vsce package --no-yarn
       - name: Upload VSIX artifact
@@ -74,4 +92,5 @@ jobs:
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
         run: npx vsce publish --packagePath *.vsix --no-yarn
+
 
