@@ -1,9 +1,7 @@
 PML for AVEVA E3D — VS Code Extension
 
 Language support for AVEVA E3D PML (Programmable Macro Language) in Visual Studio Code.
-
-Features
-- Syntax highlighting (TextMate grammar)
+\n## Features\n\n- Syntax highlighting (TextMate grammar)
 - Language configuration (comments, brackets, on-enter indent rules)
 - Document formatter (indent, empty lines, method/form/frame block layout, assignment alignment)
 - IntelliSense: completions (keywords, types, attributes, methods), signature help
@@ -12,9 +10,7 @@ Features
 - Diagnostics: unclosed blocks, basic checks
 - Tools (Command Palette): sort lines, trim whitespace, remove duplicates, extract variables/methods
 - Go to Definition / Find References / Rename (methods)
-
-Installation
-1) From VSIX (local build):
+\n## Installation\n\n1) From VSIX (local build):
    - `npm install`
    - `npm run compile`
    - Package: `npx vsce package`
@@ -22,12 +18,8 @@ Installation
 
 2) From source (debug):
    - Open folder in VS Code, press `F5` to launch Extension Development Host
-
-File Types
-- `.pml`, `.pmlobj`, `.pmlfnc`, `.pmlfrm`, `.pmlmac`, `.pmlcmd`
-
-Snippets
-- Common control flow (if/then/else, loops)
+\n## File Types\n\n- `.pml`, `.pmlobj`, `.pmlfnc`, `.pmlfrm`, `.pmlmac`, `.pmlcmd`
+\n## Snippets\n\n- Common control flow (if/then/else, loops)
 - Form/frame UI scaffolding
 - Variable declarations and helpers
 
@@ -38,26 +30,18 @@ Formatter Settings (`settings.json`)
 - `pml.formatter.formatFormBlocks` (boolean)
 - `pml.formatter.alignAssignments` (boolean)
 - `pml.formatter.fixIndentation` (boolean)
-
-JSDoc-style Documentation
-- Place `--` comments above `define method .name()`
+\n## JSDoc-style Documentation\n\n- Place `--` comments above `define method .name()`
 - Supported tags: `@param`, `@return`, `@example`, `@deprecated`, `@author`, `@since`, `@see`, `@form`, `@callback`
-
-Commands (Command Palette)
-- PML: Format PML Document
+\n## Commands (Command Palette)\n\n- PML: Format PML Document
 - PML Tools: Sort Lines A-Z / Z-A / by Length / Smart Natural Sort
 - PML Tools: Remove Duplicates / Consecutive Duplicates / Empty Lines / Whitespace-only Lines / Trim Trailing Whitespace / Tabs ↔ Spaces
 - PML Tools: Extract Variables / Extract Methods / Remove Comments
 - Show STRING/REAL/ARRAY/DBREF methods, Show All Methods
-
-Development
-- Lint: `npm run lint`
+\n## Development\n\n- Lint: `npm run lint`
 - Build: `npm run compile`
 - CI: GitHub Actions (lint + build on push/PR)
 - Release: push a tag `v*` (e.g., `v0.4.0`) to create GitHub Release with VSIX artifact
-
-Docs
-- See `docs/README.md` for the full index.
+\n## Docs\n\n- See `docs/README.md` for the full index.
 
 
 ## Requirements
@@ -80,5 +64,6 @@ See docs/CHANGELOG.md (and GitHub Releases).
 
 ## License
 MIT (see LICENSE).
+
 
 
