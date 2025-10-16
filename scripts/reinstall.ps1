@@ -36,8 +36,14 @@ if (Get-Command cursor -ErrorAction SilentlyContinue) {
   Write-Host 'Installing into Cursor...'
   cursor --install-extension "$vsixPath" --force | Out-Host
   
-  Write-Host 'Reloading Cursor window...'
-  cursor --command workbench.action.reloadWindow 2>$null | Out-Null
+  Write-Host ''
+  $response = Read-Host 'Reload Cursor window? (Y/n)'
+  if ($response -eq '' -or $response -match '^[Yy]') {
+    Write-Host 'Reloading Cursor window...'
+    cursor --command workbench.action.reloadWindow 2>$null | Out-Null
+  } else {
+    Write-Host 'Skipped reload. Manually reload: Ctrl+Shift+P -> Reload Window'
+  }
 }
 
 Write-Host 'Done.'
