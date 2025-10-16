@@ -35,6 +35,9 @@ code --install-extension "$vsixPath" --force | Out-Host
 if (Get-Command cursor -ErrorAction SilentlyContinue) {
   Write-Host 'Installing into Cursor...'
   cursor --install-extension "$vsixPath" --force | Out-Host
+  
+  Write-Host 'Reloading Cursor window...'
+  cursor --command workbench.action.reloadWindow 2>$null | Out-Null
 }
 
 Write-Host 'Done.'
