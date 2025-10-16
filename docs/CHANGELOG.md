@@ -1,5 +1,14 @@
 # Change Log
 
+## [0.4.5] - 2025-10-16
+
+### Fixed
+- **Formatter: Fixed elseif after nested endif indentation**
+  - Elseif/else after nested endif now correctly aligns with parent if
+  - Fixed currentIndent tracking: elseif/else now properly reset indent level
+  - Example: outer if → inner if/endif → outer elseif now formats correctly
+  - Restored test_elseif.pml with correct structure for validation
+
 ## [0.4.4] - 2025-10-16
 
 ### Fixed

@@ -17,32 +17,32 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
         const text = document.getText();
         let formattedText = text;
 
-        // 0. ╨Ш╤Б╨┐╤А╨░╨▓╨╗╨╡╨╜╨╕╨╡ ╨▒╨░╨╖╨╛╨▓╤Л╤Е ╨╛╤В╤Б╤В╤Г╨┐╨╛╨▓
+        // 0. Исправление базовых отступов
         if (fixIndentation) {
             formattedText = this.fixIndentation(formattedText, indentSize);
         }
 
-        // 1. ╨г╨┤╨░╨╗╨╡╨╜╨╕╨╡ ╨╝╨╜╨╛╨╢╨╡╤Б╤В╨▓╨╡╨╜╨╜╤Л╤Е ╨┐╤Г╤Б╤В╤Л╤Е ╤Б╤В╤А╨╛╨║
+        // 1. Удаление множественных пустых строк
         if (removeMultipleEmptyLines) {
             formattedText = this.removeMultipleEmptyLines(formattedText);
         }
 
-        // 2. ╨д╨╛╤А╨╝╨░╤В╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡ ╨▒╨╗╨╛╨║╨╛╨▓ method
+        // 2. Форматирование блоков method
         if (formatMethodBlocks) {
             formattedText = this.formatMethodBlocks(formattedText);
         }
 
-        // 3. ╨д╨╛╤А╨╝╨░╤В╨╕╤А╨╛╨▓╨░╨╜╨╕╨╡ ╨▒╨╗╨╛╨║╨╛╨▓ form/frame
+        // 3. Форматирование блоков form/frame
         if (formatFormBlocks) {
             formattedText = this.formatFormBlocks(formattedText);
         }
 
-        // 4. ╨Т╤Л╤А╨░╨▓╨╜╨╕╨▓╨░╨╜╨╕╨╡ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╣ (= ╨▓ ╨╛╨┤╨╜╤Г ╨╗╨╕╨╜╨╕╤О)
+        // 4. Выравнивание присваиваний (= в одну линию)
         if (alignAssignments) {
             formattedText = this.alignAssignments(formattedText);
         }
 
-        // ╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╨╝ ╨╖╨░╨╝╨╡╨╜╤Г ╨▓╤Б╨╡╨│╨╛ ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨░
+        // Возвращаем замену всего документа
         const fullRange = new vscode.Range(
             document.positionAt(0),
             document.positionAt(text.length)
@@ -52,14 +52,14 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
 
     /**
-     * ╨Ш╤Б╨┐╤А╨░╨▓╨╗╤П╨╡╤В ╨▒╨░╨╖╨╛╨▓╤Л╨╡ ╨╛╤В╤Б╤В╤Г╨┐╤Л ╨▓ ╨║╨╛╨┤╨╡
+     * Исправляет базовые отступы в коде
      */
     private fixIndentation(text: string, indentSize: number): string {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let currentIndent = 0;
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤Г╨▓╨╡╨╗╨╕╤З╨╕╨▓╨░╤О╤В ╨╛╤В╤Б╤В╤Г╨┐
+        // Ключевые слова, которые увеличивают отступ
         const increaseIndentKeywords = [
             /^define\s+(method|object)/i,
             /^setup\s+form/i,
@@ -70,7 +70,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             /^handle\b/i
         ];
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤Г╨╝╨╡╨╜╤М╤И╨░╤О╤В ╨╛╤В╤Б╤В╤Г╨┐ (╨╖╨░╨║╤А╤Л╨▓╨░╤О╤Й╨╕╨╡ ╨▒╨╗╨╛╨║╨╕)
+        // Ключевые слова, которые уменьшают отступ (закрывающие блоки)
         const decreaseIndentKeywords = [
             /^endmethod\b/i,
             /^endobject\b/i,
@@ -79,27 +79,27 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             /^endhandle\b/i
         ];
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╨┤╨╛╨╗╨╢╨╜╤Л ╨▒╤Л╤В╤М ╨╜╨░ ╤В╨╛╨╝ ╨╢╨╡ ╤Г╤А╨╛╨▓╨╜╨╡ ╤З╤В╨╛ ╨╕ ╤Б╨╛╨┤╨╡╤А╨╢╨╕╨╝╨╛╨╡ ╨▒╨╗╨╛╨║╨░
+        // Ключевые слова, которые должны быть на том же уровне что и содержимое блока
         const sameLevelKeywords = [
             /^exit\b/i
         ];
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤Г╨╝╨╡╨╜╤М╤И╨░╤О╤В ╨╛╤В╤Б╤В╤Г╨┐ ╨┤╨╗╤П ╤Б╨╡╨▒╤П, ╨╜╨╛ ╨╜╨╡ ╨┤╨╗╤П ╤Б╨╗╨╡╨┤╤Г╤О╤Й╨╕╤Е
-        // (else/elseif/elsehandle ╨┤╨╛╨╗╨╢╨╜╤Л ╨▒╤Л╤В╤М ╨╜╨░ ╤В╨╛╨╝ ╨╢╨╡ ╤Г╤А╨╛╨▓╨╜╨╡ ╤З╤В╨╛ ╨╕ if)
+        // Ключевые слова, которые уменьшают отступ для себя, но не для следующих
+        // (else/elseif/elsehandle должны быть на том же уровне что и if)
         const sameLineDecreaseKeywords = [
             /^else\b/i,
             /^elseif\b/i,
             /^elsehandle\b/i
         ];
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╤Г╨▓╨╡╨╗╨╕╤З╨╕╨▓╨░╤О╤В ╨╛╤В╤Б╤В╤Г╨┐ ╨┐╨╛╤Б╨╗╨╡ ╤Б╨╡╨▒╤П (╨╜╨╛ ╨╜╨╡ ╨┤╨╗╤П ╤Б╨╡╨▒╤П)
+        // Ключевые слова, которые увеличивают отступ после себя (но не для себя)
         const increaseAfterKeywords = [
             /^else\b/i,
             /^elseif\b/i,
             /^elsehandle\b/i
         ];
         
-        // ╨б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╤Л╨╡ ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤Ж╨╕╨╕ PML (╨╜╨╡ ╨╕╨╖╨╝╨╡╨╜╤П╤О╤В ╨╛╤В╤Б╤В╤Г╨┐)
+        // Специальные конструкции PML (не изменяют отступ)
         const specialKeywords = [
             /^skip\s+if\s*\(/i,
             /^break\b/i,
@@ -107,7 +107,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             /^return\b/i
         ];
         
-        // ╨Ъ╨╗╤О╤З╨╡╨▓╤Л╨╡ ╤Б╨╗╨╛╨▓╨░, ╨║╨╛╤В╨╛╤А╤Л╨╡ ╨┤╨╛╨╗╨╢╨╜╤Л ╨▒╤Л╤В╤М ╨╜╨░ ╤В╨╛╨╝ ╨╢╨╡ ╤Г╤А╨╛╨▓╨╜╨╡ ╤З╤В╨╛ ╨╕ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╨╕╨╣ frame
+        // Ключевые слова, которые должны быть на том же уровне что и предыдущий frame
         const frameLevelKeywords = [
             /^frame\b/i
         ];
@@ -116,19 +116,19 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             const line = lines[i];
             const trimmed = line.trim();
             
-            // ╨Я╤Г╤Б╤В╤Л╨╡ ╤Б╤В╤А╨╛╨║╨╕ ╨╛╤Б╤В╨░╨▓╨╗╤П╨╡╨╝ ╨║╨░╨║ ╨╡╤Б╤В╤М
+            // Пустые строки оставляем как есть
             if (trimmed === '') {
                 result.push('');
                 continue;
             }
             
-            // ╨Ъ╨╛╨╝╨╝╨╡╨╜╤В╨░╤А╨╕╨╕ ╤Б╨╛╤Е╤А╨░╨╜╤П╨╡╨╝ ╤Б ╤В╨╡╨║╤Г╤Й╨╕╨╝ ╨╛╤В╤Б╤В╤Г╨┐╨╛╨╝
+            // Комментарии сохраняем с текущим отступом
             if (trimmed.startsWith('--') || trimmed.startsWith('$*')) {
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 continue;
             }
             
-            // ╨б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╤Л╨╡ ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤Ж╨╕╨╕ PML (skip if, break, continue, return)
+            // Специальные конструкции PML (skip if, break, continue, return)
             let isSpecialKeyword = false;
             for (const pattern of specialKeywords) {
                 if (pattern.test(trimmed)) {
@@ -138,12 +138,12 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
             
             if (isSpecialKeyword) {
-                // ╨б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╤Л╨╡ ╨║╨╛╨╜╤Б╤В╤А╤Г╨║╤Ж╨╕╨╕ ╨┐╨╛╨╗╤Г╤З╨░╤О╤В ╤В╨╡╨║╤Г╤Й╨╕╨╣ ╨╛╤В╤Б╤В╤Г╨┐, ╨╜╨╛ ╨╜╨╡ ╨╕╨╖╨╝╨╡╨╜╤П╤О╤В ╨╡╨│╨╛
+                // Специальные конструкции получают текущий отступ, но не изменяют его
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 continue;
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ exit - ╨┤╨╛╨╗╨╢╨╡╨╜ ╨╖╨░╨║╤А╤Л╨▓╨░╤В╤М frame
+            // Проверяем exit - должен закрывать frame
             let isExitKeyword = false;
             for (const pattern of sameLevelKeywords) {
                 if (pattern.test(trimmed)) {
@@ -153,15 +153,15 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
             
             if (isExitKeyword) {
-                // exit ╨╖╨░╨║╤А╤Л╨▓╨░╨╡╤В ╤В╨╡╨║╤Г╤Й╨╕╨╣ ╨▒╨╗╨╛╨║ (frame ╨╕╨╗╨╕ form)
-                // exit ╨┤╨╛╨╗╨╢╨╡╨╜ ╨▒╤Л╤В╤М ╨╜╨░ ╤Г╤А╨╛╨▓╨╜╨╡ ╨▒╨╗╨╛╨║╨░ (frame/form), ╨░ ╨╜╨╡ ╤Б╨╛╨┤╨╡╤А╨╢╨╕╨╝╨╛╨│╨╛
-                // ╨б╨╜╨░╤З╨░╨╗╨░ ╤Г╨╝╨╡╨╜╤М╤И╨░╨╡╨╝ ╨╛╤В╤Б╤В╤Г╨┐, ╨╖╨░╤В╨╡╨╝ ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г
+                // exit закрывает текущий блок (frame или form)
+                // exit должен быть на уровне блока (frame/form), а не содержимого
+                // Сначала уменьшаем отступ, затем добавляем строку
                 currentIndent = Math.max(0, currentIndent - 1);
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 continue;
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ frame - ╨╝╨╛╨╢╨╡╤В ╨▒╤Л╤В╤М ╨▓╨╜╤Г╤В╤А╨╕ form ╨╕╨╗╨╕ ╨┐╨╛╤Б╨╗╨╡ ╨┤╤А╤Г╨│╨╛╨│╨╛ frame
+            // Проверяем frame - может быть внутри form или после другого frame
             let isFrameKeyword = false;
             for (const pattern of frameLevelKeywords) {
                 if (pattern.test(trimmed)) {
@@ -171,13 +171,13 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
             
             if (isFrameKeyword) {
-                // frame ╨┐╨╛╨╗╤Г╤З╨░╨╡╤В ╤В╨╡╨║╤Г╤Й╨╕╨╣ ╨╛╤В╤Б╤В╤Г╨┐ ╨╕ ╤Г╨▓╨╡╨╗╨╕╤З╨╕╨▓╨░╨╡╤В ╨╡╨│╨╛ ╨┤╨╗╤П ╤Б╨╛╨┤╨╡╤А╨╢╨╕╨╝╨╛╨│╨╛
+                // frame получает текущий отступ и увеличивает его для содержимого
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 currentIndent++;
                 continue;
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤Г╨╝╨╡╨╜╤М╤И╨╡╨╜╨╕╨╡ ╨╛╤В╤Б╤В╤Г╨┐╨░ ╨┐╨╡╤А╨╡╨┤ ╤Б╤В╤А╨╛╨║╨╛╨╣
+            // Проверяем уменьшение отступа перед строкой
             let decreaseBeforeLine = false;
             for (const pattern of decreaseIndentKeywords) {
                 if (pattern.test(trimmed)) {
@@ -186,7 +186,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 }
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ else/elseif/elsehandle (╤Г╨╝╨╡╨╜╤М╤И╨░╤О╤В ╨┤╨╗╤П ╤Б╨╡╨▒╤П)
+            // Проверяем else/elseif/elsehandle (уменьшают для себя)
             let sameLevelDecrease = false;
             for (const pattern of sameLineDecreaseKeywords) {
                 if (pattern.test(trimmed)) {
@@ -195,21 +195,20 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 }
             }
             
-            // ╨Я╤А╨╕╨╝╨╡╨╜╤П╨╡╨╝ ╨╛╤В╤Б╤В╤Г╨┐
+            // Применяем отступ
             let lineIndent = currentIndent;
             if (decreaseBeforeLine) {
                 lineIndent = Math.max(0, currentIndent - 1);
                 currentIndent = lineIndent;
             } else if (sameLevelDecrease) {
-                // else/elseif/elsehandle получают отступ на 1 меньше (уровень if)
-                // НЕ изменяем currentIndent - он будет увеличен в increaseAfterKeywords
                 lineIndent = Math.max(0, currentIndent - 1);
+                currentIndent = lineIndent;
             }
             
-            // ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╤Б╤В╤А╨╛╨║╤Г ╤Б ╨┐╤А╨░╨▓╨╕╨╗╤М╨╜╤Л╨╝ ╨╛╤В╤Б╤В╤Г╨┐╨╛╨╝
+            // Добавляем строку с правильным отступом
             result.push(' '.repeat(lineIndent * indentSize) + trimmed);
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤Г╨▓╨╡╨╗╨╕╤З╨╡╨╜╨╕╨╡ ╨╛╤В╤Б╤В╤Г╨┐╨░ ╨┐╨╛╤Б╨╗╨╡ ╤Б╤В╤А╨╛╨║╨╕
+            // Проверяем увеличение отступа после строки
             for (const pattern of increaseIndentKeywords) {
                 if (pattern.test(trimmed)) {
                     currentIndent++;
@@ -217,7 +216,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 }
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤Г╨▓╨╡╨╗╨╕╤З╨╡╨╜╨╕╨╡ ╨╛╤В╤Б╤В╤Г╨┐╨░ ╨┐╨╛╤Б╨╗╨╡ else/elseif/elsehandle
+            // Проверяем увеличение отступа после else/elseif/elsehandle
             for (const pattern of increaseAfterKeywords) {
                 if (pattern.test(trimmed)) {
                     currentIndent++;
@@ -225,7 +224,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 }
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤Г╨╝╨╡╨╜╤М╤И╨╡╨╜╨╕╨╡ ╨╛╤В╤Б╤В╤Г╨┐╨░ ╨┐╨╛╤Б╨╗╨╡ ╤Б╤В╤А╨╛╨║╨╕ (endif, endmethod, etc.)
+            // Проверяем уменьшение отступа после строки (endif, endmethod, etc.)
             for (const pattern of decreaseIndentKeywords) {
                 if (pattern.test(trimmed)) {
                     currentIndent = Math.max(0, currentIndent - 1);
@@ -238,17 +237,17 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
 
     /**
-     * ╨г╨┤╨░╨╗╤П╨╡╤В ╨╝╨╜╨╛╨╢╨╡╤Б╤В╨▓╨╡╨╜╨╜╤Л╨╡ ╨┐╤Г╤Б╤В╤Л╨╡ ╤Б╤В╤А╨╛╨║╨╕ (╨╛╤Б╤В╨░╨▓╨╗╤П╨╡╤В ╨╝╨░╨║╤Б╨╕╨╝╤Г╨╝ ╨╛╨┤╨╜╤Г)
+     * Удаляет множественные пустые строки (оставляет максимум одну)
      */
     private removeMultipleEmptyLines(text: string): string {
         return text.replace(/(\r?\n){3,}/g, '\n\n');
     }
 
     /**
-     * ╨д╨╛╤А╨╝╨░╤В╨╕╤А╤Г╨╡╤В ╨▒╨╗╨╛╨║╨╕ define method ... endmethod
-     * ╨Ы╨╛╨│╨╕╨║╨░ ╨╕╨╖ Python ╨║╨╛╨┤╨░:
-     * - ╨г╨┤╨░╨╗╤П╨╡╤В ╨╗╨╕╤И╨╜╨╕╨╡ ╤Б╤В╤А╨╛╨║╨╕ ╨┐╨╡╤А╨╡╨┤ endmethod
-     * - ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╤В ╨┐╤Г╤Б╤В╤Г╤О ╤Б╤В╤А╨╛╨║╤Г ╨┐╨╛╤Б╨╗╨╡ define method ╨╡╤Б╨╗╨╕ ╨╡╤С ╨╜╨╡╤В
+     * Форматирует блоки define method ... endmethod
+     * Логика из Python кода:
+     * - Удаляет лишние строки перед endmethod
+     * - Добавляет пустую строку после define method если её нет
      */
     private formatMethodBlocks(text: string): string {
         const lines = text.split(/\r?\n/);
@@ -260,22 +259,22 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             const line = lines[i];
             const trimmed = line.trim();
 
-            // ╨Э╨░╤З╨░╨╗╨╛ ╨╝╨╡╤В╨╛╨┤╨░
+            // Начало метода
             if (/^define\s+method/i.test(trimmed)) {
                 inMethod = true;
                 methodIndent = line.length - line.trimStart().length;
                 result.push(line);
 
-                // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤Б╨╗╨╡╨┤╤Г╤О╤Й╤Г╤О ╤Б╤В╤А╨╛╨║╤Г - ╨╡╤Б╨╗╨╕ ╨╜╨╡ ╨┐╤Г╤Б╤В╨░╤П, ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨┐╤Г╤Б╤В╤Г╤О
+                // Проверяем следующую строку - если не пустая, добавляем пустую
                 if (i + 1 < lines.length && lines[i + 1].trim() !== '') {
                     result.push('');
                 }
                 continue;
             }
 
-            // ╨Ъ╨╛╨╜╨╡╤Ж ╨╝╨╡╤В╨╛╨┤╨░
+            // Конец метода
             if (/^endmethod/i.test(trimmed) && inMethod) {
-                // ╨г╨┤╨░╨╗╤П╨╡╨╝ ╨┐╤Г╤Б╤В╤Л╨╡ ╤Б╤В╤А╨╛╨║╨╕ ╨┐╨╡╤А╨╡╨┤ endmethod
+                // Удаляем пустые строки перед endmethod
                 while (result.length > 0 && result[result.length - 1].trim() === '') {
                     result.pop();
                 }
@@ -292,9 +291,9 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
 
     /**
-     * ╨д╨╛╤А╨╝╨░╤В╨╕╤А╤Г╨╡╤В ╨▒╨╗╨╛╨║╨╕ setup form ... exit ╨╕ frame ... exit
-     * ╨Ы╨╛╨│╨╕╨║╨░ ╨╕╨╖ Python ╨║╨╛╨┤╨░:
-     * - ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╤В ╨┐╤Г╤Б╤В╤Г╤О ╤Б╤В╤А╨╛╨║╤Г ╨┐╨╡╤А╨╡╨┤ exit ╨╡╤Б╨╗╨╕ ╨╡╤С ╨╜╨╡╤В
+     * Форматирует блоки setup form ... exit и frame ... exit
+     * Логика из Python кода:
+     * - Добавляет пустую строку перед exit если её нет
      */
     private formatFormBlocks(text: string): string {
         const lines = text.split(/\r?\n/);
@@ -305,16 +304,16 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             const line = lines[i];
             const trimmed = line.trim();
 
-            // ╨Э╨░╤З╨░╨╗╨╛ form/frame ╨▒╨╗╨╛╨║╨░
+            // Начало form/frame блока
             if (/^(setup\s+form|frame)/i.test(trimmed)) {
                 inFormBlock = true;
                 result.push(line);
                 continue;
             }
 
-            // ╨Ъ╨╛╨╜╨╡╤Ж form/frame ╨▒╨╗╨╛╨║╨░
+            // Конец form/frame блока
             if (/^exit/i.test(trimmed) && inFormBlock) {
-                // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╨┐╤А╨╡╨┤╤Л╨┤╤Г╤Й╤Г╤О ╤Б╤В╤А╨╛╨║╤Г - ╨╡╤Б╨╗╨╕ ╨╜╨╡ ╨┐╤Г╤Б╤В╨░╤П, ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨┐╤Г╤Б╤В╤Г╤О
+                // Проверяем предыдущую строку - если не пустая, добавляем пустую
                 if (result.length > 0 && result[result.length - 1].trim() !== '') {
                     result.push('');
                 }
@@ -330,8 +329,8 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
 
     /**
-     * ╨Т╤Л╤А╨░╨▓╨╜╨╕╨▓╨░╨╜╨╕╨╡ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╣ (= ╨▓ ╨╛╨┤╨╜╤Г ╨╗╨╕╨╜╨╕╤О)
-     * ╨Э╨░╤Е╨╛╨┤╨╕╤В ╨│╤А╤Г╨┐╨┐╤Л ╤Б╤В╤А╨╛╨║ ╨┐╨╛╨┤╤А╤П╨┤ ╤Б = ╨╕ ╨▓╤Л╤А╨░╨▓╨╜╨╕╨▓╨░╨╡╤В ╨╕╤Е
+     * Выравнивание присваиваний (= в одну линию)
+     * Находит группы строк подряд с = и выравнивает их
      */
     private alignAssignments(text: string): string {
         const lines = text.split(/\r?\n/);
@@ -343,13 +342,13 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             const line = lines[i];
             const trimmed = line.trim();
             
-            // ╨Я╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝ ╨║╨╛╨╝╨╝╨╡╨╜╤В╨░╤А╨╕╨╕ ╨╕ ╨┐╤Г╤Б╤В╤Л╨╡ ╤Б╤В╤А╨╛╨║╨╕
+            // Пропускаем комментарии и пустые строки
             if (trimmed === '' || trimmed.startsWith('--') || trimmed.startsWith('$*')) {
-                // ╨Х╤Б╨╗╨╕ ╨▒╤Л╨╗╨░ ╨│╤А╤Г╨┐╨┐╨░ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╣ - ╨╛╨▒╤А╨░╨▒╨╛╤В╨░╤В╤М ╨╡╤С
+                // Если была группа присваиваний - обработать её
                 if (assignmentGroup.length >= 2) {
                     result.push(...this.processAssignmentGroup(assignmentGroup));
                 } else if (assignmentGroup.length > 0) {
-                    // ╨Х╤Б╨╗╨╕ ╨│╤А╤Г╨┐╨┐╨░ ╨╝╨╡╨╜╤М╤И╨╡ 2 - ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М ╤Б╤В╤А╨╛╨║╨╕ ╨║╨░╨║ ╨╡╤Б╤В╤М
+                    // Если группа меньше 2 - добавить строки как есть
                     result.push(...assignmentGroup.map(g => g.line));
                 }
                 assignmentGroup = [];
@@ -357,18 +356,18 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 continue;
             }
             
-            // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╨╡╤Б╤В╤М ╨╗╨╕ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╡ (╤В╨╛╨╗╤М╨║╨╛ ╨╛╨┤╨╕╨╜ ╨╖╨╜╨░╨║ =)
-            // ╨Ш╤Б╨║╨╗╤О╤З╨░╨╡╨╝ ╨╛╨┐╨╡╤А╨░╤В╨╛╤А╤Л ╤Б╤А╨░╨▓╨╜╨╡╨╜╨╕╤П (==, !=, >=, <=)
+            // Проверяем есть ли присваивание (только один знак =)
+            // Исключаем операторы сравнения (==, !=, >=, <=)
             const assignmentMatch = line.match(/^(\s*)([^=]*?)(\s*)(=)(\s*)(.*)$/);
             
             if (assignmentMatch) {
                 const [, indent, before, , , , after] = assignmentMatch;
                 
-                // ╨Я╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤З╤В╨╛ ╤Н╤В╨╛ ╨╜╨╡ ╨╛╨┐╨╡╤А╨░╤В╨╛╤А ╤Б╤А╨░╨▓╨╜╨╡╨╜╨╕╤П
+                // Проверяем что это не оператор сравнения
                 const beforeTrimmed = before.trim();
                 const afterTrimmed = after.trim();
                 
-                // ╨Х╤Б╨╗╨╕ ╨┐╨╛╤Б╨╗╨╡ = ╨╕╨┤╨╡╤В ╨╡╤Й╨╡ =, ╤В╨╛ ╤Н╤В╨╛ == (╨┐╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝)
+                // Если после = идет еще =, то это == (пропускаем)
                 if (afterTrimmed.startsWith('=')) {
                     if (assignmentGroup.length >= 2) {
                         result.push(...this.processAssignmentGroup(assignmentGroup));
@@ -380,7 +379,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                     continue;
                 }
                 
-                // ╨Х╤Б╨╗╨╕ ╨┐╨╡╤А╨╡╨┤ = ╨▒╤Л╨╗ >, <, ! ╤В╨╛ ╤Н╤В╨╛ ╨╛╨┐╨╡╤А╨░╤В╨╛╤А ╤Б╤А╨░╨▓╨╜╨╡╨╜╨╕╤П (╨┐╤А╨╛╨┐╤Г╤Б╨║╨░╨╡╨╝)
+                // Если перед = был >, <, ! то это оператор сравнения (пропускаем)
                 if (beforeTrimmed.endsWith('>') || beforeTrimmed.endsWith('<') || beforeTrimmed.endsWith('!')) {
                     if (assignmentGroup.length >= 2) {
                         result.push(...this.processAssignmentGroup(assignmentGroup));
@@ -392,7 +391,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                     continue;
                 }
                 
-                // ╨н╤В╨╛ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╡ - ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨▓ ╨│╤А╤Г╨┐╨┐╤Г
+                // Это присваивание - добавляем в группу
                 assignmentGroup.push({
                     index: i,
                     line: line,
@@ -401,7 +400,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                     after: after
                 });
             } else {
-                // ╨Э╨╡ ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╡ - ╨╛╨▒╤А╨░╨▒╨╛╤В╨░╤В╤М ╨╜╨░╨║╨╛╨┐╨╗╨╡╨╜╨╜╤Г╤О ╨│╤А╤Г╨┐╨┐╤Г
+                // Не присваивание - обработать накопленную группу
                 if (assignmentGroup.length >= 2) {
                     result.push(...this.processAssignmentGroup(assignmentGroup));
                 } else if (assignmentGroup.length > 0) {
@@ -412,11 +411,11 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
         }
         
-        // ╨Ю╨▒╤А╨░╨▒╨╛╤В╨░╤В╤М ╨┐╨╛╤Б╨╗╨╡╨┤╨╜╤О╤О ╨│╤А╤Г╨┐╨┐╤Г ╨╡╤Б╨╗╨╕ ╨╡╤Б╤В╤М
+        // Обработать последнюю группу если есть
         if (assignmentGroup.length >= 2) {
             result.push(...this.processAssignmentGroup(assignmentGroup));
         } else if (assignmentGroup.length > 0) {
-            // ╨Х╤Б╨╗╨╕ ╨│╤А╤Г╨┐╨┐╨░ ╨╝╨╡╨╜╤М╤И╨╡ 2 - ╨┤╨╛╨▒╨░╨▓╨╕╤В╤М ╤Б╤В╤А╨╛╨║╨╕ ╨║╨░╨║ ╨╡╤Б╤В╤М
+            // Если группа меньше 2 - добавить строки как есть
             result.push(...assignmentGroup.map(g => g.line));
         }
         
@@ -424,15 +423,15 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
     
     /**
-     * ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╨│╤А╤Г╨┐╨┐╤Л ╨┐╤А╨╕╤Б╨▓╨░╨╕╨▓╨░╨╜╨╕╨╣ - ╨▓╤Л╤А╨░╨▓╨╜╨╕╨▓╨░╨╜╨╕╨╡ ╨┐╨╛ =
+     * Обработка группы присваиваний - выравнивание по =
      */
     private processAssignmentGroup(
         group: Array<{ index: number; line: string; indent: string; before: string; after: string }>
     ): string[] {
-        // ╨Э╨░╨╣╤В╨╕ ╨╝╨░╨║╤Б╨╕╨╝╨░╨╗╤М╨╜╤Г╤О ╨┤╨╗╨╕╨╜╤Г ╤З╨░╤Б╤В╨╕ ╨┤╨╛ =
+        // Найти максимальную длину части до =
         const maxBeforeLength = Math.max(...group.map(g => g.before.length));
         
-        // ╨Т╤Л╤А╨╛╨▓╨╜╤П╤В╤М ╨▓╤Б╨╡ ╤Б╤В╤А╨╛╨║╨╕
+        // Выровнять все строки
         return group.map(g => {
             const spacesNeeded = maxBeforeLength - g.before.length;
             const padding = ' '.repeat(spacesNeeded);
