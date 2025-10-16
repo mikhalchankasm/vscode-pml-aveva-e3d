@@ -309,7 +309,10 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "pack": "powershell -NoProfile -Command \"Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix; npx @vscode/vsce package --no-yarn\"",
+    "install:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reinstall.ps1",
+    "pack:install": "npm run pack && npm run install:local"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
