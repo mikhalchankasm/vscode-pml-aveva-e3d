@@ -59,3 +59,25 @@ JSDoc‑документация
 Документация
 - Полный индекс — в `docs/README.md`.
 
+
+## Требования
+- Visual Studio Code 1.80.0+
+
+## Настройки расширения
+- pml.formatter.indentSize
+- pml.formatter.removeMultipleEmptyLines
+- pml.formatter.formatMethodBlocks
+- pml.formatter.formatFormBlocks
+- pml.formatter.alignAssignments
+- pml.formatter.fixIndentation
+- pml.trace
+
+## Известные проблемы
+- Языковые функции эвристические в сложном PML; сообщайте о ложных срабатываниях.
+
+## История версий
+См. docs/CHANGELOG.md и GitHub Releases.
+
+## Лицензия
+MIT (см. LICENSE).
+

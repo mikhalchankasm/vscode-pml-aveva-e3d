@@ -59,3 +59,25 @@ Development
 Docs
 - See `docs/README.md` for the full index.
 
+
+## Requirements
+- Visual Studio Code 1.80.0+
+
+## Extension Settings
+- pml.formatter.indentSize
+- pml.formatter.removeMultipleEmptyLines
+- pml.formatter.formatMethodBlocks
+- pml.formatter.formatFormBlocks
+- pml.formatter.alignAssignments
+- pml.formatter.fixIndentation
+- pml.trace
+
+## Known Issues
+- Language features are heuristic for complex PML; please report false positives.
+
+## Release Notes
+See docs/CHANGELOG.md (and GitHub Releases).
+
+## License
+MIT (see LICENSE).
+
