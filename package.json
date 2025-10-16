@@ -313,6 +313,11 @@
           "command": "pml.formatDocument",
           "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd",
           "group": "navigation"
+        },
+        {
+          "submenu": "pml.tools",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
