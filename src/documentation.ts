@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 
 /**
- * Парсер JSDoc-style комментариев для PML методов
+ * JSDoc-style documentation for PML methods для PML методов
  */
 export interface MethodDocumentation {
     description: string;
     params: Array<{ name: string; description: string }>;
     returnValue?: string;
     examples: string[];
-    deprecated?: string;
+    **Deprecated:**
     author?: string;
     since?: string;
     see?: string[];
@@ -81,9 +81,9 @@ export class PMLDocumentationParser {
             } else if (line.startsWith('@example')) {
                 currentSection = 'other';
                 doc.examples.push(line.substring(8).trim());
-            } else if (line.startsWith('@deprecated')) {
+            } else if (line.startsWith('@**Deprecated:**
                 currentSection = 'other';
-                doc.deprecated = line.substring(11).trim();
+                doc.**Deprecated:**
             } else if (line.startsWith('@author')) {
                 currentSection = 'other';
                 doc.author = line.substring(7).trim();
@@ -126,9 +126,9 @@ export class PMLDocumentationParser {
             md.appendMarkdown('\n' + doc.description + '\n');
         }
         
-        // Deprecated предупреждение
-        if (doc.deprecated) {
-            md.appendMarkdown('\n⚠️ **Deprecated:** ' + doc.deprecated + '\n');
+        // **Deprecated:**
+        if (doc.**Deprecated:**
+            md.appendMarkdown('\n⚠️ ****Deprecated:**
         }
         
         // Параметры
@@ -178,4 +178,5 @@ export class PMLDocumentationParser {
         return md;
     }
 }
+
 

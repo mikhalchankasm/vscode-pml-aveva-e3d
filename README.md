@@ -366,3 +366,8 @@ MIT License - See LICENSE file for details
 
 ## Documentation
 See docs/README.md for the full documentation index.
+
+## Screenshots
+![Syntax Highlighting](assets/screenshots/feature-placeholder.png)
+![Completion](assets/screenshots/feature-placeholder.png)
+
