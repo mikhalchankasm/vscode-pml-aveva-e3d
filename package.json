@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "publisher": "mikhalchankasm",
   "engines": {
     "vscode": "^1.80.0"
@@ -190,6 +190,12 @@
         "category": "PML Tools"
       }
     ],
+    "submenus": [
+      {
+        "id": "pml.tools",
+        "label": "PML Tools"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "PML Configuration",
@@ -237,6 +243,71 @@
       }
     },
     "menus": {
+      "editor/context": [
+        {
+          "submenu": "pml.tools",
+          "when": "editorLangId == pml",
+          "group": "1_modification"
+        }
+      ],
+      "pml.tools": [
+        {
+          "command": "pml.sortLinesAsc",
+          "group": "1_sort@1"
+        },
+        {
+          "command": "pml.sortLinesDesc",
+          "group": "1_sort@2"
+        },
+        {
+          "command": "pml.sortLinesLength",
+          "group": "1_sort@3"
+        },
+        {
+          "command": "pml.sortLinesSmart",
+          "group": "1_sort@4"
+        },
+        {
+          "command": "pml.removeDuplicates",
+          "group": "2_duplicates@1"
+        },
+        {
+          "command": "pml.removeConsecutiveDuplicates",
+          "group": "2_duplicates@2"
+        },
+        {
+          "command": "pml.removeEmptyLines",
+          "group": "3_whitespace@1"
+        },
+        {
+          "command": "pml.removeWhitespaceLines",
+          "group": "3_whitespace@2"
+        },
+        {
+          "command": "pml.trimWhitespace",
+          "group": "3_whitespace@3"
+        },
+        {
+          "command": "pml.tabsToSpaces",
+          "group": "3_whitespace@4"
+        },
+        {
+          "command": "pml.spacesToTabs",
+          "group": "3_whitespace@5"
+        },
+        {
+          "command": "pml.extractVariables",
+          "group": "4_extract@1"
+        },
+        {
+          "command": "pml.extractMethods",
+          "group": "4_extract@2"
+        },
+        {
+          "command": "pml.removeComments",
+          "group": "4_extract@3"
+        }
+      ],
       "editor/title": [
         {
           "command": "pml.formatDocument",

@@ -1,5 +1,21 @@
 # Change Log
 
+## [0.4.6] - 2025-10-16
+
+### Added
+- **Context Menu: PML Tools submenu**
+  - Right-click context menu now shows "PML Tools" submenu for PML files
+  - Quick access to sorting, duplicates, whitespace, and extraction commands
+  - Organized into groups: Sort, Duplicates, Whitespace, Extract
+  - No need to type "PML Tools" in Command Palette anymore
+
+### Fixed
+- **Formatter: Rewritten indentation logic with if-stack**
+  - Uses stack to track if-block nesting levels
+  - Elseif/else now correctly align with their parent if at any nesting depth
+  - Fixed complex nested structures (if → inner if/endif → outer elseif)
+  - Simpler and more reliable logic (90 lines vs 180)
+
 ## [0.4.5] - 2025-10-16
 
 ### Fixed
@@ -8,6 +24,8 @@
   - Fixed currentIndent tracking: elseif/else now properly reset indent level
   - Example: outer if → inner if/endif → outer elseif now formats correctly
   - Restored test_elseif.pml with correct structure for validation
+- **Formatter: Restored UTF-8 encoding for Russian comments**
+  - Fixed encoding issue where Russian comments displayed as garbage characters
 
 ## [0.4.4] - 2025-10-16
 

@@ -10,8 +10,8 @@ define method .isPositive(!value)
     if (!value gt 0) then
         return TRUE
     else
-            return FALSE
-        endif
+        return FALSE
+    endif
 
 endmethod
 
@@ -31,7 +31,7 @@ define method .calculateSum(!list)
         !sum = !sum + !item
     enddo
 
-return !sum
+    return !sum
 
 endmethod
 
@@ -60,9 +60,9 @@ define method .onOKClick()
         |Data validated successfully|.output()
         return TRUE
     else
-            |Validation failed|.alert()
-            return FALSE
-        endif
+        |Validation failed|.alert()
+        return FALSE
+    endif
 
 endmethod
 

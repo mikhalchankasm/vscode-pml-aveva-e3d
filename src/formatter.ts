@@ -58,59 +58,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let currentIndent = 0;
-        
-        // Ключевые слова, которые увеличивают отступ
-        const increaseIndentKeywords = [
-            /^define\s+(method|object)/i,
-            /^setup\s+form/i,
-            /^layout\s+form/i,
-            /^if\b/i,
-            /^then\b/i,
-            /^do\b/i,
-            /^handle\b/i
-        ];
-        
-        // Ключевые слова, которые уменьшают отступ (закрывающие блоки)
-        const decreaseIndentKeywords = [
-            /^endmethod\b/i,
-            /^endobject\b/i,
-            /^endif\b/i,
-            /^enddo\b/i,
-            /^endhandle\b/i
-        ];
-        
-        // Ключевые слова, которые должны быть на том же уровне что и содержимое блока
-        const sameLevelKeywords = [
-            /^exit\b/i
-        ];
-        
-        // Ключевые слова, которые уменьшают отступ для себя, но не для следующих
-        // (else/elseif/elsehandle должны быть на том же уровне что и if)
-        const sameLineDecreaseKeywords = [
-            /^else\b/i,
-            /^elseif\b/i,
-            /^elsehandle\b/i
-        ];
-        
-        // Ключевые слова, которые увеличивают отступ после себя (но не для себя)
-        const increaseAfterKeywords = [
-            /^else\b/i,
-            /^elseif\b/i,
-            /^elsehandle\b/i
-        ];
-        
-        // Специальные конструкции PML (не изменяют отступ)
-        const specialKeywords = [
-            /^skip\s+if\s*\(/i,
-            /^break\b/i,
-            /^continue\b/i,
-            /^return\b/i
-        ];
-        
-        // Ключевые слова, которые должны быть на том же уровне что и предыдущий frame
-        const frameLevelKeywords = [
-            /^frame\b/i
-        ];
+        const ifStack: number[] = []; // Стек уровней для if-блоков
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
@@ -129,108 +77,70 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
             
             // Специальные конструкции PML (skip if, break, continue, return)
-            let isSpecialKeyword = false;
-            for (const pattern of specialKeywords) {
-                if (pattern.test(trimmed)) {
-                    isSpecialKeyword = true;
-                    break;
-                }
-            }
-            
-            if (isSpecialKeyword) {
-                // Специальные конструкции получают текущий отступ, но не изменяют его
+            if (/^(skip\s+if\s*\(|break\b|continue\b|return\b)/i.test(trimmed)) {
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 continue;
             }
             
-            // Проверяем exit - должен закрывать frame
-            let isExitKeyword = false;
-            for (const pattern of sameLevelKeywords) {
-                if (pattern.test(trimmed)) {
-                    isExitKeyword = true;
-                    break;
-                }
-            }
-            
-            if (isExitKeyword) {
-                // exit закрывает текущий блок (frame или form)
-                // exit должен быть на уровне блока (frame/form), а не содержимого
-                // Сначала уменьшаем отступ, затем добавляем строку
+            // exit закрывает frame/form блок
+            if (/^exit\b/i.test(trimmed)) {
                 currentIndent = Math.max(0, currentIndent - 1);
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 continue;
             }
             
-            // Проверяем frame - может быть внутри form или после другого frame
-            let isFrameKeyword = false;
-            for (const pattern of frameLevelKeywords) {
-                if (pattern.test(trimmed)) {
-                    isFrameKeyword = true;
-                    break;
-                }
-            }
-            
-            if (isFrameKeyword) {
-                // frame получает текущий отступ и увеличивает его для содержимого
+            // frame начинает новый блок
+            if (/^frame\b/i.test(trimmed)) {
                 result.push(' '.repeat(currentIndent * indentSize) + trimmed);
                 currentIndent++;
                 continue;
             }
             
-            // Проверяем уменьшение отступа перед строкой
-            let decreaseBeforeLine = false;
-            for (const pattern of decreaseIndentKeywords) {
-                if (pattern.test(trimmed)) {
-                    decreaseBeforeLine = true;
-                    break;
+            // endif - закрывает if блок
+            if (/^endif\b/i.test(trimmed)) {
+                currentIndent = Math.max(0, currentIndent - 1);
+                if (ifStack.length > 0) {
+                    ifStack.pop();
                 }
+                result.push(' '.repeat(currentIndent * indentSize) + trimmed);
+                continue;
             }
             
-            // Проверяем else/elseif/elsehandle (уменьшают для себя)
-            let sameLevelDecrease = false;
-            for (const pattern of sameLineDecreaseKeywords) {
-                if (pattern.test(trimmed)) {
-                    sameLevelDecrease = true;
-                    break;
-                }
+            // endmethod, endobject, enddo, endhandle - закрывающие блоки
+            if (/^(endmethod|endobject|enddo|endhandle)\b/i.test(trimmed)) {
+                currentIndent = Math.max(0, currentIndent - 1);
+                result.push(' '.repeat(currentIndent * indentSize) + trimmed);
+                continue;
             }
             
-            // Применяем отступ
-            let lineIndent = currentIndent;
-            if (decreaseBeforeLine) {
-                lineIndent = Math.max(0, currentIndent - 1);
-                currentIndent = lineIndent;
-            } else if (sameLevelDecrease) {
-                lineIndent = Math.max(0, currentIndent - 1);
-                currentIndent = lineIndent;
+            // elseif/else/elsehandle - на уровне if
+            if (/^(elseif|else|elsehandle)\b/i.test(trimmed)) {
+                // Получаем уровень родительского if из стека
+                const ifLevel = ifStack.length > 0 ? ifStack[ifStack.length - 1] : currentIndent - 1;
+                currentIndent = ifLevel;
+                result.push(' '.repeat(currentIndent * indentSize) + trimmed);
+                // После elseif/else увеличиваем отступ для содержимого
+                currentIndent++;
+                continue;
             }
             
-            // Добавляем строку с правильным отступом
-            result.push(' '.repeat(lineIndent * indentSize) + trimmed);
-            
-            // Проверяем увеличение отступа после строки
-            for (const pattern of increaseIndentKeywords) {
-                if (pattern.test(trimmed)) {
-                    currentIndent++;
-                    break;
-                }
+            // if/then - начинает if блок
+            if (/^(if|then)\b/i.test(trimmed)) {
+                result.push(' '.repeat(currentIndent * indentSize) + trimmed);
+                ifStack.push(currentIndent); // Запоминаем уровень if
+                currentIndent++;
+                continue;
             }
             
-            // Проверяем увеличение отступа после else/elseif/elsehandle
-            for (const pattern of increaseAfterKeywords) {
-                if (pattern.test(trimmed)) {
-                    currentIndent++;
-                    break;
-                }
+            // define method/object, setup/layout form, do, handle - открывающие блоки
+            if (/^(define\s+(method|object)|setup\s+form|layout\s+form|do\b|handle\b)/i.test(trimmed)) {
+                result.push(' '.repeat(currentIndent * indentSize) + trimmed);
+                currentIndent++;
+                continue;
             }
             
-            // Проверяем уменьшение отступа после строки (endif, endmethod, etc.)
-            for (const pattern of decreaseIndentKeywords) {
-                if (pattern.test(trimmed)) {
-                    currentIndent = Math.max(0, currentIndent - 1);
-                    break;
-                }
-            }
+            // Обычная строка
+            result.push(' '.repeat(currentIndent * indentSize) + trimmed);
         }
         
         return result.join('\n');
