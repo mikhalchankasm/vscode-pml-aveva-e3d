@@ -1,0 +1,86 @@
+name: ✨ Feature Request
+description: Предложить новую функцию
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за предложение! ✨
+        
+  - type: textarea
+    id: problem
+    attributes:
+      label: Проблема / Use Case
+      description: Какую проблему решает эта функция?
+      placeholder: |
+        Например: "Мне часто нужно переименовывать методы во всех файлах проекта, но сейчас приходится делать это вручную"
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Предлагаемое решение
+      description: Как бы ты хотел чтобы это работало?
+      placeholder: |
+        Например: "Добавить команду 'Rename Symbol' (F2) которая переименовывает метод во всех местах использования"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Альтернативы
+      description: Рассматривал ли ты другие решения?
+      placeholder: Можно использовать Find & Replace, но это неудобно
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Приоритет для тебя
+      options:
+        - Critical (блокирует работу)
+        - High (очень нужно)
+        - Medium (было бы удобно)
+        - Low (nice to have)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Категория
+      options:
+        - IntelliSense / Completion
+        - Formatting
+        - Navigation (Go to Definition, Find References)
+        - Refactoring
+        - Snippets
+        - Diagnostics / Linting
+        - UI / UX
+        - Integration (AVEVA E3D)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Примеры использования
+      description: Покажи примеры как бы это использовалось
+      placeholder: |
+        1. Кликаю на имя метода .calculate()
+        2. Нажимаю F2
+        3. Ввожу новое имя .computeTotal()
+        4. Все вызовы обновляются автоматически
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Готовность помочь
+      options:
+        - label: Я готов помочь с реализацией этой функции
+        - label: Я готов протестировать PR с этой функцией
+        - label: Я готов написать документацию
+
