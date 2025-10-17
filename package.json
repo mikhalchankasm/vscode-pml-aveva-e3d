@@ -4,6 +4,10 @@
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
   "version": "0.4.8",
   "publisher": "mikhalchankasm",
+  "author": {
+    "name": "MIKHALCHANKA SIARHEI",
+    "email": ""
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
