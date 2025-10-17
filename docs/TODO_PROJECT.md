@@ -1,38 +1,38 @@
 # Project TODOs - Infrastructure & Documentation
 
-Задачи по улучшению проекта (не features расширения).
+Tasks for project improvement (not extension features).
 
-## 🚀 Высокий приоритет (сделать в ближайшее время)
+## 🚀 High Priority (do soon)
 
-### Визуальный контент
+### Visual Content
 
-- [ ] **3 GIF-демки** (≤10 MB каждая) ⭐ КРИТИЧНО
-  - [ ] GIF 1: Code Actions (лампочка 💡) - Array, Sort, Remove
-  - [ ] GIF 2: Автодополнение и Hover документация
-  - [ ] GIF 3: Форматирование и PML Tools меню
-  - Инструменты: LICEcap, ScreenToGif, Gifski
-  - Разместить в верх README.md
+- [ ] **3 GIF demos** (≤10 MB each) ⭐ CRITICAL
+  - [ ] GIF 1: Code Actions (lightbulb 💡) - Array, Sort, Remove
+  - [ ] GIF 2: Autocompletion and Hover documentation
+  - [ ] GIF 3: Formatting and PML Tools menu
+  - Tools: LICEcap, ScreenToGif, Gifski
+  - Place at top of README.md
 
-- [ ] **Скриншоты** для Marketplace
-  - [ ] Подсветка синтаксиса (до/после)
-  - [ ] Outline с методами
-  - [ ] Quick Actions меню
-  - [ ] Автодополнение в действии
-  - Папка: `images/screenshots/`
+- [ ] **Screenshots** for Marketplace
+  - [ ] Syntax highlighting (before/after)
+  - [ ] Outline with methods
+  - [ ] Quick Actions menu
+  - [ ] Autocompletion in action
+  - Folder: `images/screenshots/`
 
-- [ ] **Иконка расширения**
-  - 128×128 PNG (для Marketplace)
-  - Оптимизировать текущую `icons/pml-icon.png` (сейчас 1.84 MB!)
-  - Создать варианты: 32x32, 64x64, 128x128
+- [ ] **Extension icon**
+  - 128×128 PNG (for Marketplace)
+  - Optimize current `icons/pml-icon.png` (currently 1.84 MB!)
+  - Create variants: 32x32, 64x64, 128x128
 
-- [ ] **Banner для Marketplace**
+- [ ] **Banner for Marketplace**
   - 1400×400 PNG
-  - Текст: "PML for AVEVA E3D - IntelliSense, Formatting, Tools"
-  - Сохранить: `images/banner.png`
+  - Text: "PML for AVEVA E3D - IntelliSense, Formatting, Tools"
+  - Save as: `images/banner.png`
 
-### Бейджи в README
+### Badges in README
 
-- [ ] Добавить бейджи вверх README.md:
+- [ ] Add badges to top of README.md:
   ```markdown
   [![Version](https://img.shields.io/visual-studio-marketplace/v/mikhalchankasm.pml-aveva-e3d)](...)
   [![Installs](https://img.shields.io/visual-studio-marketplace/i/mikhalchankasm.pml-aveva-e3d)](...)
@@ -41,188 +41,186 @@
   [![License](https://img.shields.io/github/license/mikhalchankasm/vscode-pml-aveva-e3d)](LICENSE)
   ```
 
-### Документация фич
+### Feature Documentation
 
-- [ ] **docs/commands.md** - список всех команд
+- [ ] **docs/commands.md** - all commands list
   - Command ID
-  - Клавиатурные сокращения
-  - Где найти в меню
-  - Примеры использования
+  - Keyboard shortcuts
+  - Where to find in menu
+  - Usage examples
 
-- [ ] **docs/settings.md** - все настройки
+- [ ] **docs/settings.md** - all settings
   - `pml.formatter.*`
   - `pml.trace`
-  - Примеры JSON конфигурации
+  - JSON configuration examples
 
-- [ ] **docs/snippets.md** - список snippets
-  - Триггер → что генерит
-  - Таблица с примерами
+- [ ] **docs/snippets.md** - snippets list
+  - Trigger → what it generates
+  - Table with examples
 
-- [ ] **docs/pml-cheatsheet.md** - шпаргалка
-  - Типы PML (STRING, REAL, ARRAY, DBREF)
-  - Операторы (eq, ne, gt, and, or)
-  - Встроенные функции (query, output, collectallfor)
-  - Массивы (индексация с 1!)
-  - Формы и callbacks
+- [ ] **docs/pml-cheatsheet.md** - cheat sheet
+  - PML types (STRING, REAL, ARRAY, DBREF)
+  - Operators (eq, ne, gt, and, or)
+  - Built-in functions (query, output, collectallfor)
+  - Arrays (1-indexed!)
+  - Forms and callbacks
   - EDG basics
 
 ---
 
-## 🟡 Средний приоритет
+## 🟡 Medium Priority
 
-### Контент
+### Content
 
-- [ ] **Видео туториал (60-90 сек)**
-  - Установка + 3 главные функции
-  - YouTube + ссылка в README
-  - Возможно Telegram канал
+- [ ] **Video tutorial (60-90 sec)**
+  - Installation + 3 main features
+  - YouTube + link in README
+  - Possibly Telegram channel
 
-- [ ] **Примеры проектов**
-  - `example-project/` - песочница для теста
-  - 4-6 реальных PML файлов с комментариями
-  - pmlfrm/pmlfnc/pmlcmd/pmlobj примеры
+- [ ] **Example projects**
+  - `example-project/` - sandbox for testing
+  - 4-6 real PML files with comments
+  - pmlfrm/pmlfnc/pmlcmd/pmlobj examples
 
 - [ ] **Recipes / Cookbook**
-  - `docs/recipes/` папка
-  - Сортировка методов
-  - Генерация шаблона формы
-  - Быстрый EDG-пакет
-  - Работа с массивами
+  - `docs/recipes/` folder
+  - Sort methods
+  - Generate form template
+  - Quick EDG packet
+  - Working with arrays
 
-### Публикация
+### Publishing
 
-- [ ] **package.json - улучшения**
-  - Заполнить `keywords`: aveva, e3d, pml, pdms, macro, industrial-bim
-  - Добавить `categories`: Programming Languages, Snippets, Linters, Formatters
+- [ ] **package.json improvements**
+  - Fill `keywords`: aveva, e3d, pml, pdms, macro, industrial-bim
+  - Add `categories`: Programming Languages, Snippets, Linters, Formatters
   - `galleryBanner`: {"color": "#0066CC", "theme": "dark"}
-  - Проверить `publisher`, `repository`, `bugs`, `homepage`
+  - Check `publisher`, `repository`, `bugs`, `homepage`
 
-- [ ] **Open VSX публикация**
-  - `ovsx publish` в release.yml
-  - Токен для Open VSX Registry
+- [ ] **Open VSX publishing**
+  - `ovsx publish` in release.yml
+  - Token for Open VSX Registry
 
 - [ ] **Marketplace README**
-  - Отдельный README.md для Marketplace (если нужно)
-  - Больше визуала, меньше текста
+  - Separate README.md for Marketplace (if needed)
+  - More visuals, less text
 
 ### Community
 
-- [ ] **GitHub Discussions включить**
-  - Q&A категория
+- [ ] **Enable GitHub Discussions**
+  - Q&A category
   - Ideas & Feature Requests
   - Show & Tell
 
 - [ ] **good first issue labels**
-  - Создать 2-3 simple issues
+  - Create 2-3 simple issues
   - Label: `good first issue`, `help wanted`
 
 - [ ] **CODEOWNERS**
-  - Кто ревьюит grammar/LSP/docs
+  - Who reviews grammar/LSP/docs
 
 ---
 
-## 🟢 Низкий приоритет (когда будет время)
+## 🟢 Low Priority (when there's time)
 
 ### Advanced Documentation
 
-- [ ] **docs/lsp.md** (когда будет LSP)
-  - Функции (hover, defs, symbols, diagnostics)
-  - Протокол
+- [ ] **docs/lsp.md** (when LSP exists)
+  - Features (hover, defs, symbols, diagnostics)
+  - Protocol
 
 - [ ] **docs/grammar.md**
-  - Что покрывает TextMate
-  - Известные ограничения
-  - Как добавить новые паттерны
+  - What TextMate covers
+  - Known limitations
+  - How to add new patterns
 
 - [ ] **TELEMETRY.md**
-  - Список событий (если будет телеметрия)
-  - Как отключить
-  - Никакой PII
+  - Event list (if telemetry added)
+  - How to disable
+  - No PII
 
 - [ ] **PRIVACY.md**
-  - Что НЕ собираем
-  - Простым языком
+  - What we DON'T collect
+  - Plain language
 
 ### Quality
 
 - [ ] **devcontainer/**
-  - Контейнер для контрибьюторов
+  - Container for contributors
   - Node + vsce + ovsx
 
 - [ ] **Grammar tests**
   - `.github/workflows/grammar-tests.yml`
-  - Snapshot тесты подсветки
+  - Snapshot highlighting tests
 
 - [ ] **CITATION.cff**
-  - Для академических ссылок
+  - For academic citations
 
-### SEO и распространение
+### SEO and Distribution
 
-- [ ] **Темы репозитория** (GitHub)
+- [ ] **Repository topics** (GitHub)
   - `vscode-extension`, `pml`, `aveva`, `e3d`, `pdms`, `industrial-bim`
 
-- [ ] **Перевод документации**
-  - README.md на английский (уже есть README.en.md, обновить)
-  - FAQ на английский
-  - CONTRIBUTING на английский
+- [ ] **Documentation translation**
+  - Translate more docs if needed
 
-- [ ] **Сравнение до/после**
-  - Скриншоты: код без расширения vs с расширением
+- [ ] **Before/after comparison**
+  - Screenshots: code without extension vs with extension
 
 ---
 
-## ✅ Уже сделано
+## ✅ Already Done
 
 - [x] LICENSE (MIT)
 - [x] CHANGELOG.md (SemVer)
-- [x] CONTRIBUTING.md
-- [x] CODE_OF_CONDUCT.md
-- [x] SECURITY.md
-- [x] FAQ.md
-- [x] ROADMAP.md
+- [x] CONTRIBUTING.md (English)
+- [x] CODE_OF_CONDUCT.md (English)
+- [x] SECURITY.md (English)
+- [x] FAQ.md (English)
+- [x] ROADMAP.md (English)
 - [x] .github/ISSUE_TEMPLATE/bug_report.yml
 - [x] .github/ISSUE_TEMPLATE/feature_request.yml
 - [x] .github/PULL_REQUEST_TEMPLATE.md
 - [x] .github/workflows/ci.yml
 - [x] .github/workflows/release.yml
-- [x] examples/ (9 файлов)
-- [x] docs/ (15+ файлов)
+- [x] examples/ (9 files)
+- [x] docs/ (15+ files)
+- [x] README.ru.md (Russian version kept)
 
 ---
 
-## 📝 Заметки
+## 📝 Notes
 
-### Инструменты для GIF
+### GIF Tools
 
-- **LICEcap** (Windows/Mac) - простой, легкий
-- **ScreenToGif** (Windows) - много функций, редактор
-- **Gifski** - конвертер видео в GIF (высокое качество)
-- **ShareX** (Windows) - скриншоты + GIF + видео
+- **LICEcap** (Windows/Mac) - simple, lightweight
+- **ScreenToGif** (Windows) - many features, editor
+- **Gifski** - video to GIF converter (high quality)
+- **ShareX** (Windows) - screenshots + GIF + video
 
-### Оптимизация GIF
+### GIF Optimization
 
 ```bash
-# Сжатие GIF (gifsicle)
+# Compress GIF (gifsicle)
 gifsicle -O3 --lossy=80 input.gif -o output.gif
 
-# Или онлайн: ezgif.com/optimize
+# Or online: ezgif.com/optimize
 ```
 
-### Размер иконки
+### Icon Size
 
-Текущая `icons/pml-icon.png` = 1.84 MB - **слишком большая!**
+Current `icons/pml-icon.png` = 1.84 MB - **too large!**
 
-Оптимизировать:
+Optimize:
 ```bash
 # ImageMagick
 convert pml-icon.png -resize 128x128 -quality 85 pml-icon-optimized.png
 
-# TinyPNG API или онлайн: tinypng.com
+# TinyPNG API or online: tinypng.com
 ```
 
-Целевой размер: < 100 KB
+Target size: < 100 KB
 
 ---
 
-*Обновляй по мере выполнения!*
-
+*Update as you complete tasks!*
