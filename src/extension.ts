@@ -10,6 +10,7 @@ import { PMLRenameProvider } from './rename';
 import { PMLSignatureHelpProvider } from './signature';
 import { PMLToolsProvider } from './tools';
 import { PMLMethodCommands } from './methodCommands';
+import { PMLCodeActionProvider } from './codeActions';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('PML extension activated');
@@ -50,6 +51,16 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Регистрация команд методов
     PMLMethodCommands.registerCommands(context);
+
+    // Регистрация Code Actions (быстрые действия при выделении текста)
+    const codeActionProvider = vscode.languages.registerCodeActionsProvider(
+        'pml',
+        new PMLCodeActionProvider(),
+        {
+            providedCodeActionKinds: PMLCodeActionProvider.providedCodeActionKinds
+        }
+    );
+    context.subscriptions.push(codeActionProvider);
 
     // Проверка при открытии документа
     if (vscode.window.activeTextEditor) {

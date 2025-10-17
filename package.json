@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "publisher": "mikhalchankasm",
   "engines": {
     "vscode": "^1.80.0"
@@ -214,7 +214,7 @@
       {
         "id": "pml.tools",
         "label": "PML Tools",
-        "icon": "$(tools)"
+        "icon": "$(target)"
       },
       {
         "id": "pml.forms",
@@ -223,6 +223,11 @@
       {
         "id": "pml.array",
         "label": "Array"
+      },
+      {
+        "id": "pml.quickActions",
+        "label": "⚡ Quick Actions",
+        "icon": "$(zap)"
       }
     ],
     "configuration": {
@@ -276,6 +281,11 @@
         {
           "submenu": "pml.tools",
           "when": "editorLangId == pml",
+          "group": "1_modification"
+        },
+        {
+          "submenu": "pml.quickActions",
+          "when": "editorLangId == pml && editorHasSelection",
           "group": "1_modification"
         }
       ],
@@ -363,6 +373,44 @@
         {
           "command": "pml.makeListPathString",
           "group": "1_array@3"
+        }
+      ],
+      "pml.quickActions": [
+        {
+          "command": "pml.makeListPath",
+          "group": "1_array@1"
+        },
+        {
+          "command": "pml.makeListString",
+          "group": "1_array@2"
+        },
+        {
+          "command": "pml.makeListPathString",
+          "group": "1_array@3"
+        },
+        {
+          "command": "pml.sortLinesAsc",
+          "group": "2_sort@1"
+        },
+        {
+          "command": "pml.sortLinesDesc",
+          "group": "2_sort@2"
+        },
+        {
+          "command": "pml.sortLinesSmart",
+          "group": "2_sort@3"
+        },
+        {
+          "command": "pml.removeDuplicates",
+          "group": "3_clean@1"
+        },
+        {
+          "command": "pml.removeEmptyLines",
+          "group": "3_clean@2"
+        },
+        {
+          "command": "pml.trimWhitespace",
+          "group": "3_clean@3"
         }
       ],
       "editor/title": [
