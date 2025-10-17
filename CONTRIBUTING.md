@@ -127,18 +127,18 @@ See full list in [`docs/TODO.md`](docs/TODO.md) and [`docs/BACKLOG_STATUS.md`](d
 
 ```
 src/
-  codeActions.ts      - Code Actions Provider (лампочка)
-  completion.ts       - Автодополнение
-  diagnostics.ts      - Диагностика ошибок
-  formatter.ts        - Форматирование кода
-  hover.ts            - Hover документация
+  codeActions.ts      - Code Actions Provider (lightbulb)
+  completion.ts       - Autocompletion
+  diagnostics.ts      - Error diagnostics
+  formatter.ts        - Code formatting
+  hover.ts            - Hover documentation
   symbols.ts          - Document Symbols (Outline)
   definition.ts       - Go to Definition
   references.ts       - Find References
   rename.ts           - Rename Symbol
   signature.ts        - Signature Help
-  tools.ts            - PML Tools команды
-  pmlTypes.ts         - Определения типов PML
+  tools.ts            - PML Tools commands
+  pmlTypes.ts         - PML type definitions
 
 syntaxes/
   pml.tmLanguage.json - TextMate grammar
