@@ -1,0 +1,27 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# PML files
+*.pml linguist-language=PML
+*.pmlobj linguist-language=PML
+*.pmlfnc linguist-language=PML
+*.pmlfrm linguist-language=PML
+*.pmlmac linguist-language=PML
+*.pmlcmd linguist-language=PML
+
+# Hide generated/build files from GitHub linguist stats
+package-lock.json linguist-generated=true
+out/** linguist-generated=true
+*.vsix linguist-generated=true
+
+# Documentation
+docs/** linguist-documentation
+examples/** linguist-documentation
+
+# Mark config files (they'll still be visible but won't affect language stats)
+*.json linguist-detectable=false
+*.yml linguist-detectable=false
+tsconfig.json linguist-vendored
+.gitignore linguist-vendored
+.vscodeignore linguist-vendored
+
