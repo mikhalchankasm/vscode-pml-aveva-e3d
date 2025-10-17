@@ -3,21 +3,21 @@
 ## [0.4.8] - 2025-01-17
 
 ### Added
-- ⚡ **Code Actions Provider** - быстрые действия при выделении текста
-  - Появляется лампочка 💡 при выделении 2+ строк
-  - Вызов: `Ctrl+.` или клик на лампочку
-  - Команды сгруппированы по категориям (Array, Sort, Remove, Trim)
-  - Работает только для PML файлов
+- ⚡ **Code Actions Provider** - quick actions on text selection
+  - Lightbulb 💡 appears when selecting 2+ lines
+  - Trigger: `Ctrl+.` or click on lightbulb
+  - Commands grouped by categories (Array, Sort, Remove, Trim)
+  - Works only for PML files
   
-- 🎯 **Quick Actions** в контекстном меню
-  - Новое подменю "⚡ Quick Actions" при правом клике на выделении
-  - Показывается только при выделении текста в PML файлах
-  - Быстрый доступ к Array/Sort/Clean командам
-  - Не конфликтует с основным меню "PML Tools"
+- 🎯 **Quick Actions** in context menu
+  - New submenu "⚡ Quick Actions" on right-click selection
+  - Shows only when text is selected in PML files
+  - Quick access to Array/Sort/Clean commands
+  - Does not conflict with main "PML Tools" menu
 
 ### Changed
-- 🎯 Иконка "PML Tools" в title bar изменена с инструментов на мишень `$(target)`
-- Улучшена организация команд с визуальными префиксами и иконками
+- 🎯 "PML Tools" icon in title bar changed from tools to target `$(target)`
+- Improved command organization with visual prefixes and icons
 
 ### Features in Code Actions
 - 📋 Array: Make List (Path/String/Path String)
