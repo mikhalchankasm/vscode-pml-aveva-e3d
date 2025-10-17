@@ -1,6 +1,8 @@
 # PML для AVEVA E3D — расширение VS Code
 
-Подсветка синтаксиса и инструменты для языка PML (Programmable Macro Language) AVEVA E3D в Visual Studio Code.
+> Подсветка синтаксиса и инструменты для языка PML (Programmable Macro Language) AVEVA E3D в Visual Studio Code.
+
+**Языки:** [English](README.en.md) • [Русский](README.ru.md) • [Main](README.md)
 
 ## Возможности
 

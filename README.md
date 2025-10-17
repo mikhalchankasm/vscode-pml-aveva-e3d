@@ -6,7 +6,7 @@
 
 > Language support for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
 
-[English](README.en.md) | [Русский](README.ru.md)
+**Languages:** [English](README.en.md) • [Русский](README.ru.md)
 
 ---
 
