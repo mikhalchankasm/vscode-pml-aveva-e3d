@@ -49,6 +49,15 @@ export enum TokenType {
 	MEMBER = 'MEMBER',
 	IS = 'IS',
 
+	// PML1 Declarative Keywords (for syntax highlighting, not strict parsing)
+	COLLECT = 'COLLECT',
+	ALL = 'ALL',
+	WITH = 'WITH',
+	USING = 'USING',
+	AT = 'AT',
+	COMPOSE = 'COMPOSE',
+	SPACE = 'SPACE',
+
 	// Types
 	STRING_TYPE = 'STRING_TYPE',
 	REAL_TYPE = 'REAL_TYPE',
@@ -142,6 +151,15 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'exit': TokenType.EXIT,
 	'member': TokenType.MEMBER,
 	'is': TokenType.IS,
+
+	// PML1 Declarative Keywords (recognized but not strictly parsed)
+	'collect': TokenType.COLLECT,
+	'all': TokenType.ALL,
+	'with': TokenType.WITH,
+	'using': TokenType.USING,
+	'at': TokenType.AT,
+	'compose': TokenType.COMPOSE,
+	'space': TokenType.SPACE,
 
 	// Types
 	'STRING': TokenType.STRING_TYPE,

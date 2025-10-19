@@ -1,48 +1,61 @@
-ARRAY Object
+# ARRAY Object
 
-| Name                                      | Result         | Purpose                                                                                                                                                                  |
-| ----------------------------------------- | -------------- |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Append(ANY value)                         | NO RESULT      | Append value as a new element at the end of array.                                                                                                                       |
-| AppendArray(ARRAY values)                 | NO RESULT      | Append array values as new elements at the end of array.                                                                                                                 |
-| Clear()                                   | NO RESULT      | Remove all elements.                                                                                                                                                     |
-| Compress()                                | NO RESULT      | Removed all undefined elements and re-index remaining elements.                                                                                                          |
-| DeleteFrom(REAL index, REAL n)            | ARRAY          | Make undefined n elements starting at index. Remaining elements are not re-indexed. Returns an array of the deleted elements (which need not be assigned if not wanted). |
-| DeleteFrom(REAL index)                    | ARRAY          | Make undefined elements from index to end of array. Returns an array of the deleted elements. Remaining elements not re-indexed.                                         |
-| DeleteTo(REAL index, REAL n)              | ARRAY          | Make undefined n elements up to index. Returns an array of the deleted elements. Remaining elements not re-indexed.                                                      |
-| DeleteTo(REAL index)                      | ARRAY          | Make undefined elements from start to index. Returns an array of the deleted elements. Remaining elements not re-indexed.                                                |
-| Difference(ARRAY two)                     | ARRAY          | Return an array of those elements in the original array not present in array two. Duplicates will appear only once.                                                      |
-| Empty()                                   | BOOLEAN        | TRUE if array is empty.                                                                                                                                                  |
-| Evaluate(BLOCK command)                   | NEW ARRAY      | Evaluate code in command at each element.                                                                                                                                |
-| Find(ANY value)                           | NEW ARRAY      | Search original array for value and return an array of index positions at which it was found.                                                                            |
-| FindFirst(ANY value)                      | REAL           | Return index of first occurrence of value. Returns UNSET if not found.                                                                                                   |
-| First()                                   | ANY            | Return value of first defined element.                                                                                                                                   |
-| From(REAL index, REAL n)                  | ARRAY          | Copy sub-array of n elements starting at index.                                                                                                                          |
-| From(REAL index)                          | ARRAY          | Copy sub array starting at index to end of array.                                                                                                                        |
-| GetIndexed(REAL index)                    | ANY            | Implements ARRAY[index] (this is an internal method).                                                                                                                    |
-| Indices()                                 | NEW ARRAY      | Returns an array containing the indices of the target array that have a value.                                                                                           |
-| Insert(REAL index, ANY value)             | NO RESULT      | Insert value as a new element at index. Later elements are re-indexed. Index must be greater than (Length of array - 25000).                                             |
-| InsertArray(REAL index, ARRAY ANY values) | NO RESULT      | Insert values as new elements with the first at index. Later elements are re-indexed. Index must be greater than (Length of array - 25000).                              |
-| Intersect(ARRAY two)                      | NEW ARRAY      | Return array of elements present in both arrays. Duplicates will appear only once.                                                                                       |
-| Invert()                                  | NEW ARRAY      | Returns an inverted copy of the array.                                                                                                                                   |
-| Last()                                    | ANY            | Return last element value.                                                                                                                                               |
-| MaxIndex()                                | REAL           | Subscript of last defined (non-empty) element.                                                                                                                           |
-| MinIndex()                                | REAL           | Subscript of first defined (non-empty) element.                                                                                                                          |
-| Overlay(REAL index, ARRAY two)            | NEW ARRAY      | Replace array elements at index with elements from the array two. Returns an array of the elements which were overwritten (which need not be assigned if not required).  |
-| ReIndex(REAL ARRAY indices)               | NO RESULT      | Apply result of SORTEDINDICES to re-order array elements into positions specified by indices.                                                                            |
-| Remove(REAL nth)                          | ANY            | Remove and return nth element (which need not be assigned if not required). Remaining elements are re-indexed.                                                           |
-| RemoveFirst()                             | ANY            | Remove and return first element (which need not be assigned if not required). Remaining elements are re-indexed.                                                         |
-| RemoveFrom(REAL index, REAL n)            | NEW ARRAY      | Remove and return new array of n elements starting with index (which need not be assigned if not required). Remaining elements are re-indexed.                           |
-| RemoveFrom(REAL index)                    | NEW ARRAY      | Remove and return new array of elements from index to end of array (which need not be assigned if not required). Remaining elements are re-indexed.                      |
-| RemoveLast()                              | ANY            | Remove and return last element (which need not be assigned if not required). Remaining elements are re-indexed.                                                          |
-| RemoveTo(REAL index, REAL n)              | NEW ARRAY      | Remove and return n elements from start to index (which need not be assigned if not required). Remaining elements are re-indexed.                                        |
-| RemoveTo(REAL index)                      | NEW ARRAY      | Remove and return elements from start to index (which need not be assigned if not required). Remaining elements are re-indexed.                                          |
-| Size()                                    | REAL           | Returns the number of defined elements.                                                                                                                                  |
-| Sort()                                    | NO RESULT      | Sort array into ascending order.                                                                                                                                         |
-| SortUnique()                              | NEW ARRAY      | Returns a sorted copy of the array with duplicates removed. Original object is modified.                                                                                 |
-| SortUnique()                              | NO RESULT      | Sorts the array and removes duplicates.                                                                                                                                  |
-| SortedIndices()                           | NEW REAL ARRAY | Return new array of indices representing the sorted order of elements in array. The array itself is not sorted.                                                          |
-| To(REAL index, REAL n)                    | ARRAY          | Copy sub array of n elements from start to index.                                                                                                                        |
-| To(REAL index)                            | ARRAY          | Copy sub array from start of array to index.                                                                                                                             |
-| Union(ARRAY two)                          | NEW ARRAY      | Return array of elements present in either array (duplicates will appear only once).                                                                                     |
-| Unique()                                  | NO RESULT      | Discard duplicates and re-index remaining elements.                                                                                                                      |
-| Width()                                   | REAL           | Return the maximum width of string elements (other element types are ignored).                                                                                           |
+## Methods
+
+| Name                                      | Result         | Purpose                                                                                                                                            |
+| :---------------------------------------- | :------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Append(ANY value)                         | NO RESULT      | Append value as a new element at the end of array.                                                                                                 |
+| AppendArray(ARRAY values)                 | NO RESULT      | Append array values as new elements at the end of array.                                                                                           |
+| Clear()                                   | NO RESULT      | Remove all elements.                                                                                                                               |
+| Compress()                                | NO RESULT      | Removed all undefined elements and re-index remaining elements.                                                                                    |
+| DeleteFrom(REAL index, REAL n)            | ARRAY          | Make undefined n elements starting at index. Remaining elements are not re-indexed.                                                                |
+| DeleteFrom(REAL index)                    | ARRAY          | Make undefined elements from index to end of array. Returns an array of the deleted elements. Remaining elements not re-indexed.                  |
+| DeleteTo(REAL index, REAL n)              | ARRAY          | Make undefined n elements up to index. Returns an array of the deleted elements.                                                                   |
+| DeleteTo(REAL index)                      | ARRAY          | Make undefined elements from start to index. Returns an array of the deleted elements.                                                             |
+| Difference(ARRAY two)                     | ARRAY          | Return an array of those elements in the original array not present in array two. Duplicates will appear only once.                                |
+| Empty()                                   | BOOLEAN        | TRUE if array is empty.                                                                                                                            |
+| Evaluate(BLOCK command)                   | NEW ARRAY      | Evaluate code in command at each element.                                                                                                          |
+| Find(ANY value)                           | NEW ARRAY      | Search original array for value and return an array of index positions at which it was found.                                                      |
+| FindFirst(ANY value)                      | REAL           | Return index of first occurrence of value. Returns UNSET if not found.                                                                             |
+| First()                                   | ANY            | Return value of first defined element.                                                                                                             |
+| From(REAL index, REAL n)                  | ARRAY          | Copy sub-array of n elements starting at index.                                                                                                    |
+| From(REAL index)                          | ARRAY          | Copy sub array starting at index to end of array.                                                                                                  |
+| GetIndexed(REAL index)                    | ANY            | Implements ARRAY[index] (this is an internal method).                                                                                              |
+| Indices()                                 | NEW ARRAY      | Returns an array containing the indices of the target array that have a value.                                                                     |
+| Insert(REAL index, ANY value)             | NO RESULT      | Insert value as a new element at index. Later elements are re-indexed. Index must be greater than (Length of array - 25000).                       |
+| InsertArray(REAL index, ARRAY ANY values) | NO RESULT      | Insert values as new elements with the first at index. Later elements are re-indexed. Index must be greater than (Length of array - 25000).        |
+| Intersect(ARRAY two)                      | NEW ARRAY      | Return array of elements present in both arrays. Duplicates will appear only once.                                                                 |
+| Invert()                                  | NEW ARRAY      | Returns an inverted copy of the array.                                                                                                             |
+| Last()                                    | ANY            | Return last element value.                                                                                                                         |
+| MaxIndex()                                | REAL           | Subscript of last defined (non-empty) element.                                                                                                     |
+| MinIndex()                                | REAL           | Subscript of first defined (non-empty) element.                                                                                                    |
+| Overlay(REAL index, ARRAY two)            | NEW ARRAY      | Replace array elements at index with elements from the array two.                                                                                  |
+| ReIndex(REAL ARRAY indices)               | NO RESULT      | Apply result of SORTEDINDICES to re-order array elements into positions specified by indices.                                                      |
+| Remove(REAL nth)                          | ANY            | Remove and return nth element (which need not be assigned if not required). Remaining elements are re-indexed.                                     |
+| RemoveFirst()                             | ANY            | Remove and return first element (which need not be assigned if not required).                                                                      |
+| RemoveFrom(REAL index, REAL n)            | NEW ARRAY      | Remove and return new array of n elements starting with index (which need not be assigned if not required).                                        |
+| RemoveFrom(REAL index)                    | NEW ARRAY      | Remove and return new array of elements from index to end of array (which need not be assigned if not required).                                   |
+| RemoveLast()                              | ANY            | Remove and return last element (which need not be assigned if not required).                                                                       |
+| RemoveTo(REAL index, REAL n)              | NEW ARRAY      | Remove and return n elements from start to index (which need not be assigned if not required). Remaining elements are re-indexed.                  |
+| RemoveTo(REAL index)                      | NEW ARRAY      | Remove and return elements from start to index (which need not be assigned if not required). Remaining elements are re-indexed.                    |
+| Size()                                    | REAL           | Returns the number of defined elements.                                                                                                            |
+| Sort()                                    | NO RESULT      | Sort array into ascending order.                                                                                                                   |
+| SortUnique()                              | NEW ARRAY      | Returns a sorted copy of the array with duplicates removed.                                                                                        |
+| SortUnique()                              | NO RESULT      | Sorts the array and removes duplicates.                                                                                                            |
+| SortedIndices()                           | NEW REAL ARRAY | Return new array of indices representing the sorted order of elements in array.                                                                    |
+| To(REAL index, REAL n)                    | ARRAY          | Copy sub array of n elements from start to index.                                                                                                  |
+| To(REAL index)                            | ARRAY          | Copy sub array from start of array to index.                                                                                                       |
+| Union(ARRAY two)                          | NEW ARRAY      | Return array of elements present in either array (duplicates will appear only once).                                                               |
+| Unique()                                  | NO RESULT      | Discard duplicates and re-index remaining elements.                                                                                                |
+| Width()                                   | REAL           | Return the maximum width of string elements (other element types are ignored).                                                                     |
+
+```
+using namespace 'Aveva.Core.Commands'
+!tagIds = object Array()
+!tagIds[0] = '=16394/39619'
+!ht = object Array()
+!ht[0] = 'http://www.aveva.com/datamodel/item#m4268e89f-04b9-430b-8393-332663cb854e'
+!ht[1] = !tagIds
+!commandManager = object PMLNETCommandManager()
+!commandManager.executeCommand('Aveva.Engineering.Tags.ReclassifyCommand', !ht)
+```
