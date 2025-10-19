@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout package.json)",
+      "Bash(npm install vscode-languageclient)",
+      "Bash(npm run compile)",
+      "Bash(npm install)",
+      "Bash(git add .)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

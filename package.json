@@ -277,6 +277,15 @@
             "messages",
             "verbose"
           ]
+        },
+        "pml.diagnostics.typoDetection": {
+          "type": "string",
+          "default": "warning",
+          "enum": [
+            "off",
+            "warning"
+          ],
+          "description": "Detect typos in PML keywords (e.g., 'endiff' instead of 'endif')"
         }
       }
     },
@@ -534,6 +543,9 @@
     "pack": "powershell -NoProfile -Command \"Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix; npx @vscode/vsce package --no-yarn\"",
     "install:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reinstall.ps1",
     "pack:install": "npm run pack && npm run install:local"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
