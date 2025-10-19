@@ -11,7 +11,7 @@ import {
 	HandleStatement, ReturnStatement, BreakStatement, ContinueStatement,
 	ExpressionStatement, Identifier, Literal, CallExpression, MemberExpression,
 	BinaryExpression, UnaryExpression, ArrayExpression, AssignmentExpression,
-	JSDocComment, JSDocParam, GadgetDeclaration,
+	JSDocComment, JSDocParam, GadgetDeclaration, PMLType,
 	createStringType, createRealType, createBooleanType, createArrayType,
 	createIntegerType, createAnyType
 } from '../ast/nodes';
@@ -250,15 +250,23 @@ export class Parser {
 		}
 
 		do {
-			// Parameter: !paramName
+			// Parameter: !paramName [is TYPE]
 			if (this.check(TokenType.LOCAL_VAR)) {
 				const paramToken = this.advance();
 				const paramName = paramToken.value.substring(1); // Remove !
 
+				// Optional type annotation: is TYPE
+				let paramType: PMLType | undefined = undefined;
+				if (this.check(TokenType.IS)) {
+					this.advance(); // consume 'is'
+					paramType = this.parseType();
+				}
+
 				params.push({
 					type: 'Parameter',
 					name: paramName,
-					range: this.createRange(this.getTokenIndex(paramToken), this.getTokenIndex(paramToken))
+					paramType: paramType,
+					range: this.createRange(this.getTokenIndex(paramToken), this.getTokenIndex(this.previous()))
 				});
 			} else {
 				throw this.error(this.peek(), "Expected parameter name (e.g., !param)");
@@ -273,6 +281,36 @@ export class Parser {
 		} while (!this.isAtEnd());
 
 		return params;
+	}
+
+	/**
+	 * Parse type annotation (STRING, REAL, BOOLEAN, ARRAY, etc.)
+	 */
+	private parseType(): PMLType {
+		const typeToken = this.peek();
+
+		if (this.check(TokenType.IDENTIFIER)) {
+			const typeName = this.advance().value.toUpperCase();
+
+			switch (typeName) {
+				case 'STRING':
+					return createStringType();
+				case 'REAL':
+					return createRealType();
+				case 'BOOLEAN':
+					return { kind: 'BOOLEAN' };
+				case 'INTEGER':
+					return createIntegerType();
+				case 'ARRAY':
+					return createArrayType(createAnyType());
+				case 'DBREF':
+					return { kind: 'DBREF' };
+				default:
+					return createAnyType();
+			}
+		}
+
+		throw this.error(typeToken, "Expected type name (STRING, REAL, BOOLEAN, ARRAY, DBREF)");
 	}
 
 	/**

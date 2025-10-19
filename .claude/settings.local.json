@@ -5,7 +5,11 @@
       "Bash(npm install vscode-languageclient)",
       "Bash(npm run compile)",
       "Bash(npm install)",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(git commit -m \"feat: Phase 1 Complete - Full LSP with AST parser and IntelliSense\n\nBREAKING CHANGES:\n- Migrated from regex-based to LSP architecture\n- Disabled old extension.ts providers (replaced by LSP)\n\nFeatures Added:\n✅ Full AST parser (Lexer: 850 lines, Parser: 1200 lines)\n✅ Workspace indexing with cross-file navigation\n✅ Go to Definition (F12), Find References (Shift+F12)\n✅ Workspace Symbol Search (Ctrl+T)\n✅ Document Outline (Ctrl+Shift+O)\n✅ Enhanced Hover with 30+ built-in methods documented\n✅ Context-aware Completion with snippets\n✅ Array[0] error detection (PML is 1-indexed!)\n✅ Typo detection for keywords\n\nNew Files:\n- 16 files, ~4,500 lines of code\n- 40+ AST node types\n- 60+ token types\n- 20+ parser tests\n\nTest Coverage:\n- Parser tests: 20+ passing\n- Manual tests: all features verified\n\nDocumentation:\n- CHECKPOINT_1.md: Complete Phase 1 summary\n- INTELLISENSE_UPGRADE_PLAN.md: Full roadmap\n- LSP_PROGRESS.md: Implementation details\n- SETUP_LSP.md: Architecture guide\")",
+      "Bash(git push origin main)",
+      "Bash(git add -A)",
+      "Bash(git commit -m \"fix: workspace indexing path decode and parameter type parsing\n\nFixes:\n- Fixed workspace indexing URI decoding (file:///d%3A -> d:\\)\n- Added parameter type parsing (!param is REAL)\n- Added parseType() method for type annotations\n\nIssues resolved:\n- Workspace indexing was failing with path duplication\n- Methods with typed parameters (!width is REAL) were showing errors\n- Parser now correctly handles ''is TYPE'' syntax\")"
     ],
     "deny": [],
     "ask": []

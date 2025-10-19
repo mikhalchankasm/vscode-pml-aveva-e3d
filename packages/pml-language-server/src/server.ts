@@ -129,7 +129,11 @@ connection.onInitialized(async () => {
 	try {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
 		if (workspaceFolders && workspaceFolders.length > 0) {
-			const folders = workspaceFolders.map(f => f.uri.replace('file:///', '').replace(/\//g, '\\'));
+			const folders = workspaceFolders.map(f => {
+				// Decode URI: file:///d%3A/path -> d:/path -> d:\path
+				const decoded = decodeURIComponent(f.uri);
+				return decoded.replace('file:///', '').replace(/\//g, '\\');
+			});
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
