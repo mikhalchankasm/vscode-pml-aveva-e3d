@@ -82,7 +82,6 @@ connection.onInitialize((params: InitializeParams) => {
 			textDocumentSync: TextDocumentSyncKind.Incremental,
 			// Tell the client that this server supports:
 			completionProvider: {
-				resolveProvider: true,
 				triggerCharacters: ['.', '!', '|']
 			},
 			hoverProvider: true,

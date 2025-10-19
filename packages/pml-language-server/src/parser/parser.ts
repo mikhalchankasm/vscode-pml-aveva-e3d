@@ -359,6 +359,17 @@ export class Parser {
 			};
 		}
 
+		// var statement - consume 'var' and parse the following statement
+		if (this.check(TokenType.VAR)) {
+			this.advance(); // consume 'var'
+			// After 'var', expect variable declaration/assignment
+			if (this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) {
+				return this.parseVariableDeclarationOrAssignment();
+			}
+			// If not a variable, treat as expression statement
+			return this.parseExpressionStatement();
+		}
+
 		// Variable declaration or assignment
 		if (this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) {
 			return this.parseVariableDeclarationOrAssignment();

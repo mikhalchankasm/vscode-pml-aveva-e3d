@@ -9,7 +9,7 @@ endmethod
 
 define method .calculateVolume(!width is REAL, !height is REAL, !depth is REAL) is REAL
     -- Calculate volume of box
-    !area = .calculateArea(!width, !height)  -- Call to .calculateArea
+    !area = !this.calculateArea(!width, !height)  -- Call to .calculateArea
     !volume = !area * !depth
     return !volume
 endmethod

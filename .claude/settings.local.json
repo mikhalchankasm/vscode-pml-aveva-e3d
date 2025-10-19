@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"feat: Add Signature Help and release v0.5.0\n\nNew Features:\n✅ Signature Help Provider - Shows parameter hints while typing (Ctrl+Shift+Space)\n✅ Parameter hints triggered on ''('' and '',''\n✅ Shows method signature with parameter info\n\nVersion:\n- Updated to v0.5.0\n- Updated description: ''with full LSP and IntelliSense''\n\nDocumentation:\n- Added CHANGELOG.md with complete v0.5.0 release notes\n- Documents all Phase 1 features and improvements\n\nPhase 1 Complete:\n- LSP Infrastructure\n- Full AST Parser  \n- Workspace Indexing\n- Go to Definition, Find References, Workspace Search\n- Enhanced Hover with built-in method docs\n- Context-aware Completion\n- Signature Help\n- Array[0] error detection\n- Type checking\")"
+      "Bash(git tag -a v0.5.0 -m \"Release v0.5.0 - Full LSP with IntelliSense\n\nPhase 1 Complete:\n- Full AST Parser (Lexer + Parser)\n- Workspace Indexing\n- Go to Definition (F12)\n- Find References (Shift+F12)  \n- Workspace Search (Ctrl+T)\n- Document Outline (Ctrl+Shift+O)\n- Enhanced Hover with docs\n- Context-aware Completion\n- Signature Help\n- Array[0] detection\n- Type checking\n\nStatistics:\n- 16 new files\n- ~4,500 lines of code\n- 40+ AST node types\n- 60+ token types\n- 30+ built-in methods documented\n- 20+ parser tests\n\nSee CHANGELOG.md and CHECKPOINT_1.md for details.\")",
+      "Bash(git push origin main --tags)",
+      "Bash(cat -A \"d:/GitHub/vscode-pml-extension/packages/pml-language-server/src/parser/parser.ts\")"
     ],
     "deny": [],
     "ask": []

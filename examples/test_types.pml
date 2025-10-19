@@ -4,7 +4,7 @@
 define method .testTypeInference()
 
     -- Test 1: Literal type inference
-    !name = |John Doe|           -- STRING
+    !name = 'John Doe'           -- STRING
     !count = 42                  -- INTEGER
     !price = 19.99               -- REAL
     !isValid = true              -- BOOLEAN

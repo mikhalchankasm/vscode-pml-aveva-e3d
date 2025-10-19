@@ -35,10 +35,10 @@ endmethod
 
 define method .complexIfExample()
 
-    !value = 42
+    !text = 42
     !type  = |number|
 
-    if (!value gt 0) then
+    if (!text gt 0) then
         if (!type.eq(|number|)) then
             |Positive number|.output()
         elseif (!type.eq(|string|)) then
@@ -46,10 +46,10 @@ define method .complexIfExample()
         else
             |Positive other|.output()
         endif
-    elseif (!value lt 0) then
-        |Negative value|.output()
-    elseif (!value eq 0) then
-        |Zero value|.output()
+    elseif (!text lt 0) then
+        |Negative text|.output()
+    elseif (!text eq 0) then
+        |Zero text|.output()
     else
         |Unknown value|.output()
     endif
