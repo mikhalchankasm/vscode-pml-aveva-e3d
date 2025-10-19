@@ -32,6 +32,7 @@ import { ReferencesProvider } from './providers/referencesProvider';
 import { WorkspaceSymbolProvider } from './providers/workspaceSymbolProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
+import { SignatureHelpProvider } from './providers/signatureHelpProvider';
 import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
 
 // Create a connection for the server
@@ -54,6 +55,7 @@ const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex);
 const completionProvider = new CompletionProvider(symbolIndex);
+const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -89,11 +91,12 @@ connection.onInitialize((params: InitializeParams) => {
 			referencesProvider: true,
 			documentSymbolProvider: true,
 			workspaceSymbolProvider: true,
+			// Phase 1.5: Signature Help
+			signatureHelpProvider: {
+				triggerCharacters: ['(', ',']
+			},
 			// TODO: Implement these providers
 			// renameProvider: true,
-			// signatureHelpProvider: {
-			// 	triggerCharacters: ['(', ',']
-			// },
 			// Future providers (Phase 2+)
 			// semanticTokensProvider: {...},
 			// inlayHintProvider: {...},
@@ -354,6 +357,16 @@ connection.onReferences(params => {
  */
 connection.onWorkspaceSymbol(params => {
 	return workspaceSymbolProvider.provide(params);
+});
+
+/**
+ * Signature Help Provider (Parameter hints while typing)
+ */
+connection.onSignatureHelp(params => {
+	const document = documents.get(params.textDocument.uri);
+	if (!document) return null;
+
+	return signatureHelpProvider.provide(params, document);
 });
 
 // Make the text document manager listen on the connection
