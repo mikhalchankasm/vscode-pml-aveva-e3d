@@ -280,6 +280,7 @@ export interface DoStatement extends ASTNode {
 	collection?: Expression;
 	from?: Expression;
 	to?: Expression;
+	by?: Expression;
 	condition?: Expression;
 	body: Statement[];
 }

@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git tag -a v0.5.0 -m \"Release v0.5.0 - Full LSP with IntelliSense\n\nPhase 1 Complete:\n- Full AST Parser (Lexer + Parser)\n- Workspace Indexing\n- Go to Definition (F12)\n- Find References (Shift+F12)  \n- Workspace Search (Ctrl+T)\n- Document Outline (Ctrl+Shift+O)\n- Enhanced Hover with docs\n- Context-aware Completion\n- Signature Help\n- Array[0] detection\n- Type checking\n\nStatistics:\n- 16 new files\n- ~4,500 lines of code\n- 40+ AST node types\n- 60+ token types\n- 30+ built-in methods documented\n- 20+ parser tests\n\nSee CHANGELOG.md and CHECKPOINT_1.md for details.\")",
-      "Bash(git push origin main --tags)",
-      "Bash(cat -A \"d:/GitHub/vscode-pml-extension/packages/pml-language-server/src/parser/parser.ts\")"
+      "Bash(git commit -m \"feat: Add support for ''by'' keyword in do loops and ''neq'' operator\n\nFeatures:\n- Added BY token type for step size in do-from-to loops\n- Added ''neq'' as alias for ''ne'' operator\n- Parser now handles ''by'' clause: do !i from 1 to 10 by 2\n\nChanges:\n- tokens.ts: Added BY token and keyword mappings for ''by'' and ''neq''\n- nodes.ts: Added ''by'' field to DoStatement AST node\n- parser.ts: parseDoStatement() now parses optional ''by'' clause\n\nExample:\n  do !indxA from !depth to !pDepth by -1\n      -- code here\n  enddo\")"
     ],
     "deny": [],
     "ask": []

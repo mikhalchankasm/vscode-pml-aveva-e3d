@@ -438,6 +438,7 @@ export class Parser {
 		let collection: Expression | undefined;
 		let from: Expression | undefined;
 		let to: Expression | undefined;
+		let by: Expression | undefined;
 		let condition: Expression | undefined;
 
 		// Check variant
@@ -464,6 +465,11 @@ export class Parser {
 				from = this.parseExpression();
 				this.consume(TokenType.TO, "Expected 'to' in do-from-to");
 				to = this.parseExpression();
+				// Optional: by step
+				if (this.check(TokenType.BY)) {
+					this.advance();
+					by = this.parseExpression();
+				}
 			}
 		} else if (this.check(TokenType.WHILE)) {
 			this.advance();
@@ -489,6 +495,7 @@ export class Parser {
 			collection,
 			from,
 			to,
+			by,
 			condition,
 			body,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
