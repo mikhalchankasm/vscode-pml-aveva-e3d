@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"feat: Add support for ''by'' keyword in do loops and ''neq'' operator\n\nFeatures:\n- Added BY token type for step size in do-from-to loops\n- Added ''neq'' as alias for ''ne'' operator\n- Parser now handles ''by'' clause: do !i from 1 to 10 by 2\n\nChanges:\n- tokens.ts: Added BY token and keyword mappings for ''by'' and ''neq''\n- nodes.ts: Added ''by'' field to DoStatement AST node\n- parser.ts: parseDoStatement() now parses optional ''by'' clause\n\nExample:\n  do !indxA from !depth to !pDepth by -1\n      -- code here\n  enddo\")"
+      "Bash(git commit -m \"docs: reorganize documentation and create knowledge base\n\nChanges:\n- Created PROJECT_STATUS.md - main progress tracker\n- Created DOCUMENTATION_AUDIT.md - comprehensive doc analysis\n- Created objects/ knowledge base folder:\n  - objects/README.md - knowledge base index\n  - objects/array object.md - 48 ARRAY methods\n  - objects/string object.md - 69 STRING methods (moved from docs/)\n  - objects/boolean object.md - placeholder\n\nCleanup:\n- Deleted obsolete TODO files (replaced by PROJECT_STATUS.md):\n  - docs/TODO.md\n  - docs/TODO_PROJECT.md\n  - docs/NEXT_STEPS.md\n  - docs/BACKLOG_STATUS.md\n  - docs/PML_VSCode_Extension_Backlog.md\n\nStructure:\n- All planning now centralized in PROJECT_STATUS.md\n- Knowledge base in objects/ for future LSP integration\n- Cleaner docs/ folder with only active documents\")"
     ],
     "deny": [],
     "ask": []
