@@ -78,6 +78,10 @@
           "match": "\\b(method|object|function|setup|form|frame|exit|using|namespace|import|export|member|is|callback|dialog|docking|width|height|text|options|override)\\b"
         },
         {
+          "name": "keyword.declarative.pml",
+          "match": "\\b(collect|all|with|at|compose|space|var)\\b"
+        },
+        {
           "name": "keyword.operator.logical.pml",
           "match": "\\b(and|or|not|eq|ne|gt|lt|ge|le|mod|div)\\b"
         }
