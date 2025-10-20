@@ -105,6 +105,12 @@ export class Lexer {
 			return;
 		}
 
+		// Substitute variables: $!variable or $/attribute
+		if (char === '$') {
+			this.scanSubstituteVariable(startLine, startColumn, startPos);
+			return;
+		}
+
 		if (char === '.') {
 			// Could be method (.method) or just dot
 			if (this.isAlpha(this.peek())) {
@@ -312,6 +318,44 @@ export class Lexer {
 		}
 
 		this.addToken(TokenType.METHOD, value, line, column, offset, this.position - offset);
+	}
+
+	/**
+	 * Scan substitute variable: $!variable or $/attribute or $identifier
+	 * Used for variable substitution in strings and compose expressions
+	 */
+	private scanSubstituteVariable(line: number, column: number, offset: number): void {
+		let value = '$';
+
+		// Check for $!variable or $!!global or $/attribute
+		const next = this.peek();
+
+		if (next === '!') {
+			value += this.advance();
+
+			// Check for $!!global
+			if (this.peek() === '!') {
+				value += this.advance();
+			}
+
+			// Variable name
+			while (this.isAlphaNumeric(this.peek())) {
+				value += this.advance();
+			}
+		} else if (next === '/') {
+			// $/ATTRIBUTE
+			value += this.advance();
+			while (this.isAlphaNumeric(this.peek())) {
+				value += this.advance();
+			}
+		} else if (this.isAlpha(next)) {
+			// $identifier (e.g., in $!indxA)
+			while (this.isAlphaNumeric(this.peek())) {
+				value += this.advance();
+			}
+		}
+
+		this.addToken(TokenType.SUBSTITUTE_VAR, value, line, column, offset, this.position - offset);
 	}
 
 	/**

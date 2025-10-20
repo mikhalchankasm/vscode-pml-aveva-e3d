@@ -12,6 +12,7 @@ export enum TokenType {
 	IDENTIFIER = 'IDENTIFIER',
 	LOCAL_VAR = 'LOCAL_VAR',      // !variable
 	GLOBAL_VAR = 'GLOBAL_VAR',    // !!variable
+	SUBSTITUTE_VAR = 'SUBSTITUTE_VAR',  // $!variable or $/attribute
 	METHOD = 'METHOD',            // .methodName
 
 	// Keywords
