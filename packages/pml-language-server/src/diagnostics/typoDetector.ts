@@ -27,6 +27,24 @@ const PML_KEYWORDS = [
 	'TRUE', 'FALSE'
 ];
 
+// Valid identifiers that should NOT trigger typo detection
+const VALID_IDENTIFIERS = [
+	'this',      // Form context: !this
+	'ce',        // Current Element
+	'world',     // Common variable names
+	'owner',
+	'name',
+	'type',
+	'result',
+	'error',
+	'value',
+	'data',
+	'item',
+	'list',
+	'count',
+	'index'
+];
+
 /**
  * Calculate Levenshtein distance between two strings
  */
@@ -109,7 +127,10 @@ export function detectTypos(document: TextDocument): Diagnostic[] {
 			// Check if it's a known keyword (case-insensitive)
 			const isKnownKeyword = PML_KEYWORDS.some(kw => kw.toLowerCase() === word.toLowerCase());
 
-			if (!isKnownKeyword) {
+			// Check if it's a valid identifier that should be ignored
+			const isValidIdentifier = VALID_IDENTIFIERS.some(id => id.toLowerCase() === word.toLowerCase());
+
+			if (!isKnownKeyword && !isValidIdentifier) {
 				// Check for typo
 				const closest = findClosestKeyword(word);
 
