@@ -4,6 +4,7 @@
  */
 
 import * as path from 'path';
+import * as fs from 'fs';
 import { workspace, ExtensionContext } from 'vscode';
 import {
 	LanguageClient,
@@ -23,7 +24,6 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 	console.log('PML LSP Server path:', serverModule);
 
 	// Check if server.js exists
-	const fs = require('fs');
 	if (!fs.existsSync(serverModule)) {
 		console.error('❌ LSP server.js NOT FOUND at:', serverModule);
 		throw new Error(`LSP server.js not found at: ${serverModule}`);

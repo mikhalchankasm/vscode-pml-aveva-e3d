@@ -5,8 +5,8 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken,
-        context: vscode.CompletionContext
+        _token: vscode.CancellationToken,
+        _context: vscode.CompletionContext
     ): vscode.CompletionItem[] {
         const completions: vscode.CompletionItem[] = [];
         
@@ -376,9 +376,8 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
         
         return methods.map(method => {
             const item = new vscode.CompletionItem(method.name, vscode.CompletionItemKind.Method);
-            
+
             // Формируем красивый detail
-            const params = method.params.length > 0 ? `(${method.params.join(', ')})` : '()';
             item.detail = `AVEVA E3D Attribute`;
             item.documentation = method.description;
             
@@ -406,8 +405,7 @@ export class PMLCompletionProvider implements vscode.CompletionItemProvider {
         for (const [typeName, methods] of Object.entries(ALL_TYPE_METHODS)) {
             for (const method of methods) {
                 const item = new vscode.CompletionItem(method.name, vscode.CompletionItemKind.Method);
-                
-                const params = method.params.length > 0 ? `(${method.params.join(', ')})` : '()';
+
                 item.detail = `AVEVA E3D Attribute`;
                 item.documentation = method.description;
                 

@@ -27,7 +27,7 @@ export class PMLDiagnostics {
     /**
      * Проверка незакрытых блоков (method, object, if, do, form, frame)
      */
-    private checkUnclosedBlocks(lines: string[], diagnostics: vscode.Diagnostic[], document: vscode.TextDocument): void {
+    private checkUnclosedBlocks(lines: string[], diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
         const stack: Array<{ type: string; line: number; keyword: string }> = [];
 
         for (let i = 0; i < lines.length; i++) {
@@ -108,7 +108,7 @@ export class PMLDiagnostics {
     /**
      * Проверка методов на наличие скобок
      */
-    private checkMethodParentheses(lines: string[], diagnostics: vscode.Diagnostic[], document: vscode.TextDocument): void {
+    private checkMethodParentheses(lines: string[], diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmed = line.trim();
@@ -136,7 +136,7 @@ export class PMLDiagnostics {
     /**
      * Проверка использования переменных
      */
-    private checkVariableUsage(lines: string[], diagnostics: vscode.Diagnostic[], document: vscode.TextDocument): void {
+    private checkVariableUsage(_lines: string[], _diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
         // Эта проверка пока не используется
         // В PML глобальные переменные (!!var) - это нормальная практика
         // Оставлено для будущих проверок переменных
