@@ -71,36 +71,36 @@ export class CompletionProvider {
 	private getBuiltInMethodCompletions(): CompletionItem[] {
 		return [
 			// STRING methods
-			{ label: 'upcase', kind: CompletionItemKind.Method, detail: 'STRING → STRING', documentation: 'Convert to uppercase' },
-			{ label: 'lowcase', kind: CompletionItemKind.Method, detail: 'STRING → STRING', documentation: 'Convert to lowercase' },
-			{ label: 'trim', kind: CompletionItemKind.Method, detail: 'STRING → STRING', documentation: 'Remove whitespace' },
-			{ label: 'length', kind: CompletionItemKind.Method, detail: 'STRING → REAL', documentation: 'Get string length' },
-			{ label: 'substring', kind: CompletionItemKind.Method, detail: 'STRING → STRING', documentation: 'Extract substring', insertText: 'substring($1, $2)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'real', kind: CompletionItemKind.Method, detail: 'STRING → REAL', documentation: 'Convert to number' },
-			{ label: 'match', kind: CompletionItemKind.Method, detail: 'STRING → BOOLEAN', documentation: 'Pattern matching', insertText: 'match($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'upcase', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Convert to uppercase' },
+			{ label: 'lowcase', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Convert to lowercase' },
+			{ label: 'trim', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Remove whitespace' },
+			{ label: 'length', kind: CompletionItemKind.Method, detail: 'STRING -> REAL', documentation: 'Get string length' },
+			{ label: 'substring', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Extract substring', insertText: 'substring($1, $2)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'real', kind: CompletionItemKind.Method, detail: 'STRING -> REAL', documentation: 'Convert to number' },
+			{ label: 'match', kind: CompletionItemKind.Method, detail: 'STRING -> BOOLEAN', documentation: 'Pattern matching', insertText: 'match($1)$0', insertTextFormat: InsertTextFormat.Snippet },
 
 			// REAL methods
-			{ label: 'abs', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Absolute value' },
-			{ label: 'round', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Round to integer' },
-			{ label: 'floor', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Round down' },
-			{ label: 'ceiling', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Round up' },
-			{ label: 'string', kind: CompletionItemKind.Method, detail: 'REAL → STRING', documentation: 'Convert to string' },
-			{ label: 'sin', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Sine (radians)' },
-			{ label: 'cos', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Cosine (radians)' },
-			{ label: 'sqrt', kind: CompletionItemKind.Method, detail: 'REAL → REAL', documentation: 'Square root' },
+			{ label: 'abs', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Absolute value' },
+			{ label: 'round', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Round to integer' },
+			{ label: 'floor', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Round down' },
+			{ label: 'ceiling', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Round up' },
+			{ label: 'string', kind: CompletionItemKind.Method, detail: 'REAL -> STRING', documentation: 'Convert to string' },
+			{ label: 'sin', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Sine (radians)' },
+			{ label: 'cos', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Cosine (radians)' },
+			{ label: 'sqrt', kind: CompletionItemKind.Method, detail: 'REAL -> REAL', documentation: 'Square root' },
 
 			// ARRAY methods
-			{ label: 'size', kind: CompletionItemKind.Method, detail: 'ARRAY → REAL', documentation: 'Number of elements' },
-			{ label: 'append', kind: CompletionItemKind.Method, detail: 'ARRAY → BOOLEAN', documentation: 'Add element to end', insertText: 'append($1)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'first', kind: CompletionItemKind.Method, detail: 'ARRAY → ANY', documentation: 'Get first element (arr[1])' },
-			{ label: 'last', kind: CompletionItemKind.Method, detail: 'ARRAY → ANY', documentation: 'Get last element' },
-			{ label: 'empty', kind: CompletionItemKind.Method, detail: 'ARRAY → BOOLEAN', documentation: 'Check if empty' },
+			{ label: 'size', kind: CompletionItemKind.Method, detail: 'ARRAY -> REAL', documentation: 'Number of elements' },
+			{ label: 'append', kind: CompletionItemKind.Method, detail: 'ARRAY -> BOOLEAN', documentation: 'Add element to end', insertText: 'append($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'first', kind: CompletionItemKind.Method, detail: 'ARRAY -> ANY', documentation: 'Get first element (arr[1])' },
+			{ label: 'last', kind: CompletionItemKind.Method, detail: 'ARRAY -> ANY', documentation: 'Get last element' },
+			{ label: 'empty', kind: CompletionItemKind.Method, detail: 'ARRAY -> BOOLEAN', documentation: 'Check if empty' },
 
 			// DBREF methods
-			{ label: 'query', kind: CompletionItemKind.Method, detail: 'DBREF → STRING', documentation: 'Query attribute as string', insertText: 'query(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'qreal', kind: CompletionItemKind.Method, detail: 'DBREF → REAL', documentation: 'Query attribute as number', insertText: 'qreal(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'qboolean', kind: CompletionItemKind.Method, detail: 'DBREF → BOOLEAN', documentation: 'Query attribute as boolean', insertText: 'qboolean(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'delete', kind: CompletionItemKind.Method, detail: 'DBREF → BOOLEAN', documentation: 'Delete element (use with caution!)' },
+			{ label: 'query', kind: CompletionItemKind.Method, detail: 'DBREF -> STRING', documentation: 'Query attribute as string', insertText: 'query(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'qreal', kind: CompletionItemKind.Method, detail: 'DBREF -> REAL', documentation: 'Query attribute as number', insertText: 'qreal(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'qboolean', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Query attribute as boolean', insertText: 'qboolean(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'delete', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Delete element (use with caution!)' },
 		];
 	}
 

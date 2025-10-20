@@ -796,17 +796,21 @@ export class Parser {
 	 */
 	private parseCall(): Expression {
 		let expr = this.parseMember();
+		const startPos = expr.range.start;
 
 		// Check for function call: ()
 		while (this.match(TokenType.LPAREN)) {
 			const args = this.parseArguments();
-			this.consume(TokenType.RPAREN, "Expected ')' after arguments");
+			const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
 
 			expr = {
 				type: 'CallExpression',
 				callee: expr,
 				arguments: args,
-				range: this.createRange(0, this.current - 1) // TODO: proper range
+				range: {
+					start: startPos,
+					end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
+				}
 			};
 		}
 

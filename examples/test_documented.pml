@@ -3,11 +3,11 @@
 -- ============================================
 
 -- Простой метод с базовой документацией
--- @param !value - числовое значение для проверки
+-- @param !somevalue - числовое значение для проверки
 -- @return BOOLEAN - true если значение положительное
-define method .isPositive(!value)
+define method .isPositive(!somevalue is real)
 
-    if (!value gt 0) then
+    if (!somevalue gt 0) then
         return TRUE
     else
         return FALSE
@@ -23,7 +23,7 @@ endmethod
 -- @example !total = .calculateSum(!myNumbers)
 -- @author Your Name
 -- @since 1.0.0
-define method .calculateSum(!list)
+define method .calculateSum(!list is array)
 
     !sum = 0
 
@@ -98,9 +98,6 @@ define method .testHover()
     enddo
 
 DRAWLIST
-
-elem.DRAWLIST
-
 
 endmethod
 
