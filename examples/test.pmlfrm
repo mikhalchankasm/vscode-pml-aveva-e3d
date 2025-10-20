@@ -1,5 +1,15 @@
 define method .initbran(!pipelist is array)
 
+    do !element values !pipes
+    
+        if ( !pipes.size() lt 0 ) then
+            -- true branch
+        else
+            -- false branch
+        endif
+            
+    enddo
+
     !branlist = object array()
 
     do !pipe values !pipelist

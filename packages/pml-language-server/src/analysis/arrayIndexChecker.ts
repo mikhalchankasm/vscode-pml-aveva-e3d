@@ -3,7 +3,7 @@
  */
 
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
-import { Program, Statement, Expression, MemberExpression, Literal } from '../ast/nodes';
+import { Program, Statement, Expression, MemberExpression } from '../ast/nodes';
 
 export class ArrayIndexChecker {
 	private diagnostics: Diagnostic[] = [];

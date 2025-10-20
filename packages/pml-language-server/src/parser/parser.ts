@@ -835,7 +835,7 @@ export class Parser {
 					computed: false,
 					range: {
 						start: startPos,
-						end: { line: property.line - 1, character: property.column + property.length - 1 }
+						end: { line: property.line - 1, character: property.column - 1 + property.length }
 					}
 				};
 			} else if (this.match(TokenType.LBRACKET)) {
@@ -850,7 +850,7 @@ export class Parser {
 					computed: true,
 					range: {
 						start: startPos,
-						end: { line: rbracket.line - 1, character: rbracket.column - 1 }
+						end: { line: rbracket.line - 1, character: rbracket.column - 1 + rbracket.length }
 					}
 				};
 			} else {

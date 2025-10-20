@@ -48,3 +48,4 @@ setup form !!nestedForm dialog
 exit
 
 
+!pipe = object string()
