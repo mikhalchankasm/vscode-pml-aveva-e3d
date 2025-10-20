@@ -50,7 +50,10 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 		// Pass extension path to server for bundled knowledge base
 		initializationOptions: {
 			extensionPath: context.extensionPath
-		}
+		},
+		// Show output channel by default
+		outputChannelName: 'PML Language Server',
+		revealOutputChannelOn: 4 // RevealOutputChannelOn.Never (we'll show manually if needed)
 	};
 
 	// Create the language client and start the client
