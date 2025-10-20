@@ -1,13 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git push origin main)",
-      "Bash(git add CHANGELOG.md)",
-      "Bash(git commit -m \"docs: update CHANGELOG for v0.5.2 final release\")",
-      "Bash(git add packages/pml-language-server/src/diagnostics/typoDetector.ts)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfix: add whitelist to typo detector for common identifiers\n\nProblem:\n- !this flagged as typo: \"Did you mean 'then'?\"\n- Other common identifiers like ''ce'', ''world'', ''owner'' also triggered false positives\n- Levenshtein distance too sensitive for short common words\n\nSolution:\n- Added VALID_IDENTIFIERS whitelist with common PML identifiers\n- Skip typo detection for whitelisted identifiers:\n  - this (form context)\n  - ce (Current Element)\n  - world, owner, name, type (common variable names)\n  - result, error, value, data (common return values)\n  - item, list, count, index (loop variables)\n\nNow !this and other common identifiers won''t trigger typo warnings!\n\nv0.5.2\nEOF\n)\")",
-      "Bash(git commit -m \"fix: resolve ESLint warnings in build\n\n- Replace require(''fs'') with import * as fs in languageClient.ts\n- Add _ prefix to unused parameters (token, context, document)\n- Remove unused local variables (params)\n\nFixes GitHub Actions build warnings\")",
-      "Bash(git commit -m \"chore: release v0.5.3 - revert type inference\n\nType inference was too complex and not working correctly.\nReverted to stable version with only essential fixes:\n\n- ✅ LSP server works in production mode\n- ✅ Form files (.pmlfrm) don''t show parser errors  \n- ✅ object ARRAY() syntax supported\n- ✅ !this and common identifiers don''t trigger typo warnings\n- ✅ ESLint warnings resolved\n\nv0.5.3\")"
+      "Bash(git commit -m \"docs: major documentation cleanup\n\n- Simplified README.md with bilingual support (EN/RU)\n- Clear project structure and navigation\n- Removed 20+ redundant MD files:\n  * CHECKPOINT_1, CODE_OF_CONDUCT, FAQ, FIXES_APPLIED\n  * INTELLISENSE_UPGRADE_PLAN, LSP_PROGRESS, ROADMAP\n  * README.en.md, README.ru.md (merged into main README)\n  * docs/ folder (outdated technical docs)\n  * scripts/LOCAL_DEV.md\n  \n- Kept only essential docs:\n  * README.md - main project documentation\n  * CHANGELOG.md - version history (updated for v0.5.3)\n  * CONTRIBUTING.md - contribution guidelines\n  * objects/ - PML knowledge base (required for LSP)\n  * packages/pml-language-server/README.md\n\nNow the repository is clean and easy to navigate!\")"
     ],
     "deny": [],
     "ask": []
