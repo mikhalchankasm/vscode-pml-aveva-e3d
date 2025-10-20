@@ -5,8 +5,7 @@
   "version": "0.5.2",
   "publisher": "mikhalchankasm",
   "author": {
-    "name": "MIKHALCHANKA SIARHEI",
-    "email": ""
+    "name": "MIKHALCHANKA SIARHEI"
   },
   "engines": {
     "vscode": "^1.80.0"
@@ -25,9 +24,6 @@
   ],
   "main": "./out/extension.js",
   "icon": "./icons/pml-icon.png",
-  "activationEvents": [
-    "onLanguage:pml"
-  ],
   "contributes": {
     "keybindings": [
       {
