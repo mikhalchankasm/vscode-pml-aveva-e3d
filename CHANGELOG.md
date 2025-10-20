@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.6] - 2025-01-21
+
+### Fixed
+- **CRITICAL: LSP Server Not Found in VSIX** - Fixed production deployment
+  - LSP server compiled output now correctly included in VSIX package
+  - Added explicit include patterns for `packages/pml-language-server/out/`
+  - Updated compile script to build both extension and LSP server
+  - Fixed path: `packages/pml-language-server/out/server.js` now packaged
+  - Error resolved: "LSP server.js not found at: ...packages\pml-language-server\out\server.js"
+
+### Changed
+- Disabled `noUnusedLocals` and `noUnusedParameters` in LSP server tsconfig
+  - Prevents compilation errors from unused imports
+  - Allows successful VSIX build process
+
 ## [0.5.5] - 2025-01-20
 
 ### Fixed

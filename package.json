@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -535,7 +535,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
     "lint": "eslint src --ext ts",

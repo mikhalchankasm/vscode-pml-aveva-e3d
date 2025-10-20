@@ -4,7 +4,10 @@
       "Bash(sed -n '74p' packages/pml-language-server/src/providers/completionProvider.ts)",
       "Bash(npm run compile)",
       "Bash(git add -A)",
-      "Bash(git commit -m \"fix: correct range calculations and remove unicode arrows\n\nCritical fixes from code review:\n\n1. **CallExpression Range** - Fixed pointing to line 0\n   - Before: range: this.createRange(0, this.current - 1)\n   - After: Capture startPos from callee, end from rparen token\n   - Impact: \"\"Go to definition\"\", hovers now point to actual call location\n   - Removed TODO comment\n\n2. **Completion Strings** - Replace unicode arrows with ASCII\n   - Changed: ''STRING → STRING'' (UTF-8 arrow U+2192)\n   - To: ''STRING -> STRING'' (ASCII hyphen-greater-than)\n   - Prevents any potential mojibake in IntelliSense detail panes\n   - Safer across different terminals/editors\n\nBoth fixes ensure correct highlighting and readable completions.\")"
+      "Bash(git commit -m \"fix: correct range calculations and remove unicode arrows\n\nCritical fixes from code review:\n\n1. **CallExpression Range** - Fixed pointing to line 0\n   - Before: range: this.createRange(0, this.current - 1)\n   - After: Capture startPos from callee, end from rparen token\n   - Impact: \"\"Go to definition\"\", hovers now point to actual call location\n   - Removed TODO comment\n\n2. **Completion Strings** - Replace unicode arrows with ASCII\n   - Changed: ''STRING → STRING'' (UTF-8 arrow U+2192)\n   - To: ''STRING -> STRING'' (ASCII hyphen-greater-than)\n   - Prevents any potential mojibake in IntelliSense detail panes\n   - Safer across different terminals/editors\n\nBoth fixes ensure correct highlighting and readable completions.\")",
+      "Bash(git push origin main)",
+      "Bash(npm run pack)",
+      "Bash(npx @vscode/vsce ls)"
     ],
     "deny": [],
     "ask": []

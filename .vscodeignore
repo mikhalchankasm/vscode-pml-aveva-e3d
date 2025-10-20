@@ -1,6 +1,7 @@
 .vscode/**
 .vscode-test/**
 src/**
+packages/**/src/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -20,3 +21,8 @@ node_modules/@types/**
 node_modules/@typescript-eslint/**
 node_modules/eslint/**
 node_modules/typescript/**
+
+# IMPORTANT: Include compiled LSP server
+!packages/pml-language-server/out/**/*.js
+!packages/pml-language-server/out/**/*.d.ts
+!packages/pml-language-server/package.json
