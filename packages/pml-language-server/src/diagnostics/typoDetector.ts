@@ -124,27 +124,48 @@ export function detectTypos(document: TextDocument): Diagnostic[] {
 			const word = match[1];
 			const startColumn = match.index;
 
+			// Skip variables (start with !)
+			if (withoutStrings[startColumn - 1] === '!') {
+				continue;
+			}
+
+			// Skip method calls (preceded by .)
+			if (withoutStrings[startColumn - 1] === '.') {
+				continue;
+			}
+
+			// Skip $P, $*, $$ directives
+			if (withoutStrings[startColumn - 1] === '$') {
+				continue;
+			}
+
 			// Check if it's a known keyword (case-insensitive)
 			const isKnownKeyword = PML_KEYWORDS.some(kw => kw.toLowerCase() === word.toLowerCase());
+
+			if (isKnownKeyword) {
+				continue; // Valid keyword, no typo
+			}
 
 			// Check if it's a valid identifier that should be ignored
 			const isValidIdentifier = VALID_IDENTIFIERS.some(id => id.toLowerCase() === word.toLowerCase());
 
-			if (!isKnownKeyword && !isValidIdentifier) {
-				// Check for typo
-				const closest = findClosestKeyword(word);
+			if (isValidIdentifier) {
+				continue; // Known valid identifier, no typo
+			}
 
-				if (closest) {
-					diagnostics.push({
-						severity: DiagnosticSeverity.Warning,
-						range: {
-							start: { line: lineIndex, character: startColumn },
-							end: { line: lineIndex, character: startColumn + word.length }
-						},
-						message: `Unknown identifier '${word}'. Did you mean '${closest.keyword}'?`,
-						source: 'pml-typo-detector'
-					});
-				}
+			// Only check for typos if word is VERY similar to a keyword (distance <= 2)
+			const closest = findClosestKeyword(word);
+
+			if (closest && closest.distance <= 2) {
+				diagnostics.push({
+					severity: DiagnosticSeverity.Warning,
+					range: {
+						start: { line: lineIndex, character: startColumn },
+						end: { line: lineIndex, character: startColumn + word.length }
+					},
+					message: `Possible typo: '${word}'. Did you mean '${closest.keyword}'?`,
+					source: 'pml-typo-detector'
+				});
 			}
 		}
 	}
