@@ -65,7 +65,7 @@ export class PMLToolsProvider implements vscode.Disposable {
     private getSelectedTextOrShowError(editor: vscode.TextEditor): { text: string; range: vscode.Range } | undefined {
         const selection = editor.selection;
         if (selection.isEmpty) {
-            vscode.window.showErrorMessage('Выделите текст для применения команды');
+            vscode.window.showErrorMessage('Please select text to apply the command');
             return undefined;
         }
         const text = editor.document.getText(selection);

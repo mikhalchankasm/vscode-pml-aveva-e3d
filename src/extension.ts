@@ -27,25 +27,25 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showErrorMessage(`PML Language Server failed to start: ${error}`);
     }
 
-    // Регистрация форматтера
+    // Register formatter
     const formatter = vscode.languages.registerDocumentFormattingEditProvider('pml', new PMLFormatter());
     context.subscriptions.push(formatter);
 
-    // Регистрация автодополнения
+    // Register completion provider
     // TEMPORARILY DISABLED: LSP provides this now
     // const completionProvider = vscode.languages.registerCompletionItemProvider(
     //     'pml',
     //     new PMLCompletionProvider(),
-    //     '.', '!', '|'  // Триггерные символы
+    //     '.', '!', '|'  // Trigger characters
     // );
     // context.subscriptions.push(completionProvider);
 
-    // Регистрация подсказок при наведении
+    // Register hover provider
     // TEMPORARILY DISABLED: LSP provides this now
     // const hoverProvider = vscode.languages.registerHoverProvider('pml', new PMLHoverProvider());
     // context.subscriptions.push(hoverProvider);
 
-    // Регистрация навигации по символам (Outline)
+    // Register document symbol provider (Outline)
     // TEMPORARILY DISABLED: LSP provides this now
     // const symbolProvider = vscode.languages.registerDocumentSymbolProvider('pml', new PMLDocumentSymbolProvider());
     // context.subscriptions.push(symbolProvider);
@@ -57,19 +57,19 @@ export function activate(context: vscode.ExtensionContext) {
     // context.subscriptions.push(vscode.languages.registerRenameProvider('pml', new PMLRenameProvider()));
     // context.subscriptions.push(vscode.languages.registerSignatureHelpProvider('pml', new PMLSignatureHelpProvider(), '(', ','));
 
-    // Регистрация диагностики
+    // Register diagnostics
     // TEMPORARILY DISABLED: LSP provides diagnostics now
     // const diagnostics = new PMLDiagnostics();
     // context.subscriptions.push(diagnostics);
 
-    // Регистрация PML Tools команд
+    // Register PML Tools commands
     const toolsProvider = new PMLToolsProvider();
     context.subscriptions.push(toolsProvider);
 
-    // Регистрация команд методов
+    // Register method commands
     PMLMethodCommands.registerCommands(context);
 
-    // Регистрация Code Actions (быстрые действия при выделении текста)
+    // Register Code Actions (quick fixes on text selection)
     const codeActionProvider = vscode.languages.registerCodeActionsProvider(
         'pml',
         new PMLCodeActionProvider(),
@@ -106,21 +106,21 @@ export function activate(context: vscode.ExtensionContext) {
     //     })
     // );
 
-    // Регистрация команды форматирования
+    // Register format command
     const formatCommand = vscode.commands.registerCommand('pml.formatDocument', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
-            vscode.window.showErrorMessage('Нет активного редактора');
+            vscode.window.showErrorMessage('No active editor');
             return;
         }
 
         if (editor.document.languageId !== 'pml') {
-            vscode.window.showErrorMessage('Это не PML файл');
+            vscode.window.showErrorMessage('This is not a PML file');
             return;
         }
 
         await vscode.commands.executeCommand('editor.action.formatDocument');
-        vscode.window.showInformationMessage('PML документ отформатирован');
+        vscode.window.showInformationMessage('PML document formatted');
     });
 
     context.subscriptions.push(formatCommand);
