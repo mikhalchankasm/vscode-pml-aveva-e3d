@@ -4,32 +4,42 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## [0.5.2] - 2025-10-20
 
-### 🚀 Type Inference & Smart Completions
+### 🔧 Critical Fixes - LSP Activation & Form Support
 
-#### Added
-- **Type Inference Engine** - Intelligent variable type tracking
-  - Infers types from assignments: `!k = object array()` → ARRAY
-  - Tracks types through control flow (if/do statements)
-  - Supports all built-in types (STRING, ARRAY, REAL, BOOLEAN, DBREF)
-  - Special handling for `object TYPE()` constructors
+#### Fixed - LSP Server Now Works in Production! ✅
+- **LSP Server Activation** - Critical fix for production mode
+  - Fixed `Cannot find module 'vscode-languageclient/node'` error
+  - Include runtime dependencies (`node_modules`) in VSIX package
+  - Updated `.vscodeignore` to exclude only devDependencies
+  - LSP server now starts correctly when installed from VSIX
+  - Added diagnostic logging for troubleshooting
 
-- **Knowledge Base Integration** - Methods from MD files
-  - `BuiltInMethodsLoader` - Parses `objects/*.md` files automatically
-  - Loads 69 STRING methods from `string object.md`
-  - Loads 48 ARRAY methods from `array object.md`
-  - Extensible for REAL, BOOLEAN, DBREF objects
+- **Form Files Support** (`.pmlfrm`) - No More False Errors! ✅
+  - Disabled strict parsing for form files (special DSL syntax)
+  - Added form UI keywords: `text`, `button`, `call`, `dialog`, `resize`, `wid`, `hei`
+  - Parse errors logged but not shown to user
+  - Forms now have syntax highlighting without red underlines
+  - `!this`, `setup form`, `frame`, etc. no longer show errors
 
-- **Smart Method Completions** - Context-aware IntelliSense
-  - Type `!k = object array()` then `!k.` → see only ARRAY methods
-  - Type `!name = |text|` then `!name.` → see only STRING methods
-  - Method signatures with parameter placeholders
-  - Documentation from knowledge base in completion items
+- **Object Constructor Syntax** - `object ARRAY()` Now Works! ✅
+  - Parser recognizes `object TYPE()` syntax in expressions
+  - Fixed "Expected expression" error on `!k = object ARRAY()`
+  - Supports `object STRING()`, `object ARRAY()`, custom types
 
-#### Technical
-- New file: `src/analysis/typeInference.ts` - Type inference engine
-- New file: `src/knowledge/builtInMethodsLoader.ts` - MD parser
-- Updated: `CompletionProvider` - Integrated type inference
-- Updated: `server.ts` - Initialize with workspace root for knowledge base
+#### Changed
+- Kept `activationEvents` in package.json for VSCode 1.80.0 compatibility
+- Workspace indexer excludes `objects/`, `docs/`, `scripts/` folders
+- Added diagnostic logging in extension activation
+
+#### Removed
+- Reverted broken type inference implementation (will be reimplemented properly)
+  - Removed `typeInference.ts` (had AST type mismatches)
+  - Removed `builtInMethodsLoader.ts` (needs redesign)
+  - Type inference feature postponed to future release
+
+#### Known Issues
+- Type-aware completions not yet implemented (coming in v0.6.0)
+- Form syntax not fully parsed (graceful degradation approach)
 
 ## [0.5.1] - 2025-10-19
 
