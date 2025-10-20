@@ -2,6 +2,35 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.2] - 2025-10-20
+
+### 🚀 Type Inference & Smart Completions
+
+#### Added
+- **Type Inference Engine** - Intelligent variable type tracking
+  - Infers types from assignments: `!k = object array()` → ARRAY
+  - Tracks types through control flow (if/do statements)
+  - Supports all built-in types (STRING, ARRAY, REAL, BOOLEAN, DBREF)
+  - Special handling for `object TYPE()` constructors
+
+- **Knowledge Base Integration** - Methods from MD files
+  - `BuiltInMethodsLoader` - Parses `objects/*.md` files automatically
+  - Loads 69 STRING methods from `string object.md`
+  - Loads 48 ARRAY methods from `array object.md`
+  - Extensible for REAL, BOOLEAN, DBREF objects
+
+- **Smart Method Completions** - Context-aware IntelliSense
+  - Type `!k = object array()` then `!k.` → see only ARRAY methods
+  - Type `!name = |text|` then `!name.` → see only STRING methods
+  - Method signatures with parameter placeholders
+  - Documentation from knowledge base in completion items
+
+#### Technical
+- New file: `src/analysis/typeInference.ts` - Type inference engine
+- New file: `src/knowledge/builtInMethodsLoader.ts` - MD parser
+- Updated: `CompletionProvider` - Integrated type inference
+- Updated: `server.ts` - Initialize with workspace root for knowledge base
+
 ## [0.5.1] - 2025-10-19
 
 ### 🎯 Parser Improvements & Documentation

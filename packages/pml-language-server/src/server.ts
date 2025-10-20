@@ -48,13 +48,16 @@ const documentASTs: Map<string, Program> = new Map();
 const symbolIndex = new SymbolIndex();
 const workspaceIndexer = new WorkspaceIndexer(symbolIndex, connection);
 
-// Providers
+// Workspace root (will be set in onInitialized)
+let workspaceRoot: string | undefined;
+
+// Providers (CompletionProvider will be initialized after workspace is known)
 const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
 const definitionProvider = new DefinitionProvider(symbolIndex, documents);
 const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex);
-const completionProvider = new CompletionProvider(symbolIndex);
+let completionProvider: CompletionProvider;
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
 
 let hasConfigurationCapability = false;
@@ -136,13 +139,25 @@ connection.onInitialized(async () => {
 				const decoded = decodeURIComponent(f.uri);
 				return decoded.replace('file:///', '').replace(/\//g, '\\');
 			});
+
+			// Set workspace root for knowledge base
+			workspaceRoot = folders[0];
+
+			// Initialize CompletionProvider with workspace root
+			completionProvider = new CompletionProvider(symbolIndex, workspaceRoot);
+
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
+		} else {
+			// No workspace folder - initialize without knowledge base
+			completionProvider = new CompletionProvider(symbolIndex);
 		}
 	} catch (error) {
 		connection.console.error(`Failed to index workspace: ${error}`);
+		// Fallback: initialize without workspace root
+		completionProvider = new CompletionProvider(symbolIndex);
 	}
 
 	connection.console.log('PML Language Server initialized');
@@ -315,7 +330,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
  */
 connection.onCompletion(params => {
 	const document = documents.get(params.textDocument.uri);
-	if (!document) return [];
+	if (!document || !completionProvider) return [];
 
 	return completionProvider.provide(params, document);
 });

@@ -17,3 +17,15 @@ setup form !!testForm dialog resize
     exit
 exit
 
+-- Должно работать БЕЗ ошибок:
+var !result collect all (pipe equi) with (name eq 'TEST')
+var !text compose |Hello| space |World|
+var !dprt compose space $!indxA |END|
+do !i from 1 to 10 by -1
+if !x neq 5 then
+
+var !pipes collect all for ( pipe equi ) for ce
+
+!k = object array()
+
+!K.

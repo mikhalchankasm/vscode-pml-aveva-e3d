@@ -14,6 +14,8 @@ define method .calculateVolume(!width is REAL, !height is REAL, !depth is REAL) 
     return !volume
 endmethod
 
+
+-- метод тестирования расчетов
 define method .testCalculations()
     -- Test the calculation methods
     !myArea = !this.calculateArea(10.0, 5.0)  -- F12 should jump to line 4
@@ -23,3 +25,6 @@ define method .testCalculations()
     !result = .processData('test')  -- Should jump to test_objects.pml
 endmethod
 
+
+
+!this.testCalculations()
