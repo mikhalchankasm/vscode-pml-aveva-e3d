@@ -104,10 +104,11 @@ export class WorkspaceIndexer {
 				for (const entry of entries) {
 					const fullPath = path.join(dir, entry.name);
 
-					// Skip node_modules, .git, etc.
+					// Skip node_modules, .git, objects, docs, etc.
 					if (entry.isDirectory()) {
 						const dirName = entry.name;
-						if (!dirName.startsWith('.') && dirName !== 'node_modules' && dirName !== 'out') {
+						const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode'];
+						if (!dirName.startsWith('.') && !excludedDirs.includes(dirName)) {
 							scanDirectory(fullPath);
 						}
 					} else if (entry.isFile()) {

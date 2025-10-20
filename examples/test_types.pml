@@ -57,3 +57,4 @@ define method .testTypeInference()
     !isZero = !count eq 0             -- BOOLEAN
 
 endmethod
+

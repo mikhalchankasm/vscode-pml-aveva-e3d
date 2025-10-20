@@ -1,18 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx vsce --version)",
-      "Bash(npx vsce package)",
-      "Bash(code --install-extension pml-aveva-e3d-0.5.1.vsix)",
-      "Bash(powershell -ExecutionPolicy Bypass -File scripts/reinstall.ps1 -Version \"0.5.1\")",
-      "Bash(git add INSTALL_VSIX.md)",
-      "Bash(git commit -m \"docs: add VSIX installation guide\n\nCreated comprehensive installation guide for v0.5.1:\n- Installation methods (CLI, UI, drag-drop)\n- Verification steps\n- Troubleshooting section\n- What''s new in v0.5.1\n- Testing checklist\n\nVSIX package ready: pml-aveva-e3d-0.5.1.vsix (15.39 MB)\nSuccessfully installed in VSCode and Cursor.\")",
-      "Bash(git add NEXT_STEPS.md)",
-      "Bash(git commit -m \"docs: add comprehensive development roadmap and testing checklist\n\nCreated NEXT_STEPS.md with:\n- v0.5.1 testing checklist\n- Short/medium/long-term tasks\n- Development process guide\n- Criteria for v1.0.0\n- Prioritized TODO list\n\nReady for user testing phase.\")",
-      "Bash(git push origin main)",
-      "Bash(npm run compile)",
-      "Bash(git add -A)",
-      "Bash(git commit -m \"feat: add type inference engine and smart method completions\n\nImplemented intelligent variable type tracking and context-aware completions:\n\nNew Features:\n- TypeInferenceEngine - Infers variable types from assignments\n  - Tracks !k = object array() → ARRAY type\n  - Handles control flow (if/do statements)\n  - Supports STRING, ARRAY, REAL, BOOLEAN, DBREF types\n\n- BuiltInMethodsLoader - Parses knowledge base MD files\n  - Loads methods from objects/string object.md (69 methods)\n  - Loads methods from objects/array object.md (48 methods)\n  - Extensible for other object types\n\n- Smart Completions - Type-aware IntelliSense\n  - Type !k = object array() then !k. → see ARRAY methods only\n  - Type !name = |text| then !name. → see STRING methods only\n  - Method signatures with parameter snippets\n  - Documentation from knowledge base\n\nTechnical:\n- New: src/analysis/typeInference.ts\n- New: src/knowledge/builtInMethodsLoader.ts\n- Updated: CompletionProvider with type inference\n- Updated: server.ts to pass workspace root\n- Added: examples/test_type_inference.pml\n\nFixes type-aware completions issue - now shows relevant methods based on variable type!\n\nv0.5.2\")"
+      "Bash(git commit -m \"fix: bundle knowledge base (objects/) into VSIX for user installations\n\nCritical fix for type inference in production:\n\nProblem:\n- objects/ folder only exists in development\n- Users installing VSIX don''t have objects/*.md files\n- Type inference completions would fail silently\n\nSolution:\n- Pass extensionPath from VSCode extension to LSP server\n- BuiltInMethodsLoader now supports 3 path strategies:\n  1. Workspace root (for testing with local objects/)\n  2. Extension path (for bundled VSIX)\n  3. Fallback to relative path from __dirname\n\nTechnical Changes:\n- Updated: languageClient.ts - Pass extensionPath via initializationOptions\n- Updated: server.ts - Extract extensionPath from params.initializationOptions\n- Updated: BuiltInMethodsLoader - Smart path resolution with fs.existsSync\n- Updated: CompletionProvider - Accept extensionPath parameter\n\nNow objects/ folder will be bundled into VSIX and accessible to all users!\")",
+      "Bash(npm run pack)",
+      "Bash(git commit -m \"fix: exclude objects/ and docs/ from workspace indexing\n\nProblem:\n- WorkspaceIndexer was scanning ALL directories including objects/, docs/\n- MD files and examples were being parsed as PML code\n- Random words from documentation appeared in completions\n\nSolution:\n- Added excludedDirs list: objects, docs, scripts, .git, .vscode\n- Now only actual PML code files (.pml, .pmlfrm, etc.) are indexed\n- MD files are only used by BuiltInMethodsLoader for type-specific methods\n\nv0.5.2 fix\")"
     ],
     "deny": [],
     "ask": []
