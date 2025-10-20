@@ -187,11 +187,12 @@ export interface CallExpression extends ASTNode {
  * Member Expression
  * !variable.method()
  * !object.property
+ * !arr[index]
  */
 export interface MemberExpression extends ASTNode {
 	type: 'MemberExpression';
 	object: Expression;
-	property: Identifier;
+	property: Expression; // For computed: Expression (arr[i+1]), for non-computed: Identifier (.method)
 	computed: boolean; // true for !arr[index]
 }
 

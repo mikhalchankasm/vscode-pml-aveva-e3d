@@ -818,6 +818,7 @@ export class Parser {
 	 */
 	private parseMember(): Expression {
 		let expr = this.parsePrimary();
+		const startPos = expr.range.start;
 
 		while (true) {
 			if (this.match(TokenType.DOT)) {
@@ -832,19 +833,25 @@ export class Parser {
 						range: this.createRange(this.getTokenIndex(property), this.getTokenIndex(property))
 					},
 					computed: false,
-					range: this.createRange(0, this.current - 1)
+					range: {
+						start: startPos,
+						end: { line: property.line - 1, character: property.column + property.length - 1 }
+					}
 				};
 			} else if (this.match(TokenType.LBRACKET)) {
 				// Array access: [index]
-				const startPos = this.current - 1;
+				const lbracketPos = this.current - 1;
 				const indexExpr = this.parseExpression();
-				this.consume(TokenType.RBRACKET, "Expected ']' after array index");
+				const rbracket = this.consume(TokenType.RBRACKET, "Expected ']' after array index");
 				expr = {
 					type: 'MemberExpression',
 					object: expr,
 					property: indexExpr, // Store the actual index expression
 					computed: true,
-					range: this.createRange(startPos, this.current - 1)
+					range: {
+						start: startPos,
+						end: { line: rbracket.line - 1, character: rbracket.column - 1 }
+					}
 				};
 			} else {
 				break;

@@ -20,5 +20,3 @@ define method .initbran(!pipelist is array)
     !this.export(!outlist)
 
 endmethod
-
-!this.export(!sometext)
