@@ -2,6 +2,25 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.5] - 2025-01-20
+
+### Fixed
+- ✅ **MemberExpression AST Type** - Correct TypeScript typing
+  - Changed `property` type from `Identifier` to `Expression`
+  - Now supports computed (`arr[i+1]`) and non-computed (`.method`) access
+  - Fixed TypeScript error: "Identifier not assignable to Expression"
+  - `arr[0]` detection now actually runs (was always-false before)
+
+- ✅ **MemberExpression Range** - Correct highlighting
+  - Fixed dot member access range (was pointing to line 0)
+  - Now captures start position from object, not from file top
+  - Go to definition and hovers now highlight correctly
+  - Example: `!var.method` now highlights entire expression, not line 0
+
+### Added
+- Test file `test_array_zero.pml` with arr[0] edge cases
+- Tests for elseif blocks with array access
+
 ## [0.5.4] - 2025-01-20
 
 ### Fixed
