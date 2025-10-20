@@ -15,5 +15,6 @@ jobs:
         with:
           node-version: 18
       - run: npm ci || npm install
+      - run: cd packages/pml-language-server && npm ci || npm install
       - run: npm run lint
       - run: npm run compile

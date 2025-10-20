@@ -6,8 +6,8 @@ package-lock.json
 # Build output
 out/
 
-# VSIX packages
-pml-aveva-e3d-*.vsix
+# VSIX packages - commented out to allow committing releases
+# pml-aveva-e3d-*.vsix
 
 # OS / editor
 .DS_Store
