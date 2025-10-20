@@ -236,6 +236,16 @@ documents.onDidChangeContent(change => {
 	validateTextDocument(change.document);
 });
 
+// Document opened - validate immediately
+documents.onDidOpen(event => {
+	validateTextDocument(event.document);
+});
+
+// Document saved - revalidate
+documents.onDidSave(event => {
+	validateTextDocument(event.document);
+});
+
 /**
  * Validate document (AST-based diagnostics)
  */

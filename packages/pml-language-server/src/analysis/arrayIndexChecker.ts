@@ -38,8 +38,14 @@ export class ArrayIndexChecker {
 					this.checkStatement(thenStmt);
 				}
 				if (ifStmt.alternate) {
-					for (const elseStmt of ifStmt.alternate) {
-						this.checkStatement(elseStmt);
+					// alternate can be either an IfStatement (elseif) or Statement[] (else)
+					if (Array.isArray(ifStmt.alternate)) {
+						for (const elseStmt of ifStmt.alternate) {
+							this.checkStatement(elseStmt);
+						}
+					} else {
+						// Handle elseif - alternate is an IfStatement
+						this.checkStatement(ifStmt.alternate);
 					}
 				}
 				break;
@@ -76,19 +82,22 @@ export class ArrayIndexChecker {
 			case 'MemberExpression':
 				const member = expr as MemberExpression;
 				// Check if it's array access with [0]
-				if (member.computed) {
-					// In computed mode: property is an Identifier containing the index
-					// For !arr[0], property.name will be "0"
-					const indexValue = member.property.name;
-					if (indexValue === '0') {
-						this.diagnostics.push({
-							range: expr.range,
-							message: 'Array indices in PML start at 1, not 0. Accessing [0] will cause a runtime error.',
-							severity: DiagnosticSeverity.Error,
-							source: 'pml-array-index',
-							code: 'array-index-zero'
-						});
+				if (member.computed && member.property) {
+					// property is now an Expression - check if it's a Literal with value 0
+					if (member.property.type === 'Literal') {
+						const literal = member.property as any;
+						if (literal.value === 0 || literal.value === '0') {
+							this.diagnostics.push({
+								range: member.property.range,
+								message: 'Array indices in PML start at 1, not 0. Accessing [0] will cause a runtime error.',
+								severity: DiagnosticSeverity.Error,
+								source: 'pml-array-index',
+								code: 'array-index-zero'
+							});
+						}
 					}
+					// Recursively check the index expression
+					this.checkExpression(member.property);
 				}
 				// Recursively check object
 				this.checkExpression(member.object);

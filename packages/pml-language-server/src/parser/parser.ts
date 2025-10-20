@@ -836,18 +836,15 @@ export class Parser {
 				};
 			} else if (this.match(TokenType.LBRACKET)) {
 				// Array access: [index]
-				const index = this.parseExpression();
+				const startPos = this.current - 1;
+				const indexExpr = this.parseExpression();
 				this.consume(TokenType.RBRACKET, "Expected ']' after array index");
 				expr = {
 					type: 'MemberExpression',
 					object: expr,
-					property: {
-						type: 'Identifier',
-						name: 'index',
-						range: this.createRange(0, 0)
-					},
+					property: indexExpr, // Store the actual index expression
 					computed: true,
-					range: this.createRange(0, this.current - 1)
+					range: this.createRange(startPos, this.current - 1)
 				};
 			} else {
 				break;
