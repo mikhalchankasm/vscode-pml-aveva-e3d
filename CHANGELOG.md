@@ -2,6 +2,32 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.4] - 2025-01-20
+
+### Fixed
+- ✅ **Parser MemberExpression** - Array index expressions now stored correctly
+  - Before: `!arr[index]` stored fake Identifier('index')
+  - After: Stores real parsed expression
+  - Impact: Hovers, definitions, diagnostics now work on array indices
+  - Fixed ranges - no more "pointing at top of file"
+
+- ✅ **ArrayIndexChecker** - Fixed crash on elseif statements
+  - Fixed TypeError when `elseif` appears in code
+  - Added proper handling for `ifStmt.alternate` (can be IfStatement or Statement[])
+  - Updated `arr[0]` detection to check `Literal.value` instead of `property.name`
+  - Now correctly detects and warns about zero-based array access
+
+- ✅ **Document Validation** - Diagnostics show immediately
+  - Added validation on `onDidOpen()` - no need to edit first
+  - Added validation on `onDidSave()` - revalidate after save
+  - Before: diagnostics only appeared after first keystroke
+  - After: red squiggles appear instantly when opening file
+
+### Technical
+- All fixes based on thorough code review
+- Improved AST accuracy for member expressions
+- Better error handling in analysis passes
+
 ## [0.5.3] - 2025-01-20
 
 ### Fixed
