@@ -82,8 +82,9 @@ vscode-pml-extension/
 
 ### 🐛 Known Issues
 
-- Form files (.pmlfrm) have limited parser support (intentional - complex DSL)
-- Type inference is disabled in v0.5.3 (will be reimplemented)
+- **Form files** (.pmlfrm) have limited parser support (intentional - complex DSL)
+- **Find All References** currently shows definitions instead of actual call sites (limitation of current implementation)
+- **object ARRAY()** syntax may show "Expected expression" warning (parser limitation, does not affect functionality)
 
 ### 📝 License
 
@@ -164,8 +165,9 @@ vscode-pml-extension/
 
 ### 🐛 Известные проблемы
 
-- Файлы форм (.pmlfrm) имеют ограниченную поддержку парсера (намеренно - сложный DSL)
-- Type inference отключён в v0.5.3 (будет переделан позже)
+- **Файлы форм** (.pmlfrm) имеют ограниченную поддержку парсера (намеренно - сложный DSL)
+- **Find All References** показывает определения вместо реальных вызовов (ограничение текущей реализации)
+- **object ARRAY()** может показывать предупреждение "Expected expression" (ограничение парсера, не влияет на функциональность)
 
 ### 📝 Лицензия
 
