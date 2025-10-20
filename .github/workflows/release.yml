@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: 20.18.1
       - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - run: cd packages/pml-language-server && npm ci --no-audit --no-fund || npm install --no-audit --no-fund
       - run: npm run compile
       - name: Compute release tag
         id: vars
@@ -72,7 +73,7 @@ jobs:
           files: |
             *.vsix
           generate_release_notes: true
-          body_path: docs/CHANGELOG.md
+          body_path: CHANGELOG.md
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       - name: Determine VSCE PAT
         id: vsce
