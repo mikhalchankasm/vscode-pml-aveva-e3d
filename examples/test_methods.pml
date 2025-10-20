@@ -26,5 +26,3 @@ define method .testCalculations()
 endmethod
 
 
-
-!this.testCalculations()

@@ -11,7 +11,8 @@
       "Bash(git commit -m \"docs: add comprehensive development roadmap and testing checklist\n\nCreated NEXT_STEPS.md with:\n- v0.5.1 testing checklist\n- Short/medium/long-term tasks\n- Development process guide\n- Criteria for v1.0.0\n- Prioritized TODO list\n\nReady for user testing phase.\")",
       "Bash(git push origin main)",
       "Bash(npm run compile)",
-      "Bash(git add -A)"
+      "Bash(git add -A)",
+      "Bash(git commit -m \"feat: add type inference engine and smart method completions\n\nImplemented intelligent variable type tracking and context-aware completions:\n\nNew Features:\n- TypeInferenceEngine - Infers variable types from assignments\n  - Tracks !k = object array() → ARRAY type\n  - Handles control flow (if/do statements)\n  - Supports STRING, ARRAY, REAL, BOOLEAN, DBREF types\n\n- BuiltInMethodsLoader - Parses knowledge base MD files\n  - Loads methods from objects/string object.md (69 methods)\n  - Loads methods from objects/array object.md (48 methods)\n  - Extensible for other object types\n\n- Smart Completions - Type-aware IntelliSense\n  - Type !k = object array() then !k. → see ARRAY methods only\n  - Type !name = |text| then !name. → see STRING methods only\n  - Method signatures with parameter snippets\n  - Documentation from knowledge base\n\nTechnical:\n- New: src/analysis/typeInference.ts\n- New: src/knowledge/builtInMethodsLoader.ts\n- Updated: CompletionProvider with type inference\n- Updated: server.ts to pass workspace root\n- Added: examples/test_type_inference.pml\n\nFixes type-aware completions issue - now shows relevant methods based on variable type!\n\nv0.5.2\")"
     ],
     "deny": [],
     "ask": []

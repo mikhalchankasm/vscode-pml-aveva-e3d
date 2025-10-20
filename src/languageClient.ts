@@ -46,6 +46,10 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 		synchronize: {
 			// Notify the server about file changes to '.pml files contained in the workspace
 			fileEvents: workspace.createFileSystemWatcher('**/*.{pml,pmlobj,pmlfnc,pmlfrm,pmlmac,pmlcmd}')
+		},
+		// Pass extension path to server for bundled knowledge base
+		initializationOptions: {
+			extensionPath: context.extensionPath
 		}
 	};
 

@@ -30,11 +30,28 @@ export class BuiltInMethodsLoader {
 	private knowledgeBasePath: string;
 	private typeMethodsCache: Map<string, MethodInfo[]>;
 
-	constructor(workspaceRoot?: string) {
-		// Try to find knowledge base path
-		this.knowledgeBasePath = workspaceRoot
-			? path.join(workspaceRoot, 'objects')
-			: path.join(__dirname, '..', '..', '..', '..', 'objects');
+	constructor(workspaceRoot?: string, extensionPath?: string) {
+		// Try to find knowledge base path in order of priority:
+		// 1. Workspace root (for development/testing with local objects/)
+		// 2. Extension path (for bundled VSIX)
+		// 3. Relative to compiled JS (__dirname)
+
+		if (workspaceRoot) {
+			const workspacePath = path.join(workspaceRoot, 'objects');
+			if (fs.existsSync(workspacePath)) {
+				this.knowledgeBasePath = workspacePath;
+			} else if (extensionPath) {
+				// Use bundled knowledge base from extension
+				this.knowledgeBasePath = path.join(extensionPath, 'objects');
+			} else {
+				// Fallback: relative to compiled JS
+				this.knowledgeBasePath = path.join(__dirname, '..', '..', '..', '..', 'objects');
+			}
+		} else if (extensionPath) {
+			this.knowledgeBasePath = path.join(extensionPath, 'objects');
+		} else {
+			this.knowledgeBasePath = path.join(__dirname, '..', '..', '..', '..', 'objects');
+		}
 
 		this.typeMethodsCache = new Map();
 	}

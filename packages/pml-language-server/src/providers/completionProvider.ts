@@ -19,9 +19,9 @@ export class CompletionProvider {
 	private typeInference: TypeInferenceEngine;
 	private methodsLoader: BuiltInMethodsLoader;
 
-	constructor(private symbolIndex: SymbolIndex, workspaceRoot?: string) {
+	constructor(private symbolIndex: SymbolIndex, workspaceRoot?: string, extensionPath?: string) {
 		this.typeInference = new TypeInferenceEngine();
-		this.methodsLoader = new BuiltInMethodsLoader(workspaceRoot);
+		this.methodsLoader = new BuiltInMethodsLoader(workspaceRoot, extensionPath);
 
 		// Pre-load knowledge base
 		try {

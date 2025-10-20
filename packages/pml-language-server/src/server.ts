@@ -48,8 +48,9 @@ const documentASTs: Map<string, Program> = new Map();
 const symbolIndex = new SymbolIndex();
 const workspaceIndexer = new WorkspaceIndexer(symbolIndex, connection);
 
-// Workspace root (will be set in onInitialized)
+// Workspace root and extension path (will be set in onInitialize/onInitialized)
 let workspaceRoot: string | undefined;
+let extensionPath: string | undefined;
 
 // Providers (CompletionProvider will be initialized after workspace is known)
 const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
@@ -66,6 +67,12 @@ let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
+
+	// Get extension path from initialization options
+	if (params.initializationOptions && params.initializationOptions.extensionPath) {
+		extensionPath = params.initializationOptions.extensionPath;
+		connection.console.log(`Extension path: ${extensionPath}`);
+	}
 
 	// Check client capabilities
 	hasConfigurationCapability = !!(
@@ -143,21 +150,21 @@ connection.onInitialized(async () => {
 			// Set workspace root for knowledge base
 			workspaceRoot = folders[0];
 
-			// Initialize CompletionProvider with workspace root
-			completionProvider = new CompletionProvider(symbolIndex, workspaceRoot);
+			// Initialize CompletionProvider with workspace root and extension path
+			completionProvider = new CompletionProvider(symbolIndex, workspaceRoot, extensionPath);
 
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
 		} else {
-			// No workspace folder - initialize without knowledge base
-			completionProvider = new CompletionProvider(symbolIndex);
+			// No workspace folder - use extension path for bundled knowledge base
+			completionProvider = new CompletionProvider(symbolIndex, undefined, extensionPath);
 		}
 	} catch (error) {
 		connection.console.error(`Failed to index workspace: ${error}`);
-		// Fallback: initialize without workspace root
-		completionProvider = new CompletionProvider(symbolIndex);
+		// Fallback: use extension path for bundled knowledge base
+		completionProvider = new CompletionProvider(symbolIndex, undefined, extensionPath);
 	}
 
 	connection.console.log('PML Language Server initialized');
