@@ -4,7 +4,21 @@
       "Bash(git commit -m \"fix: bundle knowledge base (objects/) into VSIX for user installations\n\nCritical fix for type inference in production:\n\nProblem:\n- objects/ folder only exists in development\n- Users installing VSIX don''t have objects/*.md files\n- Type inference completions would fail silently\n\nSolution:\n- Pass extensionPath from VSCode extension to LSP server\n- BuiltInMethodsLoader now supports 3 path strategies:\n  1. Workspace root (for testing with local objects/)\n  2. Extension path (for bundled VSIX)\n  3. Fallback to relative path from __dirname\n\nTechnical Changes:\n- Updated: languageClient.ts - Pass extensionPath via initializationOptions\n- Updated: server.ts - Extract extensionPath from params.initializationOptions\n- Updated: BuiltInMethodsLoader - Smart path resolution with fs.existsSync\n- Updated: CompletionProvider - Accept extensionPath parameter\n\nNow objects/ folder will be bundled into VSIX and accessible to all users!\")",
       "Bash(npm run pack)",
       "Bash(git commit -m \"fix: exclude objects/ and docs/ from workspace indexing\n\nProblem:\n- WorkspaceIndexer was scanning ALL directories including objects/, docs/\n- MD files and examples were being parsed as PML code\n- Random words from documentation appeared in completions\n\nSolution:\n- Added excludedDirs list: objects, docs, scripts, .git, .vscode\n- Now only actual PML code files (.pml, .pmlfrm, etc.) are indexed\n- MD files are only used by BuiltInMethodsLoader for type-specific methods\n\nv0.5.2 fix\")",
-      "Bash(git commit -m \"fix: add explicit output channel for PML Language Server\n\nIssue:\n- Output channel ''PML Language Server'' not appearing in production\n- Works in debug mode (F5) but not when installed as VSIX\n- Makes debugging difficult for users\n\nSolution:\n- Added outputChannelName: ''PML Language Server'' to clientOptions\n- Added revealOutputChannelOn setting\n- Now Output channel will be created on extension activation\n\nv0.5.2\")"
+      "Bash(git commit -m \"fix: add explicit output channel for PML Language Server\n\nIssue:\n- Output channel ''PML Language Server'' not appearing in production\n- Works in debug mode (F5) but not when installed as VSIX\n- Makes debugging difficult for users\n\nSolution:\n- Added outputChannelName: ''PML Language Server'' to clientOptions\n- Added revealOutputChannelOn setting\n- Now Output channel will be created on extension activation\n\nv0.5.2\")",
+      "Bash(git add package.json)",
+      "Bash(git commit -m \"chore: fix package.json warnings\n\n- Removed empty email field from author\n- Removed activationEvents (VSCode auto-generates from contributes)\n\nFixes validation warnings in package.json\")",
+      "Bash(code --list-extensions)",
+      "Bash(code --list-extensions --show-versions)",
+      "Bash(ls -la \"$HOME/.vscode/extensions/mikhalchankasm.pml-aveva-e3d-0.5.2/packages/pml-language-server/out/\")",
+      "Bash(ls -la \"$USERPROFILE/.vscode/extensions/mikhalchankasm.pml-aveva-e3d-0.5.2/packages/pml-language-server/out/\")",
+      "Bash(find \"$HOME/.vscode/extensions/mikhalchankasm.pml-aveva-e3d-0.5.2\" -name \"knowledge\" -type d)",
+      "Bash(ls -R \"$HOME/.vscode/extensions/mikhalchankasm.pml-aveva-e3d-0.5.2/packages/pml-language-server/out/\")",
+      "Bash(npm run compile)",
+      "Bash(npx tsc -p .)",
+      "Bash(git checkout 5844e3e -- packages/pml-language-server/src/providers/completionProvider.ts packages/pml-language-server/src/server.ts src/languageClient.ts)",
+      "Bash(npx tsc -p . --noEmit false)",
+      "Bash(ls -la \"$USERPROFILE/.vscode/extensions/mikhalchankasm.pml-aveva-e3d-0.5.2/packages/pml-language-server/out/server.js\")",
+      "Bash(git add -A)"
     ],
     "deny": [],
     "ask": []

@@ -50,6 +50,15 @@ export enum TokenType {
 	MEMBER = 'MEMBER',
 	IS = 'IS',
 
+	// Form UI keywords (for syntax highlighting, not strict parsing)
+	TEXT = 'TEXT',
+	BUTTON = 'BUTTON',
+	CALL = 'CALL',
+	DIALOG = 'DIALOG',
+	RESIZE = 'RESIZE',
+	WID = 'WID',
+	HEI = 'HEI',
+
 	// PML1 Declarative Keywords (for syntax highlighting, not strict parsing)
 	COLLECT = 'COLLECT',
 	ALL = 'ALL',
@@ -152,6 +161,15 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'exit': TokenType.EXIT,
 	'member': TokenType.MEMBER,
 	'is': TokenType.IS,
+
+	// Form UI keywords (recognized but not strictly parsed)
+	'text': TokenType.TEXT,
+	'button': TokenType.BUTTON,
+	'call': TokenType.CALL,
+	'dialog': TokenType.DIALOG,
+	'resize': TokenType.RESIZE,
+	'wid': TokenType.WID,
+	'hei': TokenType.HEI,
 
 	// PML1 Declarative Keywords (recognized but not strictly parsed)
 	'collect': TokenType.COLLECT,

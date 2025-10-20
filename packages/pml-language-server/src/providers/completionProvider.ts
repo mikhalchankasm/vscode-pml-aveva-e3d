@@ -1,5 +1,5 @@
 /**
- * Enhanced Completion Provider - Context-aware code completion with type inference
+ * Enhanced Completion Provider - Context-aware code completion
  */
 
 import {
@@ -10,26 +10,9 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
-import { TypeInferenceEngine } from '../analysis/typeInference';
-import { BuiltInMethodsLoader } from '../knowledge/builtInMethodsLoader';
-import { Parser } from '../parser/parser';
-import { Lexer } from '../parser/lexer';
 
 export class CompletionProvider {
-	private typeInference: TypeInferenceEngine;
-	private methodsLoader: BuiltInMethodsLoader;
-
-	constructor(private symbolIndex: SymbolIndex, workspaceRoot?: string, extensionPath?: string) {
-		this.typeInference = new TypeInferenceEngine();
-		this.methodsLoader = new BuiltInMethodsLoader(workspaceRoot, extensionPath);
-
-		// Pre-load knowledge base
-		try {
-			this.methodsLoader.loadAllMethods();
-		} catch (error) {
-			console.error('Failed to load knowledge base:', error);
-		}
-	}
+	constructor(private symbolIndex: SymbolIndex) {}
 
 	public provide(params: CompletionParams, document: TextDocument): CompletionItem[] {
 		const position = params.position;
@@ -47,26 +30,11 @@ export class CompletionProvider {
 		}
 
 		// Check if typing after a variable (for method calls)
-		// Match: !variable. or !!global. or identifier.
-		const memberMatch = textBeforeCursor.match(/(!{1,2})?(\w+)\.\s*$/);
+		const memberMatch = textBeforeCursor.match(/(\w+)\.\s*$/);
 		if (memberMatch) {
-			const varName = memberMatch[2];
-			const isVariable = !!memberMatch[1]; // Has ! or !!
-
-			// Try to infer variable type
-			const varType = this.inferVariableType(varName, document);
-
-			if (varType && varType !== 'ANY') {
-				// Offer type-specific methods from knowledge base
-				const typeMethods = this.methodsLoader.getCompletionItemsForType(varType);
-				if (typeMethods.length > 0) {
-					return typeMethods;
-				}
-			}
-
-			// Fallback: offer all built-in methods
+			// Try to infer variable type and offer type-specific methods
+			// For now, offer all built-in methods
 			items.push(...this.getBuiltInMethodCompletions());
-			return items;
 		}
 
 		// Keywords and snippets
@@ -80,36 +48,6 @@ export class CompletionProvider {
 		items.push(...this.getWorkspaceSymbolCompletions());
 
 		return items;
-	}
-
-	/**
-	 * Infer variable type from document context
-	 */
-	private inferVariableType(varName: string, document: TextDocument): string | null {
-		try {
-			// Parse the document
-			const text = document.getText();
-			const lexer = new Lexer(text);
-			const tokens = lexer.scanTokens();
-			const parser = new Parser(tokens);
-			const program = parser.parse();
-
-			// Analyze program to build type context
-			const context = this.typeInference.analyzeProgram(program);
-
-			// Get variable type
-			const type = this.typeInference.getVariableType(varName, context);
-
-			if (type) {
-				return type.kind;
-			}
-
-			return null;
-		} catch (error) {
-			// Parse error - gracefully fall back
-			console.error('Type inference failed:', error);
-			return null;
-		}
 	}
 
 	/**

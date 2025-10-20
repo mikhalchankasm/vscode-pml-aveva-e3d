@@ -24,6 +24,9 @@
   ],
   "main": "./out/extension.js",
   "icon": "./icons/pml-icon.png",
+  "activationEvents": [
+    "onLanguage:pml"
+  ],
   "contributes": {
     "keybindings": [
       {

@@ -27,5 +27,4 @@ if !x neq 5 then
 var !pipes collect all for ( pipe equi ) for ce
 
 !k = object array()
-
-!K.
+!k.

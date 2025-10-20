@@ -8,10 +8,15 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
-node_modules/**
 .editorconfig
 test.pml
 docs/**
 examples/**
 scripts/**
 *.vsix
+
+# Exclude devDependencies but KEEP runtime dependencies
+node_modules/@types/**
+node_modules/@typescript-eslint/**
+node_modules/eslint/**
+node_modules/typescript/**

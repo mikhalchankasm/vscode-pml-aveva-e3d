@@ -14,12 +14,18 @@ import { PMLCodeActionProvider } from './codeActions';
 import { activateLanguageServer, deactivateLanguageServer } from './languageClient';
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('PML extension activated');
+    console.log('✅ PML extension activated');
+    console.log('Extension path:', context.extensionPath);
 
     // Activate Language Server (Phase 1 - LSP)
     // TODO: Once LSP is fully implemented, this will replace the providers below
-    const client = activateLanguageServer(context);
-    console.log('PML Language Server client started');
+    try {
+        const client = activateLanguageServer(context);
+        console.log('✅ PML Language Server client started');
+    } catch (error) {
+        console.error('❌ Failed to start PML Language Server:', error);
+        vscode.window.showErrorMessage(`PML Language Server failed to start: ${error}`);
+    }
 
     // Регистрация форматтера
     const formatter = vscode.languages.registerDocumentFormattingEditProvider('pml', new PMLFormatter());

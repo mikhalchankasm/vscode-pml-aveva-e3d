@@ -17,15 +17,15 @@
 -- =========== ====== ===========
 
 
-import 'PMLFileBrowser'
+import |PMLFileBrowser|
 handle (1000,0)
 endhandle
 
-import 'GridControl'
+import |GridControl|
 handle (1000,0)
 endhandle
 
-import 'Z:\RSD81\SP4\PMLLIB\dop\ReportPdmsAddin12sp2'
+import |Z:\RSD81\SP4\PMLLIB\dop\ReportPdmsAddin12sp2|
 handle (1000,0)
 endhandle
 
@@ -34,7 +34,7 @@ endhandle
 setup form !!report dialog resize
     
     -- Define grid control namespace
-    using namespace 'Aveva.Pdms.Presentation'
+    using namespace |Aveva.Pdms.Presentation|
     
     ---------------------------------- FORM ------------------------------
     
@@ -45,8 +45,8 @@ setup form !!report dialog resize
     !this.cancelCall     = |!this.cancelCall()|
     !this.okCall         = |!this.okCall()|
     
-    track 'DBCHANGED' call '!this.track()'
-    track 'DESICE'    call '!this.track()'
+    track |DBCHANGED| call |!this.track()|
+    track |DESICE|    call |!this.track()|
     
     !lrtb      = | anchor all |
     !lrt       = | anchor left + right + top |
@@ -58,15 +58,15 @@ setup form !!report dialog resize
     frame .tabs tabset $!lrtb at xmin form ymax form
         
         $* ====================================================  Вкладка "Публикация" ====================================================
-        frame .isoFrame 'Публикация' $!lrt at xmin ymin
+        frame .isoFrame |Публикация| $!lrt at xmin ymin
 		
-			button .bnAddCe      'Добавить текущий'  at x0 ymin + 0.25 $!lt 
-            button .bnAddDlst    'Добавить MEMb'     at xmax.bnAddCe + 0.5      ymin.bnAddCe $!lt
-			button .bnReport     'Отчет'             at xmax  + 0.5       ymin.bnAddCe $!lt
+			button .bnAddCe      |Добавить текущий|  at x0 ymin + 0.25 $!lt 
+            button .bnAddDlst    |Добавить MEMb|     at xmax.bnAddCe + 0.5      ymin.bnAddCe $!lt
+			button .bnReport     |Отчет|             at xmax  + 0.5       ymin.bnAddCe $!lt
 			
 			
-            frame .frTablePipe 'Линии' anchor all at x0.5  wid 80 HEI 14
-                container .gridFramePipe nobox PMLNETCONTROL 'TablePipe' at xmin.frTablePipe + 0.25 ymin.frTablePipe + 0.25 $!lrtb wid 78 HEI 13
+            frame .frTablePipe |Линии| anchor all at x0.5  wid 80 HEI 14
+                container .gridFramePipe nobox PMLNETCONTROL |TablePipe| at xmin.frTablePipe + 0.25 ymin.frTablePipe + 0.25 $!lrtb wid 78 HEI 13
             exit
             
         exit
@@ -103,11 +103,11 @@ setup form !!report dialog resize
     member .grid is NetGridControl
     
     menu .menuPopup popup
-    !this.menuPopup.add( 'CALLBACK', 'Перейти к',| !this.NavigateTo()| )
-    !this.menuPopup.add( 'CALLBACK', 'Удалить выбранные',|!this.remove()| )
-    !this.menuPopup.add( 'CALLBACK', 'Очистить список',|!this.grid.ClearGridData()| )
-    !this.menuPopup.add( 'SEPARATOR' )
-    !this.menuPopup.add( 'CALLBACK', 'Экспорт в Excel',|!this.saveToXLS()| )
+    !this.menuPopup.add( |CALLBACK|, |Перейти к|,| !this.NavigateTo()| )
+    !this.menuPopup.add( |CALLBACK|, |Удалить выбранные|,|!this.remove()| )
+    !this.menuPopup.add( |CALLBACK|, |Очистить список|,|!this.grid.ClearGridData()| )
+    !this.menuPopup.add( |SEPARATOR| )
+    !this.menuPopup.add( |CALLBACK|, |Экспорт в Excel|,|!this.saveToXLS()| )
 exit
 -- End of FORM definition
 
@@ -122,15 +122,15 @@ define method .firstShown()
     
     $* настройка таблицы чертежей
     !headings = object array()
-    !headings[1] = 'NAME'
-    !headings[2] = 'ZONE'
+    !headings[1] = |NAME|
+    !headings[2] = |ZONE|
     
     !data = object Array()
     
-    using namespace 'Aveva.Pdms.Presentation'
-    !nds = object NetDataSource('Grid Drawings', !headings, !data)
+    using namespace |Aveva.Pdms.Presentation|
+    !nds = object NetDataSource(|Grid Drawings|, !headings, !data)
     !this.grid.BindToDataSource(!nds)
-    !this.setGrid('grid')
+    !this.setGrid(|grid|)
 
     
     -- !this.settingOpen()
@@ -148,7 +148,7 @@ endmethod
 define method .init()
     
 	 -- Define grid control namespace
-    using namespace 'Aveva.Pdms.Presentation'
+    using namespace |Aveva.Pdms.Presentation|
     -- Set the gadget icons
     
     !ps = 16
@@ -170,8 +170,8 @@ define method .init()
     $* таблица трубопроводов
     !this.grid = object NetGridControl()
     !this.gridFramePipe.control = !this.grid.handle()
-    !this.grid.addEventHandler('OnPopup', !this, 'OnPopupPipeCallback')
-    !this.grid.addEventHandler('AfterSelectChange', !this, 'changePipeList')
+    !this.grid.addEventHandler(|OnPopup|, !this, |OnPopupPipeCallback|)
+    !this.grid.addEventHandler(|AfterSelectChange|, !this, |changePipeList|)
     !this.gridFramePipe.popup = !this.menuPopup
     
     -- !this.setting()
@@ -205,10 +205,10 @@ define method .selectTemplate() is string
     
     var !projCode proj code
     
-    !projCode      = !projCode & 'dflts'
+    !projCode      = !projCode & |dflts|
     !this.dfltsDir = !!evar(!projCode)
-    !projCode      = !!evar(!projCode) & '\Шаблон_ИЧ.docx'
-    !return        = 'Не найден. Повторите выбор'
+    !projCode      = !!evar(!projCode) & |\Шаблон_ИЧ.docx|
+    !return        = |Не найден. Повторите выбор|
     !file          = object File(!projCode)
     
     if ( !file.Exists() ) then
@@ -301,7 +301,7 @@ endmethod
 
 define method .selectFile()
     
-    !!fileBrowser(!this.wordFileDir, '*.docx', 'Выбор Word файла', true , '')
+    !!fileBrowser(!this.wordFileDir, |*.docx|, |Выбор Word файла|, true , ||)
     
     !file = !!fileBrowser.file
     
@@ -350,14 +350,14 @@ define method .check()
     !f1 = object file(!this.txtFileName.Val)
     !f2 = object file(!this.txtFolderName.Val)
     
-    if ( !f1.Unset() or !f1.Exists().Not() or !f1.Type() neq 'FILE' ) then
-        !!Alert.Message('Путь к файлу word не верный. Повторите выбор файла')
+    if ( !f1.Unset() or !f1.Exists().Not() or !f1.Type() neq |FILE| ) then
+        !!Alert.Message(|Путь к файлу word не верный. Повторите выбор файла|)
         !this.txtFileName.SetFocus()
         return
     endif
     
-    if ( !f2.Unset() or !f2.Exists().Not() or !f2.Type() neq 'DIRECTORY' ) then
-        !!Alert.Message('Путь к директории с изометрическими чертежами указан не верно. ')
+    if ( !f2.Unset() or !f2.Exists().Not() or !f2.Type() neq |DIRECTORY| ) then
+        !!Alert.Message(|Путь к директории с изометрическими чертежами указан не верно. |)
         !this.txtFolderName.SetFocus()
         return
     endif
@@ -379,7 +379,7 @@ define method .readFolder()
     
     
     
-    using namespace 'ReportPdmsAddin'
+    using namespace |ReportPdmsAddin|
     !report = object Report()
     
     show !!CADCBTH free
@@ -397,24 +397,24 @@ define method .readFolder()
     do !file values !findFiles
         
         
-        if ( !file.FullName().Substring(-3, 3).UpCase() eq 'PDF' or !file.FullName().Substring(-3, 3).UpCase() eq '_SHT_1.DXF'  ) then
+        if ( !file.FullName().Substring(-3, 3).UpCase() eq |PDF| or !file.FullName().Substring(-3, 3).UpCase() eq |_SHT_1.DXF|  ) then
             !FullName = !file.FullName() $* полный путь к pdf файлу
             --  $P $!FullName
-            !fileName = !file.Entry().Before('.pdf').Before('.dxf')
-            !fileName = !fileName.Before('_rev')
-            !pipeName = '/' & !fileName $* преобразование имени файла в имя трубопровода
-            !fdrawing = ''
+            !fileName = !file.Entry().Before(|.pdf|).Before(|.dxf|)
+            !fileName = !fileName.Before(|_rev|)
+            !pipeName = |/| & !fileName $* преобразование имени файла в имя трубопровода
+            !fdrawing = ||
             !pipeRef = object DbRef()
             var !exist exist $!pipeName
             
-            if ( !exist eq 'TRUEA' ) then
+            if ( !exist eq |TRUEA| ) then
                 !pipeRef = !pipeName.DbRef() $* поиск по имени
                 
                 else
-                !fileName = !fileName.replace('_', '?')
-                !coll = !!collectallfor('pipe', |matchwild(:IsoDrNo, '$!fileName')|, world) $* поиск по чертежу
+                !fileName = !fileName.replace(|_|, |?|)
+                !coll = !!collectallfor(|pipe|, |matchwild(:IsoDrNo, |$!fileName|)|, world) $* поиск по чертежу
                 if ( !coll.Empty() ) then
-                    !!Alert.Message('Трубопровод с чертежом или именем из файла $!FullName не найден')
+                    !!Alert.Message(|Трубопровод с чертежом или именем из файла $!FullName не найден|)
                     $P Трубопровод с чертежом или именем из файла $!FullName не найден
                     skip
                     
@@ -430,19 +430,19 @@ define method .readFolder()
             
             do !y from 20 to 0 by -1
                 var !rev :Rev$!y of $!pipeRef
-                if ( not unset ( !rev ) and !rev neq 'unset' and !rev neq '' ) then
+                if ( not unset ( !rev ) and !rev neq |unset| and !rev neq || ) then
                     break
                 endif
             enddo
-            !rev = !rev.replace('unset', '')
+            !rev = !rev.replace(|unset|, ||)
             
             -- if ( !pipeRef.revision lt 1 ) then
-                -- !rev = ''
+                -- !rev = ||
             -- endif
             
             !locList.Append(!rev)
             -- !locList.Append(!count)
-            -- !locList.Append('')
+            -- !locList.Append(||)
             
             !newTableList.Append(!locList)
             
@@ -452,7 +452,7 @@ define method .readFolder()
     
     $* PDF файлов не найдено
     if ( !newTableList.Empty() ) then
-        !!Alert.Message('Чертежей в папке не найдено!')
+        !!Alert.Message(|Чертежей в папке не найдено!|)
         return
     endif
     
@@ -469,13 +469,13 @@ define method .readFolder()
     do !tw values !tableWord
         !locList = object Array()
         -- q var !tw
-        if ( !tw[1].Trim() eq '' ) then
+        if ( !tw[1].Trim() eq || ) then
             skip
         endif
         !oldTableDrwg.Append(!tw[1])
         
         !locList.Append(!tw[1])
-        !locList.Append(!tw[2].replace('Изометрический чертеж линии', '').trim())
+        !locList.Append(!tw[2].replace(|Изометрический чертеж линии|, ||).trim())
         !locList.Append(!tw[3])
         
         !oldTableWord.Append(!locList)
@@ -506,20 +506,20 @@ define method .readFolder()
     
     $* добавляем запись "Нов." для новых в списке трубопроводов
     do !nl values !newList
-        !nl[3] = 'Нов.'
+        !nl[3] = |Нов.|
     enddo
     
     $* добавляем запись "Зам." для замененных в списке трубопроводов
     do !el values !editList
         -- q var !el[1] !el[2] !el[3] !el[4] !el[5]
         !dr = !el[1]
-        !el[3] = ''
+        !el[3] = ||
         
-        !collDr = !!collectallfor('pipe', |:IsoDrNo eq '$!dr'|, world) $* поиск по чертежу
+        !collDr = !!collectallfor(|pipe|, |:IsoDrNo eq |$!dr||, world) $* поиск по чертежу
         if ( !collDr.Empty() ) then
-            -- !el[3] = ''
-            -- !el[4] = ''
-            !el[5] = 'Аннул.'
+            -- !el[3] = ||
+            -- !el[4] = ||
+            !el[5] = |Аннул.|
             
             else
             !ddr = !collDr[1]
@@ -527,13 +527,13 @@ define method .readFolder()
                 !el[2] = !ddr.Namn
                 do !y from 20 to 0 by -1
                     var !ddRev :Rev$!y of $!ddr
-                    if ( not unset ( !ddRev ) and !ddRev neq 'unset' and !ddRev neq '' ) then
+                    if ( not unset ( !ddRev ) and !ddRev neq |unset| and !ddRev neq || ) then
                         break
                     endif
                 enddo
-                !ddRev = !ddRev.replace('unset', '')
-                !el[3] = iftrue ( !ddRev neq '' , 'Изм. ' & !ddRev & ' (Зам.)', '' )
-                -- !el[3] = 'Зам.'
+                !ddRev = !ddRev.replace(|unset|, ||)
+                !el[3] = iftrue ( !ddRev neq || , |Изм. | & !ddRev & | (Зам.)|, || )
+                -- !el[3] = |Зам.|
             endif
             
         endif
@@ -648,7 +648,7 @@ endmethod
 
 define method .saveToXLS()
     
-    !path = !!evar('PDMSUSER') & |Перечень_чертежей.xls|
+    !path = !!evar(|PDMSUSER|) & |Перечень_чертежей.xls|
     !this.grid.SaveGridToExcel(!path)
     $P $!path
     syscom |$!path &|
@@ -667,7 +667,7 @@ endmethod
 
 define method .saveToXLSPipe()
     
-    !path = !!evar('PDMSUSER') & |Перечень_трубопроводов.xls|
+    !path = !!evar(|PDMSUSER|) & |Перечень_трубопроводов.xls|
     !this.grid.SaveGridToExcel(!path)
     $P $!path
     syscom |$!path &|
@@ -685,7 +685,7 @@ endmethod
 
 define method .apply()
     
-    using namespace 'ReportPdmsAddin'
+    using namespace |ReportPdmsAddin|
     !report = object Report()
     
     !file = !this.copyFile()
@@ -694,7 +694,7 @@ define method .apply()
     !outData = array()
     do !row values !this.grid.GetRows()
         !line = !row
-        !line[2] = 'Изометрический чертеж линии ' & !line[2]
+        !line[2] = |Изометрический чертеж линии | & !line[2]
         !outData.Append(!line)
     enddo
     
@@ -715,10 +715,14 @@ endmethod
 
 define method .copyFile() is string
     var !projCode proj code
-    !targetPath = !!evar('USERPROFILE') & '\AppData\Local\Temp\' & 'Изометрические_чертежи_' & !projCode & ' ' & !!getDate() & '.docx'
+    !targetPath = !!evar(|USERPROFILE|) & |\\AppData\\Local\\Temp\\| & |Изометрические_чертежи_| & !projCode & | | & !!getDate() & |.docx |
     !targetFile = object File(!targetPath)
     !templatePath = !this.txtFileName.Val
     copyfile "$!templatePath" "$!targetPath" over
+
+    !k = object array()
+    !k.Append(!targetFile.FullName())
+
     return !targetFile.FullName()
 endmethod
 
@@ -738,7 +742,7 @@ define method .sortNewTable(!list is array) is array
     
     do !j values !list
         
-        !number = !j[1].part(-1, '-').real()
+        !number = !j[1].part(-1, |-|).real()
         !addline = iftrue( !number.unset() , 0 , !number )
         !num.Append(!number)
         
@@ -786,7 +790,7 @@ define method .AddPipe(!list is array)
         enddo
         
         else
-        if ( !!ce.type neq 'WORL' and !!ce.own.type inset ( 'CABLE', 'RPATH') ) then
+        if ( !!ce.type neq |WORL| and !!ce.own.type inset ( |CABLE|, |RPATH|) ) then
             CABLE
         endif
         var !data append collect all CABLE FOR CE
@@ -801,19 +805,19 @@ define method .AddPipe(!list is array)
     !data.Unique()
     
     !headings = object array()
-    !headings[1] = 'NAME'
-    !headings[2] = 'ZONE'
-    !headings[3] = 'DESC'
+    !headings[1] = |NAME|
+    !headings[2] = |ZONE|
+    !headings[3] = |DESC|
 
-    using namespace 'Aveva.Pdms.Presentation'
-    !nds = object NetDataSource('Piping', !headings, !data)
+    using namespace |Aveva.Pdms.Presentation|
+    !nds = object NetDataSource(|Piping|, !headings, !data)
     !this.grid.BindToDataSource(!nds)
-    -- !nds.displayUnsetAs('')
-        -- !nds.displayNulrefAs('=0')
+    -- !nds.displayUnsetAs(||)
+        -- !nds.displayNulrefAs(|=0|)
     !this.grid.ColumnExcelFilter(t)
     !this.grid.OutlookGroupStyle(f) $* -- группировка по заголовкам
     !this.grid.SingleRowSelection(f)
-    !this.grid.setAlternateRowColor('WHITE')
+    !this.grid.setAlternateRowColor(|WHITE|)
     
     !this.grid.setNameColumnImage()
     !this.grid.ColumnSummaries(f)
@@ -823,8 +827,8 @@ define method .AddPipe(!list is array)
     -- !this.grid.ErrorIcon(t)
     -- !this.grid.BulkEditableGrid(true)
     !this.grid.EditableGrid(f)
-    -- !this.grid.FeedbackFailColor('red')
-        -- !this.grid.FeedbackSuccessColor('green')
+    -- !this.grid.FeedbackFailColor(|red|)
+        -- !this.grid.FeedbackSuccessColor(|green|)
         -- !this.grid.setEditableColumn(2, false)
         -- !this.grid.setEditableColumn(3, false)
     -- !this.grid.setEditableColumn(4, true)
@@ -868,7 +872,7 @@ endmethod
 
 define method .SortPipe()
     
-    if ( !this.txtSort.Val.Trim() eq '' or !this.txtDelim.Val.Trim() eq '' or !this.txtDelim.Val.Trim().Length() gt 1 ) then
+    if ( !this.txtSort.Val.Trim() eq || or !this.txtDelim.Val.Trim() eq || or !this.txtDelim.Val.Trim().Length() gt 1 ) then
         return
     endif
     
@@ -910,22 +914,22 @@ define method .SetDrwg()
     endif
     
     !undoModify = object UNDOABLE()
-    !undoModify.description('Modify Fdrawing')
-    !undoModify.undoAction ('!this.grid.RefreshTable()')
-    !undoModify.redoAction ('!this.grid.RefreshTable()')
+    !undoModify.description(|Modify Fdrawing|)
+    !undoModify.undoAction (|!this.grid.RefreshTable()|)
+    !undoModify.redoAction (|!this.grid.RefreshTable()|)
     !undoModify.add()
     
     !claimList = !this.pipeList
     
-    if ( !this.txtTemplate.Val.Trim() eq '' or !this.txtDrwgNum.Val.String().Trim() eq '' ) then
-        !ans = !!Alert.Confirm('Очистить номера чертежей из списка линий?')
-        if ( !ans eq 'YES' ) then
+    if ( !this.txtTemplate.Val.Trim() eq || or !this.txtDrwgNum.Val.String().Trim() eq || ) then
+        !ans = !!Alert.Confirm(|Очистить номера чертежей из списка линий?|)
+        if ( !ans eq |YES| ) then
             claim all from !claimList
             handle any
                 return
             endhandle
             do !j values !this.pipeList
-                !j.DbRef().:IsoDrNo = ''
+                !j.DbRef().:IsoDrNo = ||
             enddo
             
         endif
@@ -944,7 +948,7 @@ define method .SetDrwg()
     
     do !v values !this.pipeList
         !pipe = !v.DbRef()
-        !pipe.Fdrawing = !this.txtTemplate.Val.Trim().Trim('-') & '-' & !this.txtDrwgNum.Val.String().Trim()
+        !pipe.Fdrawing = !this.txtTemplate.Val.Trim().Trim(|-|) & |-| & !this.txtDrwgNum.Val.String().Trim()
         !this.txtDrwgNum.Val = !this.txtDrwgNum.Val + 1
     enddo
     
@@ -997,12 +1001,12 @@ endmethod
 define method .setOptionFiles()
     
     var !projCode proj code
-    !targetPath = !!evar('$!<projCode>iso') & '\std\'
+    !targetPath = !!evar(|$!<projCode>iso|) & |\std\|
     !targetFile = object File(!targetPath)
     !files = !targetFile.Files()
     
     if ( !files.Empty() ) then
-        !!Alert.Message('Ни одного настроечного файла не найдено.')
+        !!Alert.Message(|Ни одного настроечного файла не найдено.|)
         return
     endif
     
@@ -1010,14 +1014,14 @@ define method .setOptionFiles()
     do !file values !files
         !f = true
         do !line values !file.ReadFile()
-            if ( !line.matchwild(|*AppWareText 'COMMENT1'*|) ) then
+            if ( !line.matchwild(|*AppWareText |COMMENT1|*|) ) then
                 !f = false
-                !desc.Append(!line.After(|AppWareText 'COMMENT1'|).replace(|'|, ||).Trim())
+                !desc.Append(!line.After(|AppWareText |COMMENT1||).replace(|||, ||).Trim())
                 break
             endif 
         enddo
         if ( !f ) then
-            !desc.Append('')
+            !desc.Append(||)
         endif
     enddo
     
@@ -1046,7 +1050,7 @@ endmethod
 
 define method .OpenIsoFolder()
     
-    if ( !this.optionsFile eq '' ) then
+    if ( !this.optionsFile eq || ) then
         return
     endif
     !file = !this.optionsFile
@@ -1090,14 +1094,14 @@ define method .IsoGenerate()
     endif
     
     if ( !this.optionsFile.Unset() ) then
-        !!Alert.Message('Не выбран options-файл')
+        !!Alert.Message(|Не выбран options-файл|)
         !this.settingFrame.visible = true
         return
     endif
 	
 	  if ( !this.grid.GetRows().Size() gt 10 ) then
-        !Answer = !!Alert.Confirm('В списке более 10 элементов. Продолжить публикацию изометрий?' )
-		if  ( !Answer eq 'NO' ) then
+        !Answer = !!Alert.Confirm(|В списке более 10 элементов. Продолжить публикацию изометрий?| )
+		if  ( !Answer eq |NO| ) then
 			return
 		endif
     endif
@@ -1120,7 +1124,7 @@ define method .DetailIso(!isoListPipe is array)
     
 	
     !failediso = object Array()
-    !this.enhance(!isoListPipe, 'lightgrey')
+    !this.enhance(!isoListPipe, |lightgrey|)
     
     !this.isomode(true)
     
@@ -1141,7 +1145,7 @@ define method .DetailIso(!isoListPipe is array)
         
         $M "$!this.optionsFile"
         handle any
-            !!Alert.Message('Ошибка в настрочном файле: $!!error.text')
+            !!Alert.Message(|Ошибка в настрочном файле: $!!error.text|)
             $P $!!error.text
             break
         endhandle
@@ -1161,39 +1165,39 @@ define method .DetailIso(!isoListPipe is array)
         
         do !PLOT to $!ISOCOUNT
             var !PLOTFILE isodraw plotfile $!PLOT filename
-            !rootName = !plotFile.after('/')
+            !rootName = !plotFile.after(|/|)
             
             var !PIPENAME isodraw plotfile $!PLOT drawing 1 title
-            if ( !this.rtDrwg.Val and !pipe.DbRef().:IsoDrNo neq '' ) then
+            if ( !this.rtDrwg.Val and !pipe.DbRef().:IsoDrNo neq || ) then
                 !PIPENAME = !pipe.DbRef().:IsoDrNo
             endif
             var !SHEET isodraw plotfile $!PLOT drawing 1 sheet
             
-            !FileName = '$!PIPENAME Sht $!SHEET'
+            !FileName = |$!PIPENAME Sht $!SHEET|
             !refPipe = !pipe.DbRef()
             
            -- do !y from 20 to 0 by -1
            --     var !ddRev :Rev$!y of $!refPipe
-           --     if ( not unset ( !ddRev ) and !ddRev neq 'unset' and !ddRev neq '' ) then
+           --     if ( not unset ( !ddRev ) and !ddRev neq |unset| and !ddRev neq || ) then
            --         break
            --     endif
            -- enddo
-           -- !ddRev = !ddRev.replace('unset', '')
-		   !ddRev = ''
+           -- !ddRev = !ddRev.replace(|unset|, ||)
+		   !ddRev = ||
             
-            if ( !ddRev neq '' ) then
-                !FileName = !PIPENAME & ' ' & !ddRev & ' Sht ' & !SHEET
+            if ( !ddRev neq || ) then
+                !FileName = !PIPENAME & | | & !ddRev & | Sht | & !SHEET
                 
                 else
-                !FileName = !PIPENAME & ' Sht ' & !SHEET
+                !FileName = !PIPENAME & | Sht | & !SHEET
             endif
             
             
             -- if ( !this.togRev.Val eq false ) then
-                -- !FileName = !FileName.Replace(' rev0', '').Replace(' rev', '')
+                -- !FileName = !FileName.Replace(| rev0|, ||).Replace(| rev|, ||)
             -- endif
             
-            !FileName = !!generateFileName(!FileName).Replace(' ', '_')
+            !FileName = !!generateFileName(!FileName).Replace(| |, |_|)
             
             !this.pdf(!rootName, !FileName )
             !this.dxf(!rootName, !FileName )
@@ -1206,9 +1210,9 @@ define method .DetailIso(!isoListPipe is array)
     $!back
     
     !this.isomode(false)
-    !this.enhance(!failediso, 'yellow')
+    !this.enhance(!failediso, |yellow|)
     
-    -- !this.bnIso.Tag = 'Изометрия'
+    -- !this.bnIso.Tag = |Изометрия|
         -- !this.bnIso.Background = 132
     -- !this.bnIso.Refresh()
     
@@ -1261,7 +1265,7 @@ define method .pdf(!rootName is string, !FileName is string)
     
     var !pdfdev isodraw device pdf
     handle any
-        var !pdfdev 'PDF OFF'
+        var !pdfdev |PDF OFF|
     endhandle
     
     var !pdfopt split |$!pdfdev|
@@ -1285,14 +1289,14 @@ define method .pdf(!rootName is string, !FileName is string)
         
         else
         !pdf = false
-        !pdfext = ''
+        !pdfext = ||
     endif
     
     if ( !pdf ) then
         !pdfFilePath = !rootName & !pdfext
         !pdfFile = object File(!pdfFilePath)
-        !pdfDirectory = !pdfFile.PathName().Trim('\') & '\'
-        !ext = '.pdf'
+        !pdfDirectory = !pdfFile.PathName().Trim(|\|) & |\|
+        !ext = |.pdf|
         
         !this.RenameIsoFiles(!ext, !FileName, !pdfFile, !pdfDirectory, !pdfbind)
         
@@ -1312,7 +1316,7 @@ endmethod
 define method .dxf(!rootName is string, !FileName is string)
     var !dxfdev isodraw device dxf
     handle any
-        var !dxfdev 'DXF OFF'
+        var !dxfdev |DXF OFF|
     endhandle
     var !dxfopt split |$!dxfdev|
     if ( |$!dxfopt[2]| eq |ON| ) then
@@ -1320,16 +1324,16 @@ define method .dxf(!rootName is string, !FileName is string)
         !dxfext = !dxfopt[4]
         else
         !dxf = false
-        !dxfext = ''
+        !dxfext = ||
     endif
     
     if ( !dxf ) then
         !dxfFilePath = !rootName & !dxfext
         !dxfFile = object File(!dxfFilePath)
-        !dxfDirectory = !dxfFile.PathName().Trim('\') & '\'
-        !ext = '.dxf'
+        !dxfDirectory = !dxfFile.PathName().Trim(|\|) & |\|
+        !ext = |.dxf|
         !this.RenameIsoFiles(!ext, !FileName, !dxfFile, !dxfDirectory, false)
-        -- !!runMacro('%PMLUI%/ISO/GEN\rename', '$!ext $<$!PipeNumb$> $<$!dxfFilePath$> $<$!dxfDirectory$>')
+        -- !!runMacro(|%PMLUI%/ISO/GEN\rename|, |$!ext $<$!PipeNumb$> $<$!dxfFilePath$> $<$!dxfDirectory$>|)
         
     endif
     
@@ -1357,7 +1361,7 @@ define method .RenameIsoFiles(!ext is String, !FileName is String, !file is File
     
     !locFileName = !FileName
     if ( !pdfbind ) then
-        !locFileName = !locFileName.replace('_Sht_1','')
+        !locFileName = !locFileName.replace(|_Sht_1|,||)
     endif
     
     !newFilePath = !directory & !locFileName & !ext
@@ -1366,7 +1370,7 @@ define method .RenameIsoFiles(!ext is String, !FileName is String, !file is File
     do !x from 1 to 99
         movefile "$!file" "$!newFilePath" over
         handle any
-            !newFilePath = !directory & !locFileName & 'r' & !x & !ext
+            !newFilePath = !directory & !locFileName & |r| & !x & !ext
             elsehandle none
             break
         endhandle
@@ -1397,10 +1401,10 @@ endmethod
 -- Description:
 
 define method .SetLastNumber()
-    !coll = !!collectallfor('PIPE', |NOT UNSET (:IsoDrNo) OR :IsoDrNo NEQ ''|, !!CE)
+    !coll = !!collectallfor(|PIPE|, |NOT UNSET (:IsoDrNo) OR :IsoDrNo NEQ |||, !!CE)
     !max = 0
     do !j values !coll
-        !d = !j.:IsoDrNo.Part(-1, '-').Digits()
+        !d = !j.:IsoDrNo.Part(-1, |-|).Digits()
         if ( !d gt 0 ) then
             !max = max (!max, !d)
         endif
@@ -1428,13 +1432,13 @@ define method .enhance(!list is array , !color is string)
             
             else
             !v = !j / 2
-            if ( !v.string().Matchwild('*.*') ) then
-                !this.grid.SetRowColor(!j, 'white' )
+            if ( !v.string().Matchwild(|*.*|) ) then
+                !this.grid.SetRowColor(!j, |white| )
             endif
             
         endif
     enddo
-    -- !this.grid.setAlternateRowColor('white')
+    -- !this.grid.setAlternateRowColor(|white|)
     
 endmethod
 -- End of method definition for .enhance()
@@ -1474,24 +1478,24 @@ define method .saveSetting()
     !this.order = !this.txtSort.Val
     !this.delim = !this.txtDelim.Val
     !this.template = !this.txtTemplate.Val
-    !this.isoType = iftrue ( !this.rtDrwg.Val, '!!report.rtDrwg.Val = true', '!!report.rtLine.Val = true' )
-    !this.isRev = iftrue ( !this.togRev.Val, '!!report.togRev.Val = true', '!!report.togRev.Val = false' )
-    !add1 = iftrue ( !this.togRev.Val, '!!report.bnIso.Tag = |Изометрия+R|', '!!report.bnIso.Tag = |Изометрия|' )
-    !add2 = iftrue ( !this.togRev.Val, '!!report.bnIso.background = 13', '!!report.bnIso.Tag = 132' )
+    !this.isoType = iftrue ( !this.rtDrwg.Val, |!!report.rtDrwg.Val = true|, |!!report.rtLine.Val = true| )
+    !this.isRev = iftrue ( !this.togRev.Val, |!!report.togRev.Val = true|, |!!report.togRev.Val = false| )
+    !add1 = iftrue ( !this.togRev.Val, |!!report.bnIso.Tag = |Изометрия+R||, |!!report.bnIso.Tag = |Изометрия|| )
+    !add2 = iftrue ( !this.togRev.Val, |!!report.bnIso.background = 13|, |!!report.bnIso.Tag = 132| )
     
     !out = object Array()
-    !out.Append( '!this.txtFileName.Val = |' & !this.txtFileName.Val & '|' )
-    !out.Append( '!this.txtFolderName.Val = |' & !this.txtFolderName.Val & '|' )
-    !out.Append( '!this.txtSort.Val = |' & !this.txtSort.Val & '|' )
-    !out.Append( '!this.txtDelim.Val = |' & !this.txtDelim.Val & '|' )
-    !out.Append( '!this.txtTemplate.Val = |' & !this.txtTemplate.Val & '|' )
+    !out.Append( |!this.txtFileName.Val = || & !this.txtFileName.Val & ||| )
+    !out.Append( |!this.txtFolderName.Val = || & !this.txtFolderName.Val & ||| )
+    !out.Append( |!this.txtSort.Val = || & !this.txtSort.Val & ||| )
+    !out.Append( |!this.txtDelim.Val = || & !this.txtDelim.Val & ||| )
+    !out.Append( |!this.txtTemplate.Val = || & !this.txtTemplate.Val & ||| )
     !out.Append( !this.isoType )
     !out.Append( !this.isRev )
     !out.Append( !add1 )
     !out.Append( !add2 )
-    !out.Append( '!!report.iso = ' & !this.frDir.Val )
-    !out.Append( '!!report.frDir.Val = ' & !this.frDir.Val )
-    !this.settingFile.WriteFile('over', !out)
+    !out.Append( |!!report.iso = | & !this.frDir.Val )
+    !out.Append( |!!report.frDir.Val = | & !this.frDir.Val )
+    !this.settingFile.WriteFile(|over|, !out)
     
 endmethod
 -- End of method definition for .saveSetting()
@@ -1532,7 +1536,7 @@ endmethod
 
 define method .settingOpen()
     
-    !this.settingFile = object file( !!evar('PDMSUSER') & 'isometricform.pmldat' )
+    !this.settingFile = object file( !!evar(|PDMSUSER|) & |isometricform.pmldat| )
     if ( !this.settingFile.Exists() ) then
         do !line values !this.settingFile.ReadFile()
             $!line
@@ -1556,9 +1560,9 @@ endmethod
 
 define method .OpenIsoDir()
     
-    if ( !this.isoDir neq '' and !this.isoDir.Unset().Not() ) then
+    if ( !this.isoDir neq || and !this.isoDir.Unset().Not() ) then
         $P Папка с ИЧ $!this.isoDir
-        syscom ' explorer "$!this.isoDir" & '
+        syscom | explorer "$!this.isoDir" & |
         
     endif
     
@@ -1701,7 +1705,7 @@ define method .CheckDrawing()
         !this.$!<name>.scrollSelectedRowToView(true)
         !this.$!<name>.SingleRowSelection(false)
         !this.$!<name>.HeaderSort(false)
-        !this.$!<name>.setAlternateRowColor('white')
+        !this.$!<name>.setAlternateRowColor(|white|)
         
         
     endmethod
@@ -1717,7 +1721,7 @@ define method .CheckDrawing()
 
 define method .togsel(!gadget is gadget, !action is string)
     
-    if ( !action eq 'SELECT') then
+    if ( !action eq |SELECT|) then
          !this.frDir.Val = !gadget.index
         !this.iso = !this.frDir.Val
     endif
@@ -1726,10 +1730,3 @@ endmethod
 -- End of method definition for .Togsel()
 
 
-
-
-define method .report()
-
-endmethod
-	
-	

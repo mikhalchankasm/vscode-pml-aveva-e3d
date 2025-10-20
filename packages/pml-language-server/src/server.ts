@@ -48,17 +48,13 @@ const documentASTs: Map<string, Program> = new Map();
 const symbolIndex = new SymbolIndex();
 const workspaceIndexer = new WorkspaceIndexer(symbolIndex, connection);
 
-// Workspace root and extension path (will be set in onInitialize/onInitialized)
-let workspaceRoot: string | undefined;
-let extensionPath: string | undefined;
-
-// Providers (CompletionProvider will be initialized after workspace is known)
+// Providers
 const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
 const definitionProvider = new DefinitionProvider(symbolIndex, documents);
 const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex);
-let completionProvider: CompletionProvider;
+const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
 
 let hasConfigurationCapability = false;
@@ -67,12 +63,6 @@ let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
-
-	// Get extension path from initialization options
-	if (params.initializationOptions && params.initializationOptions.extensionPath) {
-		extensionPath = params.initializationOptions.extensionPath;
-		connection.console.log(`Extension path: ${extensionPath}`);
-	}
 
 	// Check client capabilities
 	hasConfigurationCapability = !!(
@@ -146,25 +136,13 @@ connection.onInitialized(async () => {
 				const decoded = decodeURIComponent(f.uri);
 				return decoded.replace('file:///', '').replace(/\//g, '\\');
 			});
-
-			// Set workspace root for knowledge base
-			workspaceRoot = folders[0];
-
-			// Initialize CompletionProvider with workspace root and extension path
-			completionProvider = new CompletionProvider(symbolIndex, workspaceRoot, extensionPath);
-
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
-		} else {
-			// No workspace folder - use extension path for bundled knowledge base
-			completionProvider = new CompletionProvider(symbolIndex, undefined, extensionPath);
 		}
 	} catch (error) {
 		connection.console.error(`Failed to index workspace: ${error}`);
-		// Fallback: use extension path for bundled knowledge base
-		completionProvider = new CompletionProvider(symbolIndex, undefined, extensionPath);
 	}
 
 	connection.console.log('PML Language Server initialized');
@@ -278,17 +256,26 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		// Index document symbols
 		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version);
 
-		// Convert parse errors to diagnostics
-		for (const error of parseResult.errors) {
-			diagnostics.push({
-				severity: DiagnosticSeverity.Error,
-				range: {
-					start: { line: error.token.line - 1, character: error.token.column - 1 },
-					end: { line: error.token.line - 1, character: error.token.column + error.token.length }
-				},
-				message: error.message,
-				source: 'pml-parser'
-			});
+		// Convert parse errors to diagnostics (skip for forms - they have special syntax)
+		const isFormFile = textDocument.uri.endsWith('.pmlfrm');
+
+		if (!isFormFile) {
+			for (const error of parseResult.errors) {
+				diagnostics.push({
+					severity: DiagnosticSeverity.Error,
+					range: {
+						start: { line: error.token.line - 1, character: error.token.column - 1 },
+						end: { line: error.token.line - 1, character: error.token.column + error.token.length }
+					},
+					message: error.message,
+					source: 'pml-parser'
+				});
+			}
+		} else {
+			// For form files, only log errors but don't show them to user
+			if (parseResult.errors.length > 0) {
+				connection.console.log(`Form file ${textDocument.uri} has ${parseResult.errors.length} parse errors (suppressed - form syntax not fully supported)`);
+			}
 		}
 
 		// Semantic diagnostics: typo detection
@@ -337,7 +324,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
  */
 connection.onCompletion(params => {
 	const document = documents.get(params.textDocument.uri);
-	if (!document || !completionProvider) return [];
+	if (!document) return [];
 
 	return completionProvider.provide(params, document);
 });

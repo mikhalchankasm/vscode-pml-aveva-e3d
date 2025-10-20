@@ -920,6 +920,20 @@ export class Parser {
 			};
 		}
 
+		// Object constructor: object TYPE()
+		if (this.match(TokenType.OBJECT)) {
+			const objectToken = this.previous();
+			// Next should be type constructor (STRING, ARRAY, etc.) or custom type
+			const typeToken = this.peek();
+
+			// Return 'object' as identifier - it will be parsed as call expression
+			return {
+				type: 'Identifier',
+				name: 'object',
+				range: this.createRange(this.getTokenIndex(objectToken), this.getTokenIndex(objectToken))
+			};
+		}
+
 		// Type constructors (STRING(), ARRAY(), etc.)
 		if (this.match(TokenType.STRING_TYPE, TokenType.REAL_TYPE, TokenType.INTEGER_TYPE,
 			TokenType.BOOLEAN_TYPE, TokenType.ARRAY_TYPE, TokenType.DBREF_TYPE, TokenType.ANY_TYPE)) {

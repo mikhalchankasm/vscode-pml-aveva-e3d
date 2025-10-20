@@ -20,6 +20,17 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 		path.join('packages', 'pml-language-server', 'out', 'server.js')
 	);
 
+	console.log('PML LSP Server path:', serverModule);
+
+	// Check if server.js exists
+	const fs = require('fs');
+	if (!fs.existsSync(serverModule)) {
+		console.error('❌ LSP server.js NOT FOUND at:', serverModule);
+		throw new Error(`LSP server.js not found at: ${serverModule}`);
+	} else {
+		console.log('✅ LSP server.js found');
+	}
+
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	const serverOptions: ServerOptions = {
@@ -46,14 +57,7 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 		synchronize: {
 			// Notify the server about file changes to '.pml files contained in the workspace
 			fileEvents: workspace.createFileSystemWatcher('**/*.{pml,pmlobj,pmlfnc,pmlfrm,pmlmac,pmlcmd}')
-		},
-		// Pass extension path to server for bundled knowledge base
-		initializationOptions: {
-			extensionPath: context.extensionPath
-		},
-		// Show output channel by default
-		outputChannelName: 'PML Language Server',
-		revealOutputChannelOn: 4 // RevealOutputChannelOn.Never (we'll show manually if needed)
+		}
 	};
 
 	// Create the language client and start the client
