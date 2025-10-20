@@ -2,6 +2,57 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.1] - 2025-10-19
+
+### 🎯 Parser Improvements & Documentation
+
+#### Added
+- **PML1 Keywords Support** - Added declarative syntax keywords
+  - `collect`, `all`, `with`, `using`, `at` - Collection operations
+  - `compose`, `space` - String composition
+  - Keywords recognized for syntax highlighting (graceful parsing - no false errors!)
+
+- **Graceful Parsing Strategy** - New parser philosophy
+  - Unknown keywords → highlighted as identifiers, NO ERRORS
+  - Like Notepad++: syntax highlighting without strict validation
+  - Optional semantic validation through settings
+  - See: `docs/PARSER_STRATEGY.md`
+
+- **PML Language Variants Documentation**
+  - Comprehensive guide to PML1 (declarative) vs PML2 (procedural) syntax
+  - Examples of both syntaxes with conversion patterns
+  - Realistic coverage goals (75-85%)
+  - See: `objects/PML_LANGUAGE_VARIANTS.md`
+
+- **Knowledge Base Structure** - `objects/` folder
+  - `array object.md` - 48 ARRAY methods documented
+  - `string object.md` - 69 STRING methods with examples
+  - 10+ additional PML reference documents
+  - `KNOWLEDGE_BASE_GUIDE.md` - Contributor guide
+
+- **Project Management Documents**
+  - `PROJECT_STATUS.md` - Main progress tracker with todos and metrics
+  - `DOCUMENTATION_AUDIT.md` - Complete documentation inventory
+
+#### Fixed
+- `var` keyword parsing
+- `by` keyword in do-from-to loops (`do !i from 1 to 10 by -1`)
+- `neq` operator (alias for `ne`)
+- Workspace indexing URI decoding on Windows
+- Parameter type parsing (`!width is REAL`)
+- completionItem/resolve error
+
+#### Changed
+- Reorganized documentation - removed 5 obsolete TODO files
+- Moved STRING Object.md to `objects/` folder
+- Parser now uses graceful degradation for unknown constructs
+
+#### Documentation
+- Created comprehensive parser strategy guide
+- Added PML1/PML2 syntax comparison
+- Knowledge base filling guide for contributors
+- Complete project status tracker
+
 ## [0.5.0] - 2025-10-19
 
 ### 🎉 Major Release - Full LSP Implementation
