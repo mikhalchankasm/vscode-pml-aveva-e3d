@@ -12,6 +12,18 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - Fixed path: `packages/pml-language-server/out/server.js` now packaged
   - Error resolved: "LSP server.js not found at: ...packages\pml-language-server\out\server.js"
 
+- **Object Definition Parsing** - Full support for `define object` syntax
+  - Parser now correctly handles `member .property is TYPE` declarations
+  - Parser now correctly handles `define method` inside objects
+  - Fixed "Expected 'method'" errors on `member` statements
+  - Fixed "Expected expression" errors on `.data`, `this`, etc.
+
+- **Backslash Escape Sequences** - Removed incorrect escape handling
+  - PML does NOT use backslash for escaping (it's a literal character)
+  - Fixed red highlighting on characters after `\` in strings
+  - Windows paths like `|Z:\RSD81\SP4\PMLLIB\dop\file|` now parse correctly
+  - Removed escape patterns from TextMate grammar
+
 ### Changed
 - Disabled `noUnusedLocals` and `noUnusedParameters` in LSP server tsconfig
   - Prevents compilation errors from unused imports
