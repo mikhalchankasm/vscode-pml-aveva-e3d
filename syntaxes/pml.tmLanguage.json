@@ -31,35 +31,17 @@
         {
           "name": "string.quoted.pipe.pml",
           "begin": "\\|",
-          "end": "\\|",
-          "patterns": [
-            {
-              "name": "constant.character.escape.pml",
-              "match": "\\\\."
-            }
-          ]
+          "end": "\\|"
         },
         {
           "name": "string.quoted.single.pml",
           "begin": "'",
-          "end": "'",
-          "patterns": [
-            {
-              "name": "constant.character.escape.pml",
-              "match": "\\\\."
-            }
-          ]
+          "end": "'"
         },
         {
           "name": "string.quoted.double.pml",
           "begin": "\"",
-          "end": "\"",
-          "patterns": [
-            {
-              "name": "constant.character.escape.pml",
-              "match": "\\\\."
-            }
-          ]
+          "end": "\""
         }
       ]
     },

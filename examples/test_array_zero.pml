@@ -28,3 +28,4 @@ define method .testArrayZero()
 	endif
 
 endmethod
+

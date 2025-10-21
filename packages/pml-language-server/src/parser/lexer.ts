@@ -221,6 +221,7 @@ export class Lexer {
 
 	/**
 	 * Scan quoted string: '...' or "..."
+	 * NOTE: PML does NOT use backslash escapes - backslash is a literal character
 	 */
 	private scanQuotedString(quote: string, line: number, column: number, offset: number): void {
 		let value = '';
@@ -231,6 +232,7 @@ export class Lexer {
 				this.line++;
 				this.column = 1;
 			}
+			// In PML, backslash is a literal character (no escape sequences)
 			value += char;
 		}
 

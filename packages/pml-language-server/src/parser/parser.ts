@@ -143,7 +143,8 @@ export class Parser {
 	/**
 	 * Parse object definition
 	 * define object MyObject
-	 *   member .method1()
+	 *   member .property is TYPE
+	 *   define method .setup()
 	 *     ...
 	 *   endmethod
 	 * endobject
@@ -157,13 +158,35 @@ export class Parser {
 		const members: MethodDefinition[] = [];
 
 		while (!this.check(TokenType.ENDOBJECT) && !this.isAtEnd()) {
-			// Parse member methods
+			// Parse member properties: member .property is TYPE
 			if (this.check(TokenType.MEMBER)) {
 				this.advance(); // consume 'member'
-				const memberMethod = this.parseMethodDefinition(this.previous());
-				members.push(memberMethod);
-			} else {
-				this.advance(); // skip unknown tokens
+				// Skip member property declaration (just consume tokens until newline/statement end)
+				// member .data is STRING
+				while (!this.isAtEnd() && this.peek().type !== TokenType.MEMBER &&
+				       this.peek().type !== TokenType.DEFINE &&
+				       this.peek().type !== TokenType.ENDOBJECT) {
+					this.advance();
+					// Break at potential statement boundary (simple heuristic)
+					if (this.previous().value === '\n' || this.check(TokenType.MEMBER) || this.check(TokenType.DEFINE)) {
+						break;
+					}
+				}
+			}
+			// Parse method definitions: define method .methodName()
+			else if (this.check(TokenType.DEFINE)) {
+				const defineToken = this.advance(); // consume 'define'
+				if (this.check(TokenType.METHOD_KW)) {
+					const memberMethod = this.parseMethodDefinition(defineToken);
+					members.push(memberMethod);
+				} else {
+					// Unknown define statement, skip
+					this.advance();
+				}
+			}
+			// Skip comments and other tokens
+			else {
+				this.advance();
 			}
 		}
 
