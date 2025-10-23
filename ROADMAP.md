@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.6.0)
+## ✅ Completed (v0.4.8 - v0.7.0)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -108,15 +108,36 @@ Development plans and progress tracking.
 
 ---
 
-## 🎯 v0.7.0 (Next Release) - Current Focus
+## ✅ v0.7.0 - COMPLETED (2025-01-24)
+
+### High Priority Features
+
+- [x] **Find All References** ✅ COMPLETED
+  - Implemented reference search within current file
+  - Finds method calls: `.methodName()` and `!var.methodName()`
+  - Highlights exact method name positions
+  - Works with Go to Definition (F12)
+
+- [x] **Method Documentation** ✅ COMPLETED
+  - Comments before methods shown in hover tooltips
+  - JSDoc-style parameter docs: `-- @param1 - description`
+  - Multi-line comment support
+  - Formatted documentation with parameter info
+
+- [x] **Go to Definition Improvements** ✅ COMPLETED
+  - Fixed F12 for method calls in same file
+  - Works for `!variable.methodName()` pattern
+  - Correct dot detection
+
+- [x] **Return Type Support** ✅ COMPLETED
+  - Parser accepts: `define method .name() is TYPE`
+  - Return type stored in AST
+
+---
+
+## 🎯 v0.8.0 (Next Release) - Current Focus
 
 ### High Priority
-
-- [ ] **Find All References** ⭐
-  - Currently only returns definitions
-  - Implement proper reference search
-  - Find method calls across workspace
-  - Find variable usage
 
 - [ ] **Code Bundling** ⭐
   - VSIX is 15.6 MB with 1627 files
@@ -305,20 +326,21 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.6.0
-**Released:** 2025-01-21
+**Version:** 0.7.0
+**Released:** 2025-01-24
 
 **Statistics:**
 - Extension size: 15.61 MB (needs bundling)
-- Files in VSIX: 1629 files (865 JS files)
-- LSP features: 12+ providers
+- Files in VSIX: 1631 files (866 JS files)
+- LSP features: 13+ providers (with documentation extraction)
 - Commands: 27+
 - Diagnostics: 3 types
 - Operators: 15+ (including OF)
+- Documentation: Comment-based method docs
 
 **Known Limitations:**
 - Form syntax: graceful degradation (parsed as PML)
-- Find References: only returns definitions (needs implementation)
+- Find References: works only in current file (workspace search pending)
 - Type inference: removed (needs re-implementation with correct architecture)
 - No tests yet
 
