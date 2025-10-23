@@ -22,7 +22,7 @@ const PML_KEYWORDS = [
 	'values', 'index', 'from', 'to', 'by',
 	'member', 'is', 'var',
 	'and', 'or', 'not',
-	'eq', 'ne', 'gt', 'lt', 'ge', 'le',
+	'eq', 'ne', 'neq', 'gt', 'lt', 'ge', 'geq', 'le', 'leq',
 	'mod', 'div',
 	'STRING', 'REAL', 'INTEGER', 'BOOLEAN', 'ARRAY', 'DBREF', 'ANY',
 	'TRUE', 'FALSE'

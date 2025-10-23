@@ -1620,5 +1620,5 @@ endmethod
 
 define method .mymethod()
     
-    !this.to
+  
 endmethod

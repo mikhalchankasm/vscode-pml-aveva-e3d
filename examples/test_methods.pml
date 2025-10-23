@@ -1,6 +1,5 @@
 -- Test file for method definitions and calls
 -- Use this to test Go to Definition (F12) and Find References (Shift+F12)
-
 define method .methodName1()
 
     -- Method body
@@ -18,6 +17,63 @@ define method .methodName001(!param1 is string) is string
 
 endmethod
 
+
+
+
+!S.
+!k.methodName1()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!x.methodName1()
 
 
 

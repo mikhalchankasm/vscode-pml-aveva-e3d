@@ -12,7 +12,9 @@
       "Bash(npm run pack:install:*)",
       "Bash(npm run pack:*)",
       "Bash(npx @vscode/vsce package:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(code --install-extension:*)",
+      "Bash(cursor --install-extension:*)"
     ],
     "deny": [],
     "ask": []

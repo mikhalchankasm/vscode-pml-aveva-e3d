@@ -28,3 +28,13 @@ var !pipes collect all for ( pipe equi ) for ce
 
 !k = object array()
 !k.
+
+
+eq
+gt
+ge
+lt
+le
+neq
+geq
+leq

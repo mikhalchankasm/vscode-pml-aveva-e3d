@@ -2,6 +2,25 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.7.1] - 2025-01-24
+
+### Added
+- **Additional Comparison Operators** - Support for alternative operator spellings
+  - Added `geq` as alias for `ge` (greater than or equal)
+  - Added `leq` as alias for `le` (less than or equal)
+  - `neq` was already supported as alias for `ne`
+
+### Fixed
+- **Completion Provider** - Shows only current file methods after dot
+  - After typing `.` only methods from current document are shown
+  - Prevents pollution from workspace methods
+  - Built-in methods (STRING, ARRAY, etc.) still available
+  - Cleaner, more focused autocompletion experience
+
+### Improved
+- Typo detector recognizes `geq`, `leq`, `neq` as valid keywords
+- Better IntelliSense filtering for method calls
+
 ## [0.7.0] - 2025-01-24
 
 ### Added

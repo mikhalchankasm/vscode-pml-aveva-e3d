@@ -32,18 +32,11 @@ export class CompletionProvider {
 		// Check if typing after a variable (for method calls)
 		const memberMatch = textBeforeCursor.match(/([!$]?\w+)\s*\.\s*$/);
 		if (memberMatch) {
-			// Provide form-specific methods for !this.
-			if (memberMatch[1].toLowerCase() === '!this') {
-				const currentMethods = this.getCurrentDocumentMethodCompletions(document);
-				if (currentMethods.length > 0) {
-					return currentMethods;
-				}
-			}
-
-			// Fallback: offer all workspace methods + built-ins
-			const methodItems = this.getMethodCompletions();
+			// Always show only current document methods + built-ins
+			// This prevents pollution from workspace methods
+			const currentMethods = this.getCurrentDocumentMethodCompletions(document);
 			const builtInItems = this.getBuiltInMethodCompletions();
-			return [...methodItems, ...builtInItems];
+			return [...currentMethods, ...builtInItems];
 		}
 
 		// If cursor is after a bare dot, do not spam unrelated completions
