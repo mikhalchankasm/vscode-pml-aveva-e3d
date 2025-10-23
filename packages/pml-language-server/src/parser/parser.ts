@@ -760,9 +760,30 @@ export class Parser {
 	 * Parse comparison (gt, lt, ge, le)
 	 */
 	private parseComparison(): Expression {
-		let left = this.parseAddition();
+		let left = this.parseOf();
 
 		while (this.match(TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE)) {
+			const operator = this.previous().value;
+			const right = this.parseOf();
+			left = {
+				type: 'BinaryExpression',
+				operator,
+				left,
+				right,
+				range: this.createRangeFromNodes(left, right)
+			};
+		}
+
+		return left;
+	}
+
+	/**
+	 * Parse 'of' operator (namn of zone, name of $!element)
+	 */
+	private parseOf(): Expression {
+		let left = this.parseAddition();
+
+		while (this.match(TokenType.OF)) {
 			const operator = this.previous().value;
 			const right = this.parseAddition();
 			left = {

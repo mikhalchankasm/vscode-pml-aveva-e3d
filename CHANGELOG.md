@@ -2,6 +2,30 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.6.0] - 2025-01-21
+
+### Added
+- **OF Operator Support** - Parser now supports `of` keyword as binary operator
+  - Added OF token type and parsing logic
+  - Works in expressions: `namn of zone`, `name of zone of $!element`
+  - Supports chaining: `attr1 of attr2 of object`
+  - Example: `:Обозначение OF $!element` now parses correctly
+
+### Fixed
+- **Auto-indentation for Functions** - Code formatting now works for function blocks
+  - `define function...endfunction` blocks now auto-indent like methods
+  - Added folding support for function definitions
+  - Fixed indentation rules in language-configuration.json
+
+- **Typo Detector Improvements** - Eliminated false positives on special characters
+  - Skip single-character identifiers (fixes `_` warnings in `Шифр_комплекта_РД`)
+  - Skip attribute access (preceded by `:`)
+  - No more warnings on underscores in Russian attribute names
+
+### Improved
+- Better parser error recovery for complex expressions
+- Language configuration now handles all PML block types consistently
+
 ## [0.5.9] - 2025-01-21
 
 ### Added

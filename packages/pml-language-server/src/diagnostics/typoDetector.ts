@@ -134,6 +134,11 @@ export function detectTypos(document: TextDocument): Diagnostic[] {
 			const word = match[1];
 			const startColumn = match.index;
 
+			// Skip single character identifiers (likely part of names like Шифр_комплекта)
+			if (word.length === 1) {
+				continue;
+			}
+
 			// Skip variables (start with !)
 			if (withoutStrings[startColumn - 1] === '!') {
 				continue;
@@ -146,6 +151,11 @@ export function detectTypos(document: TextDocument): Diagnostic[] {
 
 			// Skip $P, $*, $$ directives
 			if (withoutStrings[startColumn - 1] === '$') {
+				continue;
+			}
+
+			// Skip attribute access (preceded by :)
+			if (withoutStrings[startColumn - 1] === ':') {
 				continue;
 			}
 

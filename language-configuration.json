@@ -25,13 +25,13 @@
   ],
   "folding": {
     "markers": {
-      "start": "^\\s*(define\\s+method|setup\\s+form|frame|if\\s+.*then|do\\s+)",
-      "end": "^\\s*(endmethod|exit|endif|enddo)"
+      "start": "^\\s*(define\\s+(method|function)|setup\\s+form|frame|if\\s+.*then|do\\s+)",
+      "end": "^\\s*(endmethod|endfunction|exit|endif|enddo)"
     }
   },
   "indentationRules": {
-    "increaseIndentPattern": "^\\s*(define\\s+method|setup\\s+form|frame|if\\s+.*then|do\\s+).*$",
-    "decreaseIndentPattern": "^\\s*(endmethod|exit|endif|enddo|else|elseif).*$"
+    "increaseIndentPattern": "^\\s*(define\\s+(method|function)|setup\\s+form|frame|if\\s+.*then|do\\s+).*$",
+    "decreaseIndentPattern": "^\\s*(endmethod|endfunction|exit|endif|enddo|else|elseif).*$"
   },
   "onEnterRules": [
     {
@@ -43,11 +43,11 @@
       "action": { "indent": "outdent" }
     },
     {
-      "beforeText": "^\\s*(define\\s+method|setup\\s+form|frame|do\\b.*)\\s*$",
+      "beforeText": "^\\s*(define\\s+(method|function)|setup\\s+form|frame|do\\b.*)\\s*$",
       "action": { "indent": "indent" }
     },
     {
-      "beforeText": "^\\s*(endmethod|endif|enddo|exit)\\b.*$",
+      "beforeText": "^\\s*(endmethod|endfunction|endif|enddo|exit)\\b.*$",
       "action": { "indent": "outdent" }
     }
   ],

@@ -96,6 +96,7 @@ export enum TokenType {
 	AND = 'AND',
 	OR = 'OR',
 	NOT = 'NOT',
+	OF = 'OF',                // of (attribute access)
 	ASSIGN = 'ASSIGN',        // =
 
 	// Delimiters
@@ -206,6 +207,7 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'and': TokenType.AND,
 	'or': TokenType.OR,
 	'not': TokenType.NOT,
+	'of': TokenType.OF,
 
 	// Boolean literals
 	'TRUE': TokenType.BOOLEAN,

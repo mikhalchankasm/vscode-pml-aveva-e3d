@@ -1,14 +1,14 @@
 ﻿define function !!tsgreport()
 
-!inlist[1 ] = /240000-ТСГ7
-!inlist[2 ] = /240124-ТСГ1
-!inlist[3 ] = /240125-ТСГ1
-!inlist[4 ] = /240137-ТСГ1
-!inlist[5 ] = /240140-ТСГ1
-!inlist[6 ] = /240146-ТСГ1-01
-!inlist[7 ] = /240164-ТСГ1
-!inlist[8 ] = /240166-ТСГ2
-!inlist[9 ] = /240126-ТСГ1
+!inlist[1 ]  = /240000-ТСГ7
+!inlist[2 ]  = /240124-ТСГ1
+!inlist[3 ]  = /240125-ТСГ1
+!inlist[4 ]  = /240137-ТСГ1
+!inlist[5 ]  = /240140-ТСГ1
+!inlist[6 ]  = /240146-ТСГ1-01
+!inlist[7 ]  = /240164-ТСГ1
+!inlist[8 ]  = /240166-ТСГ2
+!inlist[9 ]  = /240126-ТСГ1
 !inlist[10 ] = /240197-ТСГ1
 !inlist[11 ] = /240101-ТСГ3
 !inlist[12 ] = /240101-ТСГ4
@@ -53,7 +53,6 @@
 !inlist[51 ] = /240148-ТСГ1
 !inlist[52 ] = /240150-ТСГ1
 
-
 !marka = 'ТСГ'
 
 var !!starttime clock
@@ -62,7 +61,6 @@ trace off
 !sites = array()
 
 !sites = !inlist
-
 
 !attlist[1 ] = 'Имя_элемента'
 !attlist[2 ] = 'Зона_расположения'
@@ -77,89 +75,87 @@ trace off
 
 !headline = !!join(!attlist, ';')
 
-
 !csvFolder = 'C:\Share\export\csv\' & !marka & '\'
 !!mkdir(!csvFolder)
 
 !total = !sites.size()
 
 do !index index !sites
-    
+
     !site = !sites[!index]
     -- if ( !site.name.matchwild('*-АС*').not() ) then
-        -- skip
+    -- skip
     -- endif
 
-    !result = object array()
+    !result    = object array()
     !result[1] = !headline
     $!site
     !branmem = !!collectallfor('PANE', |not matchwild(name of zone, '*TEMP*') and NOT UNSET ( :Обозначение )| , $!site )
     !branmem.appendarray(!!collectallfor('GENSEC', |not matchwild(name of zone, '*TEMP*') and cutlen gt 1mm and NOT UNSET ( :Обозначение )| , $!site ) )
     !branmem.appendarray(!!collectallfor('FRMW EQUI', |not matchwild(name of zone, '*TEMP*') and NOT UNSET ( :Обозначение ) | , $!site ) )
-    
+
     if ( !branmem.empty()  ) then
-    
-    skip
+
+        skip
     endif
-    
+
     do !element values !branmem
         $!element
         !t = array()
-        
+
         !t[1] = !!ce.flnn
         !t[2] = namn of zone of $!element
-        
+
         !t[3] = :Шифр_комплекта_РД of site
         !t[4] = :Обозначение of $!element
         handle any
-        !t[4] = 'Ошибка Обозначение'
+            !t[4] = 'Ошибка Обозначение'
         endhandle
-        
+
         !t[5] = :Тип_изделия OF $!element
         handle any
-        !t[5] = 'Ошибка: Тип_изделия'
+            !t[5] = 'Ошибка: Тип_изделия'
         endhandle
-        
+
         !t[6] = :Наименование_изделия OF $!element
         handle any
-        !t[6] = 'Ошибка Наименование_изделия'
+            !t[6] = 'Ошибка Наименование_изделия'
         endhandle
-        
+
         if ( !element.type eq 'GENSEC' ) then
-            !len = !element.cutlen.ConvertUnits('mm').Value().String('d0')
-            !t[7] = !len
+            !len   = !element.cutlen.ConvertUnits('mm').Value().String('d0')
+            !t[7]  = !len
             !t[8 ] = :Длина_сваи OF $!element
             !t[9 ] = :Номер_сваи OF $!element
             !t[10] = :Марка_сваи OF $!element
         else
-            
+
             !t[7 ] = ''
             !t[8 ] = ''
             !t[9 ] = ''
             !t[10] = ''
         endif
-        
+
         !result.append(!!join(!t, ';'))
-    
+
     enddo
 
     !filename = object file( !csvFolder & !!generatefilename( namn of $!site ) & '.csv' )
-    
+
     !filename.WriteFile('over', !result)
 
     $!site
-    $P выгружено: ( $!index ) ( $!total  ) -  $!!CE.flnm 
+    $P выгружено: ( $!index ) ( $!total  ) -  $!!CE.flnm
     $P *******
-    $P  
-    
+    $P
+
 enddo
 
 $!back
 
-    -- var !finishtime clock
-    
-    !!difftime()
+-- var !finishtime clock
 
+!!difftime()
 
 endfunction
 
