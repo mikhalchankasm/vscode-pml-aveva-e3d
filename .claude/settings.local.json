@@ -1,19 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sed -n '74p' packages/pml-language-server/src/providers/completionProvider.ts)",
-      "Bash(npm run compile)",
-      "Bash(git add -A)",
-      "Bash(git commit -m \"fix: correct range calculations and remove unicode arrows\n\nCritical fixes from code review:\n\n1. **CallExpression Range** - Fixed pointing to line 0\n   - Before: range: this.createRange(0, this.current - 1)\n   - After: Capture startPos from callee, end from rparen token\n   - Impact: \"\"Go to definition\"\", hovers now point to actual call location\n   - Removed TODO comment\n\n2. **Completion Strings** - Replace unicode arrows with ASCII\n   - Changed: ''STRING → STRING'' (UTF-8 arrow U+2192)\n   - To: ''STRING -> STRING'' (ASCII hyphen-greater-than)\n   - Prevents any potential mojibake in IntelliSense detail panes\n   - Safer across different terminals/editors\n\nBoth fixes ensure correct highlighting and readable completions.\")",
-      "Bash(git push origin main)",
-      "Bash(npm run pack)",
-      "Bash(npx @vscode/vsce ls)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nfix: include LSP server in VSIX package - critical production fix\n\n**CRITICAL FIX:** LSP server now correctly packaged in VSIX\n\nChanges:\n1. **.vscodeignore** - Explicit include patterns for LSP server\n   - Added `!packages/pml-language-server/out/**/*.js`\n   - Added `!packages/pml-language-server/out/**/*.d.ts`\n   - Added `!packages/pml-language-server/package.json`\n   - Excludes source `packages/**/src/**`\n\n2. **package.json** - Updated compile script\n   - Before: `tsc -p ./`\n   - After: `tsc -p ./ && cd packages/pml-language-server && tsc -p ./`\n   - Ensures both extension and LSP server are compiled before packaging\n   - Bumped version to 0.5.6\n\n3. **packages/pml-language-server/tsconfig.json** - Relaxed strict checks\n   - Set `noUnusedLocals: false`\n   - Set `noUnusedParameters: false`\n   - Prevents compilation errors from unused imports\n\n4. **CHANGELOG.md, README.md** - Version 0.5.6 documentation\n\nImpact:\n- Fixes error: \"LSP server.js not found at: ...packagespml-language-serveroutserver.js\"\n- Extension now works correctly when installed from VSIX on production systems\n- Verified with `vsce ls` - server.js now included in package\nEOF\n)\")",
-      "Bash(git commit -m \"$(cat <<''EOF''\nchore: add VSIX to repo and fix CI workflow\n\nChanges:\n1. **ci.yml** - Install LSP server dependencies\n   - Added `cd packages/pml-language-server && npm ci || npm install`\n   - Fixes \"Cannot find module 'vscode-languageserver/node'\" errors in CI\n\n2. **.gitignore** - Allow VSIX files in repository\n   - Commented out `pml-aveva-e3d-*.vsix` exclusion\n   - Enables committing release builds for easy distribution\n\n3. **pml-aveva-e3d-0.5.6.vsix** - Production-ready release\n   - Includes compiled LSP server\n   - Ready for installation on production systems\n\nThis should fix the CI build errors and make releases available in git.\nEOF\n)\")",
-      "Bash(gh run list --limit 5)",
-      "Bash(git add .github/workflows/release.yml)",
-      "Bash(git commit -m \"fix: install LSP server dependencies in release workflow\n\nChanges:\n- Added npm install for packages/pml-language-server before compile\n- Fixed body_path: docs/CHANGELOG.md -> CHANGELOG.md\n- Ensures LSP server modules are available during build\")",
-      "Bash(npm run pack:install)"
+      "Bash(git add CHANGELOG.md)",
+      "Bash(git commit -m \"docs: update CHANGELOG with object and backslash fixes\")",
+      "Bash(gh run list:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run compile:*)",
+      "Bash(npm run pack:install:*)",
+      "Bash(npm run pack:*)"
     ],
     "deny": [],
     "ask": []

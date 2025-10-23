@@ -2,6 +2,26 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.7] - 2025-01-21
+
+### Added
+- **Context-aware `!this.` Completion** - Form method IntelliSense
+  - When typing `!this.` in a form file, shows only methods from current document
+  - Supports both parsed methods (from AST) and regex-extracted methods
+  - Example: `!this.` → shows `.remove()`, `.init()`, `.report()`, etc.
+  - Greatly improves developer experience when working with forms
+
+### Fixed
+- **Reduced completion spam on bare `.`**
+  - Empty dot no longer shows unrelated completions
+  - Only shows relevant methods when context is clear
+
+### Improved
+- **Better member completion logic**
+  - Enhanced regex to match `!variable.` and `$variable.` patterns
+  - Workspace methods now have better filtering and sorting
+  - Method completions include parameter information
+
 ## [0.5.6] - 2025-01-21
 
 ### Fixed

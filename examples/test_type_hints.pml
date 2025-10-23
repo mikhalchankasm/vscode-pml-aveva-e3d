@@ -87,3 +87,4 @@ endmethod
 
 !unknown.   ← покажет методы для STRING, REAL, ARRAY, DBREF с метками [TYPE]
 
+!this.

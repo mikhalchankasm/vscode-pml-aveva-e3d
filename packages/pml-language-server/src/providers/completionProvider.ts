@@ -11,6 +11,12 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
 
+type LightweightMethod = {
+	name: string;
+	parameters: string[];
+	documentation?: string;
+};
+
 export class CompletionProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
 
@@ -23,18 +29,27 @@ export class CompletionProvider {
 
 		const items: CompletionItem[] = [];
 
-		// Check if we're typing after a dot (method completion)
-		if (textBeforeCursor.endsWith('.')) {
-			// Method completion - offer all workspace methods
-			return this.getMethodCompletions();
+		// Check if typing after a variable (for method calls)
+		const memberMatch = textBeforeCursor.match(/([!$]?\w+)\s*\.\s*$/);
+		if (memberMatch) {
+			// Provide form-specific methods for !this.
+			if (memberMatch[1].toLowerCase() === '!this') {
+				const currentMethods = this.getCurrentDocumentMethodCompletions(document);
+				if (currentMethods.length > 0) {
+					return currentMethods;
+				}
+			}
+
+			// Fallback: offer all workspace methods + built-ins
+			const methodItems = this.getMethodCompletions();
+			const builtInItems = this.getBuiltInMethodCompletions();
+			return [...methodItems, ...builtInItems];
 		}
 
-		// Check if typing after a variable (for method calls)
-		const memberMatch = textBeforeCursor.match(/(\w+)\.\s*$/);
-		if (memberMatch) {
-			// Try to infer variable type and offer type-specific methods
-			// For now, offer all built-in methods
-			items.push(...this.getBuiltInMethodCompletions());
+		// If cursor is after a bare dot, do not spam unrelated completions
+		const trimmedText = textBeforeCursor.trimEnd();
+		if (trimmedText.endsWith('.')) {
+			return [];
 		}
 
 		// Keywords and snippets
@@ -252,7 +267,7 @@ export class CompletionProvider {
 				kind: CompletionItemKind.Method,
 				detail: `Method (${method.parameters.join(', ')})`,
 				documentation: method.documentation,
-				filterText: method.name,
+				filterText: `workspace:${method.name}`,
 				sortText: `0${method.name}` // Sort workspace methods first
 			});
 		}
@@ -270,5 +285,79 @@ export class CompletionProvider {
 		}
 
 		return items;
+	}
+
+	/**
+	 * Get methods defined in the current document (used for !this.)
+	 */
+	private getCurrentDocumentMethodCompletions(document: TextDocument): CompletionItem[] {
+		const fileSymbols = this.symbolIndex.getFileSymbols(document.uri);
+
+		const methodMap: Map<string, LightweightMethod> = new Map();
+
+		if (fileSymbols) {
+			for (const method of fileSymbols.methods) {
+				methodMap.set(method.name.toLowerCase(), {
+					name: method.name,
+					parameters: method.parameters,
+					documentation: method.documentation
+				});
+			}
+		}
+
+		// Enrich with regexp extraction to catch methods missed by parser (common for forms)
+		for (const method of this.extractMethodsFromDocument(document)) {
+			const key = method.name.toLowerCase();
+			if (!methodMap.has(key)) {
+				methodMap.set(key, method);
+			}
+		}
+
+		const methods = Array.from(methodMap.values());
+		if (methods.length === 0) {
+			return [];
+		}
+
+		return methods.map(method => ({
+			label: `.${method.name}`,
+			kind: CompletionItemKind.Method,
+			detail: method.parameters.length
+				? `Method (${method.parameters.map(param => '!' + param).join(', ')})`
+				: 'Method',
+			documentation: method.documentation,
+			insertText: method.name,
+			filterText: method.name,
+			sortText: `0${method.name}`
+		}));
+	}
+
+	/**
+	 * Fallback: extract methods from the current document text
+	 * when the symbol index is not yet populated.
+	 */
+	private extractMethodsFromDocument(document: TextDocument): LightweightMethod[] {
+		const text = document.getText();
+		const methodRegex = /^\s*define\s+method\s+\.([A-Za-z0-9_]+)\s*(\(([^)]*)\))?/gim;
+		const methods: LightweightMethod[] = [];
+
+		let match: RegExpExecArray | null;
+		while ((match = methodRegex.exec(text)) !== null) {
+			const params = (match[3] || '')
+				.split(',')
+				.map(param => param.trim())
+				.filter(Boolean)
+				.map(param => {
+					// Parameter name always starts with !
+					const nameMatch = param.match(/!([A-Za-z0-9_]+)/);
+					return nameMatch ? nameMatch[1] : param;
+				});
+
+			methods.push({
+				name: match[1],
+				parameters: params
+			});
+		}
+
+		return methods;
 	}
 }
