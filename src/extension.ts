@@ -12,6 +12,7 @@ import { PMLToolsProvider } from './tools';
 import { PMLMethodCommands } from './methodCommands';
 import { PMLCodeActionProvider } from './codeActions';
 import { activateLanguageServer, deactivateLanguageServer } from './languageClient';
+import { sortMethodsAscending, sortMethodsDescending } from './commands/sortMethods';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('✅ PML extension activated');
@@ -68,6 +69,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register method commands
     PMLMethodCommands.registerCommands(context);
+
+    // Register Sort Methods commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('pml.sortMethodsAscending', sortMethodsAscending),
+        vscode.commands.registerCommand('pml.sortMethodsDescending', sortMethodsDescending)
+    );
 
     // Register Code Actions (quick fixes on text selection)
     const codeActionProvider = vscode.languages.registerCodeActionsProvider(

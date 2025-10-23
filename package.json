@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -95,6 +95,16 @@
       {
         "command": "pml.formatDocument",
         "title": "Format PML Document",
+        "category": "PML"
+      },
+      {
+        "command": "pml.sortMethodsAscending",
+        "title": "Sort Methods (A→Z)",
+        "category": "PML"
+      },
+      {
+        "command": "pml.sortMethodsDescending",
+        "title": "Sort Methods (Z→A)",
         "category": "PML"
       },
       {
@@ -438,6 +448,14 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "pml.sortMethodsAscending",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.sortMethodsDescending",
+          "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
         {
           "command": "pml.sortLinesAsc",
           "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"

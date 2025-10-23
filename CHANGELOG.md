@@ -2,6 +2,24 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.8] - 2025-01-21
+
+### Added
+- **Sort Methods Command** ⭐ HIGH PRIORITY ROADMAP ITEM
+  - Command: `PML: Sort Methods (A→Z)` - Sort methods alphabetically ascending
+  - Command: `PML: Sort Methods (Z→A)` - Sort methods alphabetically descending
+  - Preserves preceding comments (JSDoc style and regular `--` comments)
+  - Preserves blank lines between methods
+  - Handles nested `define method` blocks correctly
+  - Accessible via Command Palette (`Ctrl+Shift+P`)
+  - Example: Sorts `.zebra()`, `.apple()`, `.banana()` → `.apple()`, `.banana()`, `.zebra()`
+
+### Improved
+- Method extraction algorithm in Sort Methods
+  - Detects and preserves multi-line comments before methods
+  - Handles empty lines gracefully
+  - Case-insensitive sorting (natural order)
+
 ## [0.5.7] - 2025-01-21
 
 ### Added
