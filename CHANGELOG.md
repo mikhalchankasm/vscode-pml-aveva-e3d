@@ -2,6 +2,24 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.7.2] - 2025-01-24
+
+### Fixed
+- **Go to Definition (F12)** - Now works correctly for method calls
+  - Fixed word boundary detection to exclude dot from word range
+  - Cursor on `methodName` in `!var.methodName()` now jumps to definition
+  - Previously dot was included in word, breaking detection logic
+
+- **Hover Documentation** - Method documentation now displays correctly
+  - Fixed same word boundary issue affecting hover tooltips
+  - Hover over method name after dot now shows documentation
+  - Documentation from comments before method definition appears properly
+
+### Technical
+- Removed dot (`.`) from `isWordChar()` regex in both definitionProvider and hoverProvider
+- Changed from `/[a-zA-Z0-9_.]/` to `/[a-zA-Z0-9_]/`
+- This allows proper detection of dot-preceded method names
+
 ## [0.7.1] - 2025-01-24
 
 ### Added
