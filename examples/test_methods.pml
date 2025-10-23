@@ -1,13 +1,59 @@
 -- Test file for method definitions and calls
 -- Use this to test Go to Definition (F12) and Find References (Shift+F12)
 
-!element = object array()
+define method .methodName1()
 
-!pipe = object string()
+    -- Method body
+    |Hello world|.output()
 
-do !index index !pipes
-    !item = !pipes[!index]
+endmethod
 
-enddo
 
-Hello world
+-- Этот метод должен быть вызван из другого метода
+-- @param1 - первый параметр
+define method .methodName001(!param1 is string) is string
+
+    -- Method body
+    return |Hello world|  
+
+endmethod
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!M = 'SOME TEXT'
+!M.methodName001()
+
+
+
+
+
+

@@ -11,7 +11,8 @@
       "Bash(npm run compile:*)",
       "Bash(npm run pack:install:*)",
       "Bash(npm run pack:*)",
-      "Bash(npx @vscode/vsce package:*)"
+      "Bash(npx @vscode/vsce package:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

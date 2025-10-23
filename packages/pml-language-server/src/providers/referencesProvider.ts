@@ -45,19 +45,48 @@ export class ReferencesProvider {
 			}
 		}
 
-		// Find all usages in all indexed files
-		// TODO: Implement actual usage scanning (requires scanning all files for calls)
-		// For now, just return definitions
-
-		// Scan all files for method calls
+		// Scan current document for references to this method
 		if (methods.length > 0) {
-			const allFileSymbols = this.symbolIndex.getStats();
-			// TODO: Scan each file's content for `.methodName(` pattern
-			// This requires keeping file content or re-parsing
-			// For MVP, we just return definitions
+			const currentFileRefs = this.findReferencesInDocument(document, symbolName);
+			references.push(...currentFileRefs);
 		}
 
 		return references.length > 0 ? references : null;
+	}
+
+	/**
+	 * Find all references to a symbol in a document
+	 */
+	private findReferencesInDocument(document: TextDocument, symbolName: string): Location[] {
+		const text = document.getText();
+		const references: Location[] = [];
+
+		// Pattern to match method calls: .methodName( or variable.methodName(
+		const patterns = [
+			new RegExp(`\\.${symbolName}\\s*\\(`, 'gi'),  // Direct call: .methodName()
+			new RegExp(`\\w+\\.${symbolName}\\s*\\(`, 'gi')  // Variable call: !var.methodName()
+		];
+
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(text)) !== null) {
+				// Find the exact position of the method name (not the dot or parenthesis)
+				const matchText = match[0];
+				const methodNameIndex = matchText.lastIndexOf(symbolName);
+				const startOffset = match.index + methodNameIndex;
+				const endOffset = startOffset + symbolName.length;
+
+				references.push(Location.create(
+					document.uri,
+					{
+						start: document.positionAt(startOffset),
+						end: document.positionAt(endOffset)
+					}
+				));
+			}
+		}
+
+		return references;
 	}
 
 	/**

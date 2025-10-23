@@ -4,6 +4,7 @@
 
 import { Range, Location } from 'vscode-languageserver/node';
 import { Program, MethodDefinition, ObjectDefinition, FormDefinition, FrameDefinition } from '../ast/nodes';
+import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
 
 /**
  * Symbol information stored in index
@@ -78,12 +79,20 @@ export class SymbolIndex {
 	// Map: file URI -> file symbols
 	private fileSymbols: Map<string, FileSymbols> = new Map();
 
+	// Map: file URI -> document text (for comment extraction)
+	private documentTexts: Map<string, string> = new Map();
+
 	/**
 	 * Index a file's AST
 	 */
-	public indexFile(uri: string, ast: Program, version: number): void {
+	public indexFile(uri: string, ast: Program, version: number, documentText?: string): void {
 		// Remove old symbols from this file
 		this.removeFile(uri);
+
+		// Store document text for comment extraction
+		if (documentText) {
+			this.documentTexts.set(uri, documentText);
+		}
 
 		const fileSymbols: FileSymbols = {
 			uri,
@@ -97,7 +106,7 @@ export class SymbolIndex {
 		// Extract symbols from AST
 		for (const node of ast.body) {
 			if (node.type === 'MethodDefinition') {
-				const methodInfo = this.extractMethodInfo(node, uri);
+				const methodInfo = this.extractMethodInfo(node, uri, documentText);
 				fileSymbols.methods.push(methodInfo);
 				this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
 			} else if (node.type === 'ObjectDefinition') {
@@ -107,7 +116,7 @@ export class SymbolIndex {
 
 				// Index methods inside object
 				for (const method of node.members) {
-					const methodInfo = this.extractMethodInfo(method, uri, objectInfo.name);
+					const methodInfo = this.extractMethodInfo(method, uri, documentText, objectInfo.name);
 					fileSymbols.methods.push(methodInfo);
 					this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
 				}
@@ -142,6 +151,7 @@ export class SymbolIndex {
 
 		// Remove file entry
 		this.fileSymbols.delete(uri);
+		this.documentTexts.delete(uri);
 	}
 
 	/**
@@ -261,9 +271,21 @@ export class SymbolIndex {
 	/**
 	 * Helper: Extract method info from AST node
 	 */
-	private extractMethodInfo(node: MethodDefinition, uri: string, containerName?: string): MethodInfo {
+	private extractMethodInfo(node: MethodDefinition, uri: string, documentText?: string, containerName?: string): MethodInfo {
 		const parameters = node.parameters.map(p => p.name);
 		const signature = `.${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
+
+		// Extract documentation from comments if available
+		let documentation: string | undefined = node.documentation?.description;
+		if (!documentation && documentText) {
+			// Extract comments from document text
+			const lineNumber = node.range.start.line;
+			const rawComments = extractPrecedingComments(documentText, lineNumber);
+			if (rawComments) {
+				// Format documentation with parameter info
+				documentation = formatDocumentation(rawComments, node.name, parameters.map(p => '!' + p));
+			}
+		}
 
 		return {
 			name: node.name,
@@ -272,7 +294,7 @@ export class SymbolIndex {
 			range: node.range,
 			containerName,
 			deprecated: node.deprecated,
-			documentation: node.documentation?.description,
+			documentation,
 			parameters,
 			parameterCount: parameters.length,
 			signature

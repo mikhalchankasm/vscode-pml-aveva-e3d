@@ -263,8 +263,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		// Cache AST for other providers
 		documentASTs.set(textDocument.uri, parseResult.ast);
 
-		// Index document symbols
-		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version);
+		// Index document symbols (pass document text for comment extraction)
+		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
 
 		// Convert parse errors to diagnostics (skip for forms - they have special syntax)
 		const isFormFile = textDocument.uri.endsWith('.pmlfrm');

@@ -22,10 +22,18 @@ export class DefinitionProvider {
 
 		const word = document.getText(wordRange);
 
-		// Check if it's a method call (.methodName)
+		// Check if it's a method call (.methodName or just methodName after .)
 		if (word.startsWith('.')) {
 			const methodName = word.substring(1);
 			return this.findMethodDefinition(methodName);
+		}
+
+		// Check if previous character before word is a dot (for .methodName() calls)
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (wordStartOffset > 0 && text[wordStartOffset - 1] === '.') {
+			// This is a method call after dot: !var.methodName()
+			return this.findMethodDefinition(word);
 		}
 
 		// Check if it's just a method name without dot

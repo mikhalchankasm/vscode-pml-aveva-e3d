@@ -2,6 +2,43 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.7.0] - 2025-01-24
+
+### Added
+- **Method Return Type Support** - Parser now accepts return type declarations
+  - Syntax: `define method .name(!param is TYPE) is RETURN_TYPE`
+  - Example: `define method .getData() is STRING` now parses correctly
+  - Return type is stored in AST and used for documentation
+
+- **Method Documentation from Comments** - Automatic documentation extraction
+  - Comments before method definition are now shown in hover tooltips
+  - Supports multi-line comments (all `--` lines before method)
+  - JSDoc-style parameter documentation: `-- @param1 - description`
+  - Documentation persists until empty line or non-comment
+  - Example:
+    ```pml
+    -- This method processes data
+    -- @param1 - input data string
+    define method .process(!param1 is STRING)
+    ```
+
+- **Find All References** - Shift+F12 now works within current file
+  - Shows all usages of method in current document
+  - Finds both direct calls `.methodName()` and variable calls `!var.methodName()`
+  - Highlights exact method name positions
+  - Works alongside Go to Definition (F12)
+
+### Fixed
+- **Go to Definition (F12)** - Now works for method calls in same file
+  - Fixed detection of method calls after dot: `!variable.methodName()`
+  - Correctly identifies method name even when cursor is on method name (not dot)
+  - Works for all method call patterns
+
+### Improved
+- Hover tooltips now show formatted documentation with parameters
+- Method signatures in hover include parameter types
+- Better symbol indexing with comment extraction
+
 ## [0.6.0] - 2025-01-21
 
 ### Added

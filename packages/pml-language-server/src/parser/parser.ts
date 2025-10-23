@@ -101,7 +101,7 @@ export class Parser {
 
 	/**
 	 * Parse method definition
-	 * define method .methodName(!param1, !param2)
+	 * define method .methodName(!param1, !param2) [is RETURN_TYPE]
 	 *   ...
 	 * endmethod
 	 */
@@ -120,6 +120,13 @@ export class Parser {
 		const parameters = this.parseParameters();
 		this.consume(TokenType.RPAREN, "Expected ')' after parameters");
 
+		// Optional return type: is TYPE
+		let returnType: PMLType | undefined = undefined;
+		if (this.check(TokenType.IS)) {
+			this.advance(); // consume 'is'
+			returnType = this.parseType();
+		}
+
 		// Method body
 		const body: Statement[] = [];
 		while (!this.check(TokenType.ENDMETHOD) && !this.isAtEnd()) {
@@ -136,6 +143,7 @@ export class Parser {
 			name: methodName,
 			parameters,
 			body,
+			returnType,
 			documentation,
 			deprecated: documentation?.deprecated || false,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
