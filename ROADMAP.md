@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.5.6)
+## ✅ Completed (v0.4.8 - v0.5.9)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -36,6 +36,12 @@ Development plans and progress tracking.
   - Handle `member .property is TYPE`
   - Handle `define method` inside objects
 
+- ✅ **Function Definition Support** (v0.5.9)
+  - Parse `define function !!name() ... endfunction`
+  - FunctionDefinition AST node for .pmlfnc files
+  - Full parameter and body parsing
+  - Works with global variable names (!!functionName)
+
 - ✅ **MemberExpression Fixes** (v0.5.5)
   - Correct AST typing (Expression, not Identifier)
   - Fixed range calculations
@@ -54,6 +60,7 @@ Development plans and progress tracking.
 
 - ✅ **PML Tools**
   - Sort Lines (A→Z, Z→A, by length, smart natural sort)
+  - Sort Methods (A→Z, Z→A) - v0.5.8
   - Remove duplicates/consecutive duplicates
   - Remove empty/whitespace lines
   - Trim trailing whitespace
@@ -94,11 +101,16 @@ Development plans and progress tracking.
 
 ### High Priority
 
-- [ ] **Sort Methods A→Z/Z→A** ⭐ HIGH PRIORITY
+- [x] **Sort Methods A→Z/Z→A** ✅ COMPLETED (v0.5.8)
   - Command "PML: Sort Methods (A→Z)"
   - Parse `define method ... endmethod` blocks
   - Preserve comments before methods
   - Preserve blank lines between methods
+
+- [x] **Function Definition Support** ✅ COMPLETED (v0.5.9)
+  - Parser supports `define function !!name()...endfunction`
+  - Typo detector improvements (reduced false positives)
+  - Support for .pmlfnc files
 
 - [ ] **Find All References** ⭐
   - Currently only returns definitions
@@ -293,14 +305,14 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.5.6
+**Version:** 0.5.9
 **Released:** 2025-01-21
 
 **Statistics:**
-- Extension size: 15.6 MB (needs bundling)
-- Files in VSIX: 1627 files (864 JS files)
+- Extension size: 15.61 MB (needs bundling)
+- Files in VSIX: 1629 files (865 JS files)
 - LSP features: 12+ providers
-- Commands: 25+
+- Commands: 27+
 - Diagnostics: 3 types
 
 **Known Limitations:**
