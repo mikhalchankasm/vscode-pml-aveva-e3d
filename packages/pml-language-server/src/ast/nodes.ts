@@ -40,6 +40,7 @@ export interface Program extends ASTNode {
  */
 export type Statement =
 	| MethodDefinition
+	| FunctionDefinition
 	| ObjectDefinition
 	| FormDefinition
 	| VariableDeclaration
@@ -60,6 +61,22 @@ export type Statement =
 export interface MethodDefinition extends ASTNode {
 	type: 'MethodDefinition';
 	name: string; // without leading dot
+	parameters: Parameter[];
+	body: Statement[];
+	returnType?: PMLType;
+	documentation?: JSDocComment;
+	deprecated?: boolean;
+}
+
+/**
+ * Function Definition
+ * define function !!functionName(!param1, !param2)
+ *   ...
+ * endfunction
+ */
+export interface FunctionDefinition extends ASTNode {
+	type: 'FunctionDefinition';
+	name: string; // without leading !!
 	parameters: Parameter[];
 	body: Statement[];
 	returnType?: PMLType;

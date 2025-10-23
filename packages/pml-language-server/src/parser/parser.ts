@@ -6,7 +6,7 @@
 import { Token, TokenType } from './tokens';
 import { Lexer } from './lexer';
 import {
-	Program, Statement, Expression, MethodDefinition, ObjectDefinition, FormDefinition,
+	Program, Statement, Expression, MethodDefinition, FunctionDefinition, ObjectDefinition, FormDefinition,
 	FrameDefinition, VariableDeclaration, Parameter, IfStatement, DoStatement,
 	HandleStatement, ReturnStatement, BreakStatement, ContinueStatement,
 	ExpressionStatement, Identifier, Literal, CallExpression, MemberExpression,
@@ -83,17 +83,19 @@ export class Parser {
 	}
 
 	/**
-	 * Parse definition (method or object)
+	 * Parse definition (method, function, or object)
 	 */
 	private parseDefinition(): Statement {
 		const startToken = this.consume(TokenType.DEFINE, "Expected 'define'");
 
 		if (this.check(TokenType.METHOD_KW)) {
 			return this.parseMethodDefinition(startToken);
+		} else if (this.check(TokenType.FUNCTION)) {
+			return this.parseFunctionDefinition(startToken);
 		} else if (this.check(TokenType.OBJECT)) {
 			return this.parseObjectDefinition(startToken);
 		} else {
-			throw this.error(this.peek(), "Expected 'method' or 'object' after 'define'");
+			throw this.error(this.peek(), "Expected 'method', 'function', or 'object' after 'define'");
 		}
 	}
 
@@ -132,6 +134,49 @@ export class Parser {
 		return {
 			type: 'MethodDefinition',
 			name: methodName,
+			parameters,
+			body,
+			documentation,
+			deprecated: documentation?.deprecated || false,
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	/**
+	 * Parse function definition
+	 * define function !!functionName(!param1, !param2)
+	 *   ...
+	 * endfunction
+	 */
+	private parseFunctionDefinition(startToken: Token): FunctionDefinition {
+		this.consume(TokenType.FUNCTION, "Expected 'function'");
+
+		// Parse documentation (JSDoc comments before function)
+		const documentation = this.parsePrecedingDocumentation();
+
+		// Function name: !!functionName (global variable)
+		const nameToken = this.consume(TokenType.GLOBAL_VAR, "Expected function name (e.g., !!myFunction)");
+		const functionName = nameToken.value.substring(2); // Remove leading !!
+
+		// Parameters: (...)
+		this.consume(TokenType.LPAREN, "Expected '(' after function name");
+		const parameters = this.parseParameters();
+		this.consume(TokenType.RPAREN, "Expected ')' after parameters");
+
+		// Function body
+		const body: Statement[] = [];
+		while (!this.check(TokenType.ENDFUNCTION) && !this.isAtEnd()) {
+			const stmt = this.parseStatement();
+			if (stmt) {
+				body.push(stmt);
+			}
+		}
+
+		const endToken = this.consume(TokenType.ENDFUNCTION, "Expected 'endfunction'");
+
+		return {
+			type: 'FunctionDefinition',
+			name: functionName,
 			parameters,
 			body,
 			documentation,

@@ -2,6 +2,31 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.5.9] - 2025-01-21
+
+### Added
+- **Function Definition Support** - Parser now supports `define function...endfunction` syntax
+  - New AST node: `FunctionDefinition` for .pmlfnc files
+  - Parser accepts: `define function !!functionName(!param1, !param2)`
+  - Properly closes with `endfunction`
+  - Added FUNCTION and ENDFUNCTION token types
+  - Example: `define function !!tsgreport()` now parses without errors
+
+### Fixed
+- **Typo Detector False Positives** - Reduced warnings on valid PML identifiers
+  - Added to keywords: `function`, `endfunction`, `var`, `by`
+  - Added to valid identifiers: `trace`, `off`, `on`, `of`, `file`, `zone`, `clock`, `namn`, `flnn`
+  - Fixed: "var" no longer suggests "for"
+  - Fixed: "trace" no longer suggests "frame"
+  - Fixed: "off" no longer suggests "if"
+  - Fixed: "of" no longer suggests "if"
+  - Fixed: "file" no longer suggests "while"
+
+### Improved
+- Parser error messages now mention 'function' as valid after 'define'
+- Typo detector now recognizes common AVEVA attributes (namn, flnn)
+- Better support for .pmlfnc file extension
+
 ## [0.5.8] - 2025-01-21
 
 ### Added

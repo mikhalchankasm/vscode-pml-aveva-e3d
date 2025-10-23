@@ -18,9 +18,11 @@ export enum TokenType {
 	// Keywords
 	DEFINE = 'DEFINE',
 	METHOD_KW = 'METHOD_KW',
+	FUNCTION = 'FUNCTION',
 	OBJECT = 'OBJECT',
 	ENDOBJECT = 'ENDOBJECT',
 	ENDMETHOD = 'ENDMETHOD',
+	ENDFUNCTION = 'ENDFUNCTION',
 	IF = 'IF',
 	THEN = 'THEN',
 	ELSE = 'ELSE',
@@ -130,9 +132,11 @@ export const KEYWORDS: Record<string, TokenType> = {
 	// Control flow
 	'define': TokenType.DEFINE,
 	'method': TokenType.METHOD_KW,
+	'function': TokenType.FUNCTION,
 	'object': TokenType.OBJECT,
 	'endobject': TokenType.ENDOBJECT,
 	'endmethod': TokenType.ENDMETHOD,
+	'endfunction': TokenType.ENDFUNCTION,
 	'if': TokenType.IF,
 	'then': TokenType.THEN,
 	'else': TokenType.ELSE,

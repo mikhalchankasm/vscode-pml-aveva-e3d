@@ -10,6 +10,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 const PML_KEYWORDS = [
 	'define', 'enddefine',
 	'method', 'endmethod',
+	'function', 'endfunction',
 	'object', 'endobject',
 	'if', 'then', 'else', 'elseif', 'endif',
 	'do', 'enddo',
@@ -18,8 +19,8 @@ const PML_KEYWORDS = [
 	'handle', 'elsehandle', 'endhandle',
 	'setup', 'form', 'frame', 'exit',
 	'return', 'break', 'continue', 'goto',
-	'values', 'index', 'from', 'to',
-	'member', 'is',
+	'values', 'index', 'from', 'to', 'by',
+	'member', 'is', 'var',
 	'and', 'or', 'not',
 	'eq', 'ne', 'gt', 'lt', 'ge', 'le',
 	'mod', 'div',
@@ -42,7 +43,16 @@ const VALID_IDENTIFIERS = [
 	'item',
 	'list',
 	'count',
-	'index'
+	// Common PML built-in functions/keywords
+	'trace',     // trace on/off
+	'off',       // trace off
+	'on',        // trace on
+	'of',        // of operator (e.g., "name of zone")
+	'file',      // file operations
+	'zone',      // zone attribute
+	'clock',     // clock type
+	'namn',      // AVEVA attribute (name in Swedish)
+	'flnn'       // AVEVA attribute (full name)
 ];
 
 /**
