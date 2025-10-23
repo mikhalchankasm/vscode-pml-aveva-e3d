@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.5.9)
+## ✅ Completed (v0.4.8 - v0.6.0)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -24,11 +24,12 @@ Development plans and progress tracking.
   - Warning on `arr[0]` (PML arrays are 1-indexed)
   - Handles elseif statements correctly
 
-- ✅ **Typo Detection** (v0.5.4)
+- ✅ **Typo Detection** (v0.5.4, v0.6.0)
   - Detects typos in keywords (e.g., "endiff" → "endif")
   - Levenshtein distance algorithm
-  - Skip variables (!), methods (.), directives ($)
-  - Reduced false positives
+  - Skip variables (!), methods (.), directives ($), attributes (:)
+  - Skip single-character identifiers (v0.6.0)
+  - Reduced false positives on Russian attribute names
 
 ### Parser Improvements
 - ✅ **Object Definition Support** (v0.5.6)
@@ -50,6 +51,11 @@ Development plans and progress tracking.
 - ✅ **Backslash Handling** (v0.5.6)
   - PML doesn't use backslash escapes
   - Windows paths work correctly: `|Z:\path\file|`
+
+- ✅ **OF Operator** (v0.6.0)
+  - Binary operator for attribute access
+  - Supports: `namn of zone`, `:attr OF $!element`
+  - Chaining: `name of zone of $!element`
 
 ### Code Actions & Commands
 - ✅ **Code Actions Provider**
@@ -95,22 +101,16 @@ Development plans and progress tracking.
   - Clean project structure
   - CHANGELOG tracking
 
+- ✅ **Code Formatting** (v0.6.0)
+  - Auto-indentation for `define function...endfunction`
+  - Folding support for all block types
+  - Consistent language configuration
+
 ---
 
-## 🎯 v0.6.0 (Next Release) - Current Focus
+## 🎯 v0.7.0 (Next Release) - Current Focus
 
 ### High Priority
-
-- [x] **Sort Methods A→Z/Z→A** ✅ COMPLETED (v0.5.8)
-  - Command "PML: Sort Methods (A→Z)"
-  - Parse `define method ... endmethod` blocks
-  - Preserve comments before methods
-  - Preserve blank lines between methods
-
-- [x] **Function Definition Support** ✅ COMPLETED (v0.5.9)
-  - Parser supports `define function !!name()...endfunction`
-  - Typo detector improvements (reduced false positives)
-  - Support for .pmlfnc files
 
 - [ ] **Find All References** ⭐
   - Currently only returns definitions
@@ -305,7 +305,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.5.9
+**Version:** 0.6.0
 **Released:** 2025-01-21
 
 **Statistics:**
@@ -314,6 +314,7 @@ Development plans and progress tracking.
 - LSP features: 12+ providers
 - Commands: 27+
 - Diagnostics: 3 types
+- Operators: 15+ (including OF)
 
 **Known Limitations:**
 - Form syntax: graceful degradation (parsed as PML)
