@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.7.0)
+## ✅ Completed (v0.4.8 - v0.7.2)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -132,6 +132,42 @@ Development plans and progress tracking.
 - [x] **Return Type Support** ✅ COMPLETED
   - Parser accepts: `define method .name() is TYPE`
   - Return type stored in AST
+
+---
+
+## ✅ v0.7.1 - COMPLETED (2025-01-24)
+
+### Improvements
+
+- [x] **Comparison Operator Aliases** ✅ COMPLETED
+  - Added `geq` as alias for `ge` (greater than or equal)
+  - Added `leq` as alias for `le` (less than or equal)
+  - `neq` already supported as alias for `ne`
+  - No more false positive typo warnings
+
+- [x] **Completion Provider Filtering** ✅ COMPLETED
+  - After typing `.` only methods from current document shown
+  - Prevents pollution from workspace methods
+  - Built-in methods still available
+  - Cleaner IntelliSense experience
+
+---
+
+## ✅ v0.7.2 - COMPLETED (2025-01-24)
+
+### Critical Fixes
+
+- [x] **F12 (Go to Definition) Fixed** ✅ COMPLETED
+  - Fixed word boundary detection in definitionProvider
+  - Removed dot from `isWordChar()` regex
+  - F12 now works correctly for `!var.methodName()` calls
+  - Jump to definition works reliably
+
+- [x] **Hover Documentation Fixed** ✅ COMPLETED
+  - Fixed word boundary detection in hoverProvider
+  - Removed dot from `isWordChar()` regex
+  - Hover over method name now shows documentation
+  - Comments before methods display properly in tooltips
 
 ---
 
@@ -326,7 +362,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.7.0
+**Version:** 0.7.2
 **Released:** 2025-01-24
 
 **Statistics:**
@@ -335,8 +371,14 @@ Development plans and progress tracking.
 - LSP features: 13+ providers (with documentation extraction)
 - Commands: 27+
 - Diagnostics: 3 types
-- Operators: 15+ (including OF)
-- Documentation: Comment-based method docs
+- Operators: 15+ (including OF, comparison operator aliases)
+- Documentation: Comment-based method docs with JSDoc support
+
+**Recent Fixes (v0.7.2):**
+- ✅ F12 (Go to Definition) works for method calls
+- ✅ Hover documentation displays correctly
+- ✅ Comparison operators (neq, geq, leq) supported
+- ✅ Completion provider shows only current file methods
 
 **Known Limitations:**
 - Form syntax: graceful degradation (parsed as PML)
@@ -356,5 +398,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2025-01-21*
+*Last updated: 2025-01-24*
 *Roadmap may change based on feedback and priorities*
