@@ -32,7 +32,9 @@ export class PMLToolsProvider implements vscode.Disposable {
         // PML helpers
         this.registerCommand('pml.extractVariables', 'Extract Variables', this.extractVariables);
         this.registerCommand('pml.extractMethods', 'Extract Methods', this.extractMethods);
+        this.registerCommand('pml.addComments', 'Add Comments', this.addComments);
         this.registerCommand('pml.removeComments', 'Remove Comments', this.removeComments);
+        this.registerCommand('pml.alignPML', 'Align PML', this.alignPML);
 
         // Form helpers
         this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
@@ -306,6 +308,28 @@ export class PMLToolsProvider implements vscode.Disposable {
         vscode.window.showInformationMessage(`Extracted ${list.length} methods. Opened in a new document.`);
     };
 
+    private addComments = () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        // Add -- at the beginning of each line
+        const lines = selected.text.split('\n');
+        const commented = lines.map(line => {
+            // Skip empty lines
+            if (line.trim() === '') return line;
+            // Add -- with appropriate spacing
+            const match = line.match(/^(\s*)/);
+            const indent = match ? match[1] : '';
+            const rest = line.substring(indent.length);
+            return `${indent}-- ${rest}`;
+        });
+
+        this.applyChangesToSelection(editor, selected.range, commented.join('\n'), 'Added comments');
+    };
+
     private removeComments = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
@@ -320,6 +344,109 @@ export class PMLToolsProvider implements vscode.Disposable {
         // collapse multiple blank lines introduced by stripping comments
         const filtered = newText.split('\n').filter(line => line.trim() !== '');
         this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), 'Removed comments');
+    };
+
+    private alignPML = () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
+
+        // Detect what to align by: '=' or 'is'
+        const hasEquals = lines.some(line => line.includes('='));
+        const hasIs = lines.some(line => /\s+is\s+/i.test(line));
+
+        let aligned: string[];
+
+        if (hasIs) {
+            // Align by 'is' keyword (member declarations)
+            aligned = this.alignByKeyword(lines, /\s+(is)\s+/i);
+        } else if (hasEquals) {
+            // Align by '=' operator
+            aligned = this.alignByOperator(lines, '=');
+        } else {
+            vscode.window.showInformationMessage('No alignment target found (= or is)');
+            return;
+        }
+
+        this.applyChangesToSelection(editor, selected.range, aligned.join('\n'), 'Aligned PML');
+    };
+
+    private alignByOperator(lines: string[], operator: string): string[] {
+        // Find the maximum position of the operator
+        let maxPos = 0;
+        const positions: number[] = [];
+
+        for (const line of lines) {
+            const trimmed = line.trimEnd();
+            const idx = trimmed.indexOf(operator);
+            if (idx >= 0) {
+                // Find position before operator (trim right spaces before =)
+                let pos = idx;
+                while (pos > 0 && trimmed[pos - 1] === ' ') {
+                    pos--;
+                }
+                positions.push(pos);
+                maxPos = Math.max(maxPos, pos);
+            } else {
+                positions.push(-1); // no operator on this line
+            }
+        }
+
+        // Align lines
+        return lines.map((line, i) => {
+            if (positions[i] < 0) return line;
+
+            const trimmed = line.trimEnd();
+            const idx = trimmed.indexOf(operator);
+
+            // Get parts before and after operator
+            let before = trimmed.substring(0, idx).trimEnd();
+            const after = trimmed.substring(idx);
+
+            // Calculate spaces needed
+            const spacesNeeded = maxPos - before.length;
+            const padding = ' '.repeat(Math.max(0, spacesNeeded));
+
+            return before + padding + ' ' + after;
+        });
+    }
+
+    private alignByKeyword(lines: string[], keywordRegex: RegExp): string[] {
+        // Find the maximum position of the keyword
+        let maxPos = 0;
+        const matches: Array<{ before: string; keyword: string; after: string } | null> = [];
+
+        for (const line of lines) {
+            const trimmed = line.trimEnd();
+            const match = trimmed.match(keywordRegex);
+
+            if (match && match.index !== undefined) {
+                const keywordStart = match.index;
+                const before = trimmed.substring(0, keywordStart).trimEnd();
+                const keyword = match[1];
+                const after = trimmed.substring(keywordStart + match[0].length);
+
+                matches.push({ before, keyword, after });
+                maxPos = Math.max(maxPos, before.length);
+            } else {
+                matches.push(null);
+            }
+        }
+
+        // Align lines
+        return lines.map((line, i) => {
+            const match = matches[i];
+            if (!match) return line;
+
+            const spacesNeeded = maxPos - match.before.length;
+            const padding = ' '.repeat(Math.max(0, spacesNeeded));
+
+            return match.before + padding + ' ' + match.keyword + ' ' + match.after;
+        });
     };
 
     // Form helpers

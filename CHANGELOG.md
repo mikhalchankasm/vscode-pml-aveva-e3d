@@ -2,6 +2,35 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.1] - 2025-01-28
+
+### Changed - UI/UX Improvements
+
+- **Context Menu Cleanup**
+  - Removed all PML Tools commands from context menu (right-click)
+  - Commands remain accessible via editor title bar button (top toolbar)
+  - Cleaner, less cluttered context menu experience
+
+### Added - New Commands
+
+- **Add Comments** - Adds `--` comment prefix to selected lines
+  - Preserves indentation
+  - Skips empty lines
+  - Available in PML Tools menu
+
+- **Align PML** - Intelligently aligns code by operators or keywords
+  - Aligns by `=` operator: `!var = value` → all `=` aligned
+  - Aligns by `is` keyword: `member .name is TYPE` → all `is` aligned
+  - Auto-detects alignment target
+  - Available in PML Tools menu
+
+### Fixed - Command Functionality
+
+- Fixed "Remove Duplicate Lines" command
+- Fixed "Remove Empty Lines" command
+- Fixed "Trim Whitespace" command
+- All whitespace/cleanup commands now work correctly
+
 ## [0.9.0] - 2025-01-28
 
 ### Added - Form Syntax Support (Basic Implementation)

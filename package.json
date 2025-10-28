@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -173,8 +173,18 @@
         "category": "PML Tools"
       },
       {
+        "command": "pml.addComments",
+        "title": "Add Comments",
+        "category": "PML Tools"
+      },
+      {
         "command": "pml.removeComments",
         "title": "Remove Comments",
+        "category": "PML Tools"
+      },
+      {
+        "command": "pml.alignPML",
+        "title": "Align PML",
         "category": "PML Tools"
       },
       {
@@ -299,18 +309,7 @@
       }
     },
     "menus": {
-      "editor/context": [
-        {
-          "submenu": "pml.tools",
-          "when": "editorLangId == pml",
-          "group": "1_modification"
-        },
-        {
-          "submenu": "pml.quickActions",
-          "when": "editorLangId == pml && editorHasSelection",
-          "group": "1_modification"
-        }
-      ],
+      "editor/context": [],
       "pml.tools": [
         {
           "command": "pml.sortLinesAsc",
@@ -365,16 +364,24 @@
           "group": "4_extract@2"
         },
         {
+          "command": "pml.alignPML",
+          "group": "5_align@1"
+        },
+        {
+          "command": "pml.addComments",
+          "group": "6_comments@1"
+        },
+        {
           "command": "pml.removeComments",
-          "group": "4_extract@3"
+          "group": "6_comments@2"
         },
         {
           "submenu": "pml.forms",
-          "group": "5_forms"
+          "group": "7_forms"
         },
         {
           "submenu": "pml.array",
-          "group": "6_array"
+          "group": "8_array"
         }
       ],
       "pml.forms": [
