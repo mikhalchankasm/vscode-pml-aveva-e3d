@@ -2,6 +2,28 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.3] - 2025-01-24
+
+### Fixed
+- **Settings: Typo Detection** - Changed default from `warning` to `off`
+  - Transparent behavior: setting now matches actual functionality
+  - `detectTypos()` currently returns empty array (parser catches syntax errors instead)
+  - Clear documentation: "CURRENTLY DISABLED - parser catches syntax errors instead"
+  - Future: may re-enable with AST-based narrow checking
+
+- **Documentation Extraction** - Fixed for opened documents
+  - `workspaceIndexer.indexDocument()` now passes document text to `symbolIndex`
+  - Hover documentation now works for opened files
+  - Previously only workspace files had documentation
+
+### Changed
+- **Default Setting**: `pml.diagnostics.typoDetection` now defaults to `off` (was `warning`)
+- Added clear comments in code explaining typo detection status
+
+### Improved
+- Honest and documented behavior for typo detection
+- Better documentation extraction consistency
+
 ## [0.8.2] - 2025-01-24
 
 ### Fixed

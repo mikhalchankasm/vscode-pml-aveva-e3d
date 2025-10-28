@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -289,12 +289,12 @@
         },
         "pml.diagnostics.typoDetection": {
           "type": "string",
-          "default": "warning",
+          "default": "off",
           "enum": [
             "off",
             "warning"
           ],
-          "description": "Detect typos in PML keywords (e.g., 'endiff' instead of 'endif')"
+          "description": "Detect typos in PML keywords (CURRENTLY DISABLED - parser catches syntax errors instead. Use 'off')"
         }
       }
     },

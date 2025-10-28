@@ -30,7 +30,8 @@ export class WorkspaceIndexer {
 			const parseResult = this.parser.parse(text);
 
 			if (parseResult.ast) {
-				this.symbolIndex.indexFile(document.uri, parseResult.ast, document.version);
+				// Pass document text for documentation/comment extraction
+				this.symbolIndex.indexFile(document.uri, parseResult.ast, document.version, text);
 
 				const stats = this.symbolIndex.getStats();
 				this.connection.console.log(

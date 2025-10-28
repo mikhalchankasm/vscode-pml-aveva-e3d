@@ -287,8 +287,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		}
 
 		// Semantic diagnostics: typo detection
-		// DISABLED for form files (.pmlfrm) since they have special syntax
-		// Pass AST to enable AST-based checking (eliminates false positives)
+		// NOTE: Currently disabled (returns empty array) because:
+		// - Parser already catches real syntax errors (e.g., "endiff" → parse error)
+		// - Text-based heuristics caused too many false positives
+		// - Default setting changed to 'off' for transparency
+		// Future: Could re-enable with AST-based narrow checking
 		if (settings.diagnostics.typoDetection !== 'off' && !isFormFile) {
 			const typoDiagnostics = detectTypos(textDocument, parseResult.ast);
 			diagnostics.push(...typoDiagnostics);
