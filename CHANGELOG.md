@@ -2,6 +2,25 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.2] - 2025-01-28
+
+### Added - Column Generator
+
+- **Column Generator** - Insert text or sequential numbers across multiple lines
+  - **Text Mode**: Insert the same text at cursor position on each selected line
+  - **Number Mode**: Insert sequential numbers with customizable:
+    - Starting number
+    - Increment value
+    - Format: Decimal, Hexadecimal, Binary, Octal
+  - Interactive dialogs for easy configuration
+  - Works like Notepad++ Column Editor
+
+**Usage:**
+1. Select multiple lines (or place cursor at same column)
+2. Run "Column Generator" from PML Tools menu
+3. Choose mode and configure options
+4. Numbers/text inserted at cursor position on each line
+
 ## [0.9.1] - 2025-01-28
 
 ### Changed - UI/UX Improvements

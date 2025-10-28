@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -188,6 +188,11 @@
         "category": "PML Tools"
       },
       {
+        "command": "pml.columnGenerator",
+        "title": "Column Generator",
+        "category": "PML Tools"
+      },
+      {
         "command": "pml.showStringMethods",
         "title": "Show STRING Methods",
         "category": "PML Tools"
@@ -366,6 +371,10 @@
         {
           "command": "pml.alignPML",
           "group": "5_align@1"
+        },
+        {
+          "command": "pml.columnGenerator",
+          "group": "5_align@2"
         },
         {
           "command": "pml.addComments",
