@@ -91,7 +91,8 @@ Toolbar Button
 ### Method 1: Manual VSIX Installation
 
 1. Download `pml-aveva-e3d-0.9.6.vsix` from [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.9.6)
-2. Install:
+2. Verify checksum: `f9c8d3aa4a8d6997492879da2f8957ab`
+3. Install:
    - **VS Code:** `code --install-extension pml-aveva-e3d-0.9.6.vsix`
    - **Cursor:** Extensions → "..." menu → "Install from VSIX"
 
@@ -103,7 +104,8 @@ Coming soon...
 
 ## 📊 Statistics
 
-- **Extension size:** ~2.08 MB (55 files)
+- **Extension size:** 2.08 MB (56 files)
+- **MD5 Checksum:** `f9c8d3aa4a8d6997492879da2f8957ab`
 - **Changes:** UX improvements, menu simplification
 - **Removed:** Column Generator (1 command)
 - **Enhanced:** Comment commands, context menu
