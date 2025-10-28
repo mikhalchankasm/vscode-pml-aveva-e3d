@@ -2,6 +2,28 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.7] - 2025-01-29
+
+### Changed - IntelliSense for Forms
+
+- **Form Files (.pmlfrm)** - IntelliSense improvements
+  - Removed all built-in methods from completion (cos, delete, query, etc.)
+  - Now shows ONLY methods defined in the current form
+  - Cleaner, more relevant suggestions
+  - Preparation for future form-specific enhancements
+
+**Before:**
+```pml
+!this.  → shows: cos, delete, query, upcase, lowcase, etc. (30+ methods)
+```
+
+**After:**
+```pml
+!this.  → shows: only .initCall, .buildForm, etc. (methods in THIS form)
+```
+
+**Note:** Built-in methods still available in regular .pml files
+
 ## [0.9.6] - 2025-01-29
 
 ### Changed - UX Improvements

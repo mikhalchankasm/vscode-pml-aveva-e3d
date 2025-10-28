@@ -32,11 +32,19 @@ export class CompletionProvider {
 		// Check if typing after a variable (for method calls)
 		const memberMatch = textBeforeCursor.match(/([!$]?\w+)\s*\.\s*$/);
 		if (memberMatch) {
-			// Always show only current document methods + built-ins
-			// This prevents pollution from workspace methods
+			// For .pmlfrm files, show only methods defined in the form (no built-ins)
+			// For other files, show current document methods + built-ins
 			const currentMethods = this.getCurrentDocumentMethodCompletions(document);
-			const builtInItems = this.getBuiltInMethodCompletions();
-			return [...currentMethods, ...builtInItems];
+
+			const isFormFile = document.uri.endsWith('.pmlfrm');
+			if (isFormFile) {
+				// Forms: only show methods defined in this form
+				return currentMethods;
+			} else {
+				// Regular files: show built-ins + current document methods
+				const builtInItems = this.getBuiltInMethodCompletions();
+				return [...currentMethods, ...builtInItems];
+			}
 		}
 
 		// If cursor is after a bare dot, do not spam unrelated completions
