@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -319,6 +319,11 @@
           "submenu": "pml.quickActions",
           "when": "editorLangId == pml && editorHasSelection",
           "group": "1_modification"
+        },
+        {
+          "submenu": "pml.array",
+          "when": "editorLangId == pml && editorHasSelection",
+          "group": "2_array"
         }
       ],
       "pml.tools": [
@@ -393,6 +398,10 @@
         {
           "submenu": "pml.forms",
           "group": "7_forms"
+        },
+        {
+          "submenu": "pml.array",
+          "group": "8_array"
         }
       ],
       "pml.forms": [
@@ -417,40 +426,12 @@
       ],
       "pml.quickActions": [
         {
-          "command": "pml.makeListPath",
-          "group": "1_array@1"
+          "command": "pml.addComments",
+          "group": "1_comments@1"
         },
         {
-          "command": "pml.makeListString",
-          "group": "1_array@2"
-        },
-        {
-          "command": "pml.makeListPathString",
-          "group": "1_array@3"
-        },
-        {
-          "command": "pml.sortLinesAsc",
-          "group": "2_sort@1"
-        },
-        {
-          "command": "pml.sortLinesDesc",
-          "group": "2_sort@2"
-        },
-        {
-          "command": "pml.sortLinesSmart",
-          "group": "2_sort@3"
-        },
-        {
-          "command": "pml.removeDuplicates",
-          "group": "3_clean@1"
-        },
-        {
-          "command": "pml.removeEmptyLines",
-          "group": "3_clean@2"
-        },
-        {
-          "command": "pml.trimWhitespace",
-          "group": "3_clean@3"
+          "command": "pml.removeComments",
+          "group": "1_comments@2"
         }
       ],
       "editor/title": [
