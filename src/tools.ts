@@ -35,7 +35,6 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.addComments', 'Add Comments', this.addComments);
         this.registerCommand('pml.removeComments', 'Remove Comments', this.removeComments);
         this.registerCommand('pml.alignPML', 'Align PML', this.alignPML);
-        this.registerCommand('pml.columnGenerator', 'Column Generator', this.columnGenerator);
 
         // Form helpers
         this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
@@ -313,11 +312,23 @@ export class PMLToolsProvider implements vscode.Disposable {
         const editor = this.getActiveEditor();
         if (!editor) return;
 
-        const selected = this.getSelectedTextOrShowError(editor);
-        if (!selected) return;
+        const selection = editor.selection;
+        let range: vscode.Range;
+        let text: string;
+
+        // If no selection, work with current line
+        if (selection.isEmpty) {
+            const line = editor.document.lineAt(selection.active.line);
+            range = line.range;
+            text = line.text;
+        } else {
+            // Work with selected text
+            range = new vscode.Range(selection.start, selection.end);
+            text = editor.document.getText(range);
+        }
 
         // Add -- at the beginning of each line
-        const lines = selected.text.split('\n');
+        const lines = text.split('\n');
         const commented = lines.map(line => {
             // Skip empty lines
             if (line.trim() === '') return line;
@@ -328,17 +339,29 @@ export class PMLToolsProvider implements vscode.Disposable {
             return `${indent}-- ${rest}`;
         });
 
-        this.applyChangesToSelection(editor, selected.range, commented.join('\n'), 'Added comments');
+        this.applyChangesToSelection(editor, range, commented.join('\n'), 'Added comments');
     };
 
     private removeComments = () => {
         const editor = this.getActiveEditor();
         if (!editor) return;
 
-        const selected = this.getSelectedTextOrShowError(editor);
-        if (!selected) return;
+        const selection = editor.selection;
+        let range: vscode.Range;
+        let text: string;
 
-        const lines = selected.text.split('\n');
+        // If no selection, work with current line
+        if (selection.isEmpty) {
+            const line = editor.document.lineAt(selection.active.line);
+            range = line.range;
+            text = line.text;
+        } else {
+            // Work with selected text
+            range = new vscode.Range(selection.start, selection.end);
+            text = editor.document.getText(range);
+        }
+
+        const lines = text.split('\n');
         const uncommented = lines.map(line => {
             // Remove -- prefix (with optional leading spaces before --)
             // Pattern: optional spaces, then --, then optional space, then capture rest
@@ -348,7 +371,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return result;
         });
 
-        this.applyChangesToSelection(editor, selected.range, uncommented.join('\n'), 'Removed comment prefixes');
+        this.applyChangesToSelection(editor, range, uncommented.join('\n'), 'Removed comment prefixes');
     };
 
     private alignPML = () => {
@@ -453,109 +476,6 @@ export class PMLToolsProvider implements vscode.Disposable {
             return match.before + padding + ' ' + match.keyword + ' ' + match.after;
         });
     }
-
-    private columnGenerator = async () => {
-        const editor = this.getActiveEditor();
-        if (!editor) return;
-
-        const selection = editor.selection;
-        if (selection.isEmpty) {
-            vscode.window.showInformationMessage('Please select multiple lines first');
-            return;
-        }
-
-        // Ask user for input type
-        const mode = await vscode.window.showQuickPick(
-            [
-                { label: 'Insert Text', description: 'Insert the same text on each line', value: 'text' },
-                { label: 'Insert Numbers', description: 'Insert sequential numbers', value: 'number' }
-            ],
-            { placeHolder: 'Select generation mode' }
-        );
-
-        if (!mode) return;
-
-        if (mode.value === 'text') {
-            // Text mode
-            const text = await vscode.window.showInputBox({
-                prompt: 'Enter text to insert',
-                placeHolder: 'Text'
-            });
-
-            if (!text) return;
-
-            await editor.edit(editBuilder => {
-                for (let i = selection.start.line; i <= selection.end.line; i++) {
-                    const position = new vscode.Position(i, selection.start.character);
-                    editBuilder.insert(position, text);
-                }
-            });
-
-        } else {
-            // Number mode
-            const startNum = await vscode.window.showInputBox({
-                prompt: 'Starting number',
-                value: '1',
-                validateInput: (value) => {
-                    return isNaN(Number(value)) ? 'Please enter a valid number' : null;
-                }
-            });
-
-            if (!startNum) return;
-
-            const increment = await vscode.window.showInputBox({
-                prompt: 'Increment by',
-                value: '1',
-                validateInput: (value) => {
-                    return isNaN(Number(value)) ? 'Please enter a valid number' : null;
-                }
-            });
-
-            if (!increment) return;
-
-            const format = await vscode.window.showQuickPick(
-                [
-                    { label: 'Decimal', description: '1, 2, 3...', value: 'dec' },
-                    { label: 'Hexadecimal', description: '1, 2, 3... 9, A, B...', value: 'hex' },
-                    { label: 'Binary', description: '1, 10, 11...', value: 'bin' },
-                    { label: 'Octal', description: '1, 2, 3... 7, 10, 11...', value: 'oct' }
-                ],
-                { placeHolder: 'Select number format' }
-            );
-
-            if (!format) return;
-
-            let currentNum = Number(startNum);
-            const incrementValue = Number(increment);
-
-            await editor.edit(editBuilder => {
-                for (let i = selection.start.line; i <= selection.end.line; i++) {
-                    const position = new vscode.Position(i, selection.start.character);
-
-                    let numText = '';
-                    switch (format.value) {
-                        case 'dec':
-                            numText = currentNum.toString();
-                            break;
-                        case 'hex':
-                            numText = currentNum.toString(16).toUpperCase();
-                            break;
-                        case 'bin':
-                            numText = currentNum.toString(2);
-                            break;
-                        case 'oct':
-                            numText = currentNum.toString(8);
-                            break;
-                    }
-
-                    editBuilder.insert(position, numText);
-                    currentNum += incrementValue;
-                }
-            });
-        }
-
-        vscode.window.showInformationMessage('Column generated successfully');
-    };
 
     // Form helpers
     private reloadForm = async () => {

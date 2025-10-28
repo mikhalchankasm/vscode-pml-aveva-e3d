@@ -2,6 +2,46 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.6] - 2025-01-29
+
+### Changed - UX Improvements
+
+- **Comment Commands** - Now work without selection
+  - Add/Remove Comments work on current line if nothing is selected
+  - Cursor can be anywhere in the line
+  - More convenient workflow
+
+- **Code Actions (Ctrl+.)** - Simplified to comments only
+  - ❌ Removed all PML commands (sort, array, cleanup)
+  - ✅ Add Comments
+  - ✅ Remove Comments
+  - Focused Quick Fix menu
+
+- **Context Menu "Quick Action PML"** - Full command set
+  - Renamed from "Quick Actions" to "Quick Action PML"
+  - Now contains ALL toolbar commands:
+    - Sort (4 commands)
+    - Duplicates (2 commands)
+    - Whitespace (5 commands)
+    - Extract (2 commands)
+    - Align (1 command)
+    - Comments (2 commands)
+    - Forms submenu
+    - Array submenu
+  - Single comprehensive menu for all PML operations
+
+### Removed
+
+- **Column Generator** - Removed (replaced by external extension)
+  - Deleted command from package.json
+  - Deleted implementation from tools.ts
+  - Users can use dedicated column editing extensions
+
+**Menu Structure:**
+- Code Actions (💡) = Comment operations only
+- Context Menu → Quick Action PML = All PML commands
+- Toolbar Button = All PML commands
+
 ## [0.9.5] - 2025-01-29
 
 ### Changed - Menu Reorganization
