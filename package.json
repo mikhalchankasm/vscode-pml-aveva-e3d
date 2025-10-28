@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -552,9 +552,13 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run esbuild-base -- --production",
+    "compile": "npm run esbuild-base",
+    "compile:tsc": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
+    "watch": "npm run esbuild-base -- --watch",
+    "watch:tsc": "tsc -watch -p ./",
+    "esbuild-base": "node esbuild.js",
+    "esbuild": "npm run esbuild-base -- --production",
     "pretest": "npm run compile",
     "lint": "eslint src --ext ts",
     "pack": "powershell -NoProfile -Command \"Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix; npx @vscode/vsce package --no-yarn\"",
@@ -569,6 +573,7 @@
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "esbuild": "^0.25.11",
     "eslint": "^8.45.0",
     "typescript": "^5.1.6"
   },

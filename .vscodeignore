@@ -1,28 +1,45 @@
+# Build artifacts and config files
 .vscode/**
 .vscode-test/**
-src/**
-packages/**/src/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
+.editorconfig
+esbuild.js
+tsconfig.json
 **/tsconfig.json
 **/.eslintrc.json
-**/*.map
+
+# Source files (we ship bundled code only)
+src/**
+packages/**/src/**
 **/*.ts
-.editorconfig
-test.pml
+
+# Maps are only needed for debugging
+**/*.map
+
+# Documentation and examples (reduce VSIX size)
 docs/**
 examples/**
 scripts/**
+test.pml
+README_DEV.md
+RELEASE_NOTES_*.md
+.github/**
+
+# Old VSIX files
 *.vsix
 
-# Exclude devDependencies but KEEP runtime dependencies
-node_modules/@types/**
-node_modules/@typescript-eslint/**
-node_modules/eslint/**
-node_modules/typescript/**
+# Node modules - COMPLETELY EXCLUDED (bundled into single files)
+node_modules/**
+packages/pml-language-server/node_modules/**
+packages/pml-language-server/out/**/*.js
+packages/pml-language-server/out/**/*.d.ts
+packages/pml-language-server/out/**/*.map
+packages/pml-language-server/**/*.ts
+packages/pml-language-server/src/**
 
-# IMPORTANT: Include compiled LSP server
-!packages/pml-language-server/out/**/*.js
-!packages/pml-language-server/out/**/*.d.ts
+# Include ONLY these bundled files
+!out/extension.js
+!packages/pml-language-server/out/server.js
 !packages/pml-language-server/package.json

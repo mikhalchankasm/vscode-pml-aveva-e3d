@@ -1,27 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add CHANGELOG.md)",
-      "Bash(git commit -m \"docs: update CHANGELOG with object and backslash fixes\")",
-      "Bash(gh run list:*)",
-      "Bash(git log:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(npm run compile:*)",
-      "Bash(npm run pack:install:*)",
-      "Bash(npm run pack:*)",
-      "Bash(npx @vscode/vsce package:*)",
-      "Bash(git rm:*)",
-      "Bash(code --install-extension:*)",
-      "Bash(cursor --install-extension:*)",
-      "Bash(gh release create:*)",
-      "Bash(winget install:*)",
-      "Bash(gh --version:*)",
-      "Bash(powershell -Command \"gh --version\")",
-      "Bash(powershell -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
-      "Bash(powershell -Command \"& ''C:\\Program Files\\GitHub CLI\\gh.exe'' --version\")",
-      "Bash(powershell -Command \"& ''C:\\Program Files\\GitHub CLI\\gh.exe'' auth status\")"
+      "Bash(npm install:*)",
+      "Bash(npx @vscode/vsce:*)"
     ],
     "deny": [],
     "ask": []

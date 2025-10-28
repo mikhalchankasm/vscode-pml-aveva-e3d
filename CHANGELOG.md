@@ -2,6 +2,43 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.0] - 2025-01-24
+
+### 🚀 Major Improvement: Code Bundling
+
+- **Extension size reduced from 15.61 MB to 2.07 MB** (7.5x smaller!)
+- **File count reduced from 1632 to 54 files** (30x fewer files!)
+- **Faster activation** - bundled code loads significantly quicker
+- **Better performance** - reduced I/O operations
+
+### Added
+- **esbuild Integration** - Modern bundler for extension and language server
+  - Created `esbuild.js` configuration for both extension and LSP
+  - Production builds use minification
+  - Development builds include source maps
+  - Watch mode for development
+
+### Changed
+- **Build System** - Switched from TypeScript compilation to esbuild bundling
+  - `npm run compile` now uses esbuild (faster builds)
+  - `npm run compile:tsc` available for TypeScript-only compilation
+  - `npm run watch` uses esbuild watch mode
+  - `npm run esbuild` for production builds
+
+### Improved
+- **VSIX Package** - Optimized file inclusion
+  - Only bundled JavaScript files included
+  - Source files excluded
+  - node_modules completely excluded (code bundled)
+  - Documentation and examples excluded from package
+  - Faster installation and updates
+
+### Technical
+- Added `esbuild` as dev dependency
+- Updated `.vscodeignore` for optimal bundling
+- Updated `package.json` scripts for esbuild workflow
+- Bundle targets: `out/extension.js` and `packages/pml-language-server/out/server.js`
+
 ## [0.7.3] - 2025-01-24
 
 ### Fixed
