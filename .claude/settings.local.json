@@ -14,7 +14,14 @@
       "Bash(npx @vscode/vsce package:*)",
       "Bash(git rm:*)",
       "Bash(code --install-extension:*)",
-      "Bash(cursor --install-extension:*)"
+      "Bash(cursor --install-extension:*)",
+      "Bash(gh release create:*)",
+      "Bash(winget install:*)",
+      "Bash(gh --version:*)",
+      "Bash(powershell -Command \"gh --version\")",
+      "Bash(powershell -Command \"Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(powershell -Command \"& ''C:\\Program Files\\GitHub CLI\\gh.exe'' --version\")",
+      "Bash(powershell -Command \"& ''C:\\Program Files\\GitHub CLI\\gh.exe'' auth status\")"
     ],
     "deny": [],
     "ask": []

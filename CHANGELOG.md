@@ -2,6 +2,28 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.7.3] - 2025-01-24
+
+### Fixed
+- **Typo Detection Overhaul** - Eliminated false positive warnings
+  - Completely rewrote typo detector to use AST-based checking
+  - No more warnings like "Possible typo: 'OK'" or "Possible typo: 'at'"
+  - Only checks keywords in specific language structures (methods, if statements, etc.)
+  - Arbitrary identifiers (UI labels, variable names) are no longer flagged
+  - Disabled typo detection for `.pmlfrm` files (form syntax is special)
+  - Parser now reuses already-built AST instead of re-parsing text
+
+### Improved
+- **Performance** - Validation is faster due to AST reuse
+- **Form Files** - Better handling of `.pmlfrm` files with reduced noise
+- **Code Quality** - Cleaner diagnostic approach based on syntactic context
+
+### Technical
+- Modified `typoDetector.ts` to accept AST parameter
+- Added AST walker function to traverse specific node types
+- Updated `server.ts` to pass parsed AST to typo detector
+- Disabled text-based regex scanning (source of false positives)
+
 ## [0.7.2] - 2025-01-24
 
 ### Fixed

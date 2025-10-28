@@ -289,8 +289,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		}
 
 		// Semantic diagnostics: typo detection
-		if (settings.diagnostics.typoDetection !== 'off') {
-			const typoDiagnostics = detectTypos(textDocument);
+		// DISABLED for form files (.pmlfrm) since they have special syntax
+		// Pass AST to enable AST-based checking (eliminates false positives)
+		if (settings.diagnostics.typoDetection !== 'off' && !isFormFile) {
+			const typoDiagnostics = detectTypos(textDocument, parseResult.ast);
 			diagnostics.push(...typoDiagnostics);
 		}
 

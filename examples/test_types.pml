@@ -59,4 +59,4 @@ define method .testTypeInference()
 endmethod
 
 !k = object ARRAY()
-!k.
+!k.size

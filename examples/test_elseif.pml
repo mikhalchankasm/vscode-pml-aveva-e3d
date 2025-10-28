@@ -33,6 +33,8 @@ define method .testElseIf()
 
 endmethod
 
+
+-- complexIfExample demonstrates a complex if-elseif-else structure
 define method .complexIfExample()
 
     !text = 42
@@ -83,3 +85,6 @@ define method .nestedIfExample()
     endif
 
 endmethod
+
+
+!this.complexIfExample()
