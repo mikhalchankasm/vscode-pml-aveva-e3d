@@ -287,13 +287,11 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		}
 
 		// Semantic diagnostics: typo detection
-		// NOTE: Currently disabled (returns empty array) because:
-		// - Parser already catches real syntax errors (e.g., "endiff" → parse error)
-		// - Text-based heuristics caused too many false positives
-		// - Default setting changed to 'off' for transparency
-		// Future: Could re-enable with AST-based narrow checking
+		// Analyzes parse errors to suggest corrections for common keyword typos
+		// Uses Levenshtein distance to find similar keywords
+		// Only checks tokens that caused parse errors to avoid false positives
 		if (settings.diagnostics.typoDetection !== 'off' && !isFormFile) {
-			const typoDiagnostics = detectTypos(textDocument, parseResult.ast);
+			const typoDiagnostics = detectTypos(textDocument, parseResult.errors);
 			diagnostics.push(...typoDiagnostics);
 		}
 

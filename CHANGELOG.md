@@ -2,6 +2,34 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.6] - 2025-01-28
+
+### Added
+- **Typo Detection: Restored Functionality** - Now actively detects typos when enabled
+  - Analyzes parser errors to identify potential keyword typos
+  - Uses Levenshtein distance algorithm to find similar keywords
+  - Suggests corrections for common misspellings (e.g., "iff" → "if", "doo" → "do", "endiff" → "endif")
+  - Only checks tokens that caused parse errors, avoiding false positives
+  - Works when `pml.diagnostics.typoDetection` is set to `"warning"` (default: `"off"`)
+
+### Implementation Details
+- **Smart Detection Algorithm:**
+  - Checks 40+ PML keywords (control flow, definitions, types, operators)
+  - Distance threshold: 1-2 character differences
+  - Length filtering: skips words with >3 character length difference
+  - Precise error ranges: highlights exact typo location when possible
+
+### Example
+```pml
+iff (!x eq 5) then    // ⚠️  Possible typo: 'iff' might be 'if'
+    ...
+endiff                // ⚠️  Possible typo: 'endiff' might be 'endif'
+```
+
+### Changed
+- `detectTypos()` signature: now accepts `ParseError[]` instead of `Program`
+- Updated server.ts to pass `parseResult.errors` to typo detector
+
 ## [0.8.5] - 2025-01-28
 
 ### Fixed

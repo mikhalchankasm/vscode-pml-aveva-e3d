@@ -9,7 +9,9 @@
       "Bash(node test-simple.js:*)",
       "Bash(node test-debug.js:*)",
       "Bash(git reset:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(node test-typo-detection.js:*)",
+      "Bash(node test-typo-detailed.js:*)"
     ],
     "deny": [],
     "ask": []
