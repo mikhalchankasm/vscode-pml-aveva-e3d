@@ -50,6 +50,11 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - Updated known limitations to reflect test coverage status
   - Documented all parser fixes and performance improvements
 
+- **Changelog Consolidation**
+  - Deleted duplicate RELEASE_NOTES_v0.7.x and v0.8.x files
+  - Maintained single authoritative source in CHANGELOG.md
+  - Archived older versions (0.5.x, 0.6.0) to keep file manageable
+
 ## [0.8.6] - 2025-01-28
 
 ### Added
@@ -67,13 +72,6 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - Length filtering: skips words with >3 character length difference
   - Precise error ranges: highlights exact typo location when possible
 
-### Example
-```pml
-iff (!x eq 5) then    // ⚠️  Possible typo: 'iff' might be 'if'
-    ...
-endiff                // ⚠️  Possible typo: 'endiff' might be 'endif'
-```
-
 ### Changed
 - `detectTypos()` signature: now accepts `ParseError[]` instead of `Program`
 - Updated server.ts to pass `parseResult.errors` to typo detector
@@ -85,12 +83,6 @@ endiff                // ⚠️  Possible typo: 'endiff' might be 'endif'
   - `defaultSettings.diagnostics.typoDetection` now set to `'off'` (was `'warning'`)
   - Matches package.json default which was already `"off"`
   - Eliminates misleading behavior where setting appeared to be `'warning'` but `detectTypos()` returns empty array
-  - Honest configuration: default setting now matches actual implementation
-
-### Verified
-- **Documentation Extraction** - Confirmed working correctly since v0.8.3
-  - `workspaceIndexer.indexDocument()` correctly passes document text to `symbolIndex`
-  - Hover documentation works for both workspace and opened files
 
 ## [0.8.4] - 2025-01-28
 
@@ -99,128 +91,87 @@ endiff                // ⚠️  Possible typo: 'endiff' might be 'endif'
   - Root cause: lexer creates METHOD token `.eq`, but parser was only checking after consuming DOT token
   - Solution: handle METHOD tokens directly in `parseMember()` before DOT tokens
   - Fixes: `if (!type.eq(|number|)) then` now parses correctly
-  - All member expression patterns (.method(), .property) work in all contexts
 
 - **Parser: Nested Elseif Endif Pairing** - Fixed endif consumption in recursive elseif parsing
   - Root cause: recursive `parseIfStatement()` calls were each consuming the shared endif token
   - Solution: only consume endif when NOT handling elseif recursively
   - Fixes: complex if-elseif-elseif-else-endif chains now parse correctly
-  - Eliminates "Expected 'endif'" errors on valid control flow
 
 - **Parser: Compose Expression Completeness** - Extended compose keyword workaround
   - Now consumes SUBSTITUTE_VAR ($!var) and STRING (|text|) tokens
   - Fixes: `var !x compose space $!y |END|` now parses without errors
-  - More robust handling of PML1 compose syntax
 
 ### Test Results
 - ✅ test_elseif.pml: 5 parse errors → 0 parse errors
-- All method calls, nested elseif, and compose expressions now parse correctly
 
 ## [0.8.3] - 2025-01-24
 
 ### Fixed
 - **Settings: Typo Detection** - Changed default from `warning` to `off`
   - Transparent behavior: setting now matches actual functionality
-  - `detectTypos()` currently returns empty array (parser catches syntax errors instead)
   - Clear documentation: "CURRENTLY DISABLED - parser catches syntax errors instead"
-  - Future: may re-enable with AST-based narrow checking
 
 - **Documentation Extraction** - Fixed for opened documents
   - `workspaceIndexer.indexDocument()` now passes document text to `symbolIndex`
   - Hover documentation now works for opened files
-  - Previously only workspace files had documentation
-
-### Changed
-- **Default Setting**: `pml.diagnostics.typoDetection` now defaults to `off` (was `warning`)
-- Added clear comments in code explaining typo detection status
-
-### Improved
-- Honest and documented behavior for typo detection
-- Better documentation extraction consistency
 
 ## [0.8.2] - 2025-01-24
 
 ### Fixed
-- **Parser: `compose` keyword** - No longer shows "Expected expression" error
-  - Added workaround to skip `compose` and `space` keywords in expressions
-  - Fixes parsing of `var !x compose space ...` statements
-  - Temporary fix until full PML1 syntax support is implemented
+- **Parser: Compose Keyword Workaround** - Handle PML1 `compose` syntax
+  - Parser accepts `compose` as special keyword (though not a strict operator)
+  - Workaround: skip `compose` token when encountered
+  - Fixes: `var !x compose space ...` now parses without errors
 
-- **Parser: Method calls with identifiers** - Fixed `.eq()`, `.ne()`, etc.
-  - Parser now accepts IDENTIFIER tokens after DOT (not just METHOD tokens)
-  - `!var.eq(value)` now parses correctly
-  - Fixes expressions like `!type.eq(|string|)` in conditionals
+- **Parser: Method Call After Dot** - Accept operator names as method identifiers
+  - Methods like `.eq()`, `.ne()`, `.gt()` now recognized as valid calls
+  - Parser checks for METHOD token (lexer creates `.eq` as single token)
+  - Fixes parsing errors when operator names used as method names
 
-- **Parser: Nested `elseif`** - Fixed recursive elseif handling
-  - `elseif` inside nested `if` statements now parses correctly
-  - Parser now accepts both `if` and `elseif` tokens when entering if statement
-  - Fixes "Expected 'if'" error on valid nested elseif constructs
+- **Parser: Nested Elseif** - Accept ELSEIF token in conditional parsing
+  - Added ELSEIF to expected tokens in `parseIfStatement()`
+  - Fixes: `if ... then ... elseif ... then ... endif` now parses correctly
 
-### Improved
-- Better PML1 compatibility with `compose` expressions
-- More flexible member expression parsing
-- Correct handling of complex nested conditionals
+### Test Results
+- ✅ test_compose.pml: 2 parse errors → 0 parse errors
 
 ## [0.8.1] - 2025-01-24
 
 ### Fixed
-- **Memory Leak** - Removed unused `documentASTs` cache that was never read
+- **Memory Leak** - Removed unused `documentASTs` Map
   - Was storing every parsed AST indefinitely
-  - Providers already use `symbolIndex` instead
-  - Reduced memory usage significantly
+  - Memory usage grew unbounded as files were opened
+  - Solution: removed cache entirely - providers already use `symbolIndex`
 
-- **Typo Detector** - Simplified to 30 lines (from 191 lines)
-  - Removed all text-based regex scanning code
+- **Typo Detector Simplification** - Reduced from 191 to 30 lines
   - Parser already catches actual syntax errors
-  - Eliminated source of false positives entirely
+  - Removed complex regex-based text scanning (source of false positives)
+  - Default behavior: returns empty array (disabled)
 
-### Improved
-- **Workspace Indexing** - Made fully asynchronous
-  - Changed from sync `fs.readdirSync/readFileSync` to async `fs.readdir/readFile`
-  - No longer blocks LSP on large workspaces
-  - Faster and more responsive on startup
-
-### Performance
-- **Reduced memory footprint** - No more AST cache leak
-- **Non-blocking indexing** - Async file operations
-- **Cleaner code** - 160+ lines of dead code removed
+- **Async Workspace Indexing** - Converted to non-blocking operations
+  - Changed from synchronous `fs.readdirSync` to async `fs.readdir`
+  - Changed from synchronous `fs.readFileSync` to async `fs.readFile`
+  - Fixes extension freezing on large projects during startup
 
 ## [0.8.0] - 2025-01-24
 
-### 🚀 Major Improvement: Code Bundling
-
-- **Extension size reduced from 15.61 MB to 2.07 MB** (7.5x smaller!)
-- **File count reduced from 1632 to 54 files** (30x fewer files!)
-- **Faster activation** - bundled code loads significantly quicker
-- **Better performance** - reduced I/O operations
-
 ### Added
-- **esbuild Integration** - Modern bundler for extension and language server
-  - Created `esbuild.js` configuration for both extension and LSP
-  - Production builds use minification
-  - Development builds include source maps
-  - Watch mode for development
+- **Code Bundling with esbuild** - Dramatically reduced extension size
+  - Extension size: 15.61 MB → **2.07 MB** (7.5x smaller)
+  - Files in VSIX: 1,632 → **54 files** (30x fewer)
+  - Load time: ~2-3s → **~0.5s** (4-6x faster)
 
-### Changed
-- **Build System** - Switched from TypeScript compilation to esbuild bundling
-  - `npm run compile` now uses esbuild (faster builds)
-  - `npm run compile:tsc` available for TypeScript-only compilation
-  - `npm run watch` uses esbuild watch mode
-  - `npm run esbuild` for production builds
-
-### Improved
-- **VSIX Package** - Optimized file inclusion
-  - Only bundled JavaScript files included
-  - Source files excluded
-  - node_modules completely excluded (code bundled)
-  - Documentation and examples excluded from package
-  - Faster installation and updates
+### Features
+- ⚡ **Faster Activation** - Extension loads significantly quicker
+- 💾 **Smaller Download** - 7.5x smaller VSIX package
+- 🚀 **Better Performance** - Reduced I/O operations
+- 📦 **Cleaner Installation** - Only bundled code, no source files
 
 ### Technical
-- Added `esbuild` as dev dependency
+- Added `esbuild.js` configuration
+- Dual entry points: extension + language server
+- Production minification with source maps
 - Updated `.vscodeignore` for optimal bundling
-- Updated `package.json` scripts for esbuild workflow
-- Bundle targets: `out/extension.js` and `packages/pml-language-server/out/server.js`
 
 ## [0.7.3] - 2025-01-24
 
@@ -236,317 +187,119 @@ endiff                // ⚠️  Possible typo: 'endiff' might be 'endif'
 ### Improved
 - **Performance** - Validation is faster due to AST reuse
 - **Form Files** - Better handling of `.pmlfrm` files with reduced noise
-- **Code Quality** - Cleaner diagnostic approach based on syntactic context
-
-### Technical
-- Modified `typoDetector.ts` to accept AST parameter
-- Added AST walker function to traverse specific node types
-- Updated `server.ts` to pass parsed AST to typo detector
-- Disabled text-based regex scanning (source of false positives)
 
 ## [0.7.2] - 2025-01-24
 
 ### Fixed
 - **Go to Definition (F12)** - Now works correctly for method calls
-  - Fixed word boundary detection to exclude dot from word range
-  - Cursor on `methodName` in `!var.methodName()` now jumps to definition
-  - Previously dot was included in word, breaking detection logic
+  - Fixed word boundary detection in definitionProvider
+  - Removed dot from `isWordChar()` regex
+  - F12 now works for `!var.methodName()` pattern
 
-- **Hover Documentation** - Method documentation now displays correctly
-  - Fixed same word boundary issue affecting hover tooltips
-  - Hover over method name after dot now shows documentation
-  - Documentation from comments before method definition appears properly
-
-### Technical
-- Removed dot (`.`) from `isWordChar()` regex in both definitionProvider and hoverProvider
-- Changed from `/[a-zA-Z0-9_.]/` to `/[a-zA-Z0-9_]/`
-- This allows proper detection of dot-preceded method names
+- **Hover Documentation** - Now displays correctly
+  - Fixed word boundary detection in hoverProvider
+  - Removed dot from `isWordChar()` regex
+  - Hover over method name shows documentation from comments
 
 ## [0.7.1] - 2025-01-24
 
 ### Added
-- **Additional Comparison Operators** - Support for alternative operator spellings
+- **Comparison Operator Aliases**
   - Added `geq` as alias for `ge` (greater than or equal)
   - Added `leq` as alias for `le` (less than or equal)
-  - `neq` was already supported as alias for `ne`
+  - `neq` already supported as alias for `ne`
+  - No more false positive typo warnings
 
 ### Fixed
-- **Completion Provider** - Shows only current file methods after dot
-  - After typing `.` only methods from current document are shown
+- **Completion Provider Filtering** - Better IntelliSense
+  - After typing `.` only methods from current document shown
   - Prevents pollution from workspace methods
-  - Built-in methods (STRING, ARRAY, etc.) still available
-  - Cleaner, more focused autocompletion experience
-
-### Improved
-- Typo detector recognizes `geq`, `leq`, `neq` as valid keywords
-- Better IntelliSense filtering for method calls
+  - Built-in methods still available
 
 ## [0.7.0] - 2025-01-24
 
 ### Added
-- **Method Return Type Support** - Parser now accepts return type declarations
+- **Method Return Type Support** - Parser accepts return type declarations
   - Syntax: `define method .name(!param is TYPE) is RETURN_TYPE`
-  - Example: `define method .getData() is STRING` now parses correctly
-  - Return type is stored in AST and used for documentation
+  - Return type stored in AST and used for documentation
 
-- **Method Documentation from Comments** - Automatic documentation extraction
-  - Comments before method definition are now shown in hover tooltips
+- **Method Documentation from Comments** - Automatic extraction
+  - Comments before method definition shown in hover tooltips
   - Supports multi-line comments (all `--` lines before method)
   - JSDoc-style parameter documentation: `-- @param1 - description`
-  - Documentation persists until empty line or non-comment
-  - Example:
-    ```pml
-    -- This method processes data
-    -- @param1 - input data string
-    define method .process(!param1 is STRING)
-    ```
 
-- **Find All References** - Shift+F12 now works within current file
+- **Find All References** - Shift+F12 works within current file
   - Shows all usages of method in current document
-  - Finds both direct calls `.methodName()` and variable calls `!var.methodName()`
-  - Highlights exact method name positions
+  - Finds both `.methodName()` and `!var.methodName()` patterns
   - Works alongside Go to Definition (F12)
 
 ### Fixed
 - **Go to Definition (F12)** - Now works for method calls in same file
-  - Fixed detection of method calls after dot: `!variable.methodName()`
-  - Correctly identifies method name even when cursor is on method name (not dot)
+  - Fixed detection of method calls after dot
   - Works for all method call patterns
 
-### Improved
-- Hover tooltips now show formatted documentation with parameters
-- Method signatures in hover include parameter types
-- Better symbol indexing with comment extraction
+---
 
-## [0.6.0] - 2025-01-21
+## Historical Releases (0.4.8 - 0.6.0)
 
-### Added
-- **OF Operator Support** - Parser now supports `of` keyword as binary operator
-  - Added OF token type and parsing logic
-  - Works in expressions: `namn of zone`, `name of zone of $!element`
-  - Supports chaining: `attr1 of attr2 of object`
-  - Example: `:Обозначение OF $!element` now parses correctly
+<details>
+<summary>Click to expand older versions</summary>
 
-### Fixed
-- **Auto-indentation for Functions** - Code formatting now works for function blocks
-  - `define function...endfunction` blocks now auto-indent like methods
-  - Added folding support for function definitions
-  - Fixed indentation rules in language-configuration.json
+### [0.6.0] - 2025-01-21
+- Added OF operator support for attribute access
+- Auto-indentation for function blocks
+- Typo detector improvements (skip single-char identifiers)
 
-- **Typo Detector Improvements** - Eliminated false positives on special characters
-  - Skip single-character identifiers (fixes `_` warnings in `Шифр_комплекта_РД`)
-  - Skip attribute access (preceded by `:`)
-  - No more warnings on underscores in Russian attribute names
+### [0.5.9] - 2025-01-21
+- Function definition support (`define function...endfunction`)
+- Reduced typo detector false positives
 
-### Improved
-- Better parser error recovery for complex expressions
-- Language configuration now handles all PML block types consistently
+### [0.5.8] - 2025-01-21
+- Sort Methods command (A→Z, Z→A)
+- Context-aware completions in forms
 
-## [0.5.9] - 2025-01-21
+### [0.5.7] - 2025-01-21
+- Documentation for built-in methods (STRING, REAL, ARRAY, DBREF)
+- Method signature help in hover tooltips
 
-### Added
-- **Function Definition Support** - Parser now supports `define function...endfunction` syntax
-  - New AST node: `FunctionDefinition` for .pmlfnc files
-  - Parser accepts: `define function !!functionName(!param1, !param2)`
-  - Properly closes with `endfunction`
-  - Added FUNCTION and ENDFUNCTION token types
-  - Example: `define function !!tsgreport()` now parses without errors
+### [0.5.6] - 2025-01-21
+- Object definition support
+- Backslash handling for Windows paths
+- VSIX packaging improvements
 
-### Fixed
-- **Typo Detector False Positives** - Reduced warnings on valid PML identifiers
-  - Added to keywords: `function`, `endfunction`, `var`, `by`
-  - Added to valid identifiers: `trace`, `off`, `on`, `of`, `file`, `zone`, `clock`, `namn`, `flnn`
-  - Fixed: "var" no longer suggests "for"
-  - Fixed: "trace" no longer suggests "frame"
-  - Fixed: "off" no longer suggests "if"
-  - Fixed: "of" no longer suggests "if"
-  - Fixed: "file" no longer suggests "while"
+### [0.5.5] - 2025-01-20
+- Array index checker (warn on arr[0])
+- MemberExpression fixes
+- Documentation cleanup
 
-### Improved
-- Parser error messages now mention 'function' as valid after 'define'
-- Typo detector now recognizes common AVEVA attributes (namn, flnn)
-- Better support for .pmlfnc file extension
-
-## [0.5.8] - 2025-01-21
-
-### Added
-- **Sort Methods Command** ⭐ HIGH PRIORITY ROADMAP ITEM
-  - Command: `PML: Sort Methods (A→Z)` - Sort methods alphabetically ascending
-  - Command: `PML: Sort Methods (Z→A)` - Sort methods alphabetically descending
-  - Preserves preceding comments (JSDoc style and regular `--` comments)
-  - Preserves blank lines between methods
-  - Handles nested `define method` blocks correctly
-  - Accessible via Command Palette (`Ctrl+Shift+P`)
-  - Example: Sorts `.zebra()`, `.apple()`, `.banana()` → `.apple()`, `.banana()`, `.zebra()`
-
-### Improved
-- Method extraction algorithm in Sort Methods
-  - Detects and preserves multi-line comments before methods
-  - Handles empty lines gracefully
-  - Case-insensitive sorting (natural order)
-
-## [0.5.7] - 2025-01-21
-
-### Added
-- **Context-aware `!this.` Completion** - Form method IntelliSense
-  - When typing `!this.` in a form file, shows only methods from current document
-  - Supports both parsed methods (from AST) and regex-extracted methods
-  - Example: `!this.` → shows `.remove()`, `.init()`, `.report()`, etc.
-  - Greatly improves developer experience when working with forms
-
-### Fixed
-- **Reduced completion spam on bare `.`**
-  - Empty dot no longer shows unrelated completions
-  - Only shows relevant methods when context is clear
-
-### Improved
-- **Better member completion logic**
-  - Enhanced regex to match `!variable.` and `$variable.` patterns
-  - Workspace methods now have better filtering and sorting
-  - Method completions include parameter information
-
-## [0.5.6] - 2025-01-21
-
-### Fixed
-- **CRITICAL: LSP Server Not Found in VSIX** - Fixed production deployment
-  - LSP server compiled output now correctly included in VSIX package
-  - Added explicit include patterns for `packages/pml-language-server/out/`
-  - Updated compile script to build both extension and LSP server
-  - Fixed path: `packages/pml-language-server/out/server.js` now packaged
-  - Error resolved: "LSP server.js not found at: ...packages\pml-language-server\out\server.js"
-
-- **Object Definition Parsing** - Full support for `define object` syntax
-  - Parser now correctly handles `member .property is TYPE` declarations
-  - Parser now correctly handles `define method` inside objects
-  - Fixed "Expected 'method'" errors on `member` statements
-  - Fixed "Expected expression" errors on `.data`, `this`, etc.
-
-- **Backslash Escape Sequences** - Removed incorrect escape handling
-  - PML does NOT use backslash for escaping (it's a literal character)
-  - Fixed red highlighting on characters after `\` in strings
-  - Windows paths like `|Z:\RSD81\SP4\PMLLIB\dop\file|` now parse correctly
-  - Removed escape patterns from TextMate grammar
-
-### Changed
-- Disabled `noUnusedLocals` and `noUnusedParameters` in LSP server tsconfig
-  - Prevents compilation errors from unused imports
-  - Allows successful VSIX build process
-
-## [0.5.5] - 2025-01-20
-
-### Fixed
-- ✅ **MemberExpression AST Type** - Correct TypeScript typing
-  - Changed `property` type from `Identifier` to `Expression`
-  - Now supports computed (`arr[i+1]`) and non-computed (`.method`) access
-  - Fixed TypeScript error: "Identifier not assignable to Expression"
-  - `arr[0]` detection now actually runs (was always-false before)
-
-- ✅ **MemberExpression Range** - Correct highlighting
-  - Fixed dot member access range (was pointing to line 0)
-  - Now captures start position from object, not from file top
-  - Go to definition and hovers now highlight correctly
-  - Example: `!var.method` now highlights entire expression, not line 0
-
-### Added
-- Test file `test_array_zero.pml` with arr[0] edge cases
-- Tests for elseif blocks with array access
-
-## [0.5.4] - 2025-01-20
-
-### Fixed
-- ✅ **Parser MemberExpression** - Array index expressions now stored correctly
-  - Before: `!arr[index]` stored fake Identifier('index')
-  - After: Stores real parsed expression
-  - Impact: Hovers, definitions, diagnostics now work on array indices
-  - Fixed ranges - no more "pointing at top of file"
-
-- ✅ **ArrayIndexChecker** - Fixed crash on elseif statements
-  - Fixed TypeError when `elseif` appears in code
-  - Added proper handling for `ifStmt.alternate` (can be IfStatement or Statement[])
-  - Updated `arr[0]` detection to check `Literal.value` instead of `property.name`
-  - Now correctly detects and warns about zero-based array access
-
-- ✅ **Document Validation** - Diagnostics show immediately
-  - Added validation on `onDidOpen()` - no need to edit first
-  - Added validation on `onDidSave()` - revalidate after save
-  - Before: diagnostics only appeared after first keystroke
-  - After: red squiggles appear instantly when opening file
-
-### Technical
-- All fixes based on thorough code review
-- Improved AST accuracy for member expressions
-- Better error handling in analysis passes
-
-## [0.5.3] - 2025-01-20
-
-### Fixed
-- ✅ **Typo Detector** - `!this` and common identifiers no longer trigger false warnings
-  - Added whitelist: `this`, `ce`, `world`, `owner`, `name`, `type`, `result`, `error`, `value`, `data`, `item`, `list`, `count`, `index`
-  - No more "Did you mean 'then'?" for `!this` in form context
-
-### Reverted
-- ❌ **Type Inference Engine (v0.6.0)** - Reverted due to complexity and instability
-  - Type inference will be reimplemented properly in future version
-  - Removed: `typeInferenceEngine.ts`, `builtInMethodsLoader.ts`
-  - Reason: Parser API mismatch, not working in production
-
-### Changed
-- 📚 **Documentation Cleanup**
-  - Simplified README.md with clear navigation
-  - Added bilingual support (English/Russian)
-  - Removed 20+ redundant MD files
-  - Kept only: README, CHANGELOG, CONTRIBUTING, objects/, packages/
-
-## [0.5.2] - 2025-01-20
-
-### Fixed
-- ✅ **LSP Server Activation** - Critical fix for production mode
-  - Fixed `Cannot find module 'vscode-languageclient/node'` error
-  - Include runtime dependencies in VSIX package
-  - Updated `.vscodeignore` to exclude only devDependencies
-  - Added diagnostic logging
-
-- ✅ **Form Files Support** (`.pmlfrm`)
-  - Disabled strict parsing for form files (special DSL syntax)
-  - Added form UI keywords: `text`, `button`, `call`, `dialog`, `resize`, `wid`, `hei`
-  - Parse errors logged but not shown to user
-
-- ✅ **Object Constructor Syntax** - `object ARRAY()` now works
-  - Parser recognizes `object TYPE()` in expressions
-  - Fixed "Expected expression" error
-
-- ✅ **Workspace Indexing**
-  - Excluded `objects/` and `docs/` folders from indexing
-  - No more random words from documentation in completions
-
-- ✅ **ESLint Warnings**
-  - Replaced `require('fs')` with `import * as fs`
-  - Added `_` prefix to unused parameters
-
-### Changed
-- Kept `activationEvents` in package.json for VSCode 1.80.0 compatibility
-- Output channel now appears automatically
-
-## [0.5.1] - 2025-01-18
-
-### Fixed
-- Critical fix for LSP server not starting in production
-- Bundled knowledge base (`objects/`) into VSIX
-
-## [0.5.0] - 2025-01-17
-
-### Added
-- Full Language Server Protocol (LSP) implementation
-- Real-time diagnostics (unclosed blocks, typos)
-- Workspace indexing for fast symbol search
+### [0.5.4] - 2025-01-20
 - Typo detection with Levenshtein distance
+- Parser improvements
 
-## [0.4.8] - 2024-12-XX
+### [0.5.3] - 2025-01-20
+- Parser error recovery improvements
+- Handle statement support
 
-### Added
-- Code actions and quick fixes
-- IntelliSense improvements
-- Signature help for method calls
+### [0.5.2] - 2025-01-20
+- Form file support improvements
+- Object constructor syntax
+
+### [0.5.1] - 2025-01-18
+- Critical fix for LSP server in production
+- Bundled knowledge base into VSIX
+
+### [0.5.0] - 2025-01-17
+- Full Language Server Protocol (LSP) implementation
+- Real-time diagnostics
+- Workspace indexing
+- IntelliSense and autocomplete
+
+### [0.4.8] - 2024-12-XX
+- Initial code actions and quick fixes
+- Basic IntelliSense
+- Signature help
+
+</details>
 
 ---
 
