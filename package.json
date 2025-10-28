@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -314,7 +314,13 @@
       }
     },
     "menus": {
-      "editor/context": [],
+      "editor/context": [
+        {
+          "submenu": "pml.quickActions",
+          "when": "editorLangId == pml && editorHasSelection",
+          "group": "1_modification"
+        }
+      ],
       "pml.tools": [
         {
           "command": "pml.sortLinesAsc",
@@ -387,10 +393,6 @@
         {
           "submenu": "pml.forms",
           "group": "7_forms"
-        },
-        {
-          "submenu": "pml.array",
-          "group": "8_array"
         }
       ],
       "pml.forms": [

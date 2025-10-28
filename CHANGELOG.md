@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.4] - 2025-01-28
+
+### Fixed - Menu Configuration
+
+- **Context Menu** - Corrected menu structure per user requirements
+  - Previous behavior (v0.9.1): Removed all commands from context menu, kept array commands in toolbar
+  - Correct behavior: Keep Quick PML Action in context menu (including array commands), remove array submenu from toolbar button
+  - **Context menu** (right-click): Now shows "Quick Actions" with all commands including array operations
+  - **Toolbar button** (PML Tools): Now excludes array submenu - only shows sort, cleanup, comment, align, and form commands
+  - User can access array commands via context menu Quick Actions
+
+**Menu Structure:**
+- Context Menu → Quick Actions → Array commands (✅ restored)
+- Toolbar Button → Array submenu (❌ removed)
+
 ## [0.9.3] - 2025-01-28
 
 ### Fixed - Remove Comments
