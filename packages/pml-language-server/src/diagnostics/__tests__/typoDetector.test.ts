@@ -126,9 +126,9 @@ describe('Typo Detector', () => {
 	});
 
 	describe('Operator typo detection', () => {
-		// NOTE: "adn" matches "any" with the same edit distance as "and" in the current algorithm.
-		// The scoring prefers similar-length keywords, and both "and" and "any" have the same score.
-		// Which one wins depends on iteration order. This test validates detection occurs.
+		// NOTE: "adn" has edit distance 2 to multiple keywords: "and", "any", "all".
+		// The scoring algorithm considers both edit distance and length difference.
+		// Any of these matches is acceptable - this test validates detection occurs.
 		it('should detect "adn" typo', () => {
 			const source = 'if (!x eq 1 adn !y eq 2) then\nendif';
 			const document = createDocument(source);
@@ -138,8 +138,8 @@ describe('Typo Detector', () => {
 
 			expect(diagnostics).toHaveLength(1);
 			expect(diagnostics[0].message).toContain('adn');
-			// Either "and" or "any" is acceptable since they have the same edit distance
-			expect(diagnostics[0].message).toMatch(/and|any/);
+			// "and", "any", or "all" are all acceptable with edit distance 2
+			expect(diagnostics[0].message).toMatch(/and|any|all/);
 		});
 
 		// NOTE: "nto" has edit distance 1 to "to" vs distance 2 to "not", so "to" is preferred.
