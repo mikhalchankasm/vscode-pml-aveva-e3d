@@ -189,7 +189,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ v0.8.0 - v0.8.6 - COMPLETED (2025-01-28)
+## ✅ v0.8.0 - v0.8.7 - COMPLETED (2025-01-28)
 
 ### v0.8.0 - Code Bundling ✅
 - [x] **esbuild Integration**
@@ -228,6 +228,10 @@ Development plans and progress tracking.
 - [x] **Smart Extraction** - Analyzes error messages and line context
 - 📊 **Result:** Detects typos like "iff" → "if", "doo" → "do", "endiff" → "endif"
 - ⚙️ **Default:** Still `'off'` (user must enable explicitly)
+
+### v0.8.7 - Documentation Fixes ✅
+- [x] **Comment Updates** - Fixed outdated "AST-BASED" → "PARSE-ERROR-BASED" in typoDetector.ts
+- [x] **ROADMAP Sync** - Added v0.8.0-v0.8.6 completed section, updated current status
 
 ---
 
