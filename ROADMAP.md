@@ -279,7 +279,54 @@ Development plans and progress tracking.
 
 </details>
 
-### ⭐ Latest: v0.9.0 - Basic Form Syntax Support (2025-01-28)
+### ⭐ Latest: v0.9.4 - Menu Configuration Fix (2025-01-28)
+
+**Bug Fix Release:**
+- ✅ **Menu Configuration Corrected**
+  - Context menu: Quick Actions with array commands (restored)
+  - Toolbar button: Array submenu removed
+  - Fixed v0.9.1 incorrect implementation
+
+---
+
+### v0.9.3 - Remove Comments Fix (2025-01-28)
+
+- ✅ **Remove Comments Fixed**
+  - Now removes only comment prefixes (`--` and `$*`)
+  - Preserves code content after comment marker
+  - No longer deletes entire lines
+
+---
+
+### v0.9.2 - Column Generator (2025-01-28)
+
+- ✅ **Column Generator Command**
+  - Text mode: Insert same text on each line
+  - Number mode: Sequential numbers (decimal/hex/binary/octal)
+  - Interactive dialogs
+  - Notepad++-style functionality
+
+---
+
+### v0.9.1 - UI/UX Improvements (2025-01-28)
+
+- ✅ **Context Menu Cleanup**
+  - Removed PML Tools commands from context menu
+  - All tools in editor title bar button
+  - Cleaner user experience
+
+- ✅ **New Commands**
+  - Add Comments: Comment out selected code
+  - Align PML: Smart alignment by `=` or `is` keyword
+
+- ✅ **Fixed Commands**
+  - Remove Duplicates (was broken)
+  - Remove Empty Lines (was broken)
+  - Trim Whitespace (was broken)
+
+---
+
+### v0.9.0 - Basic Form Syntax Support (2025-01-28)
 
 **🎯 Medium Priority Task: Form Syntax Improvements - Partially Completed**
 
@@ -506,11 +553,15 @@ Development plans and progress tracking.
 - Documentation: Comment-based method docs with JSDoc support
 - Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
 
-**Recent Changes (v0.8.8-v0.9.0):**
-- ✅ **Array Index Checker Tests** (v0.8.8 continuation) - 30 tests, fixed critical bug
+**Recent Changes (v0.8.8-v0.9.4):**
+- ✅ **Menu Configuration Fix** (v0.9.4) - Corrected context menu and toolbar structure
+- ✅ **Remove Comments Fix** (v0.9.3) - Now removes only prefix, not entire lines
+- ✅ **Column Generator** (v0.9.2) - Text/number insertion across multiple lines
+- ✅ **UI/UX Improvements** (v0.9.1) - New commands (Add Comments, Align PML), fixed broken commands
 - ✅ **Form Syntax Support** (v0.9.0) - Parser recognizes setup form, gadgets, members
 - ✅ **Form Tokens** (v0.9.0) - Added 15+ form-related keywords
 - ✅ **AST Extensions** (v0.9.0) - GadgetDeclaration, MemberDeclaration nodes
+- ✅ **Array Index Checker Tests** (v0.8.8) - 30 tests, fixed critical bug
 
 **Previous Milestones (v0.8.0-v0.8.8):**
 - ✅ **Code Bundling** (v0.8.0) - esbuild integration, 7.5x size reduction
