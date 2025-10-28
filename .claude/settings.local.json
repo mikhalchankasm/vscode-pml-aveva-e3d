@@ -12,7 +12,9 @@
       "Bash(git tag:*)",
       "Bash(node test-typo-detection.js:*)",
       "Bash(node test-typo-detailed.js:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(gh release:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
