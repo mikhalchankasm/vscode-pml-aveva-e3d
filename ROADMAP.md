@@ -443,8 +443,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.8.8 (in development)
-**Last Release:** 0.8.7 (2025-01-28)
+**Version:** 0.8.8
+**Released:** 2025-01-28
 
 **Statistics:**
 - Extension size: **2.07 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
