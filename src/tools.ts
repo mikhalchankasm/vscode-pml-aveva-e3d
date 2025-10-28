@@ -338,13 +338,17 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        let newText = selected.text;
-        // remove comments: lines starting with -- and $*
-        newText = newText.replace(/--.*$/gm, '');
-        newText = newText.replace(/\$\*.*$/gm, '');
-        // collapse multiple blank lines introduced by stripping comments
-        const filtered = newText.split('\n').filter(line => line.trim() !== '');
-        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), 'Removed comments');
+        const lines = selected.text.split('\n');
+        const uncommented = lines.map(line => {
+            // Remove -- prefix (with optional leading spaces before --)
+            // Pattern: optional spaces, then --, then optional space, then capture rest
+            let result = line.replace(/^(\s*)--\s?/, '$1');
+            // Also remove $* comments
+            result = result.replace(/^(\s*)\$\*\s?/, '$1');
+            return result;
+        });
+
+        this.applyChangesToSelection(editor, selected.range, uncommented.join('\n'), 'Removed comment prefixes');
     };
 
     private alignPML = () => {

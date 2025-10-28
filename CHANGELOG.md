@@ -2,6 +2,24 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.3] - 2025-01-28
+
+### Fixed - Remove Comments
+
+- **Remove Comments** - Now correctly removes only comment prefixes (`--` and `$*`)
+  - Previous behavior: Deleted entire lines after comment marker
+  - New behavior: Removes only the comment prefix, preserves code
+  - Preserves indentation
+  - Lines remain intact
+
+**Example:**
+```pml
+Before:                    After:
+-- !var = value    →      !var = value
+    -- !nested     →          !nested
+$* comment line    →      comment line
+```
+
 ## [0.9.2] - 2025-01-28
 
 ### Added - Column Generator
