@@ -163,7 +163,6 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let inMethod = false;
-        let methodIndent = 0;
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
