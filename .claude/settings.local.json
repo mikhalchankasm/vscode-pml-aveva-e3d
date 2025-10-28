@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npm install:*)",
       "Bash(npx @vscode/vsce:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(node test-compose.js:*)",
+      "Bash(node test-compose-detailed.js:*)",
+      "Bash(node test-simple.js:*)",
+      "Bash(node test-debug.js:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,30 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.4] - 2025-01-28
+
+### Fixed
+- **Parser: Method Call Expressions** - Fixed parsing of method calls in parenthesized expressions
+  - Root cause: lexer creates METHOD token `.eq`, but parser was only checking after consuming DOT token
+  - Solution: handle METHOD tokens directly in `parseMember()` before DOT tokens
+  - Fixes: `if (!type.eq(|number|)) then` now parses correctly
+  - All member expression patterns (.method(), .property) work in all contexts
+
+- **Parser: Nested Elseif Endif Pairing** - Fixed endif consumption in recursive elseif parsing
+  - Root cause: recursive `parseIfStatement()` calls were each consuming the shared endif token
+  - Solution: only consume endif when NOT handling elseif recursively
+  - Fixes: complex if-elseif-elseif-else-endif chains now parse correctly
+  - Eliminates "Expected 'endif'" errors on valid control flow
+
+- **Parser: Compose Expression Completeness** - Extended compose keyword workaround
+  - Now consumes SUBSTITUTE_VAR ($!var) and STRING (|text|) tokens
+  - Fixes: `var !x compose space $!y |END|` now parses without errors
+  - More robust handling of PML1 compose syntax
+
+### Test Results
+- ✅ test_elseif.pml: 5 parse errors → 0 parse errors
+- All method calls, nested elseif, and compose expressions now parse correctly
+
 ## [0.8.3] - 2025-01-24
 
 ### Fixed

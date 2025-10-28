@@ -23,6 +23,7 @@ docs/**
 examples/**
 scripts/**
 test.pml
+test-*.js
 README_DEV.md
 RELEASE_NOTES_*.md
 .github/**

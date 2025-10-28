@@ -485,22 +485,28 @@ export class Parser {
 
 		// Alternate (else/elseif)
 		let alternate: Statement[] | IfStatement | undefined;
+		let endToken: Token;
 
 		if (this.check(TokenType.ELSEIF)) {
 			// Recursive: elseif is another if statement
+			// Note: The recursive call handles its own endif, so we don't consume it here
 			alternate = this.parseIfStatement();
-		} else if (this.check(TokenType.ELSE)) {
-			this.advance(); // consume 'else'
-			alternate = [];
-			while (!this.check(TokenType.ENDIF) && !this.isAtEnd()) {
-				const stmt = this.parseStatement();
-				if (stmt) {
-					alternate.push(stmt);
+			// Use a placeholder for endToken since the recursive call consumed the actual endif
+			endToken = this.previous();
+		} else {
+			if (this.check(TokenType.ELSE)) {
+				this.advance(); // consume 'else'
+				alternate = [];
+				while (!this.check(TokenType.ENDIF) && !this.isAtEnd()) {
+					const stmt = this.parseStatement();
+					if (stmt) {
+						alternate.push(stmt);
+					}
 				}
 			}
+			// Consume endif for this if/else block
+			endToken = this.consume(TokenType.ENDIF, "Expected 'endif'");
 		}
-
-		const endToken = this.consume(TokenType.ENDIF, "Expected 'endif'");
 
 		return {
 			type: 'IfStatement',
@@ -930,20 +936,37 @@ export class Parser {
 		const startPos = expr.range.start;
 
 		while (true) {
-			if (this.match(TokenType.DOT)) {
-				// Member access: .property or .method()
-				// Accept either METHOD token (.methodName) or IDENTIFIER (eq, ne, etc.)
+			// Handle METHOD tokens directly (.eq, .ne, .output, etc.)
+			// The lexer tokenizes ".eq" as a single METHOD token, not DOT + IDENTIFIER
+			if (this.match(TokenType.METHOD)) {
+				const methodToken = this.previous();
+				const propertyName = methodToken.value.substring(1); // Remove leading dot
+
+				expr = {
+					type: 'MemberExpression',
+					object: expr,
+					property: {
+						type: 'Identifier',
+						name: propertyName,
+						range: this.createRange(this.getTokenIndex(methodToken), this.getTokenIndex(methodToken))
+					},
+					computed: false,
+					range: {
+						start: startPos,
+						end: { line: methodToken.line - 1, character: methodToken.column - 1 + methodToken.length }
+					}
+				};
+			} else if (this.match(TokenType.DOT)) {
+				// Plain dot followed by identifier (for property access)
+				// This handles cases where DOT is separate from the identifier
 				let propertyName: string;
 				let propertyToken: Token;
 
-				if (this.check(TokenType.METHOD)) {
+				if (this.check(TokenType.IDENTIFIER)) {
 					propertyToken = this.advance();
-					propertyName = propertyToken.value.substring(1); // Remove leading dot
-				} else if (this.check(TokenType.IDENTIFIER)) {
-					propertyToken = this.advance();
-					propertyName = propertyToken.value; // No dot to remove
+					propertyName = propertyToken.value;
 				} else {
-					throw this.error(this.peek(), "Expected method or property name after '.'");
+					throw this.error(this.peek(), "Expected property name after '.'");
 				}
 
 				expr = {
@@ -988,14 +1011,20 @@ export class Parser {
 	 */
 	private parsePrimary(): Expression {
 		// WORKAROUND: Skip 'compose' and 'space' keywords (PML1 syntax)
-		// These are used in "var !x compose space ..." which we don't fully parse yet
+		// These are used in "var !x compose space $!var |string|" which we don't fully parse yet
 		if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE)) {
 			const startToken = this.advance();
-			// Skip until we hit a recognizable token or end of line
-			while (!this.isAtEnd() && !this.check(TokenType.STRING) && !this.check(TokenType.SUBSTITUTE_VAR)) {
-				if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE) || this.check(TokenType.IDENTIFIER)) {
+			// Skip entire compose expression including all parts
+			while (!this.isAtEnd()) {
+				// Consume all compose-related tokens
+				if (this.check(TokenType.COMPOSE) ||
+				    this.check(TokenType.SPACE) ||
+				    this.check(TokenType.IDENTIFIER) ||
+				    this.check(TokenType.SUBSTITUTE_VAR) ||
+				    this.check(TokenType.STRING)) {
 					this.advance();
 				} else {
+					// Stop at any other token (likely end of compose expression)
 					break;
 				}
 			}
