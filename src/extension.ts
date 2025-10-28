@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import { PMLFormatter } from './formatter';
-import { PMLDiagnostics } from './diagnostics';
-import { PMLCompletionProvider } from './completion';
-import { PMLHoverProvider } from './hover';
-import { PMLDocumentSymbolProvider } from './symbols';
-import { PMLDefinitionProvider } from './definition';
-import { PMLReferenceProvider } from './references';
-import { PMLRenameProvider } from './rename';
-import { PMLSignatureHelpProvider } from './signature';
+// Legacy providers - replaced by Language Server Protocol (LSP)
+// import { PMLDiagnostics } from './diagnostics';
+// import { PMLCompletionProvider } from './completion';
+// import { PMLHoverProvider } from './hover';
+// import { PMLDocumentSymbolProvider } from './symbols';
+// import { PMLDefinitionProvider } from './definition';
+// import { PMLReferenceProvider } from './references';
+// import { PMLRenameProvider } from './rename';
+// import { PMLSignatureHelpProvider } from './signature';
 import { PMLToolsProvider } from './tools';
 import { PMLMethodCommands } from './methodCommands';
 import { PMLCodeActionProvider } from './codeActions';
@@ -21,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Activate Language Server (Phase 1 - LSP)
     // TODO: Once LSP is fully implemented, this will replace the providers below
     try {
-        const client = activateLanguageServer(context);
+        activateLanguageServer(context);
         console.log('✅ PML Language Server client started');
     } catch (error) {
         console.error('❌ Failed to start PML Language Server:', error);

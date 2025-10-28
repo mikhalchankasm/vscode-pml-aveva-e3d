@@ -5,7 +5,7 @@ export class PMLHoverProvider implements vscode.HoverProvider {
     provideHover(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.Hover | undefined {
         // Проверяем не метод ли это
         const line = document.lineAt(position.line).text;

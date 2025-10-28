@@ -4,7 +4,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     provideDocumentFormattingEdits(
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.TextEdit[] {
         const config = vscode.workspace.getConfiguration('pml.formatter');
         const removeMultipleEmptyLines = config.get<boolean>('removeMultipleEmptyLines', true);
@@ -172,7 +172,8 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             // Начало метода
             if (/^define\s+method/i.test(trimmed)) {
                 inMethod = true;
-                methodIndent = line.length - line.trimStart().length;
+                // Store method indentation for future use if needed
+                // const methodIndent = line.length - line.trimStart().length;
                 result.push(line);
 
                 // Проверяем следующую строку - если не пустая, добавляем пустую

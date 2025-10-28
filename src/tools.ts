@@ -409,7 +409,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             const idx = trimmed.indexOf(operator);
 
             // Get parts before and after operator
-            let before = trimmed.substring(0, idx).trimEnd();
+            const before = trimmed.substring(0, idx).trimEnd();
             const after = trimmed.substring(idx);
 
             // Calculate spaces needed
@@ -452,7 +452,7 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             return match.before + padding + ' ' + match.keyword + ' ' + match.after;
         });
-    };
+    }
 
     private columnGenerator = async () => {
         const editor = this.getActiveEditor();
@@ -486,7 +486,6 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             await editor.edit(editBuilder => {
                 for (let i = selection.start.line; i <= selection.end.line; i++) {
-                    const line = editor.document.lineAt(i);
                     const position = new vscode.Position(i, selection.start.character);
                     editBuilder.insert(position, text);
                 }
@@ -531,7 +530,6 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             await editor.edit(editBuilder => {
                 for (let i = selection.start.line; i <= selection.end.line; i++) {
-                    const line = editor.document.lineAt(i);
                     const position = new vscode.Position(i, selection.start.character);
 
                     let numText = '';

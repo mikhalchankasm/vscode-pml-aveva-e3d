@@ -10,7 +10,7 @@ export class PMLDocumentSymbolProvider implements vscode.DocumentSymbolProvider 
     }
     provideDocumentSymbols(
         document: vscode.TextDocument,
-        token: vscode.CancellationToken
+        _token: vscode.CancellationToken
     ): vscode.DocumentSymbol[] {
         const symbols: vscode.DocumentSymbol[] = [];
 
