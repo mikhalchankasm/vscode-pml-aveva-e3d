@@ -459,7 +459,15 @@ export class Parser {
 	 * Parse if statement
 	 */
 	private parseIfStatement(): IfStatement {
-		const startToken = this.consume(TokenType.IF, "Expected 'if'");
+		// Accept either 'if' or 'elseif' (for recursive elseif handling)
+		let startToken: Token;
+		if (this.check(TokenType.IF)) {
+			startToken = this.advance();
+		} else if (this.check(TokenType.ELSEIF)) {
+			startToken = this.advance();
+		} else {
+			throw this.error(this.peek(), "Expected 'if' or 'elseif'");
+		}
 
 		// Condition (expression before 'then')
 		const test = this.parseExpression();
@@ -923,20 +931,33 @@ export class Parser {
 
 		while (true) {
 			if (this.match(TokenType.DOT)) {
-				// Member access: .property
-				const property = this.consume(TokenType.METHOD, "Expected method name after '.'");
+				// Member access: .property or .method()
+				// Accept either METHOD token (.methodName) or IDENTIFIER (eq, ne, etc.)
+				let propertyName: string;
+				let propertyToken: Token;
+
+				if (this.check(TokenType.METHOD)) {
+					propertyToken = this.advance();
+					propertyName = propertyToken.value.substring(1); // Remove leading dot
+				} else if (this.check(TokenType.IDENTIFIER)) {
+					propertyToken = this.advance();
+					propertyName = propertyToken.value; // No dot to remove
+				} else {
+					throw this.error(this.peek(), "Expected method or property name after '.'");
+				}
+
 				expr = {
 					type: 'MemberExpression',
 					object: expr,
 					property: {
 						type: 'Identifier',
-						name: property.value.substring(1), // Remove leading dot
-						range: this.createRange(this.getTokenIndex(property), this.getTokenIndex(property))
+						name: propertyName,
+						range: this.createRange(this.getTokenIndex(propertyToken), this.getTokenIndex(propertyToken))
 					},
 					computed: false,
 					range: {
 						start: startPos,
-						end: { line: property.line - 1, character: property.column - 1 + property.length }
+						end: { line: propertyToken.line - 1, character: propertyToken.column - 1 + propertyToken.length }
 					}
 				};
 			} else if (this.match(TokenType.LBRACKET)) {
@@ -966,6 +987,26 @@ export class Parser {
 	 * Parse primary expression (literals, variables, etc.)
 	 */
 	private parsePrimary(): Expression {
+		// WORKAROUND: Skip 'compose' and 'space' keywords (PML1 syntax)
+		// These are used in "var !x compose space ..." which we don't fully parse yet
+		if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE)) {
+			const startToken = this.advance();
+			// Skip until we hit a recognizable token or end of line
+			while (!this.isAtEnd() && !this.check(TokenType.STRING) && !this.check(TokenType.SUBSTITUTE_VAR)) {
+				if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE) || this.check(TokenType.IDENTIFIER)) {
+					this.advance();
+				} else {
+					break;
+				}
+			}
+			// Return dummy identifier to avoid parse errors
+			return {
+				type: 'Identifier',
+				name: 'compose_expression',
+				range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
+			};
+		}
+
 		// String literal
 		if (this.match(TokenType.STRING)) {
 			const token = this.previous();

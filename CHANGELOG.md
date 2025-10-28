@@ -2,6 +2,29 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.2] - 2025-01-24
+
+### Fixed
+- **Parser: `compose` keyword** - No longer shows "Expected expression" error
+  - Added workaround to skip `compose` and `space` keywords in expressions
+  - Fixes parsing of `var !x compose space ...` statements
+  - Temporary fix until full PML1 syntax support is implemented
+
+- **Parser: Method calls with identifiers** - Fixed `.eq()`, `.ne()`, etc.
+  - Parser now accepts IDENTIFIER tokens after DOT (not just METHOD tokens)
+  - `!var.eq(value)` now parses correctly
+  - Fixes expressions like `!type.eq(|string|)` in conditionals
+
+- **Parser: Nested `elseif`** - Fixed recursive elseif handling
+  - `elseif` inside nested `if` statements now parses correctly
+  - Parser now accepts both `if` and `elseif` tokens when entering if statement
+  - Fixes "Expected 'if'" error on valid nested elseif constructs
+
+### Improved
+- Better PML1 compatibility with `compose` expressions
+- More flexible member expression parsing
+- Correct handling of complex nested conditionals
+
 ## [0.8.1] - 2025-01-24
 
 ### Fixed
