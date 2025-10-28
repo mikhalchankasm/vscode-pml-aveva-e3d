@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.7.2)
+## ✅ Completed (v0.4.8 - v0.7.3)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -24,12 +24,15 @@ Development plans and progress tracking.
   - Warning on `arr[0]` (PML arrays are 1-indexed)
   - Handles elseif statements correctly
 
-- ✅ **Typo Detection** (v0.5.4, v0.6.0)
+- ✅ **Typo Detection** (v0.5.4, v0.6.0, v0.7.3)
   - Detects typos in keywords (e.g., "endiff" → "endif")
   - Levenshtein distance algorithm
   - Skip variables (!), methods (.), directives ($), attributes (:)
   - Skip single-character identifiers (v0.6.0)
   - Reduced false positives on Russian attribute names
+  - **AST-based detection (v0.7.3)** - eliminated false positives entirely
+  - Only checks keywords in specific language structures
+  - Disabled for .pmlfrm files
 
 ### Parser Improvements
 - ✅ **Object Definition Support** (v0.5.6)
@@ -168,6 +171,20 @@ Development plans and progress tracking.
   - Removed dot from `isWordChar()` regex
   - Hover over method name now shows documentation
   - Comments before methods display properly in tooltips
+
+---
+
+## ✅ v0.7.3 - COMPLETED (2025-01-24)
+
+### Major Fix: Typo Detection Overhaul
+
+- [x] **AST-based Typo Detection** ✅ COMPLETED
+  - Completely rewrote typo detector to use AST instead of text scanning
+  - Eliminated all false positive warnings ("Possible typo: 'OK'", "Possible typo: 'at'")
+  - Only checks keywords in specific language structures (methods, if statements, etc.)
+  - Arbitrary identifiers (UI labels, variable names) no longer flagged
+  - Disabled typo detection for `.pmlfrm` files
+  - Parser now reuses already-built AST (performance improvement)
 
 ---
 
@@ -362,23 +379,31 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.7.2
+**Version:** 0.7.3
 **Released:** 2025-01-24
 
 **Statistics:**
 - Extension size: 15.61 MB (needs bundling)
-- Files in VSIX: 1631 files (866 JS files)
+- Files in VSIX: 1632 files (866 JS files)
 - LSP features: 13+ providers (with documentation extraction)
 - Commands: 27+
-- Diagnostics: 3 types
+- Diagnostics: 3 types (AST-based, no false positives)
 - Operators: 15+ (including OF, comparison operator aliases)
 - Documentation: Comment-based method docs with JSDoc support
 
-**Recent Fixes (v0.7.2):**
+**Recent Fixes (v0.7.3):**
+- ✅ **Typo Detection Overhaul** - No more false positive warnings
+- ✅ AST-based checking eliminates warnings on arbitrary identifiers
+- ✅ Better performance (AST reuse)
+- ✅ Form files (.pmlfrm) have cleaner diagnostics
+
+**Previous Fixes (v0.7.0-v0.7.2):**
 - ✅ F12 (Go to Definition) works for method calls
 - ✅ Hover documentation displays correctly
 - ✅ Comparison operators (neq, geq, leq) supported
 - ✅ Completion provider shows only current file methods
+- ✅ Find All References (Shift+F12) implemented
+- ✅ Method documentation from comments
 
 **Known Limitations:**
 - Form syntax: graceful degradation (parsed as PML)
