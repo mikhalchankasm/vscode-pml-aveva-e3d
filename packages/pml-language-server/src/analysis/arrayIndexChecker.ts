@@ -68,8 +68,8 @@ export class ArrayIndexChecker {
 
 			case 'VariableDeclaration':
 				const varDecl = stmt as any;
-				if (varDecl.init) {
-					this.checkExpression(varDecl.init);
+				if (varDecl.initializer) {
+					this.checkExpression(varDecl.initializer);
 				}
 				break;
 		}
