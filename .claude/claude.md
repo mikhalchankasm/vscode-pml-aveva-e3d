@@ -42,13 +42,13 @@
 A release stage is complete only after every step below has been executed and recorded.
 
 1. **Release preparation**  
-   Update version numbers and metadata (package.json, README.md, CHANGELOG.md, release notes, other artefacts). Run mandatory checks/tests and note their status.
+   Update version numbers and metadata (package.json, README.md, CHANGELOG.md, release notes, other artefacts). Keep a single `RELEASE_NOTES.md` (or equivalent) as the canonical release notes file—consolidate per-version notes into it and remove any extra copies. Run mandatory checks/tests and note their status.
 
 2. **Local VSIX publication**  
-   Build the current package (`npm run pack` or equivalent). Verify the VSIX installs and functions in a local environment.
+   Build the current package (`npm run pack` or `npm run pack:install` to pack + install). Use `scripts/reinstall.ps1` (wrapped by `npm run install:local` / `npm run pack:install`) to deploy the VSIX into both Cursor (AI IDE) and standard VS Code profiles; confirm the extension loads and runs correctly in each environment.
 
 3. **Changelog consolidation**  
-   Merge scattered change-log entries into `CHANGELOG.md`. Maintain a single authoritative release-notes document; delete obsolete or duplicative changelog/release-note files left from prior fixes.
+   Merge scattered change-log entries into `CHANGELOG.md`. Maintain a single authoritative release-notes document; delete obsolete or duplicative changelog/release-note files (including ad-hoc change notes) left from prior fixes.
 
 4. **GitHub publication**  
    Commit changes, ensure the working tree is clean, and push to the canonical branch/tags. Open a Pull Request and await CI if required.
@@ -57,7 +57,7 @@ A release stage is complete only after every step below has been executed and re
    Sync `ROADMAP.md` with completed work and new plans. Confirm it reflects the current project version and status.
 
 6. **GitHub release**  
-   Create or update the GitHub release, attach the fresh VSIX, add release notes and a checksum, and ensure alignment with the changelog and roadmap. Remove outdated local VSIX packages (keep only the latest artefacts tracked in releases).
+   Create or update the GitHub release, attach the fresh VSIX, add release notes and a checksum, and ensure alignment with the changelog and roadmap. Keep exactly one authoritative release-notes entry for the release; delete obsolete change-note files and outdated local VSIX packages so only the latest artefacts remain tracked.
 
 7. **Final actions**  
    Update auxiliary communication channels (issue tracker, wiki, docs). Record the stage outcome in internal logs if needed. Verify every checklist item is closed before moving forward.

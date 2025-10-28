@@ -10,12 +10,44 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - `server.ts`: Comment now reflects typo detection is functional (not disabled)
   - Added algorithm description to typoDetector header
 
+- **Diagnostics: English Translation** - Translated Russian text in `src/diagnostics.ts`
+  - All comments and error messages now in English
+  - Improved maintainability for international contributors
+  - File ready for use if legacy VS Code diagnostics path is needed
+
+- **Typo Detection: Enhanced Keyword Loading**
+  - Now loads 75+ keywords dynamically from `tokens.ts` (previously hardcoded 40)
+  - Includes all recent keyword additions (`function`, `endfunction`, `by`, `var`, etc.)
+  - Automatic updates when new keywords added to lexer
+  - No more manual keyword list maintenance
+
+- **Typo Detection: Windows Line Ending Support**
+  - Fixed line splitting to handle CRLF (`\r\n`) correctly
+  - Changed from `split('\n')` to `split(/\r?\n/)`
+  - Prevents stray `\r` characters from shifting highlight ranges
+
+- **Typo Detection: Improved Matching Algorithm**
+  - Smart scoring: prefers keywords with similar length and minimal edit distance
+  - Better suggestions when multiple keywords have same Levenshtein distance
+  - Only reports first typo per line to avoid spam
+  - Tracks reported lines to prevent duplicate diagnostics
+
+### Added
+- **Testing: Comprehensive Typo Detection Test Suite**
+  - 36 passing tests covering keyword typos, operators, control flow
+  - Edge case coverage: Windows line endings, multiple typos, error handling
+  - False positive prevention validation
+  - Tests for methdo→method, endobjet→endobject, iff→if, whiel→while, etc.
+  - 2 tests skipped due to vitest module loading issue (production code unaffected)
+
 ### Updated
 - **ROADMAP.md: Synchronized with Current State**
-  - Added v0.8.0 - v0.8.6 completed releases section
-  - Updated typo detection description to reflect v0.8.6 changes
-  - Changed "v0.8.0 (Next Release)" to "v0.8.x - Remaining Tasks"
-  - Removed completed "Code Bundling" from todo list
+  - Updated version to 0.8.7, release date to 2025-01-28
+  - Consolidated typo detection evolution across versions
+  - Added v0.8.0 - v0.8.7 completed releases section
+  - Updated statistics: 2.07 MB size, 54 files, test coverage details
+  - Changed diagnostics description from "AST-based" to "parse-error-based"
+  - Updated known limitations to reflect test coverage status
   - Documented all parser fixes and performance improvements
 
 ## [0.8.6] - 2025-01-28

@@ -4,7 +4,7 @@ Development plans and progress tracking.
 
 ---
 
-## ✅ Completed (v0.4.8 - v0.7.3)
+## ✅ Completed (v0.4.8 - v0.8.7)
 
 ### Core Language Server
 - ✅ **Full LSP Implementation** (v0.5.0)
@@ -24,14 +24,17 @@ Development plans and progress tracking.
   - Warning on `arr[0]` (PML arrays are 1-indexed)
   - Handles elseif statements correctly
 
-- ✅ **Typo Detection** (v0.5.4, v0.6.0, v0.7.3, v0.8.6)
-  - Detects typos in keywords (e.g., "endiff" → "endif", "iff" → "if")
-  - **Levenshtein distance algorithm** (v0.5.4, v0.8.6) - edit distance 1-2
-  - Skip variables (!), methods (.), directives ($), attributes (:)
-  - Skip single-character identifiers (v0.6.0)
-  - Reduced false positives on Russian attribute names
-  - **AST-based detection (v0.7.3)** - eliminated false positives entirely
-  - **Parse-error-based (v0.8.6)** - only checks tokens causing errors
+- ✅ **Typo Detection Evolution**
+  - **v0.5.4**: Initial Levenshtein distance algorithm (edit distance 1-2)
+  - **v0.6.0**: Skip single-character identifiers, reduced false positives
+  - **v0.7.3**: AST-based detection - eliminated false positives entirely
+  - **v0.8.1**: Simplified/disabled during performance optimization
+  - **v0.8.6-v0.8.7**: Restored with parse-error-based approach
+    - Only checks tokens causing parse errors (no false positives)
+    - Loads 75+ keywords from authoritative tokens.ts source
+    - Smart scoring for best keyword match suggestions
+    - Windows line ending support (CRLF)
+    - Comprehensive test suite (Vitest)
   - Default: `'off'` (user must enable explicitly)
   - Disabled for .pmlfrm files
 
@@ -229,9 +232,15 @@ Development plans and progress tracking.
 - 📊 **Result:** Detects typos like "iff" → "if", "doo" → "do", "endiff" → "endif"
 - ⚙️ **Default:** Still `'off'` (user must enable explicitly)
 
-### v0.8.7 - Documentation Fixes ✅
+### v0.8.7 - Documentation & Diagnostics Fixes ✅
 - [x] **Comment Updates** - Fixed outdated "AST-BASED" → "PARSE-ERROR-BASED" in typoDetector.ts
-- [x] **ROADMAP Sync** - Added v0.8.0-v0.8.6 completed section, updated current status
+- [x] **English Translation** - Translated Russian comments/messages in src/diagnostics.ts to English
+- [x] **Typo Detector Enhancements**
+  - Dynamic keyword loading from tokens.ts (75+ keywords vs hardcoded 40)
+  - Fixed Windows line ending handling (split(/\r?\n/))
+  - Smart keyword matching with scoring algorithm
+  - Added comprehensive Vitest test suite (36 tests passing)
+- [x] **ROADMAP Sync** - Updated to reflect v0.8.0-v0.8.7 progress and current status
 
 ---
 
@@ -264,15 +273,21 @@ Development plans and progress tracking.
 
 ### Testing & Quality
 
-- [ ] **Parser Tests**
-  - Unit tests for lexer
-  - Unit tests for parser
-  - Test edge cases (nested objects, complex expressions)
+- [x] **Typo Detector Tests** ✅ COMPLETED (v0.8.7)
+  - Comprehensive Vitest test suite (36 tests passing, 2 skipped)
+  - Tests for keyword typos, operators, control flow
+  - Edge case coverage (line endings, multiple typos, errors)
+  - False positive prevention validation
+
+- [ ] **Parser Tests** (Partial - 2 failing tests exist)
+  - ✅ Basic parser test structure in place
+  - ❌ Need to fix 2 failing parser tests
+  - ❌ Unit tests for lexer
+  - ❌ Test edge cases (nested objects, complex expressions)
 
 - [ ] **Diagnostic Tests**
-  - Test array index checker
-  - Test typo detector
-  - Test MemberExpression ranges
+  - ❌ Test array index checker
+  - ❌ Test MemberExpression ranges
 
 ---
 
@@ -425,37 +440,38 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.7.3
-**Released:** 2025-01-24
+**Version:** 0.8.7
+**Released:** 2025-01-28
 
 **Statistics:**
-- Extension size: 15.61 MB (needs bundling)
-- Files in VSIX: 1632 files (866 JS files)
+- Extension size: **2.07 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
+- Files in VSIX: 54 files (previously 1632)
 - LSP features: 13+ providers (with documentation extraction)
 - Commands: 27+
-- Diagnostics: 3 types (AST-based, no false positives)
+- Diagnostics: 3 types (parse-error-based typo detection, array index checker, parser errors)
 - Operators: 15+ (including OF, comparison operator aliases)
 - Documentation: Comment-based method docs with JSDoc support
+- Tests: Vitest test suite for typo detection (36 passing, 2 skipped)
 
-**Recent Fixes (v0.7.3):**
-- ✅ **Typo Detection Overhaul** - No more false positive warnings
-- ✅ AST-based checking eliminates warnings on arbitrary identifiers
-- ✅ Better performance (AST reuse)
-- ✅ Form files (.pmlfrm) have cleaner diagnostics
+**Recent Changes (v0.8.0-v0.8.7):**
+- ✅ **Code Bundling** (v0.8.0) - esbuild integration, 7.5x size reduction
+- ✅ **Performance Optimizations** (v0.8.1) - Memory leak fixes, async workspace indexing
+- ✅ **Parser Improvements** (v0.8.2-v0.8.4) - Compose keyword, nested elseif, method token handling
+- ✅ **Typo Detection Restored** (v0.8.6-v0.8.7) - Parse-error-based, 75+ keywords, test suite
+- ✅ **Documentation** (v0.8.7) - English translation, updated roadmap
 
-**Previous Fixes (v0.7.0-v0.7.2):**
-- ✅ F12 (Go to Definition) works for method calls
-- ✅ Hover documentation displays correctly
-- ✅ Comparison operators (neq, geq, leq) supported
-- ✅ Completion provider shows only current file methods
-- ✅ Find All References (Shift+F12) implemented
-- ✅ Method documentation from comments
+**Previous Achievements (v0.7.0-v0.7.3):**
+- ✅ Find All References (Shift+F12)
+- ✅ Method documentation from comments (hover tooltips)
+- ✅ F12 (Go to Definition) for method calls
+- ✅ Comparison operators (neq, geq, leq)
+- ✅ AST-based typo detection (later replaced with parse-error-based)
 
 **Known Limitations:**
 - Form syntax: graceful degradation (parsed as PML)
 - Find References: works only in current file (workspace search pending)
 - Type inference: removed (needs re-implementation with correct architecture)
-- No tests yet
+- Tests: Typo detector covered, parser tests partial (2 failing), other diagnostics need coverage
 
 ---
 
@@ -469,5 +485,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2025-01-24*
+*Last updated: 2025-01-28*
 *Roadmap may change based on feedback and priorities*

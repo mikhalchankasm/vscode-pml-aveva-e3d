@@ -15,29 +15,10 @@
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { ParseError } from '../parser/parser';
+import { KEYWORDS } from '../parser/tokens';
 
-// PML keywords that are commonly misspelled
-const PML_KEYWORDS = [
-	// Control flow
-	'if', 'then', 'else', 'elseif', 'endif',
-	'do', 'enddo', 'while',
-	'for', 'endfor',
-	'handle', 'endhandle', 'any', 'values',
-	'return', 'break', 'continue',
-
-	// Definitions
-	'define', 'endmethod', 'object', 'member',
-	'is', 'using', 'setup', 'form',
-
-	// Types
-	'string', 'real', 'integer', 'boolean', 'array', 'dbref',
-
-	// Operators
-	'and', 'or', 'not', 'eq', 'ne', 'gt', 'lt', 'ge', 'le', 'mod', 'of',
-
-	// Special
-	'var', 'global', 'skip', 'compose', 'space'
-];
+// PML keywords that are commonly misspelled - loaded from authoritative tokens.ts
+const PML_KEYWORDS = Object.keys(KEYWORDS).map(k => k.toLowerCase());
 
 /**
  * Calculate Levenshtein distance between two strings
@@ -72,9 +53,13 @@ function levenshteinDistance(str1: string, str2: string): number {
 
 /**
  * Find the closest matching keyword for a potential typo
+ * Uses smart scoring to prefer the most likely match:
+ * 1. Shorter edit distance is better
+ * 2. When distances are equal, prefer similar-length keywords
+ * 3. When both are equal, prefer longer keywords (less ambiguous)
  */
 function findClosestKeyword(word: string): { keyword: string; distance: number } | null {
-	let closest: { keyword: string; distance: number } | null = null;
+	let closest: { keyword: string; distance: number; score: number } | null = null;
 	const wordLower = word.toLowerCase();
 
 	// Only check words that are reasonably close in length
@@ -86,13 +71,19 @@ function findClosestKeyword(word: string): { keyword: string; distance: number }
 
 		// Consider it a potential typo if distance is 1-2 and word is close to keyword
 		if (distance > 0 && distance <= 2) {
-			if (!closest || distance < closest.distance) {
-				closest = { keyword, distance };
+			// Calculate a score: lower is better
+			// Primary: distance (0-2)
+			// Secondary: length difference (0-3)
+			// Tertiary: prefer longer keywords (negate keyword length)
+			const score = distance * 100 + lengthDiff * 10 - keyword.length;
+
+			if (!closest || score < closest.score) {
+				closest = { keyword, distance, score };
 			}
 		}
 	}
 
-	return closest;
+	return closest ? { keyword: closest.keyword, distance: closest.distance } : null;
 }
 
 /**
@@ -139,7 +130,8 @@ export function detectTypos(document: TextDocument, parseErrors: ParseError[]): 
 		return diagnostics;
 	}
 
-	const lines = document.getText().split('\n');
+	const lines = document.getText().split(/\r?\n/);
+	const reportedLines = new Set<number>(); // Track lines we've already reported typos for
 
 	// Analyze each parse error
 	for (const error of parseErrors) {
@@ -150,6 +142,11 @@ export function detectTypos(document: TextDocument, parseErrors: ParseError[]): 
 
 		const lineIndex = error.token.line - 1;
 		if (lineIndex < 0 || lineIndex >= lines.length) {
+			continue;
+		}
+
+		// Skip if we already reported a typo for this line
+		if (reportedLines.has(lineIndex)) {
 			continue;
 		}
 
@@ -186,6 +183,7 @@ export function detectTypos(document: TextDocument, parseErrors: ParseError[]): 
 				}
 
 				diagnostics.push(diagnostic);
+				reportedLines.add(lineIndex); // Mark this line as reported
 				// Only report the first typo found on this line to avoid spam
 				break;
 			}

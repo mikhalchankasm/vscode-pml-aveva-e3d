@@ -16,16 +16,16 @@ export class PMLDiagnostics {
         const text = document.getText();
         const lines = text.split(/\r?\n/);
 
-        // Проверки
+        // Checks
         this.checkUnclosedBlocks(lines, diagnostics, document);
         this.checkMethodParentheses(lines, diagnostics, document);
-        // checkVariableUsage отключена - глобальные переменные это норма в PML
+        // checkVariableUsage is disabled - global variables are normal in PML
 
         this.diagnosticCollection.set(document.uri, diagnostics);
     }
 
     /**
-     * Проверка незакрытых блоков (method, object, if, do, form, frame)
+     * Check for unclosed blocks (method, object, if, do, form, frame)
      */
     private checkUnclosedBlocks(lines: string[], diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
         const stack: Array<{ type: string; line: number; keyword: string }> = [];
@@ -34,12 +34,12 @@ export class PMLDiagnostics {
             const line = lines[i];
             const trimmed = line.trim();
 
-            // Пропускаем комментарии
+            // Skip comments
             if (trimmed.startsWith('--') || trimmed.startsWith('$*')) {
                 continue;
             }
 
-            // Открывающие блоки
+            // Opening blocks
             if (/^define\s+method\s+/i.test(trimmed)) {
                 stack.push({ type: 'method', line: i, keyword: 'define method' });
             } else if (/^define\s+object\s+/i.test(trimmed)) {
@@ -56,28 +56,28 @@ export class PMLDiagnostics {
                 stack.push({ type: 'handle', line: i, keyword: 'handle' });
             }
 
-            // Закрывающие блоки
+            // Closing blocks
             else if (/^endmethod/i.test(trimmed)) {
                 if (stack.length === 0 || stack[stack.length - 1].type !== 'method') {
-                    this.addDiagnostic(diagnostics, i, 'Найден endmethod без соответствующего define method', vscode.DiagnosticSeverity.Error);
+                    this.addDiagnostic(diagnostics, i, 'Found endmethod without matching define method', vscode.DiagnosticSeverity.Error);
                 } else {
                     stack.pop();
                 }
             } else if (/^endobject/i.test(trimmed)) {
                 if (stack.length === 0 || stack[stack.length - 1].type !== 'object') {
-                    this.addDiagnostic(diagnostics, i, 'Найден endobject без соответствующего define object', vscode.DiagnosticSeverity.Error);
+                    this.addDiagnostic(diagnostics, i, 'Found endobject without matching define object', vscode.DiagnosticSeverity.Error);
                 } else {
                     stack.pop();
                 }
             } else if (/^endif/i.test(trimmed)) {
                 if (stack.length === 0 || stack[stack.length - 1].type !== 'if') {
-                    this.addDiagnostic(diagnostics, i, 'Найден endif без соответствующего if', vscode.DiagnosticSeverity.Error);
+                    this.addDiagnostic(diagnostics, i, 'Found endif without matching if', vscode.DiagnosticSeverity.Error);
                 } else {
                     stack.pop();
                 }
             } else if (/^enddo/i.test(trimmed)) {
                 if (stack.length === 0 || stack[stack.length - 1].type !== 'do') {
-                    this.addDiagnostic(diagnostics, i, 'Найден enddo без соответствующего do', vscode.DiagnosticSeverity.Error);
+                    this.addDiagnostic(diagnostics, i, 'Found enddo without matching do', vscode.DiagnosticSeverity.Error);
                 } else {
                     stack.pop();
                 }
@@ -87,45 +87,45 @@ export class PMLDiagnostics {
                 }
             } else if (/^endhandle/i.test(trimmed)) {
                 if (stack.length === 0 || stack[stack.length - 1].type !== 'handle') {
-                    this.addDiagnostic(diagnostics, i, 'Найден endhandle без соответствующего handle', vscode.DiagnosticSeverity.Error);
+                    this.addDiagnostic(diagnostics, i, 'Found endhandle without matching handle', vscode.DiagnosticSeverity.Error);
                 } else {
                     stack.pop();
                 }
             }
         }
 
-        // Проверяем незакрытые блоки
+        // Check for unclosed blocks
         for (const block of stack) {
             this.addDiagnostic(
                 diagnostics,
                 block.line,
-                `Незакрытый блок: ${block.keyword}. Ожидается закрывающий оператор.`,
+                `Unclosed block: ${block.keyword}. Expected closing statement.`,
                 vscode.DiagnosticSeverity.Error
             );
         }
     }
 
     /**
-     * Проверка методов на наличие скобок
+     * Check methods for required parentheses
      */
     private checkMethodParentheses(lines: string[], diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmed = line.trim();
 
-            // Пропускаем комментарии
+            // Skip comments
             if (trimmed.startsWith('--') || trimmed.startsWith('$*')) {
                 continue;
             }
 
-            // Проверяем определения методов
+            // Check method definitions
             const methodDefMatch = trimmed.match(/^define\s+method\s+\.(\w+)/i);
             if (methodDefMatch) {
                 if (!trimmed.includes('(') || !trimmed.includes(')')) {
                     this.addDiagnostic(
                         diagnostics,
                         i,
-                        `Метод ${methodDefMatch[1]} должен иметь скобки (), даже если нет параметров`,
+                        `Method ${methodDefMatch[1]} must have parentheses (), even if there are no parameters`,
                         vscode.DiagnosticSeverity.Warning
                     );
                 }
@@ -134,16 +134,16 @@ export class PMLDiagnostics {
     }
 
     /**
-     * Проверка использования переменных
+     * Check variable usage
      */
     private checkVariableUsage(_lines: string[], _diagnostics: vscode.Diagnostic[], _document: vscode.TextDocument): void {
-        // Эта проверка пока не используется
-        // В PML глобальные переменные (!!var) - это нормальная практика
-        // Оставлено для будущих проверок переменных
+        // This check is not currently used
+        // In PML global variables (!!var) are a normal practice
+        // Left for future variable checks
     }
 
     /**
-     * Вспомогательная функция для добавления диагностики
+     * Helper function to add diagnostic
      */
     private addDiagnostic(
         diagnostics: vscode.Diagnostic[],

@@ -14,7 +14,20 @@
       "Bash(node test-typo-detailed.js:*)",
       "Bash(cat:*)",
       "Bash(gh release:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npm --prefix packages/pml-language-server run test)",
+      "Bash(npm run compile:*)",
+      "Bash(npm run test:*)",
+      "Bash(node -e:*)",
+      "Bash(npx vitest:*)",
+      "Bash(NODE_ENV=test npx vitest:*)",
+      "Bash(md5sum:*)",
+      "Bash(npm --prefix packages/pml-language-server run test -- --run)",
+      "Bash(find:*)",
+      "Bash(npm run pack:*)",
+      "Bash(npm run install:local:*)",
+      "Bash(code:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
