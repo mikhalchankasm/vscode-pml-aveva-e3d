@@ -62,7 +62,7 @@ PML Tools (📄 icon)
 ### Manual Installation (VSIX)
 
 1. Download `pml-aveva-e3d-0.9.4.vsix` from [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.9.4)
-2. Verify checksum: `899deb8236f3b9cbe9ad7370903b3e30`
+2. Verify checksum: `2f86a1401d010f81db40907e49c9bdb2`
 3. Install:
    - VS Code: `code --install-extension pml-aveva-e3d-0.9.4.vsix`
    - Cursor: Open Extensions → "..." menu → "Install from VSIX"
@@ -72,8 +72,9 @@ PML Tools (📄 icon)
 ## 📊 Statistics
 
 - **Extension size:** 2.08 MB (55 files)
-- **MD5 Checksum:** `899deb8236f3b9cbe9ad7370903b3e30`
+- **MD5 Checksum:** `2f86a1401d010f81db40907e49c9bdb2`
 - **Bug fixes:** 1 (menu configuration)
+- **Code quality:** Fixed 2 ESLint errors + 15 warnings
 
 ---
 
