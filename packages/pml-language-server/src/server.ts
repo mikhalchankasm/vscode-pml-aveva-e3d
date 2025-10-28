@@ -188,7 +188,7 @@ const defaultSettings: PMLSettings = {
 		typeChecking: 'error',
 		unusedVariables: 'warning',
 		arrayIndexZero: 'error',
-		typoDetection: 'warning'
+		typoDetection: 'off'  // Matches package.json default; detectTypos() currently disabled
 	}
 };
 

@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.5] - 2025-01-28
+
+### Fixed
+- **Settings: Typo Detection Default** - Synchronized server default with package.json
+  - `defaultSettings.diagnostics.typoDetection` now set to `'off'` (was `'warning'`)
+  - Matches package.json default which was already `"off"`
+  - Eliminates misleading behavior where setting appeared to be `'warning'` but `detectTypos()` returns empty array
+  - Honest configuration: default setting now matches actual implementation
+
+### Verified
+- **Documentation Extraction** - Confirmed working correctly since v0.8.3
+  - `workspaceIndexer.indexDocument()` correctly passes document text to `symbolIndex`
+  - Hover documentation works for both workspace and opened files
+
 ## [0.8.4] - 2025-01-28
 
 ### Fixed
