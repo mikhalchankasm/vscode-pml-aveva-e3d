@@ -44,6 +44,8 @@ export type Statement =
 	| ObjectDefinition
 	| FormDefinition
 	| VariableDeclaration
+	| MemberDeclaration
+	| GadgetDeclaration
 	| ExpressionStatement
 	| IfStatement
 	| DoStatement
@@ -99,15 +101,19 @@ export interface ObjectDefinition extends ASTNode {
 
 /**
  * Form Definition
- * setup form !!MyForm
+ * setup form !!MyForm [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE] [DOCK direction]
  *   ...
  * exit
  */
 export interface FormDefinition extends ASTNode {
 	type: 'FormDefinition';
 	name: string; // including !!
+	formType?: 'DIALOG' | 'MAIN' | 'DOCUMENT' | 'BLOCKINGDIALOG'; // Form window type
+	resizable?: boolean; // RESIZABLE modifier
+	dock?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM'; // DOCK direction
+	body: Statement[]; // Form body (assignments, members, gadgets, frames)
 	frames: FrameDefinition[];
-	callbacks: Record<string, string>; // gadget name -> callback method
+	callbacks: Record<string, string>; // callback property -> callback method
 }
 
 /**
@@ -123,13 +129,28 @@ export interface FrameDefinition extends ASTNode {
 }
 
 /**
- * Gadget Declaration (inside frame)
+ * Gadget Declaration (button, text, option, toggle, frame, etc.)
+ * button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]
  */
 export interface GadgetDeclaration extends ASTNode {
 	type: 'GadgetDeclaration';
-	name: string;
-	gadgetType: string; // button, list, input, etc.
-	properties: Record<string, any>;
+	name: string; // without leading dot
+	gadgetType: 'button' | 'text' | 'option' | 'toggle' | 'frame' | string; // Gadget type
+	label?: string; // Label text
+	modifier?: 'OK' | 'CANCEL' | 'APPLY' | 'RESET'; // Button modifier
+	position?: number; // at x<number>
+	width?: number | string; // width for text/option gadgets
+	properties: Record<string, any>; // Additional properties
+}
+
+/**
+ * Member Declaration (inside form/object)
+ * member .name is TYPE
+ */
+export interface MemberDeclaration extends ASTNode {
+	type: 'MemberDeclaration';
+	name: string; // without leading dot
+	memberType: PMLType; // STRING, REAL, ARRAY, DBREF, etc.
 }
 
 /**

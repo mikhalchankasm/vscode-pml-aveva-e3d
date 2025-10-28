@@ -260,7 +260,8 @@ Development plans and progress tracking.
 
 </details>
 
-### ⭐ Latest: v0.8.8 - Parser Tests Completion (2025-01-28)
+<details>
+<summary><b>v0.8.8 - Parser Tests Completion (2025-01-28)</b></summary>
 
 **🎯 High Priority ROADMAP Task Completed**
 
@@ -276,21 +277,51 @@ Development plans and progress tracking.
   - Error recovery and complex scenarios
   - **38 total tests passing** (20 parser + 18 typo detector), 2 skipped
 
+</details>
+
+### ⭐ Latest: v0.9.0 - Basic Form Syntax Support (2025-01-28)
+
+**🎯 Medium Priority Task: Form Syntax Improvements - Partially Completed**
+
+- ✅ **Parser: Form Structure Recognition**
+  - Parse `setup form !!name [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE] [DOCK direction] ... exit`
+  - Extended FormDefinition AST with modifiers and body
+  - Form callbacks parsed as regular assignments
+
+- ✅ **Parser: Gadget Declarations**
+  - `button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]`
+  - `text .name |width| [at x<num>]`
+  - `option .name |width| |Label| [at x<num>]`
+  - `toggle .name |Label| [at x<num>]`
+  - `frame .name` with nested gadgets
+  - New GadgetDeclaration AST node
+
+- ✅ **Parser: Member Declarations**
+  - `member .name is TYPE`
+  - Support for all PML types (STRING, REAL, ARRAY, DBREF, etc.)
+  - New MemberDeclaration AST node
+
+- ✅ **Diagnostics: Array Index Checker Tests**
+  - 30 comprehensive tests (100% pass rate)
+  - Fixed critical bug: `varDecl.init` → `varDecl.initializer`
+
+**🔄 Still Pending (Future v0.9.x releases):**
+- ⏳ Gadget autocomplete in form context
+- ⏳ Callback validation (undefined method warnings)
+- ⏳ Form snippets
+- ⏳ IntelliSense for form callbacks
+
 ---
 
 ## 🎯 Next Steps
 
-### High Priority
-
-**All High Priority v0.8.x tasks completed! ✅**
-
 ### Medium Priority
 
-- [ ] **Form Syntax Improvements**
-  - Better parsing for `setup form`
-  - Parse `frame`, `button`, `text` gadgets
-  - Gadget autocomplete in form context
-  - Callback validation
+- [x] **Form Syntax Improvements** ✅ **PARTIALLY COMPLETED (v0.9.0)**
+  - ✅ Better parsing for `setup form`
+  - ✅ Parse `frame`, `button`, `text`, `option`, `toggle` gadgets
+  - ⏳ Gadget autocomplete in form context (deferred to v0.9.x)
+  - ⏳ Callback validation (deferred to v0.9.x)
 
 - [ ] **Enhanced Reload Form Command**
   - Detect form files automatically
@@ -461,25 +492,31 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.8.8
+**Version:** 0.9.0
 **Released:** 2025-01-28
 
 **Statistics:**
-- Extension size: **2.07 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
-- Files in VSIX: 54 files (previously 1632)
+- Extension size: **2.08 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
+- Files in VSIX: 55 files (previously 1632 before v0.8.0)
 - LSP features: 13+ providers (with documentation extraction)
 - Commands: 27+
 - Diagnostics: 3 types (parse-error-based typo detection, array index checker, parser errors)
 - Operators: 15+ (including OF, comparison operator aliases)
+- Form support: Basic parsing (setup form, gadgets, member declarations)
 - Documentation: Comment-based method docs with JSDoc support
-- Tests: **38 tests passing, 2 skipped** (20 parser + 18 typo detector)
+- Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
 
-**Recent Changes (v0.8.0-v0.8.8):**
+**Recent Changes (v0.8.8-v0.9.0):**
+- ✅ **Array Index Checker Tests** (v0.8.8 continuation) - 30 tests, fixed critical bug
+- ✅ **Form Syntax Support** (v0.9.0) - Parser recognizes setup form, gadgets, members
+- ✅ **Form Tokens** (v0.9.0) - Added 15+ form-related keywords
+- ✅ **AST Extensions** (v0.9.0) - GadgetDeclaration, MemberDeclaration nodes
+
+**Previous Milestones (v0.8.0-v0.8.8):**
 - ✅ **Code Bundling** (v0.8.0) - esbuild integration, 7.5x size reduction
 - ✅ **Performance Optimizations** (v0.8.1) - Memory leak fixes, async workspace indexing
 - ✅ **Parser Improvements** (v0.8.2-v0.8.4) - Compose keyword, nested elseif, method token handling
 - ✅ **Typo Detection Restored** (v0.8.6-v0.8.7) - Parse-error-based, 75+ keywords, test suite
-- ✅ **Documentation** (v0.8.7) - English translation, updated roadmap
 - ✅ **Parser Tests** (v0.8.8) - Fixed all 20 parser tests by removing stale compiled files
 
 **Previous Achievements (v0.7.0-v0.7.3):**

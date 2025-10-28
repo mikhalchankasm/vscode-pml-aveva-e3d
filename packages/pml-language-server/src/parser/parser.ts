@@ -7,13 +7,13 @@ import { Token, TokenType } from './tokens';
 import { Lexer } from './lexer';
 import {
 	Program, Statement, Expression, MethodDefinition, FunctionDefinition, ObjectDefinition, FormDefinition,
-	FrameDefinition, VariableDeclaration, Parameter, IfStatement, DoStatement,
+	FrameDefinition, VariableDeclaration, MemberDeclaration, Parameter, IfStatement, DoStatement,
 	HandleStatement, ReturnStatement, BreakStatement, ContinueStatement,
 	ExpressionStatement, Identifier, Literal, CallExpression, MemberExpression,
 	BinaryExpression, UnaryExpression, ArrayExpression, AssignmentExpression,
 	JSDocComment, JSDocParam, GadgetDeclaration, PMLType,
 	createStringType, createRealType, createBooleanType, createArrayType,
-	createIntegerType, createAnyType
+	createIntegerType, createAnyType, createDBRefType
 } from '../ast/nodes';
 import { Range } from 'vscode-languageserver-textdocument';
 
@@ -261,6 +261,12 @@ export class Parser {
 	 *   exit
 	 * exit
 	 */
+	/**
+	 * Parse form definition
+	 * setup form !!name [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE] [DOCK direction]
+	 *   ...
+	 * exit
+	 */
 	private parseFormDefinition(): FormDefinition {
 		const startToken = this.consume(TokenType.SETUP, "Expected 'setup'");
 		this.consume(TokenType.FORM, "Expected 'form'");
@@ -268,14 +274,79 @@ export class Parser {
 		const nameToken = this.consume(TokenType.GLOBAL_VAR, "Expected form name (e.g., !!MyForm)");
 		const formName = nameToken.value;
 
+		// Parse optional modifiers
+		let formType: 'DIALOG' | 'MAIN' | 'DOCUMENT' | 'BLOCKINGDIALOG' | undefined;
+		let resizable: boolean = false;
+		let dock: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | undefined;
+
+		// Check for form type
+		if (this.check(TokenType.DIALOG)) {
+			formType = 'DIALOG';
+			this.advance();
+		} else if (this.check(TokenType.MAIN)) {
+			formType = 'MAIN';
+			this.advance();
+		} else if (this.check(TokenType.DOCUMENT)) {
+			formType = 'DOCUMENT';
+			this.advance();
+		} else if (this.check(TokenType.BLOCKINGDIALOG)) {
+			formType = 'BLOCKINGDIALOG';
+			this.advance();
+		}
+
+		// Check for RESIZABLE
+		if (this.check(TokenType.RESIZABLE)) {
+			resizable = true;
+			this.advance();
+		}
+
+		// Check for DOCK
+		if (this.check(TokenType.DOCK)) {
+			this.advance();
+			if (this.check(TokenType.LEFT)) {
+				dock = 'LEFT';
+				this.advance();
+			} else if (this.check(TokenType.RIGHT)) {
+				dock = 'RIGHT';
+				this.advance();
+			} else if (this.check(TokenType.TOP)) {
+				dock = 'TOP';
+				this.advance();
+			} else if (this.check(TokenType.BOTTOM)) {
+				dock = 'BOTTOM';
+				this.advance();
+			}
+		}
+
+		const body: Statement[] = [];
 		const frames: FrameDefinition[] = [];
 		const callbacks: Record<string, string> = {};
 
+		// Parse form body
 		while (!this.check(TokenType.EXIT) && !this.isAtEnd()) {
+			this.skipTrivia();
+
+			if (this.check(TokenType.EXIT)) break;
+
+			// Parse frame
 			if (this.check(TokenType.FRAME)) {
 				frames.push(this.parseFrameDefinition());
-			} else {
-				this.advance();
+			}
+			// Parse member declaration
+			else if (this.check(TokenType.MEMBER)) {
+				body.push(this.parseMemberDeclaration());
+			}
+			// Parse gadget (button, text, option, toggle)
+			else if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
+			         this.check(TokenType.OPTION) || this.check(TokenType.TOGGLE)) {
+				body.push(this.parseGadget());
+			}
+			// Parse statement (callbacks, assignments, etc.)
+			else {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					body.push(stmt);
+				}
 			}
 		}
 
@@ -284,6 +355,10 @@ export class Parser {
 		return {
 			type: 'FormDefinition',
 			name: formName,
+			formType,
+			resizable,
+			dock,
+			body,
 			frames,
 			callbacks,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
@@ -301,8 +376,17 @@ export class Parser {
 		const gadgets: GadgetDeclaration[] = [];
 
 		while (!this.check(TokenType.EXIT) && !this.check(TokenType.FRAME) && !this.isAtEnd()) {
-			// TODO: Parse gadget declarations
-			this.advance();
+			this.skipTrivia();
+
+			if (this.check(TokenType.EXIT) || this.check(TokenType.FRAME)) break;
+
+			// Parse gadget
+			if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
+			    this.check(TokenType.OPTION) || this.check(TokenType.TOGGLE)) {
+				gadgets.push(this.parseGadget());
+			} else {
+				this.advance();
+			}
 		}
 
 		const endToken = this.consume(TokenType.EXIT, "Expected 'exit'");
@@ -312,6 +396,135 @@ export class Parser {
 			name: frameName,
 			gadgets,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	/**
+	 * Parse member declaration
+	 * member .name is TYPE
+	 */
+	private parseMemberDeclaration(): MemberDeclaration {
+		const startToken = this.consume(TokenType.MEMBER, "Expected 'member'");
+		const nameToken = this.consume(TokenType.METHOD, "Expected member name (e.g., .myMember)");
+		const memberName = nameToken.value.substring(1); // Remove leading dot
+
+		this.consume(TokenType.IS, "Expected 'is' after member name");
+
+		const memberType = this.parseType();
+
+		return {
+			type: 'MemberDeclaration',
+			name: memberName,
+			memberType,
+			range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
+		};
+	}
+
+	/**
+	 * Parse gadget declaration
+	 * button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]
+	 * text .name |width| [at x<num>]
+	 * option .name |width| |Label| [at x<num>]
+	 * toggle .name |Label| [at x<num>]
+	 */
+	private parseGadget(): GadgetDeclaration {
+		const startToken = this.peek();
+
+		// Gadget type
+		let gadgetType: string = '';
+		if (this.check(TokenType.BUTTON)) {
+			gadgetType = 'button';
+			this.advance();
+		} else if (this.check(TokenType.TEXT)) {
+			gadgetType = 'text';
+			this.advance();
+		} else if (this.check(TokenType.OPTION)) {
+			gadgetType = 'option';
+			this.advance();
+		} else if (this.check(TokenType.TOGGLE)) {
+			gadgetType = 'toggle';
+			this.advance();
+		} else {
+			throw this.error(this.peek(), "Expected gadget type (button, text, option, toggle)");
+		}
+
+		// Gadget name (.name)
+		const nameToken = this.consume(TokenType.METHOD, "Expected gadget name (e.g., .myButton)");
+		const gadgetName = nameToken.value.substring(1); // Remove leading dot
+
+		let label: string | undefined;
+		let width: number | string | undefined;
+		let modifier: 'OK' | 'CANCEL' | 'APPLY' | 'RESET' | undefined;
+		let position: number | undefined;
+
+		// Parse gadget-specific properties
+		if (gadgetType === 'button' || gadgetType === 'toggle') {
+			// button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]
+			// toggle .name |Label| [at x<num>]
+			if (this.check(TokenType.STRING)) {
+				label = this.advance().value;
+			}
+
+			// Button modifiers
+			if (gadgetType === 'button') {
+				if (this.check(TokenType.OK)) {
+					modifier = 'OK';
+					this.advance();
+				} else if (this.check(TokenType.CANCEL)) {
+					modifier = 'CANCEL';
+					this.advance();
+				} else if (this.check(TokenType.APPLY)) {
+					modifier = 'APPLY';
+					this.advance();
+				} else if (this.check(TokenType.RESET)) {
+					modifier = 'RESET';
+					this.advance();
+				}
+			}
+		} else if (gadgetType === 'text') {
+			// text .name |width| [at x<num>]
+			if (this.check(TokenType.STRING)) {
+				width = this.advance().value;
+			} else if (this.check(TokenType.NUMBER)) {
+				width = parseFloat(this.advance().value);
+			}
+		} else if (gadgetType === 'option') {
+			// option .name |width| |Label| [at x<num>]
+			if (this.check(TokenType.STRING)) {
+				width = this.advance().value;
+			} else if (this.check(TokenType.NUMBER)) {
+				width = parseFloat(this.advance().value);
+			}
+
+			if (this.check(TokenType.STRING)) {
+				label = this.advance().value;
+			}
+		}
+
+		// Position: at x<num>
+		if (this.check(TokenType.AT)) {
+			this.advance();
+			// Expect identifier like "x20" or separate tokens
+			const posToken = this.peek();
+			if (posToken.type === TokenType.IDENTIFIER && posToken.value.startsWith('x')) {
+				const posStr = posToken.value.substring(1);
+				position = parseInt(posStr, 10);
+				this.advance();
+			} else if (this.check(TokenType.NUMBER)) {
+				position = parseFloat(this.advance().value);
+			}
+		}
+
+		return {
+			type: 'GadgetDeclaration',
+			name: gadgetName,
+			gadgetType,
+			label,
+			modifier,
+			position,
+			width,
+			properties: {},
+			range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
 		};
 	}
 

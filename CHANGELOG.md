@@ -2,6 +2,58 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.0] - 2025-01-28
+
+### Added - Form Syntax Support (Basic Implementation)
+
+- **Parser: Form Structure Recognition**
+  - Parse `setup form !!name ... exit` structure
+  - Support form modifiers: `DIALOG`, `MAIN`, `DOCUMENT`, `BLOCKINGDIALOG`
+  - Support `RESIZABLE` modifier
+  - Support `DOCK LEFT|RIGHT|TOP|BOTTOM` positioning
+  - Extended FormDefinition AST with `formType`, `resizable`, `dock`, and `body` properties
+
+- **Parser: Gadget Declarations**
+  - Parse `button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]`
+  - Parse `text .name |width| [at x<num>]`
+  - Parse `option .name |width| |Label| [at x<num>]`
+  - Parse `toggle .name |Label| [at x<num>]`
+  - Parse `frame .name` with nested gadgets
+  - New GadgetDeclaration AST node with label, modifier, position, width properties
+
+- **Parser: Member Declarations**
+  - Parse `member .name is TYPE` syntax
+  - Support all PML types: STRING, REAL, INTEGER, BOOLEAN, ARRAY, DBREF
+  - New MemberDeclaration AST node
+
+- **Tokens: Form-Related Keywords**
+  - Added tokens: `OPTION`, `TOGGLE`, `MAIN`, `DOCUMENT`, `BLOCKINGDIALOG`
+  - Added tokens: `RESIZABLE`, `DOCK`, `LEFT`, `RIGHT`, `TOP`, `BOTTOM`
+  - Added tokens: `OK`, `CANCEL`, `APPLY`, `RESET`
+  - All form keywords now properly recognized by lexer
+
+- **Diagnostics: Array Index Checker Tests**
+  - Comprehensive test suite with 30 tests for arrayIndexChecker
+  - Fixed critical bug: changed `varDecl.init` to `varDecl.initializer`
+  - 100% test pass rate (30/30 tests passing)
+  - Tests cover: basic detection, valid indices, method bodies, control flow, expressions, edge cases
+
+### Technical Notes
+
+- `.pmlfrm` files now parse without errors for basic form structures
+- Form callbacks (`!this.formTitle`, `!this.initCall`, etc.) parsed as regular assignments
+- Graceful degradation for complex form features (layout, advanced gadgets)
+- Foundation ready for IntelliSense and diagnostic enhancements
+
+### Known Limitations
+
+- No IntelliSense for form callbacks yet (planned)
+- No gadget type completion yet (planned)
+- No callback method validation yet (planned)
+- No snippets for forms yet (planned)
+- Complex gadgets (VIEW, ALPHA, LIST, TREE) not implemented
+- Layout system (Path, Dist, Align) not implemented
+
 ## [0.8.8] - 2025-01-28
 
 ### Fixed
