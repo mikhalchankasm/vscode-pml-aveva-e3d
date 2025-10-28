@@ -279,7 +279,36 @@ Development plans and progress tracking.
 
 </details>
 
-### ⭐ Latest: v0.9.4 - Menu Configuration Fix (2025-01-28)
+### ⭐ Latest: v0.9.6 - UX Improvements (2025-01-29)
+
+**User Experience Release:**
+- ✅ **Comment Commands Enhanced**
+  - Add/Remove Comments work without selection (on current line)
+  - Cursor can be anywhere in the line
+
+- ✅ **Code Actions (Ctrl+.) Simplified**
+  - Only Add/Remove Comments
+  - Removed array, sort, cleanup commands
+
+- ✅ **Context Menu "Quick Action PML"**
+  - Renamed from "Quick Actions"
+  - Contains ALL toolbar commands
+  - Single comprehensive menu
+
+- ❌ **Column Generator Removed**
+  - Deleted (replaced by external extensions)
+
+---
+
+### v0.9.5 - Menu Reorganization (2025-01-29)
+
+- ✅ **Quick Fix Menu** - Simplified to comments only
+- ✅ **Context/Toolbar** - Array submenu added to both
+- ✅ **Philosophy** - Quick Fix = fast actions, Context = full toolset
+
+---
+
+### v0.9.4 - Menu Configuration Fix (2025-01-28)
 
 **Bug Fix Release:**
 - ✅ **Menu Configuration Corrected**
@@ -553,10 +582,12 @@ Development plans and progress tracking.
 - Documentation: Comment-based method docs with JSDoc support
 - Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
 
-**Recent Changes (v0.8.8-v0.9.4):**
+**Recent Changes (v0.8.8-v0.9.6):**
+- ✅ **UX Improvements** (v0.9.6) - Comment commands without selection, simplified Code Actions
+- ✅ **Menu Reorganization** (v0.9.5) - Quick Action PML renamed, array submenu restored
 - ✅ **Menu Configuration Fix** (v0.9.4) - Corrected context menu and toolbar structure
 - ✅ **Remove Comments Fix** (v0.9.3) - Now removes only prefix, not entire lines
-- ✅ **Column Generator** (v0.9.2) - Text/number insertion across multiple lines
+- ❌ **Column Generator Removed** (v0.9.6) - Replaced by external extensions
 - ✅ **UI/UX Improvements** (v0.9.1) - New commands (Add Comments, Align PML), fixed broken commands
 - ✅ **Form Syntax Support** (v0.9.0) - Parser recognizes setup form, gadgets, members
 - ✅ **Form Tokens** (v0.9.0) - Added 15+ form-related keywords
