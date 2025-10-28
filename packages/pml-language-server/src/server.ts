@@ -188,7 +188,7 @@ const defaultSettings: PMLSettings = {
 		typeChecking: 'error',
 		unusedVariables: 'warning',
 		arrayIndexZero: 'error',
-		typoDetection: 'off'  // Matches package.json default; detectTypos() currently disabled
+		typoDetection: 'off'  // Default off; when enabled, uses Levenshtein distance on parse errors
 	}
 };
 

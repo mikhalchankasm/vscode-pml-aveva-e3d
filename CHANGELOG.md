@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.7] - 2025-01-28
+
+### Fixed
+- **Documentation: Updated Outdated Comments**
+  - `typoDetector.ts`: Header now says "PARSE-ERROR-BASED" instead of "AST-BASED"
+  - `server.ts`: Comment now reflects typo detection is functional (not disabled)
+  - Added algorithm description to typoDetector header
+
+### Updated
+- **ROADMAP.md: Synchronized with Current State**
+  - Added v0.8.0 - v0.8.6 completed releases section
+  - Updated typo detection description to reflect v0.8.6 changes
+  - Changed "v0.8.0 (Next Release)" to "v0.8.x - Remaining Tasks"
+  - Removed completed "Code Bundling" from todo list
+  - Documented all parser fixes and performance improvements
+
 ## [0.8.6] - 2025-01-28
 
 ### Added

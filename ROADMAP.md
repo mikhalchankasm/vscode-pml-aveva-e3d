@@ -24,14 +24,15 @@ Development plans and progress tracking.
   - Warning on `arr[0]` (PML arrays are 1-indexed)
   - Handles elseif statements correctly
 
-- ✅ **Typo Detection** (v0.5.4, v0.6.0, v0.7.3)
-  - Detects typos in keywords (e.g., "endiff" → "endif")
-  - Levenshtein distance algorithm
+- ✅ **Typo Detection** (v0.5.4, v0.6.0, v0.7.3, v0.8.6)
+  - Detects typos in keywords (e.g., "endiff" → "endif", "iff" → "if")
+  - **Levenshtein distance algorithm** (v0.5.4, v0.8.6) - edit distance 1-2
   - Skip variables (!), methods (.), directives ($), attributes (:)
   - Skip single-character identifiers (v0.6.0)
   - Reduced false positives on Russian attribute names
   - **AST-based detection (v0.7.3)** - eliminated false positives entirely
-  - Only checks keywords in specific language structures
+  - **Parse-error-based (v0.8.6)** - only checks tokens causing errors
+  - Default: `'off'` (user must enable explicitly)
   - Disabled for .pmlfrm files
 
 ### Parser Improvements
@@ -188,15 +189,56 @@ Development plans and progress tracking.
 
 ---
 
-## 🎯 v0.8.0 (Next Release) - Current Focus
+## ✅ v0.8.0 - v0.8.6 - COMPLETED (2025-01-28)
+
+### v0.8.0 - Code Bundling ✅
+- [x] **esbuild Integration**
+  - Reduced VSIX from 15.61 MB (1632 files) to 2.07 MB (54 files) - 7.5x smaller
+  - Bundles extension.js and server.js into single files
+  - Production minification
+  - Faster activation time
+
+### v0.8.1 - Performance & Cleanup ✅
+- [x] **Memory Leak Fix** - Removed unused `documentASTs` Map
+- [x] **Typo Detector Simplification** - Reduced from 191 to 30 lines (disabled functionality)
+- [x] **Async Workspace Indexing** - Non-blocking file operations
+
+### v0.8.2 - Parser Fixes ✅
+- [x] **Compose Keyword Workaround** - `var !x compose space ...` now parses
+- [x] **Method Call Identifiers** - `.eq()`, `.ne()` now accepted after DOT
+- [x] **Nested Elseif** - Parser accepts ELSEIF token in `parseIfStatement()`
+
+### v0.8.3 - Settings Transparency ✅
+- [x] **Typo Detection Default** - Changed from `'warning'` to `'off'` in package.json
+- [x] **Documentation Extraction** - `indexDocument()` passes text to `symbolIndex`
+
+### v0.8.4 - Parser Method Calls & Elseif ✅
+- [x] **METHOD Token Handling** - Lexer creates `.eq` as single token, parser now handles it
+- [x] **Elseif Endif Pairing** - Fixed recursive endif consumption
+- [x] **Compose Expression Completeness** - Consumes SUBSTITUTE_VAR and STRING tokens
+- 📊 **Result:** test_elseif.pml - 5 parse errors → 0 parse errors
+
+### v0.8.5 - Configuration Sync ✅
+- [x] **Server Default Sync** - `defaultSettings.typoDetection` now `'off'` (matches package.json)
+
+### v0.8.6 - Typo Detection Restored ✅
+- [x] **Levenshtein Distance Algorithm** - Edit distance calculation (1-2 char threshold)
+- [x] **40+ PML Keywords** - Control flow, definitions, types, operators
+- [x] **Parse-Error-Based** - Only checks tokens causing errors (no false positives)
+- [x] **Smart Extraction** - Analyzes error messages and line context
+- 📊 **Result:** Detects typos like "iff" → "if", "doo" → "do", "endiff" → "endif"
+- ⚙️ **Default:** Still `'off'` (user must enable explicitly)
+
+---
+
+## 🎯 v0.8.x - Remaining Tasks
 
 ### High Priority
 
-- [ ] **Code Bundling** ⭐
-  - VSIX is 15.6 MB with 1627 files
-  - Use webpack/esbuild to bundle
-  - Reduce extension size
-  - Improve activation time
+- [ ] **Parser Tests** ⭐
+  - Unit tests for parser
+  - Test coverage for all PML constructs
+  - Regression tests for fixed bugs
 
 ### Medium Priority
 

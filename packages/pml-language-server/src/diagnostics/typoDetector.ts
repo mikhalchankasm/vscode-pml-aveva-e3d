@@ -1,9 +1,15 @@
 /**
  * Typo Detector for PML Keywords
  *
- * AST-BASED IMPLEMENTATION:
- * Analyzes parser errors to detect common typos in PML keywords.
- * Only checks tokens that caused parse errors, avoiding false positives.
+ * PARSE-ERROR-BASED IMPLEMENTATION:
+ * Analyzes parser errors to detect common typos in PML keywords using Levenshtein distance.
+ * Only checks tokens that caused parse errors, avoiding false positives on valid identifiers.
+ *
+ * Algorithm:
+ * - Receives ParseError[] from parser
+ * - Extracts identifiers from error lines
+ * - Compares against 40+ known PML keywords using edit distance
+ * - Suggests corrections for typos with distance 1-2
  */
 
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver/node';
