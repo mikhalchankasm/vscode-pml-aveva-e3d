@@ -2,6 +2,30 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.8.1] - 2025-01-24
+
+### Fixed
+- **Memory Leak** - Removed unused `documentASTs` cache that was never read
+  - Was storing every parsed AST indefinitely
+  - Providers already use `symbolIndex` instead
+  - Reduced memory usage significantly
+
+- **Typo Detector** - Simplified to 30 lines (from 191 lines)
+  - Removed all text-based regex scanning code
+  - Parser already catches actual syntax errors
+  - Eliminated source of false positives entirely
+
+### Improved
+- **Workspace Indexing** - Made fully asynchronous
+  - Changed from sync `fs.readdirSync/readFileSync` to async `fs.readdir/readFile`
+  - No longer blocks LSP on large workspaces
+  - Faster and more responsive on startup
+
+### Performance
+- **Reduced memory footprint** - No more AST cache leak
+- **Non-blocking indexing** - Async file operations
+- **Cleaner code** - 160+ lines of dead code removed
+
 ## [0.8.0] - 2025-01-24
 
 ### 🚀 Major Improvement: Code Bundling

@@ -41,8 +41,8 @@ const connection = createConnection(ProposedFeatures.all);
 // Create a document manager
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
-// Document AST cache
-const documentASTs: Map<string, Program> = new Map();
+// Document AST cache - REMOVED: was never used, caused memory leak
+// Providers use symbolIndex instead
 
 // Symbol index for workspace
 const symbolIndex = new SymbolIndex();
@@ -260,10 +260,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		const parser = new Parser();
 		const parseResult = parser.parse(text);
 
-		// Cache AST for other providers
-		documentASTs.set(textDocument.uri, parseResult.ast);
-
 		// Index document symbols (pass document text for comment extraction)
+		// SymbolIndex stores the necessary information from AST
 		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
 
 		// Convert parse errors to diagnostics (skip for forms - they have special syntax)

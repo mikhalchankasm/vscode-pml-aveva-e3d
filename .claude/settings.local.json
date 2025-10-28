@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npx @vscode/vsce:*)"
+      "Bash(npx @vscode/vsce:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

@@ -7,7 +7,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { Parser } from '../parser/parser';
 import { SymbolIndex } from './symbolIndex';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import * as path from 'path';
 
 export class WorkspaceIndexer {
@@ -91,25 +91,25 @@ export class WorkspaceIndexer {
 	}
 
 	/**
-	 * Find all .pml files in directory
+	 * Find all .pml files in directory (ASYNC version)
 	 */
 	private async findPMLFiles(dirPath: string): Promise<string[]> {
 		const pmlFiles: string[] = [];
 		const extensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
+		const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode'];
 
-		const scanDirectory = (dir: string): void => {
+		const scanDirectory = async (dir: string): Promise<void> => {
 			try {
-				const entries = fs.readdirSync(dir, { withFileTypes: true });
+				const entries = await fs.readdir(dir, { withFileTypes: true });
 
 				for (const entry of entries) {
 					const fullPath = path.join(dir, entry.name);
 
-					// Skip node_modules, .git, objects, docs, etc.
+					// Skip excluded directories
 					if (entry.isDirectory()) {
 						const dirName = entry.name;
-						const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode'];
 						if (!dirName.startsWith('.') && !excludedDirs.includes(dirName)) {
-							scanDirectory(fullPath);
+							await scanDirectory(fullPath);
 						}
 					} else if (entry.isFile()) {
 						const ext = path.extname(entry.name).toLowerCase();
@@ -123,21 +123,21 @@ export class WorkspaceIndexer {
 			}
 		};
 
-		scanDirectory(dirPath);
+		await scanDirectory(dirPath);
 		return pmlFiles;
 	}
 
 	/**
-	 * Index a single file by path
+	 * Index a single file by path (ASYNC version)
 	 */
 	private async indexFile(filePath: string): Promise<void> {
 		try {
-			const content = fs.readFileSync(filePath, 'utf-8');
+			const content = await fs.readFile(filePath, 'utf-8');
 			const uri = URI.file(filePath).toString();
 
 			const parseResult = this.parser.parse(content);
 			if (parseResult.ast) {
-				this.symbolIndex.indexFile(uri, parseResult.ast, 0);
+				this.symbolIndex.indexFile(uri, parseResult.ast, 0, content);
 			}
 		} catch (error) {
 			this.connection.console.warn(`Failed to index file ${filePath}: ${error}`);
