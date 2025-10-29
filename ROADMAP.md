@@ -568,7 +568,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.9.7
+**Version:** 0.9.8
 **Released:** 2025-01-29
 
 **Statistics:**

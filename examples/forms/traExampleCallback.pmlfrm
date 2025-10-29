@@ -36,15 +36,20 @@ define method .cancelCall()
     $p Cancel Method
 
 endmethod
+
+-- Quit Method
+--  
+--  
 define method .quitCall()
 
     $p Quit Method
 
 endmethod
-define method .killCall()     
+define method .killCall()
 
-    $p Kill Method
+    !this.quitCall()
 
+    
 endmethod
 
 -- There are 7 main event callbacks built into the FORM object:
@@ -58,3 +63,9 @@ endmethod
 -- The QUITCALL method is called by clicking the close button on the form.
 -- The KILLINGCALL method is called when the form is unloaded (killed or reloaded)
 -- If no callbacks are defined for OKCALL, CANCELCALL and QUITCALL, the default is to hide the form.
+
+define method .methodName()
+
+    !this.init()
+
+endmethod

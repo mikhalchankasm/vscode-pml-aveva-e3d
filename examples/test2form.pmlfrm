@@ -1600,5 +1600,7 @@ define method .mymethod()
 
 endmethod
 
+!this.changePipeList(object array())
+
 
 

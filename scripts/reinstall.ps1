@@ -21,7 +21,7 @@ if ($Pack) {
 $vsixPath = Find-Vsix -Version $Version
 Write-Host "Using VSIX: $vsixPath"
 
-$ids = @('mikhalchankasm.pml-aveva-e3d','your-publisher-name.pml-aveva-e3d')
+$ids = @('mikhalchankasm.pml-aveva-e3d')
 foreach ($id in $ids) {
   try { code --uninstall-extension $id 2>$null | Out-Null } catch {}
   if (Get-Command cursor -ErrorAction SilentlyContinue) {

@@ -38,7 +38,9 @@
       "Bash(node:*)",
       "Bash(npm run esbuild-base:*)",
       "Bash(where:*)",
-      "Bash(cursor --install-extension:*)"
+      "Bash(cursor --install-extension:*)",
+      "Bash(npm run pack:install:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

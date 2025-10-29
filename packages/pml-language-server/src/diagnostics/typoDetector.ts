@@ -163,24 +163,34 @@ export function detectTypos(document: TextDocument, parseErrors: ParseError[]): 
 
 			if (match) {
 				// Found a potential typo!
+				// Try to get precise range using document positions (handles tabs/multibyte correctly)
+				const wordIndex = line.toLowerCase().indexOf(potentialTypo.toLowerCase());
+
+				let startPos, endPos;
+				if (wordIndex !== -1) {
+					// Calculate byte offset for the line start
+					const lineStartOffset = document.offsetAt({ line: lineIndex, character: 0 });
+					const wordStartOffset = lineStartOffset + wordIndex;
+					const wordEndOffset = wordStartOffset + potentialTypo.length;
+
+					// Convert byte offsets to positions (handles tabs/multibyte)
+					startPos = document.positionAt(wordStartOffset);
+					endPos = document.positionAt(wordEndOffset);
+				} else {
+					// Fallback: highlight whole line
+					startPos = { line: lineIndex, character: 0 };
+					endPos = document.positionAt(document.offsetAt({ line: lineIndex + 1, character: 0 }) - 1);
+				}
+
 				const diagnostic: Diagnostic = {
 					severity: DiagnosticSeverity.Warning,
 					range: {
-						start: { line: lineIndex, character: 0 },
-						end: { line: lineIndex, character: line.length }
+						start: startPos,
+						end: endPos
 					},
 					message: `Possible typo: '${potentialTypo}' might be '${match.keyword}'`,
 					source: 'pml-typo'
 				};
-
-				// Try to get more precise range if we can find the word in the line
-				const wordIndex = line.toLowerCase().indexOf(potentialTypo.toLowerCase());
-				if (wordIndex !== -1) {
-					diagnostic.range = {
-						start: { line: lineIndex, character: wordIndex },
-						end: { line: lineIndex, character: wordIndex + potentialTypo.length }
-					};
-				}
 
 				diagnostics.push(diagnostic);
 				reportedLines.add(lineIndex); // Mark this line as reported

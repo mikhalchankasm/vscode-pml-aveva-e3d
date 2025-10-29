@@ -229,11 +229,33 @@ function getDocumentSettings(resource: string): Thenable<PMLSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => {
 	documentSettings.delete(e.document.uri);
+	// Cancel pending validation for closed document
+	const timer = validationTimers.get(e.document.uri);
+	if (timer) {
+		clearTimeout(timer);
+		validationTimers.delete(e.document.uri);
+	}
 });
+
+// Debounce validation to avoid excessive revalidation (max 3-5/s)
+const validationTimers: Map<string, NodeJS.Timeout> = new Map();
+const VALIDATION_DEBOUNCE_MS = 200; // 200ms = max 5 validations/second
 
 // The content of a text document has changed
 documents.onDidChangeContent(change => {
-	validateTextDocument(change.document);
+	// Cancel previous validation timer
+	const existingTimer = validationTimers.get(change.document.uri);
+	if (existingTimer) {
+		clearTimeout(existingTimer);
+	}
+
+	// Schedule new validation after debounce period
+	const timer = setTimeout(() => {
+		validationTimers.delete(change.document.uri);
+		validateTextDocument(change.document);
+	}, VALIDATION_DEBOUNCE_MS);
+
+	validationTimers.set(change.document.uri, timer);
 });
 
 // Document opened - validate immediately
@@ -241,8 +263,15 @@ documents.onDidOpen(event => {
 	validateTextDocument(event.document);
 });
 
-// Document saved - revalidate
+// Document saved - validate immediately (bypass debounce)
 documents.onDidSave(event => {
+	// Cancel any pending debounced validation
+	const timer = validationTimers.get(event.document.uri);
+	if (timer) {
+		clearTimeout(timer);
+		validationTimers.delete(event.document.uri);
+	}
+	// Validate immediately on save
 	validateTextDocument(event.document);
 });
 

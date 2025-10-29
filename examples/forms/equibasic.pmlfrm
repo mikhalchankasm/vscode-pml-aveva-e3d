@@ -14,10 +14,31 @@
 --
 ------------------------------------------------------------------------
 --
+--
 -- Methods defined:
 --
 --  Method call                      Return              Description
 --  ===========                      ======              ===========
+--  .equiBasic()                                                    -                   -
+--  .initialise()                                                   -                   [Data Type] [Description]
+--  .close()                                                        -                   [Data Type] [Description]
+--  .tidy()                                                         -                   [Data Type] [Description]
+--  .edgPick()                                                      -                   Define method
+--  .apply()                                                        -                   [Data Type] [Description]
+--  .feedback()                                                     -                   [Data Type] [Description]
+--  .createEquipment(!element is DBREF)                             -                   [Data Type] [Description]
+--  .demolitionSetup()                                              -                   [Data Type] [Description]
+--  .isValidReference(!gadget is GADGET, !dummyString is STRING)    -                   [Data Type] [Description]
+--  .setPositionXYZ()                                               -                   [Data Type] [Description]
+--  .setPosition()                                                  -                   [Data Type] [Description]
+--  .setShipPosition(!position is POSITION)                         -                   [Data Type] [Description]
+--  .setWrt()                                                       -                   Define method
+--  .setData()                                                      -                   [Data Type] [Description]
+--  .nameCheck()                                                    -                   Method Type: Procedure
+--  .switchPositionGadget(!ship is BOOLEAN)                         -                   Method Type: Procedure
+--  .setWrtElement()                                                -                   End of method
+--
+------------------------------------------------------------------------
 --  apply()                          -                   Create equipment callback
 --  close()                          -                   Close form
 --  createEquipment(DBREF)           -                   Create equipment/area/demolition element
@@ -774,3 +795,4 @@ define method .switchPositionGadget(!ship is BOOLEAN)
 
 endmethod
 -- End of method
+
