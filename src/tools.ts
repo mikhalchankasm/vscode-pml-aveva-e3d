@@ -395,21 +395,28 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         const lines = selected.text.split('\n');
 
-        // Detect what to align by: '=' or 'is'
-        const hasEquals = lines.some(line => line.includes('='));
-        const hasIs = lines.some(line => /\s+is\s+/i.test(line));
-
+        // Smart multi-column alignment
+        // Detects multiple alignment points: =, is, --, $*, etc.
         let aligned: string[];
 
-        if (hasIs) {
-            // Align by 'is' keyword (member declarations)
-            aligned = this.alignByKeyword(lines, /\s+(is)\s+/i);
-        } else if (hasEquals) {
-            // Align by '=' operator
-            aligned = this.alignByOperator(lines, '=');
+        // Try smart multi-column alignment first
+        if (this.hasMultipleAlignmentPoints(lines)) {
+            aligned = this.alignSmartMultiColumn(lines);
         } else {
-            vscode.window.showInformationMessage('No alignment target found (= or is)');
-            return;
+            // Fallback to single-column alignment
+            const hasEquals = lines.some(line => line.includes('='));
+            const hasIs = lines.some(line => /\s+is\s+/i.test(line));
+
+            if (hasIs) {
+                // Align by 'is' keyword (member declarations)
+                aligned = this.alignByKeyword(lines, /\s+(is)\s+/i);
+            } else if (hasEquals) {
+                // Align by '=' operator
+                aligned = this.alignByOperator(lines, '=');
+            } else {
+                vscode.window.showInformationMessage('No alignment target found (= or is)');
+                return;
+            }
         }
 
         this.applyChangesToSelection(editor, selected.range, aligned.join('\n'), 'Aligned PML');
@@ -486,6 +493,121 @@ export class PMLToolsProvider implements vscode.Disposable {
             const padding = ' '.repeat(Math.max(0, spacesNeeded));
 
             return match.before + padding + ' ' + match.keyword + ' ' + match.after;
+        });
+    }
+
+    /**
+     * Check if lines have multiple potential alignment points
+     */
+    private hasMultipleAlignmentPoints(lines: string[]): boolean {
+        // Check if we have assignment lines with comments
+        const linesWithBoth = lines.filter(line =>
+            line.includes('=') && (line.includes('--') || line.includes('$*'))
+        ).length;
+
+        return linesWithBoth >= 2;
+    }
+
+    /**
+     * Smart multi-column alignment
+     * Aligns both assignments (=) and comments (--, $*) in separate columns
+     */
+    private alignSmartMultiColumn(lines: string[]): string[] {
+        interface LineInfo {
+            indent: string;
+            beforeEqual: string;
+            equal: string;
+            afterEqual: string;
+            comment: string;
+            hasEqual: boolean;
+            hasComment: boolean;
+        }
+
+        // Parse all lines
+        const parsed: LineInfo[] = lines.map(line => {
+            // Match indent
+            const indentMatch = line.match(/^(\s*)/);
+            const indent = indentMatch ? indentMatch[1] : '';
+            const rest = line.substring(indent.length);
+
+            // Check for comment
+            const commentMatch = rest.match(/(--|\$\*)/);
+            const hasComment = commentMatch !== null;
+            let beforeComment = rest;
+            let comment = '';
+
+            if (hasComment && commentMatch) {
+                const commentStart = commentMatch.index!;
+                beforeComment = rest.substring(0, commentStart).trimEnd();
+                comment = rest.substring(commentStart);
+            }
+
+            // Check for equals in the non-comment part
+            const equalIdx = beforeComment.indexOf('=');
+            const hasEqual = equalIdx >= 0;
+
+            let beforeEqual = '';
+            let equal = '';
+            let afterEqual = '';
+
+            if (hasEqual) {
+                beforeEqual = beforeComment.substring(0, equalIdx).trimEnd();
+                equal = '=';
+                afterEqual = beforeComment.substring(equalIdx + 1).trimStart();
+            } else {
+                afterEqual = beforeComment;
+            }
+
+            return {
+                indent,
+                beforeEqual,
+                equal,
+                afterEqual,
+                comment,
+                hasEqual,
+                hasComment
+            };
+        });
+
+        // Find maximum positions
+        let maxBeforeEqual = 0;
+        let maxAfterEqual = 0;
+
+        for (const info of parsed) {
+            if (info.hasEqual) {
+                maxBeforeEqual = Math.max(maxBeforeEqual, info.beforeEqual.length);
+                if (info.hasComment) {
+                    maxAfterEqual = Math.max(maxAfterEqual, info.afterEqual.length);
+                }
+            }
+        }
+
+        // Build aligned lines
+        return parsed.map(info => {
+            if (!info.hasEqual && !info.hasComment) {
+                // Line without equals or comment - return as is
+                return info.indent + info.afterEqual;
+            }
+
+            let result = info.indent;
+
+            if (info.hasEqual) {
+                // Align equals
+                const paddingBeforeEqual = ' '.repeat(Math.max(0, maxBeforeEqual - info.beforeEqual.length));
+                result += info.beforeEqual + paddingBeforeEqual + ' ' + info.equal + ' ' + info.afterEqual;
+
+                if (info.hasComment) {
+                    // Align comment
+                    const currentLength = info.afterEqual.length;
+                    const paddingBeforeComment = ' '.repeat(Math.max(1, maxAfterEqual - currentLength + 2));
+                    result += paddingBeforeComment + info.comment;
+                }
+            } else if (info.hasComment) {
+                // Only comment, no equals
+                result += info.comment;
+            }
+
+            return result;
         });
     }
 
