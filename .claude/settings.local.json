@@ -41,7 +41,8 @@
       "Bash(cursor --install-extension:*)",
       "Bash(npm run pack:install:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
