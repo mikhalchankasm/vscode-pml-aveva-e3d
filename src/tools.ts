@@ -38,6 +38,8 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         // Form helpers
         this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
+        this.registerCommand('pml.generateMethodsSummary', 'Generate Methods Summary', this.generateMethodsSummary);
+        this.registerCommand('pml.updateMethodsSummary', 'Update Methods Summary', this.updateMethodsSummary);
 
         // Array helpers
         this.registerCommand('pml.makeListPath', 'Make List (Path)', this.makeListPath);
@@ -566,5 +568,168 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Created array list');
     };
+
+    // Form documentation helpers
+    private generateMethodsSummary = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const document = editor.document;
+
+        // Check if this is a form file
+        if (!document.fileName.endsWith('.pmlfrm')) {
+            vscode.window.showWarningMessage('This command is designed for .pmlfrm files');
+        }
+
+        const methods = this.parseFormMethods(document);
+
+        if (methods.length === 0) {
+            vscode.window.showInformationMessage('No methods found in the form');
+            return;
+        }
+
+        const summary = this.formatMethodsSummary(methods);
+
+        // Insert at cursor position
+        const position = editor.selection.active;
+        const edit = new vscode.WorkspaceEdit();
+        edit.insert(document.uri, position, summary);
+
+        const success = await vscode.workspace.applyEdit(edit);
+        if (success) {
+            vscode.window.showInformationMessage(`Generated summary for ${methods.length} methods`);
+        } else {
+            vscode.window.showErrorMessage('Failed to insert methods summary');
+        }
+    };
+
+    private updateMethodsSummary = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const document = editor.document;
+
+        // Check if this is a form file
+        if (!document.fileName.endsWith('.pmlfrm')) {
+            vscode.window.showWarningMessage('This command is designed for .pmlfrm files');
+        }
+
+        const methods = this.parseFormMethods(document);
+
+        if (methods.length === 0) {
+            vscode.window.showInformationMessage('No methods found in the form');
+            return;
+        }
+
+        const text = document.getText();
+        const summaryRegex = /--\s*Methods defined:\s*--\s*\n--\s*Method call\s+Return\s+Description\s*\n--\s*===========\s+======\s+===========\s*\n((?:--\s+.*\n)*)/;
+        const match = text.match(summaryRegex);
+
+        if (!match) {
+            vscode.window.showWarningMessage('No existing methods summary found. Use "Generate Methods Summary" instead.');
+            return;
+        }
+
+        const newSummary = this.formatMethodsSummary(methods);
+        const fullText = document.getText();
+        const startIdx = match.index!;
+        const endIdx = startIdx + match[0].length;
+
+        const edit = new vscode.WorkspaceEdit();
+        const startPos = document.positionAt(startIdx);
+        const endPos = document.positionAt(endIdx);
+        const range = new vscode.Range(startPos, endPos);
+
+        edit.replace(document.uri, range, newSummary);
+
+        const success = await vscode.workspace.applyEdit(edit);
+        if (success) {
+            vscode.window.showInformationMessage(`Updated summary for ${methods.length} methods`);
+        } else {
+            vscode.window.showErrorMessage('Failed to update methods summary');
+        }
+    };
+
+    private parseFormMethods(document: vscode.TextDocument): Array<{name: string, params: string, description: string}> {
+        const text = document.getText();
+        const methods: Array<{name: string, params: string, description: string}> = [];
+
+        // Match method definitions: define method .methodName(params)
+        const methodRegex = /define\s+method\s+\.(\w+)\s*\(([^)]*)\)/gi;
+        let match;
+
+        while ((match = methodRegex.exec(text)) !== null) {
+            const methodName = match[1];
+            const params = match[2].trim();
+            const methodStartIdx = match.index;
+
+            // Look for documentation comment before the method (within 5 lines)
+            const beforeText = text.substring(Math.max(0, methodStartIdx - 500), methodStartIdx);
+            const lines = beforeText.split('\n');
+
+            let description = '-';
+
+            // Search backwards for comment with $p marker or simple description
+            for (let i = lines.length - 1; i >= Math.max(0, lines.length - 5); i--) {
+                const line = lines[i].trim();
+
+                // Check for $p marker (AVEVA style)
+                const pMatch = line.match(/^\$p\s+(.+)$/);
+                if (pMatch) {
+                    description = pMatch[1].trim();
+                    break;
+                }
+
+                // Check for -- comment
+                const commentMatch = line.match(/^--\s+(.+)$/);
+                if (commentMatch && !commentMatch[1].match(/^=+$/)) {
+                    description = commentMatch[1].trim();
+                    break;
+                }
+            }
+
+            methods.push({
+                name: methodName,
+                params: params,
+                description: description
+            });
+        }
+
+        return methods;
+    }
+
+    private formatMethodsSummary(methods: Array<{name: string, params: string, description: string}>): string {
+        const lines: string[] = [];
+
+        lines.push('--');
+        lines.push('-- Methods defined:');
+        lines.push('--');
+        lines.push('--  Method call                      Return              Description');
+        lines.push('--  ===========                      ======              ===========');
+
+        // Calculate max lengths for alignment
+        const maxMethodLength = Math.max(
+            ...methods.map(m => {
+                const call = m.params ? `.${m.name}(${m.params})` : `.${m.name}()`;
+                return call.length;
+            }),
+            20 // minimum width
+        );
+
+        methods.forEach(method => {
+            const call = method.params ? `.${method.name}(${method.params})` : `.${method.name}()`;
+            const paddedCall = call.padEnd(maxMethodLength + 4);
+            const returnType = '-'.padEnd(20);
+            const description = method.description;
+
+            lines.push(`--  ${paddedCall}${returnType}${description}`);
+        });
+
+        lines.push('--');
+        lines.push('------------------------------------------------------------------------');
+        lines.push('');
+
+        return lines.join('\n');
+    }
 }
 

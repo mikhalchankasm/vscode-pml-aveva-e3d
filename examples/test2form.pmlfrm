@@ -1,20 +1,5 @@
-------------------------------------------------------------------------
---
---
--- File: isometricform.pmlfrm
--- Type: Form Definition
--- Group: General Application
--- Keyword: DESI
--- Module: design
--- Replaces:
---
--- Author:
---
---
--- Description:
---
-------------------------------------------------------------------------
--- =========== ====== ===========
+
+
 
 import |PMLFileBrowser|
 handle (1000,0)
@@ -46,21 +31,22 @@ setup form !!report dialog resize
     track |DBCHANGED| call |!this.track()|
     track |DESICE|    call |!this.track()|
 
-    !lrtb     = | anchor all |
-    !lrt      = | anchor left + right + top |
-    !rt       = | anchor right + top |
-    !lb       = | anchor left + bottom |
-    !lt       = | anchor left + top |
-    !pixmap16 = | pixmap width 16 height 16 |
+    !lrtb     = | anchor all                 |
+    !lrt      = | anchor left  + right + top |
+    !rt       = | anchor right + top         |
+    !lb       = | anchor left  + bottom      |
+    !lt       = | anchor left  + top         |
+    !pixmap16 = | pixmap width 16 height 16  |
 
     frame .tabs tabset $!lrtb at xmin form ymax form
 
         $* ====================================================  Вкладка "Публикация" ====================================================
         frame .isoFrame |Публикация| $!lrt at xmin ymin
 
-            button .bnAddCe      |Добавить текущий|  at x0 ymin + 0.25 $!lt
-            button .bnAddDlst    |Добавить MEMb|     at xmax.bnAddCe + 0.5      ymin.bnAddCe $!lt
-            button .bnReport     |Отчет|             at xmax  + 0.5       ymin.bnAddCe $!lt
+            button .bnAddCe   |Добавить текущий| at x0   ymin    + 0.25              $!lt
+            button .bnAddDlst |Добавить MEMb   | at xmax.bnAddCe + 0.5  ymin.bnAddCe $!lt
+            button .bnReport  |Отчет           | at xmax         + 0.5  ymin.bnAddCe $!lt
+            button .btnName   |Button   Text   | at xmax         + 0.5  ymin.bnAddCe $!lt
 
             frame .frTablePipe |Линии| anchor all at x0.5  wid 80 HEI 14
                 container .gridFramePipe nobox PMLNETCONTROL |TablePipe| at xmin.frTablePipe + 0.25 ymin.frTablePipe + 0.25 $!lrtb wid 78 HEI 13
@@ -110,11 +96,8 @@ exit
 -- End of FORM definition
 
 ---------------------------------------------------------------------
---
--- Method: firstShown
-
+-- Method: метод первого отображения формы
 ---------------------------------------------------------------------
-
 define method .firstShown()
 
     $* настройка таблицы чертежей
@@ -612,20 +595,17 @@ endmethod
 -- End of method definition for .NavigateToPipe()
 
 ---------------------------------------------------------------------
---
--- Method: clearallPipe
---
 -- Description: Очистить таблицу
-
 ------------------------------------------------------------------------
-
 define method .ClearAllPipe()
 
-    !this.grid.ClearGridData()
+    $* 99999
+    $* 99999
+    $* 99999
 
 endmethod
 
--- End of method definition for .clearall()
+-- End of method definition for .ClearAllPipe()
 
 ---------------------------------------------------------------------
 --
@@ -1364,13 +1344,13 @@ endmethod
 
 define method .setting()
 
-    !this.txtFileName.Val   = !this.wordFile
-    !this.txtFolderName.Val = !this.folder
-    !this.txtSort.Val       = !this.order
-    !this.txtDelim.Val      = !this.delim
-    !this.txtTemplate.Val   = !this.template
-    $!this.isRev
-    $!this.isoType
+    -- !this.txtFileName.Val   = !this.wordFile
+    -- !this.txtFolderName.Val = !this.folder
+    -- !this.txtSort.Val       = !this.order
+    -- !this.txtDelim.Val      = !this.delim
+    -- !this.txtTemplate.Val   = !this.template
+    -- $!this.isRev
+    -- $!this.isoType
 
 endmethod
 -- End of method definition for .setting()
@@ -1583,20 +1563,19 @@ endmethod
 --
 -- Description:
 ------------------------------------------------------------------------
-
 define method .setGrid(!name is string)
 
-    !this.$!<name>.EditableGrid(false)
-    !this.$!<name>.ColumnExcelFilter(true)
-    !this.$!<name>.setNameColumnImage()
-    !this.$!<name>.OutlookGroupStyle(false) $* -- группировка по заголовкам
-    !this.$!<name>.FixedHeaders(false)
-    !this.$!<name>.ColumnSummaries(TRUE)
-    !this.$!<name>.AutoFitColumns()
-    !this.$!<name>.scrollSelectedRowToView(true)
-    !this.$!<name>.SingleRowSelection(false)
-    !this.$!<name>.HeaderSort(false)
-    !this.$!<name>.setAlternateRowColor(|white|)
+    !this.$!<name>.EditableGrid           (false  )
+    !this.$!<name>.ColumnExcelFilter      (true   )
+    !this.$!<name>.setNameColumnImage     (       )
+    !this.$!<name>.OutlookGroupStyle      (false  ) $* -- группировка по заголовкам
+    !this.$!<name>.FixedHeaders           (false  )
+    !this.$!<name>.ColumnSummaries        (TRUE   )
+    !this.$!<name>.AutoFitColumns         (       )
+    !this.$!<name>.scrollSelectedRowToView(true   )
+    !this.$!<name>.SingleRowSelection     (false  )
+    !this.$!<name>.HeaderSort             (false  )
+    !this.$!<name>.setAlternateRowColor   (|white|)
 
 endmethod
 -- End of method definition for .setGrid()
@@ -1607,7 +1586,6 @@ endmethod
 -- Description:
 --
 ---------------------------------------------------------------------
-
 define method .togsel(!gadget is gadget, !action is string)
 
     if ( !action eq |SELECT|) then
@@ -1619,6 +1597,8 @@ endmethod
 -- End of method definition for .Togsel()
 
 define method .mymethod()
-    
-  
+
 endmethod
+
+
+

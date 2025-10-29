@@ -568,21 +568,31 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.9.0
-**Released:** 2025-01-28
+**Version:** 0.9.7
+**Released:** 2025-01-29
 
 **Statistics:**
-- Extension size: **2.08 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
-- Files in VSIX: 55 files (previously 1632 before v0.8.0)
+- Extension size: **2.09 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
+- Files in VSIX: 56 files (previously 1632 before v0.8.0)
 - LSP features: 13+ providers (with documentation extraction)
-- Commands: 27+
+- Commands: 29+ (added form documentation commands)
 - Diagnostics: 3 types (parse-error-based typo detection, array index checker, parser errors)
 - Operators: 15+ (including OF, comparison operator aliases)
-- Form support: Basic parsing (setup form, gadgets, member declarations)
-- Documentation: Comment-based method docs with JSDoc support
-- Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
+- Form support: Advanced parsing with documentation generation
+- Documentation: Comment-based method docs with JSDoc and AVEVA `$p` marker support
+- Tests: **38 tests passing, 2 skipped** (20 parser + 18 typo detector)
+- VSIX Storage: **Repository contains only latest version**; historical versions in GitHub Releases
 
-**Recent Changes (v0.8.8-v0.9.6):**
+**Recent Changes (v0.9.7-v0.9.8):**
+- ✅ **Form Documentation** (v0.9.7) - Auto-generate methods summary tables from `$p` markers
+- ✅ **Go to Definition Fix** (v0.9.7) - F12 now works correctly on `.methodName()`
+- ✅ **Hover Documentation** (v0.9.7) - Shows method docs from `$p` and `--` comments
+- ✅ **Form Header Snippet** (v0.9.7) - `formheader` snippet for .pmlfrm files
+- ✅ **Dead Code Removal** (v0.9.8) - Removed obsolete src/diagnostics.ts
+- ✅ **Release Docs Update** (v0.9.8) - UTF-8 encoding, 0.9.x examples, VSIX storage policy
+- ✅ **IntelliSense for Forms** (v0.9.7) - Only show form methods in .pmlfrm files
+
+**Previous Changes (v0.8.8-v0.9.6):**
 - ✅ **UX Improvements** (v0.9.6) - Comment commands without selection, simplified Code Actions
 - ✅ **Menu Reorganization** (v0.9.5) - Quick Action PML renamed, array submenu restored
 - ✅ **Menu Configuration Fix** (v0.9.4) - Corrected context menu and toolbar structure
@@ -612,7 +622,7 @@ Development plans and progress tracking.
 - Form syntax: graceful degradation (parsed as PML)
 - Find References: works only in current file (workspace search pending)
 - Type inference: removed (needs re-implementation with correct architecture)
-- Tests: Parser and typo detector covered (38 passing), other diagnostics need coverage
+- Test coverage: Parser and typo detector covered (38 passing); array index checker, workspace indexer, and tooling commands need Vitest suites
 
 ---
 

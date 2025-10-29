@@ -2,6 +2,54 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.8] - 2025-01-29
+
+### Fixed - Go to Definition and Documentation
+
+- **F12 (Go to Definition)** - Now works correctly on methods
+  - Fixed word boundary detection to include dot (`.`)
+  - Can now navigate to `.methodName()` definitions
+  - Works across files with workspace indexing
+
+- **Hover Documentation (Shift + mouse)** - Shows method documentation
+  - Added support for AVEVA-style `$p` marker (e.g., `$p Constructor Method`)
+  - Extracts comments from `--` and `$p` lines
+  - Displays method signature and location
+  - Enhanced `commentExtractor.ts` to recognize `$p` markers
+
+- **Form Documentation** - Auto-generation tools
+  - `formheader` snippet - Insert form header template with metadata
+  - "Generate Methods Summary" command - Creates table from method comments
+  - "Update Methods Summary" command - Refreshes existing table
+  - Parses `$p` markers and standard comments
+  - AVEVA-compatible formatting
+
+### Removed - Dead Code
+
+- **src/diagnostics.ts** - Removed obsolete file
+  - All diagnostics moved to language server in v0.8.0
+  - File was not referenced anywhere
+  - Cleaned up repository structure
+
+### Changed - Documentation
+
+- **Release Documentation** - Updated for 0.9.x workflow
+  - `.github/RELEASE_CHECKLIST.md` - Updated examples to 0.9.x
+  - `.github/RELEASE_COMMANDS.md` - Updated to use `npm run pack:install`
+  - Added VSIX storage policy (only latest in repo, historical in GitHub Releases)
+  - Confirmed UTF-8 encoding (files were already correct)
+
+- **ROADMAP.md** - Synchronized with current release
+  - Version updated to 0.9.7
+  - Added form documentation features
+  - Added test coverage limitations note
+  - Recent changes section updated
+
+**VSIX Storage Policy:**
+- Repository now contains only ONE VSIX file (latest version)
+- Historical versions available in GitHub Releases
+- Download old versions from: https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases
+
 ## [0.9.7] - 2025-01-29
 
 ### Changed - IntelliSense for Forms

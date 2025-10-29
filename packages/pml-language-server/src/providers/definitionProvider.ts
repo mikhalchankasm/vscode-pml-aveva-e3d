@@ -108,9 +108,9 @@ export class DefinitionProvider {
 	}
 
 	/**
-	 * Check if character is part of word
+	 * Check if character is part of word (including dot for methods)
 	 */
 	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_]/.test(char);
+		return /[a-zA-Z0-9_.]/.test(char);
 	}
 }

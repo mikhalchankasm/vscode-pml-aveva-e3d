@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -218,6 +218,16 @@
         "category": "PML Forms"
       },
       {
+        "command": "pml.generateMethodsSummary",
+        "title": "Generate Methods Summary",
+        "category": "PML Forms"
+      },
+      {
+        "command": "pml.updateMethodsSummary",
+        "title": "Update Methods Summary",
+        "category": "PML Forms"
+      },
+      {
         "command": "pml.makeListPath",
         "title": "Make List (Path)",
         "category": "PML Array"
@@ -399,6 +409,14 @@
         {
           "command": "pml.reloadForm",
           "group": "1_forms@1"
+        },
+        {
+          "command": "pml.generateMethodsSummary",
+          "group": "1_forms@2"
+        },
+        {
+          "command": "pml.updateMethodsSummary",
+          "group": "1_forms@3"
         }
       ],
       "pml.array": [
@@ -569,6 +587,14 @@
         {
           "command": "pml.reloadForm",
           "when": "resourceExtname == .pml || resourceExtname == .pmlobj || resourceExtname == .pmlfnc || resourceExtname == .pmlfrm || resourceExtname == .pmlmac || resourceExtname == .pmlcmd"
+        },
+        {
+          "command": "pml.generateMethodsSummary",
+          "when": "resourceExtname == .pmlfrm"
+        },
+        {
+          "command": "pml.updateMethodsSummary",
+          "when": "resourceExtname == .pmlfrm"
         },
         {
           "command": "pml.makeListPath",

@@ -1,158 +1,171 @@
 # Release Checklist
 
-Обязательный чек-лист для публикации новой версии расширения.
+Mandatory checklist for publishing a new extension version.
 
-## 📋 Pre-Release (Перед релизом)
+## 📋 Pre-Release
 
-### 1. Code Changes (Изменения кода)
-- [ ] Все изменения протестированы локально
-- [ ] Код скомпилирован без ошибок (`npm run compile`)
-- [ ] Нет TypeScript ошибок
-- [ ] Проверена работа в VS Code
-- [ ] Проверена работа в Cursor (опционально)
+### 1. Code Changes
+- [ ] All changes tested locally
+- [ ] Code compiled without errors (`npm run compile`)
+- [ ] No TypeScript errors
+- [ ] Tested in VS Code
+- [ ] Tested in Cursor (optional)
 
-### 2. Version Update (Обновление версии)
-- [ ] Обновлён `package.json` -> `version` (например: `0.7.3` -> `0.7.4`)
-- [ ] Обновлён `CHANGELOG.md`:
-  - [ ] Добавлена новая секция с версией и датой
-  - [ ] Перечислены все изменения (Added/Fixed/Changed/Removed)
-  - [ ] Указаны технические детали
-- [ ] Обновлён `ROADMAP.md` (если нужно):
-  - [ ] Отмечены завершённые задачи
-  - [ ] Обновлён раздел "Current Status"
-  - [ ] Обновлена дата последнего изменения
+### 2. Version Update
+- [ ] Updated `package.json` -> `version` (e.g., `0.9.7` -> `0.9.8`)
+- [ ] Updated `CHANGELOG.md`:
+  - [ ] Added new section with version and date
+  - [ ] Listed all changes (Added/Fixed/Changed/Removed)
+  - [ ] Included technical details
+- [ ] Updated `ROADMAP.md` (if needed):
+  - [ ] Marked completed tasks
+  - [ ] Updated "Current Status" section
+  - [ ] Updated "Recent Changes" section
+  - [ ] Updated last modified date
 
-### 3. Build VSIX (Сборка пакета)
-- [ ] Выполнена команда: `npx @vscode/vsce package --no-yarn`
-- [ ] Создан файл `pml-aveva-e3d-X.X.X.vsix`
-- [ ] Проверен размер файла (должен быть ~15-16 MB)
+### 3. Build VSIX
+- [ ] Executed command: `npm run pack`
+- [ ] Created file `pml-aveva-e3d-X.X.X.vsix`
+- [ ] Verified file size (~2.09 MB)
+- [ ] Calculated MD5 checksum: `md5sum pml-aveva-e3d-X.X.X.vsix`
 
-## 🔧 Local Testing (Локальное тестирование)
+## 🔧 Local Testing
 
-### 4. Install & Test (Установка и тестирование)
-- [ ] Установлена новая версия в VS Code:
+### 4. Install & Test
+- [ ] Installed new version using automated script:
   ```bash
-  code --install-extension pml-aveva-e3d-X.X.X.vsix --force
+  npm run pack:install
   ```
-- [ ] Установлена новая версия в Cursor (опционально):
-  ```bash
-  cursor --install-extension pml-aveva-e3d-X.X.X.vsix --force
-  ```
-- [ ] Протестированы основные функции:
-  - [ ] Syntax highlighting работает
-  - [ ] IntelliSense показывает методы
-  - [ ] Go to Definition (F12) работает
-  - [ ] Hover показывает документацию
-  - [ ] Diagnostics показываются корректно
-  - [ ] Нет новых ошибок/предупреждений
+- [ ] Manually reloaded VS Code: `Ctrl+Shift+P` → "Reload Window"
+- [ ] Tested core functionality:
+  - [ ] Syntax highlighting works
+  - [ ] IntelliSense shows methods
+  - [ ] Go to Definition (F12) works
+  - [ ] Hover shows documentation
+  - [ ] Diagnostics display correctly
+  - [ ] No new errors/warnings
 
-## 📤 Git Publication (Публикация в Git)
+## 📤 Git Publication
 
-### 5. Commit & Push (Коммит и пуш)
-- [ ] Удалены старые VSIX файлы из репозитория:
+### 5. Commit & Push
+- [ ] Removed old VSIX from repository (keep only latest):
   ```bash
-  git rm pml-aveva-e3d-*.vsix  # except latest
+  git rm pml-aveva-e3d-*.vsix
+  git add pml-aveva-e3d-0.9.X.vsix
   ```
-- [ ] Добавлены все изменения:
+- [ ] Added all changes:
   ```bash
   git add -A
   ```
-- [ ] Создан коммит с описательным сообщением:
+- [ ] Created descriptive commit:
   ```bash
-  git commit -m "fix/feat: описание изменений (vX.X.X)"
+  git commit -m "release: v0.9.X - description"
   ```
-- [ ] Изменения запушены:
+- [ ] Pushed changes:
   ```bash
   git push
   ```
-- [ ] Проверен статус на GitHub (все файлы загружены)
+- [ ] Verified status on GitHub (all files uploaded)
 
-## 🚀 GitHub Release (Создание релиза)
+## 🚀 GitHub Release
 
-### 6. Create Release (Создание релиза на GitHub)
+### 6. Create Release
 
-#### Вариант A: Через GitHub CLI (рекомендуется)
-- [ ] Создан файл `RELEASE_NOTES_vX.X.X.md` с описанием изменений
-- [ ] Выполнена команда:
+#### Option A: GitHub CLI (recommended)
+- [ ] Created file `RELEASE_NOTES_v0.9.X.md` with change description
+- [ ] Executed command:
   ```bash
-  "C:\Program Files\GitHub CLI\gh.exe" release create vX.X.X pml-aveva-e3d-X.X.X.vsix --title "vX.X.X - Название релиза" --notes-file RELEASE_NOTES_vX.X.X.md
+  gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Release Title" --notes-file RELEASE_NOTES_v0.9.X.md
   ```
-- [ ] Получена ссылка на релиз
+- [ ] Received release URL
 
-#### Вариант B: Через веб-интерфейс
-- [ ] Открыт https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/new
-- [ ] Заполнены поля:
-  - [ ] **Tag version**: `vX.X.X`
-  - [ ] **Release title**: `vX.X.X - Название релиза`
-  - [ ] **Description**: Скопировано содержимое из `RELEASE_NOTES_vX.X.X.md`
-- [ ] Загружен файл `pml-aveva-e3d-X.X.X.vsix`
-- [ ] Нажата кнопка **Publish release**
+#### Option B: Web Interface
+- [ ] Opened https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/new
+- [ ] Filled fields:
+  - [ ] **Tag version**: `v0.9.X`
+  - [ ] **Release title**: `v0.9.X - Release Title`
+  - [ ] **Description**: Copied from `RELEASE_NOTES_v0.9.X.md`
+- [ ] Uploaded file `pml-aveva-e3d-0.9.X.vsix`
+- [ ] Clicked **Publish release**
 
-### 7. Verify Release (Проверка релиза)
-- [ ] Релиз появился на https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases
-- [ ] VSIX файл доступен для скачивания
-- [ ] Описание отображается корректно
-- [ ] Ссылки работают
+### 7. Verify Release
+- [ ] Release appears at https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases
+- [ ] VSIX file is downloadable
+- [ ] Description displays correctly
+- [ ] Links work
 
-## ✅ Post-Release (После релиза)
+## ✅ Post-Release
 
-### 8. Final Checks (Финальные проверки)
-- [ ] Проверена главная страница репозитория
-- [ ] README.md актуален (если были изменения)
-- [ ] Создан issue для следующей версии (опционально)
-- [ ] Обновлён проектный трекер (опционально)
+### 8. Final Checks
+- [ ] Verified repository homepage
+- [ ] README.md is up-to-date (if changed)
+- [ ] Created issue for next version (optional)
+- [ ] Updated project tracker (optional)
 
-### 9. Cleanup (Очистка)
-- [ ] Удалены локальные VSIX файлы (оставить только последний):
+### 9. Cleanup
+- [ ] Deleted local VSIX files (keep only latest):
   ```bash
-  # Опционально - для экономии места
-  rm pml-aveva-e3d-0.7.*.vsix  # except latest
+  # Optional - to save space
+  rm pml-aveva-e3d-0.9.[0-6].vsix
   ```
-- [ ] Проверен `.gitignore` (VSIX файлы не должны игнорироваться)
+- [ ] Verified `.gitignore` (VSIX files should NOT be ignored - we keep one in repo)
 
 ## 📝 Notes
 
-### Быстрая команда для полного цикла релиза:
+### Quick Command for Full Release Cycle
 
 ```bash
 # 1. Update version in package.json manually
 # 2. Update CHANGELOG.md manually
-# 3. Compile and build
+# 3. Update ROADMAP.md manually
+
+# 4. Compile and build
 npm run compile
-npx @vscode/vsce package --no-yarn
+npm run pack
 
-# 4. Install locally
-code --install-extension pml-aveva-e3d-X.X.X.vsix --force
+# 5. Install locally and test
+npm run pack:install
+# Then manually: Ctrl+Shift+P -> Reload Window
 
-# 5. Test the extension...
+# 6. Test the extension...
 
-# 6. Remove old VSIX and commit
-git rm pml-aveva-e3d-*.vsix  # except latest
+# 7. Remove old VSIX and commit
+git rm pml-aveva-e3d-*.vsix
+git add pml-aveva-e3d-0.9.X.vsix
 git add -A
-git commit -m "release: vX.X.X"
+git commit -m "release: v0.9.X - description"
 git push
 
-# 7. Create GitHub release
-"C:\Program Files\GitHub CLI\gh.exe" release create vX.X.X pml-aveva-e3d-X.X.X.vsix --title "vX.X.X - Title" --notes-file RELEASE_NOTES_vX.X.X.md
+# 8. Create GitHub release
+gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
 ```
+
+### VSIX Storage Policy
+
+**Important**: Only ONE VSIX file is stored in the repository (latest version).
+
+- **Repository**: Contains only the latest `pml-aveva-e3d-0.9.X.vsix`
+- **GitHub Releases**: Contains all historical versions with release notes
+- **When upgrading**: Remove old VSIX from repository, add new one
+- **To download old versions**: Use GitHub Releases page
 
 ### Semantic Versioning
 
-Используем [Semantic Versioning](https://semver.org/):
-- **MAJOR** (1.0.0): Несовместимые изменения API
-- **MINOR** (0.1.0): Новые функции (обратно совместимые)
-- **PATCH** (0.0.1): Исправления ошибок (обратно совместимые)
+Using [Semantic Versioning](https://semver.org/):
+- **MAJOR** (1.0.0): Breaking API changes
+- **MINOR** (0.1.0): New features (backwards compatible)
+- **PATCH** (0.0.1): Bug fixes (backwards compatible)
 
 ### Commit Message Format
 
-Используем [Conventional Commits](https://www.conventionalcommits.org/):
-- `feat: add new feature (vX.X.X)` - новая функция
-- `fix: fix bug description (vX.X.X)` - исправление бага
-- `docs: update documentation` - документация
-- `chore: remove old files` - техническая работа
-- `refactor: refactor code` - рефакторинг
-- `perf: improve performance` - оптимизация
+Using [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat: add new feature (v0.9.X)` - new feature
+- `fix: fix bug description (v0.9.X)` - bug fix
+- `docs: update documentation` - documentation
+- `chore: remove old files` - maintenance
+- `refactor: refactor code` - code refactoring
+- `perf: improve performance` - optimization
 
 ---
 
-**Last Updated**: 2025-01-24
+**Last Updated**: 2025-01-29

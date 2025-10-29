@@ -27,7 +27,18 @@
       "Bash(npm run pack:*)",
       "Bash(npm run install:local:*)",
       "Bash(code:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" release create v0.8.8 pml-aveva-e3d-0.8.8.vsix --title \"v0.8.8 - Parser Tests Completion\" --notes-file RELEASE_NOTES_v0.8.8.md)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" release view v0.8.8)",
+      "Bash(\"C:\\Program Files\\GitHub CLI\\gh.exe\" release list --limit 5)",
+      "Bash(node test-array-checker.js:*)",
+      "Bash(node test-array-checker-debug.js:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node test-array-assignment.js:*)",
+      "Bash(node:*)",
+      "Bash(npm run esbuild-base:*)",
+      "Bash(where:*)",
+      "Bash(cursor --install-extension:*)"
     ],
     "deny": [],
     "ask": []

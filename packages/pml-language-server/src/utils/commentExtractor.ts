@@ -40,6 +40,14 @@ export function extractPrecedingComments(text: string, lineNumber: number): stri
 			continue;
 		}
 
+		// AVEVA-style $p marker (method description)
+		if (line.startsWith('$p')) {
+			const commentText = line.substring(2).trim();
+			commentLines.unshift(commentText);
+			currentLine--;
+			continue;
+		}
+
 		// Non-comment, non-empty line - stop
 		break;
 	}

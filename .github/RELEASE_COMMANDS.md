@@ -1,172 +1,184 @@
 # Release Commands Quick Reference
 
-Быстрая шпаргалка команд для релиза.
+Quick command reference for releases.
 
-## 🚀 Полный цикл релиза (Copy-Paste)
+## 🚀 Full Release Cycle (Copy-Paste)
 
 ```bash
-# 1. Компиляция и сборка VSIX
+# 1. Compile and build VSIX
 npm run compile
-npx @vscode/vsce package --no-yarn
+npm run pack
 
-# 2. Локальная установка и тестирование
-code --install-extension pml-aveva-e3d-0.7.X.vsix --force
-cursor --install-extension pml-aveva-e3d-0.7.X.vsix --force
+# 2. Local installation and testing
+npm run pack:install
+# Then manually: Ctrl+Shift+P -> Reload Window in VS Code/Cursor
 
-# 3. После тестирования - удаление старых VSIX
-git rm pml-aveva-e3d-0.7.*.vsix  # except latest version
+# 3. After testing - remove old VSIX, add new one
+git rm pml-aveva-e3d-*.vsix
+git add pml-aveva-e3d-0.9.X.vsix
 
-# 4. Коммит и пуш
+# 4. Commit and push
 git add -A
-git commit -m "release: v0.7.X - description"
+git commit -m "release: v0.9.X - description"
 git push
 
-# 5. Создание GitHub release
-"C:\Program Files\GitHub CLI\gh.exe" release create v0.7.X pml-aveva-e3d-0.7.X.vsix --title "v0.7.X - Title" --notes-file RELEASE_NOTES_v0.7.X.md
+# 5. Create GitHub release
+gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
 ```
 
 ---
 
-## 📦 Отдельные команды
+## 📦 Individual Commands
 
-### Компиляция
+### Compilation
 ```bash
 npm run compile
 ```
 
-### Сборка VSIX
+### Build VSIX
 ```bash
-npx @vscode/vsce package --no-yarn
+npm run pack
 ```
 
-### Установка в VS Code
+### Install in VS Code and Cursor (automated)
 ```bash
-code --install-extension pml-aveva-e3d-0.7.X.vsix --force
+npm run pack:install
 ```
 
-### Установка в Cursor
+### Install in VS Code only (manual)
 ```bash
-cursor --install-extension pml-aveva-e3d-0.7.X.vsix --force
+code --install-extension pml-aveva-e3d-0.9.X.vsix --force
+```
+
+### Install in Cursor only (manual)
+```bash
+cursor --install-extension pml-aveva-e3d-0.9.X.vsix --force
+```
+
+### Calculate MD5 checksum
+```bash
+md5sum pml-aveva-e3d-0.9.X.vsix
 ```
 
 ---
 
-## 🗑️ Очистка старых VSIX
+## 🗑️ Cleanup Old VSIX Files
 
-### Удалить все кроме последней версии
+### Remove all VSIX except latest from repository
 ```bash
-# Список всех VSIX в git
+# List all VSIX in git
 git ls-files "*.vsix"
 
-# Удалить конкретные версии
-git rm pml-aveva-e3d-0.7.1.vsix
-git rm pml-aveva-e3d-0.7.2.vsix
+# Remove all VSIX (prepare to add only the latest)
+git rm pml-aveva-e3d-*.vsix
 
-# Удалить все старые (bash wildcard)
-git rm pml-aveva-e3d-0.7.[0-2].vsix
+# Add back only the latest
+git add pml-aveva-e3d-0.9.X.vsix
 ```
 
-### Удалить локальные VSIX файлы (PowerShell)
+### Delete local VSIX files (PowerShell)
 ```powershell
-# Список всех VSIX в папке
+# List all VSIX in folder
 Get-ChildItem pml-aveva-e3d-*.vsix
 
-# Удалить все кроме последней
-Get-ChildItem pml-aveva-e3d-*.vsix | Where-Object { $_.Name -ne "pml-aveva-e3d-0.7.3.vsix" } | Remove-Item
+# Keep only latest
+Get-ChildItem pml-aveva-e3d-*.vsix | Where-Object { $_.Name -ne "pml-aveva-e3d-0.9.8.vsix" } | Remove-Item
 ```
 
 ---
 
-## 📝 Git команды
+## 📝 Git Commands
 
-### Статус и diff
+### Status and diff
 ```bash
 git status
 git diff
 git log --oneline -5
 ```
 
-### Коммит всех изменений
+### Commit all changes
 ```bash
 git add -A
 git commit -m "message"
 git push
 ```
 
-### Отмена последнего коммита (если не запушен)
+### Undo last commit (if not pushed)
 ```bash
-git reset --soft HEAD~1  # Отменить коммит, сохранить изменения
-git reset --hard HEAD~1  # Отменить коммит и изменения (ОПАСНО!)
+git reset --soft HEAD~1  # Undo commit, keep changes
+git reset --hard HEAD~1  # Undo commit and changes (DANGEROUS!)
 ```
 
-### Изменить последний коммит
+### Amend last commit
 ```bash
 git commit --amend -m "new message"
-git push --force  # Если уже запушен (ОПАСНО на main!)
+git push --force  # If already pushed (DANGEROUS on main!)
 ```
 
 ---
 
-## 🎯 GitHub CLI (gh) команды
+## 🎯 GitHub CLI (gh) Commands
 
-### Проверка авторизации
+### Check authentication
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" auth status
+gh auth status
 ```
 
-### Логин
+### Login
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" auth login
+gh auth login
 ```
 
-### Создание релиза
+### Create release
 ```bash
-# Основная команда
-"C:\Program Files\GitHub CLI\gh.exe" release create v0.7.X pml-aveva-e3d-0.7.X.vsix --title "v0.7.X - Title" --notes "Description"
+# Basic command
+gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes "Description"
 
-# С файлом release notes
-"C:\Program Files\GitHub CLI\gh.exe" release create v0.7.X pml-aveva-e3d-0.7.X.vsix --title "v0.7.X - Title" --notes-file RELEASE_NOTES_v0.7.X.md
+# With release notes file
+gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
 
-# С несколькими файлами
-"C:\Program Files\GitHub CLI\gh.exe" release create v0.7.X file1.vsix file2.zip --title "Title" --notes "Notes"
+# With multiple files
+gh release create v0.9.X file1.vsix file2.zip --title "Title" --notes "Notes"
 ```
 
-### Список релизов
+### List releases
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" release list
+gh release list
 ```
 
-### Просмотр релиза
+### View release
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" release view v0.7.X
+gh release view v0.9.X
 ```
 
-### Удаление релиза
+### Delete release
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" release delete v0.7.X
+gh release delete v0.9.X
 ```
 
-### Загрузка файла в существующий релиз
+### Upload file to existing release
 ```bash
-"C:\Program Files\GitHub CLI\gh.exe" release upload v0.7.X pml-aveva-e3d-0.7.X.vsix
+gh release upload v0.9.X pml-aveva-e3d-0.9.X.vsix
 ```
 
 ---
 
-## 🔍 Полезные проверки
+## 🔍 Useful Checks
 
-### Размер VSIX файла
+### VSIX file size
 ```bash
 # PowerShell
-(Get-Item pml-aveva-e3d-0.7.X.vsix).Length / 1MB
+(Get-Item pml-aveva-e3d-0.9.X.vsix).Length / 1MB
+
+# Expected: ~2.09 MB
 ```
 
-### Содержимое VSIX (список файлов)
+### VSIX contents (file list)
 ```bash
 npx @vscode/vsce ls --tree
 ```
 
-### Версия в package.json
+### Version in package.json
 ```bash
 # PowerShell
 (Get-Content package.json | ConvertFrom-Json).version
@@ -175,52 +187,57 @@ npx @vscode/vsce ls --tree
 grep '"version"' package.json
 ```
 
-### Последний коммит
+### Last commit
 ```bash
 git log -1 --oneline
 ```
 
-### Последний тег
+### Last tag
 ```bash
 git describe --tags --abbrev=0
 ```
 
 ---
 
-## 🧪 Тестирование
+## 🧪 Testing
 
-### Запуск компиляции и проверка ошибок
+### Compile and check for errors
 ```bash
 npm run compile 2>&1 | Select-String "error"
 ```
 
-### Проверка TypeScript ошибок
+### Check TypeScript errors
 ```bash
 npx tsc --noEmit
 ```
 
-### Список установленных расширений
+### List installed extensions
 ```bash
 code --list-extensions | Select-String "pml"
 ```
 
+### Run language server tests
+```bash
+npm --prefix packages/pml-language-server run test -- --run
+```
+
 ---
 
-## 📊 Статистика
+## 📊 Statistics
 
-### Количество файлов в проекте
+### Number of files in project
 ```bash
 # PowerShell
 (Get-ChildItem -Recurse -File | Measure-Object).Count
 ```
 
-### Количество строк кода
+### Lines of code
 ```bash
 # PowerShell - TypeScript files only
 (Get-ChildItem -Recurse -Filter *.ts | Get-Content | Measure-Object -Line).Lines
 ```
 
-### Размер папки
+### Folder size
 ```bash
 # PowerShell
 "{0:N2} MB" -f ((Get-ChildItem -Recurse | Measure-Object -Property Length -Sum).Sum / 1MB)
@@ -230,30 +247,55 @@ code --list-extensions | Select-String "pml"
 
 ## 🔧 Troubleshooting
 
-### Очистка node_modules и переустановка
+### Clean node_modules and reinstall
 ```bash
 rm -rf node_modules
 rm package-lock.json
 npm install
 ```
 
-### Пересборка с нуля
+### Rebuild from scratch
 ```bash
-npm run clean  # Если есть clean script
+npm run clean  # If clean script exists
 npm run compile
-npx @vscode/vsce package --no-yarn
+npm run pack
 ```
 
-### Проверка GitHub CLI пути
+### Verify GitHub CLI path
 ```bash
 # PowerShell
 Get-Command gh -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
 
-# Или прямой вызов
-& "C:\Program Files\GitHub CLI\gh.exe" --version
+# Or direct call
+gh --version
+```
+
+### Force reload language server
+```
+1. Press F1 / Ctrl+Shift+P
+2. Type "Developer: Reload Window"
+3. Press Enter
+```
+
+### Completely restart VS Code
+```
+Close VS Code completely (not just Reload Window)
+Reopen VS Code
+This ensures language server restarts fresh
 ```
 
 ---
 
+## 📌 VSIX Storage Policy
+
+**Important**: Only ONE VSIX file is stored in the repository.
+
+- **Repository**: Contains only `pml-aveva-e3d-0.9.X.vsix` (latest)
+- **GitHub Releases**: Contains all historical versions
+- **Old versions**: Download from GitHub Releases page
+
+---
+
 **Created**: 2025-01-24
+**Updated**: 2025-01-29
 **For**: PML for AVEVA E3D Extension

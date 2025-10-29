@@ -358,5 +358,22 @@
       "!${1:element}.query(|NAME|)"
     ],
     "description": "Get element name"
+  },
+  "Form Header": {
+    "prefix": "formheader",
+    "body": [
+      "----------------------------------------------------------------------",
+      "--",
+      "--  File:            ${TM_FILENAME}",
+      "--    Type:          Form Definition",
+      "--    Module:        ${1:Module}",
+      "--  Author:          ${2:Author}",
+      "--  Created:         ${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}",
+      "--",
+      "--  Description:     ${3:Description}",
+      "--",
+      "------------------------------------------------------------------------"
+    ],
+    "description": "Form header documentation block"
   }
 }
