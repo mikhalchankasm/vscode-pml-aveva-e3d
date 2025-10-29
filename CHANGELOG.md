@@ -2,6 +2,56 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.9.9] - 2025-01-29
+
+### Added - Method Documentation and Comment Tools
+
+- **Insert Method Documentation Block** - New command for AVEVA-standard documentation
+  - Inserts documentation template above method definitions
+  - Auto-fills method name
+  - Preserves indentation
+  - Cursor positioned at Description field for quick editing
+  - Format includes Method, Description, Method Type, Arguments, Return sections
+  - Works with .pml, .pmlobj, .pmlfnc, .pmlfrm, .pmlmac, .pmlcmd files
+
+### Fixed - F12 (Go to Definition) for All Patterns
+
+- **Complete F12 fix** - Now works on all method call patterns
+  - Fixed `!var.method()` pattern (e.g., `!a.calculateSum()`)
+  - Fixed `!this.method()` pattern
+  - Added `isStopChar()` to stop word expansion at special characters
+  - Added check for dot within captured word
+  - Extracts method name after last dot correctly
+
+- **Hover provider** - Same fixes applied
+  - Works on `!var.method()` patterns
+  - Shows documentation for all method call styles
+
+### Fixed - Parser Skip Statement Support
+
+- **`skip` keyword support** - Added SKIP token to lexer
+  - Parser recognizes `skip` as continue statement
+  - No more false warnings on plain `skip`
+
+- **`skip if` conditional** - Parser handles skip with condition
+  - `skip if(condition)` works without `then` keyword (unlike regular `if`)
+  - Fixed "Expected 'then' after if condition" error
+  - Fixed "Expected expression" error on following line
+  - Uses `ContinueStatement` AST node (skip = continue in PML)
+
+### Improved - Comment Commands (Line-Based)
+
+- **Add Comments** - Now works line-based instead of selection-based
+  - Cursor can be anywhere in line (beginning, middle, end)
+  - Partial multi-line selection comments all touched lines
+  - Adds `--` after indentation (preserves formatting)
+  - Empty lines skipped
+
+- **Remove Comments** - Same line-based behavior
+  - Removes `--` or `$*` from start of lines
+  - Works on partial selections
+  - Preserves code after comment marker
+
 ## [0.9.8] - 2025-01-29
 
 ### Fixed - Go to Definition and Documentation

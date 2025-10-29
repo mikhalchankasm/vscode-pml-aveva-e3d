@@ -47,7 +47,7 @@ define method .quitCall()
 endmethod
 define method .killCall()
 
-    !this.quitCall()
+  
 
     
 endmethod
@@ -66,6 +66,26 @@ endmethod
 
 define method .methodName()
 
-    !this.init()
+    init
 
 endmethod
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  !this.quitCall()

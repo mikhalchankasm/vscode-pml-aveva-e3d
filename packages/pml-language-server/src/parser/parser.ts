@@ -648,6 +648,11 @@ export class Parser {
 			};
 		}
 
+		// skip (with optional if condition)
+		if (this.check(TokenType.SKIP)) {
+			return this.parseSkipStatement();
+		}
+
 		// var statement - consume 'var' and parse the following statement
 		if (this.check(TokenType.VAR)) {
 			this.advance(); // consume 'var'
@@ -727,6 +732,35 @@ export class Parser {
 			consequent,
 			alternate,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	/**
+	 * Parse skip statement (skip or skip if condition)
+	 * Note: In PML, 'skip' is essentially the same as 'continue'
+	 * 'skip if' conditionally skips to next iteration without 'then' keyword
+	 */
+	private parseSkipStatement(): Statement {
+		const token = this.advance(); // consume 'skip'
+
+		// Check if there's an 'if' condition
+		if (this.check(TokenType.IF)) {
+			this.advance(); // consume 'if'
+			const condition = this.parseExpression();
+
+			// skip if doesn't require 'then' - treat as conditional continue
+			// For AST purposes, we treat this as a continue statement
+			// (the condition is parsed but not stored in the AST)
+			return {
+				type: 'ContinueStatement',
+				range: this.createRange(this.getTokenIndex(token), this.current - 1)
+			};
+		}
+
+		// Plain skip without condition
+		return {
+			type: 'ContinueStatement',
+			range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
 		};
 	}
 

@@ -279,24 +279,40 @@ Development plans and progress tracking.
 
 </details>
 
-### ⭐ Latest: v0.9.6 - UX Improvements (2025-01-29)
+### ⭐ Latest: v0.9.9 - F12 Complete Fix & Documentation Tools (2025-01-29)
 
-**User Experience Release:**
-- ✅ **Comment Commands Enhanced**
-  - Add/Remove Comments work without selection (on current line)
-  - Cursor can be anywhere in the line
+**Critical Fixes & Documentation Release:**
 
-- ✅ **Code Actions (Ctrl+.) Simplified**
-  - Only Add/Remove Comments
-  - Removed array, sort, cleanup commands
+- ✅ **F12 (Go to Definition) - Complete Fix**
+  - Works on ALL patterns: `!var.method()`, `!this.method()`, `.method()`
+  - Added `isStopChar()` to stop word expansion at `!`, `$`, operators
+  - Extracts method name after last dot in captured word
+  - Hover provider also fixed
 
-- ✅ **Context Menu "Quick Action PML"**
-  - Renamed from "Quick Actions"
-  - Contains ALL toolbar commands
-  - Single comprehensive menu
+- ✅ **Skip Statement Support**
+  - Added `SKIP` token to lexer and parser
+  - `skip if(condition)` works without `then` keyword
+  - Fixed "Expected 'then' after if condition" error
+  - Fixed "Expected expression" error on following line
 
-- ❌ **Column Generator Removed**
-  - Deleted (replaced by external extensions)
+- ✅ **Insert Method Documentation Block**
+  - New command for AVEVA-standard documentation
+  - Auto-fills method name, preserves indentation
+  - Cursor positioned at Description field
+  - Format: Method, Description, Type, Arguments, Return
+
+- ✅ **Comment Commands - Line-Based Operation**
+  - Add/Remove Comments work on full lines regardless of cursor position
+  - Partial multi-line selection processes all touched lines
+  - Preserves indentation when adding `--`
+
+---
+
+### v0.9.6-v0.9.8 - Previous Releases
+
+**v0.9.8** - Form Documentation & Dead Code Cleanup
+**v0.9.7** - Form Tools (Generate/Update Methods Summary)
+**v0.9.6** - UX Improvements (Comment commands, Code Actions)
 
 ---
 
@@ -568,24 +584,31 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.9.8
+**Version:** 0.9.9
 **Released:** 2025-01-29
 
 **Statistics:**
 - Extension size: **2.09 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
 - Files in VSIX: 56 files (previously 1632 before v0.8.0)
 - LSP features: 13+ providers (with documentation extraction)
-- Commands: 29+ (added form documentation commands)
+- Commands: 30 (added Insert Method Documentation Block)
 - Diagnostics: 3 types (parse-error-based typo detection, array index checker, parser errors)
 - Operators: 15+ (including OF, comparison operator aliases)
+- Keywords: 78+ (added SKIP token)
 - Form support: Advanced parsing with documentation generation
 - Documentation: Comment-based method docs with JSDoc and AVEVA `$p` marker support
 - Tests: **38 tests passing, 2 skipped** (20 parser + 18 typo detector)
 - VSIX Storage: **Repository contains only latest version**; historical versions in GitHub Releases
 
-**Recent Changes (v0.9.7-v0.9.8):**
+**Recent Changes (v0.9.9):**
+- ✅ **F12 Complete Fix** - Works on ALL patterns: `!var.method()`, `!this.method()`, `.method()`
+- ✅ **Skip Statement Support** - Parser handles `skip` and `skip if(condition)`
+- ✅ **Insert Method Documentation Block** - AVEVA-standard documentation template command
+- ✅ **Comment Commands Enhanced** - Line-based operation regardless of cursor position
+
+**Previous Changes (v0.9.7-v0.9.8):**
 - ✅ **Form Documentation** (v0.9.7) - Auto-generate methods summary tables from `$p` markers
-- ✅ **Go to Definition Fix** (v0.9.7) - F12 now works correctly on `.methodName()`
+- ✅ **Go to Definition Partial Fix** (v0.9.7) - F12 works on `.methodName()` (completed in v0.9.9)
 - ✅ **Hover Documentation** (v0.9.7) - Shows method docs from `$p` and `--` comments
 - ✅ **Form Header Snippet** (v0.9.7) - `formheader` snippet for .pmlfrm files
 - ✅ **Dead Code Removal** (v0.9.8) - Removed obsolete src/diagnostics.ts

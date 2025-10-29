@@ -1,3 +1,16 @@
+------------------------------------------------------------------------
+--
+-- Method:      initbran
+--
+-- Description: 
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
 define method .initbran(!pipelist is array)
 
     do !element values !pipes
@@ -30,3 +43,10 @@ define method .initbran(!pipelist is array)
     !this.export(!outlist)
 
 endmethod
+
+
+
+!this.initbran(!pipes)
+
+
+

@@ -62,102 +62,103 @@
 
 setup form !!equiBasic dialog resize
 
-  -- Element Name
-  frame .nameFrame 'Naming' anchor left + right + top width 38
-    text  .name   anchor left + right + top  at xmin y0.2 width 35 NAME
-  exit
+    -- Element Name
+    frame .nameFrame 'Naming' anchor left + right + top width 38
+        text  .name   anchor left + right + top  at xmin y0.2 width 35 NAME
 
-  -- Standard WRT positioning frame shown in PDMS and Marine
-  frame .positionFrame  'Position'  anchor left + right + top  at x0 ymax+0.2 width.nameFrame
+    exit
 
-    path down
-    vdist 0.1
-    option .ew      anchor left  + top         at xmin y0.7     width 5
-    option .ns      anchor left  + top                             width 5
-    option .ud      anchor left  + top                             width 5
-    text   .x       anchor left  + right + top at xmax+0.8 ymin.ew width 18 is REAL format !!distanceFmt
-    text   .y       anchor left  + right + top at xmin     ymin.ns width 18 is REAL format !!distanceFmt
-    text   .z       anchor left  + right + top at xmin     ymin.ud width 18 is REAL format !!distanceFmt
-    toggle .xFlag   anchor right + top         at xmax+0.9 ymin.ew
-    toggle .yFlag   anchor right + top         at xmin     ymin.ns
-    toggle .zFlag   anchor right + top         at xmin     ymin.ud
+    -- Standard WRT positioning frame shown in PDMS and Marine
+    frame .positionFrame  'Position'  anchor left + right + top  at x0 ymax+0.2 width.nameFrame
 
-    --  Reference (wrt)
-    halign right
-    text .wrt 'WRT' anchor left + right + top  at x1 ymax+0.2  tagwid 8 width 26 string
+        path down
+        vdist 0.1
+        option .ew      anchor left  + top         at xmin y0.7     width 5
+        option .ns      anchor left  + top                             width 5
+        option .ud      anchor left  + top                             width 5
+        text   .x       anchor left  + right + top at xmax+0.8 ymin.ew width 18 is REAL format !!distanceFmt
+        text   .y       anchor left  + right + top at xmin     ymin.ns width 18 is REAL format !!distanceFmt
+        text   .z       anchor left  + right + top at xmin     ymin.ud width 18 is REAL format !!distanceFmt
+        toggle .xFlag   anchor right + top         at xmax+0.9 ymin.ew
+        toggle .yFlag   anchor right + top         at xmin     ymin.ns
+        toggle .zFlag   anchor right + top         at xmin     ymin.ud
 
-    para   .lock    anchor right + top         at xmin.xFlag-1.3 ymin.ew-1.2 text 'Lock'
-    button .switchToShip 'Ship Position' tooltip 'Ship Position' pixmap         at x0.5 ymin.lock+0.2 width 16 height 16
+        --  Reference (wrt)
+        halign right
+        text .wrt 'WRT' anchor left + right + top  at x1 ymax+0.2  tagwid 8 width 26 string
 
-  exit
+        para   .lock    anchor right + top         at xmin.xFlag-1.3 ymin.ew-1.2 text 'Lock'
+        button .switchToShip 'Ship Position' tooltip 'Ship Position' pixmap         at x0.5 ymin.lock+0.2 width 16 height 16
 
-  -- Ship grid position frame, only shown in Marine
-  frame .shipPositionFrame  'Ship Position'  anchor left + right + top          at xmin.positionFrame      ymin.positionFrame width.nameFrame
+    exit
 
-    button .switchToPos 'Explicit Position' tooltip 'Explicit Position' pixmap  at xmin.switchToShip ymin.switchToShip width 16 height 16
+    -- Ship grid position frame, only shown in Marine
+    frame .shipPositionFrame  'Ship Position'  anchor left + right + top          at xmin.positionFrame      ymin.positionFrame width.nameFrame
 
-    -- Frame information
-    text .xGridline 'FR'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
-    text .xOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
-    text .xPosition 'X'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
+        button .switchToPos 'Explicit Position' tooltip 'Explicit Position' pixmap  at xmin.switchToShip ymin.switchToShip width 16 height 16
 
-    -- Horizontal Longitude information
-    text .yGridline 'LH'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
-    text .yOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
-    text .yPosition 'Y'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
+        -- Frame information
+        text .xGridline 'FR'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
+        text .xOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
+        text .xPosition 'X'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
 
-    -- Vertical Longitude information
-    text .zGridline 'LV'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
-    text .zOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
-    text .zPosition 'Z'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
+        -- Horizontal Longitude information
+        text .yGridline 'LH'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
+        text .yOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
+        text .yPosition 'Y'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
 
-    -- Column headings
-    paragraph .offsetTag                  anchor left + top          at xmin.xOffset+1   ymin.xOffset-0.8  text 'Offset'
-    paragraph .positionTag                anchor left + right + top  at xmin.xPosition+3 ymin      width 9.5 lines 1
+        -- Vertical Longitude information
+        text .zGridline 'LV'      tagwidth 3  anchor left + top          at x1               ymax+0.2  width 3  is REAL format !!integerFmt
+        text .zOffset                         anchor left + top          at xmax+0.7         ymin      width 7  is REAL format !!distanceFmt
+        text .zPosition 'Z'                   anchor left + right + top  at xmax+1           ymin      width 15 is REAL format !!distanceFmt
 
-  exit
+        -- Column headings
+        paragraph .offsetTag                  anchor left + top          at xmin.xOffset+1   ymin.xOffset-0.8  text 'Offset'
+        paragraph .positionTag                anchor left + right + top  at xmin.xPosition+3 ymin      width 9.5 lines 1
 
-  frame .equipAttributes    'Attributes'  anchor left + right + top  at x0               ymax.positionFrame+0.2 width.nameFrame
+    exit
 
-    path down
-    vdist 0.1
-    text .description |Description:|         anchor left + right + top  at x1            ymax   tagwidth 16 width 18 STRING
-    text .function    |Function:|            anchor left + right + top                          tagwidth 16 width 18 STRING
-    text .code        |Design Code:|         anchor left + right + top                          tagwidth 16 width 18 STRING
-    text .paint       |Paint Specification:| anchor left + right + top                          tagwidth 16 width 18 STRING
-    text .inSpec      |Inspection Schedule:| anchor left + right + top                          tagwidth 16 width 18 STRING
+    frame .equipAttributes    'Attributes'  anchor left + right + top  at x0               ymax.positionFrame+0.2 width.nameFrame
 
-  exit
+        path down
+        vdist 0.1
+        text .description |Description:|         anchor left + right + top  at x1            ymax   tagwidth 16 width 18 STRING
+        text .function    |Function:|            anchor left + right + top                          tagwidth 16 width 18 STRING
+        text .code        |Design Code:|         anchor left + right + top                          tagwidth 16 width 18 STRING
+        text .paint       |Paint Specification:| anchor left + right + top                          tagwidth 16 width 18 STRING
+        text .inSpec      |Inspection Schedule:| anchor left + right + top                          tagwidth 16 width 18 STRING
 
-  -- Apply
-  button .cancel 'Cancel'                 anchor right + bottom      at xmax form-size   ymax.equipAttributes+0.8  width 7 CANCEL
-  button .apply  'OK'                     anchor right + bottom      at xmin.cancel-9    ymin                      width 7 OK
+    exit
 
-  -- Form Data
+    -- Apply
+    button .cancel 'Cancel'                 anchor right + bottom      at xmax form-size   ymax.equipAttributes+0.8  width 7 CANCEL
+    button .apply  'OK'                     anchor right + bottom      at xmin.cancel-9    ymin                      width 7 OK
 
-  -- WRT Element
-  member .wrtElement    is DBREF
+    -- Form Data
 
-  -- Ship Grid
-  member .shipGrid      is SHIPGRID
+    -- WRT Element
+    member .wrtElement    is DBREF
 
-  -- Current position
-  member .position      is POSITION
+    -- Ship Grid
+    member .shipGrid      is SHIPGRID
 
-  -- PDMS position gadget control
-  member .positionLink  is POSITIONLINK
+    -- Current position
+    member .position      is POSITION
 
-  -- Feedback aid number
-  member .aidNumber     is REAL
+    -- PDMS position gadget control
+    member .positionLink  is POSITIONLINK
 
-  -- Undo for creation
-  member .undo          is UNDOABLE
+    -- Feedback aid number
+    member .aidNumber     is REAL
 
-  -- Marine or PDMS
-  member .isMarine      is BOOLEAN
+    -- Undo for creation
+    member .undo          is UNDOABLE
 
-  -- Position in hierarchy at which to create element
-  member .currentElement is DBREF
+    -- Marine or PDMS
+    member .isMarine      is BOOLEAN
+
+    -- Position in hierarchy at which to create element
+    member .currentElement is DBREF
 
 exit
 -- End of form definition
@@ -179,84 +180,84 @@ exit
 
 define method .equiBasic()
 
-  -- Form properties
-  !this.formTitle             = 'Equipment Creation'
-  !this.iconTitle             = 'EQUC'
-  !this.callback              = '!this.initialise()'
-  !this.cancelCall            = '!this.close()'
-  !this.cancel.callback       = '!this.close()'
-  !this.apply.callback        = '!this.apply()'
-  !this.name.callback         = '!this.nameCheck()'
-  !this.switchToShip.callback = '!this.switchPositionGadget(true)'
-  !this.switchToPos.callback  = '!this.switchPositionGadget(false)'
-  !this.xGridline.callback    = '!this.setData()'
-  !this.xOffset.callback      = '!this.setData()'
-  !this.xPosition.callback    = '!this.setPosition()'
-  !this.yGridline.callback    = '!this.setData()'
-  !this.yOffset.callback      = '!this.setData()'
-  !this.yPosition.callback    = '!this.setPosition()'
-  !this.zGridline.callback    = '!this.setData()'
-  !this.zOffset.callback      = '!this.setData()'
-  !this.zPosition.callback    = '!this.setPosition()'
-  !this.wrt.callback          = '!this.setWrt()'
-  !this.switchToShip.addPixmap(!!pml.getPathname('frlg16.png'))
-  !this.switchToShip.setTooltip('Position')
-  !this.switchToPos.addPixmap(!!pml.getPathname('xyz16.png'))
-  !this.switchToPos.setTooltip('Explicit Position')
+    -- Form properties
+    !this.formTitle             = 'Equipment Creation'
+    !this.iconTitle             = 'EQUC'
+    !this.callback              = '!this.initialise()'
+    !this.cancelCall            = '!this.close()'
+    !this.cancel.callback       = '!this.close()'
+    !this.apply.callback        = '!this.apply()'
+    !this.name.callback         = '!this.nameCheck()'
+    !this.switchToShip.callback = '!this.switchPositionGadget(true)'
+    !this.switchToPos.callback  = '!this.switchPositionGadget(false)'
+    !this.xGridline.callback    = '!this.setData()'
+    !this.xOffset.callback      = '!this.setData()'
+    !this.xPosition.callback    = '!this.setPosition()'
+    !this.yGridline.callback    = '!this.setData()'
+    !this.yOffset.callback      = '!this.setData()'
+    !this.yPosition.callback    = '!this.setPosition()'
+    !this.zGridline.callback    = '!this.setData()'
+    !this.zOffset.callback      = '!this.setData()'
+    !this.zPosition.callback    = '!this.setPosition()'
+    !this.wrt.callback          = '!this.setWrt()'
+    !this.switchToShip.addPixmap(!!pml.getPathname('frlg16.png'))
+    !this.switchToShip.setTooltip('Position')
+    !this.switchToPos.addPixmap(!!pml.getPathname('xyz16.png'))
+    !this.switchToPos.setTooltip('Explicit Position')
 
-  -- Initialise Variables
-  !this.positionTag.val         = 'World Position'
+    -- Initialise Variables
+    !this.positionTag.val         = 'World Position'
 
-  -- !mm = object AVEVAMODULEMANAGER()
-  -- !this.isMarine = ( !mm.currentProductName().upcase().eq('HULL & OUTFITTING') )
-  !this.isMarine = ( !!module().projectType.upcase() eq 'MARINE' )
+    -- !mm = object AVEVAMODULEMANAGER()
+    -- !this.isMarine = ( !mm.currentProductName().upcase().eq('HULL & OUTFITTING') )
+    !this.isMarine = ( !!module().projectType.upcase() eq 'MARINE' )
 
-  !this.position   = object POSITION('N0 WRT WORLD')
-  if( !this.isMarine ) then
-    -- not sure why the next line is necessary - but without it !this.shipGrid does not initialise
-    !this.shipGrid = object SHIPGRID()
-    !this.setShipPosition(!this.position)
+    !this.position   = object POSITION('N0 WRT WORLD')
+    if( !this.isMarine ) then
+        -- not sure why the next line is necessary - but without it !this.shipGrid does not initialise
+        !this.shipGrid = object SHIPGRID()
+        !this.setShipPosition(!this.position)
 
-    -- Set Validation check for tag lines
-    !this.xGridline.validateCall  = '!this.isValidReference('
-    !this.yGridline.validateCall  = '!this.isValidReference('
-    !this.zGridline.validateCall  = '!this.isValidReference('
+        -- Set Validation check for tag lines
+        !this.xGridline.validateCall = '!this.isValidReference('
+        !this.yGridline.validateCall = '!this.isValidReference('
+        !this.zGridline.validateCall = '!this.isValidReference('
 
-    -- Load Tags
-    !this.xGridline.tag           = 'FR'
-    !this.yGridline.tag           = 'LH'
-    !this.zGridline.tag           = 'LV'
-  endif
+        -- Load Tags
+        !this.xGridline.tag = 'FR'
+        !this.yGridline.tag = 'LH'
+        !this.zGridline.tag = 'LV'
+    endif
 
-  -- Aid Number
-  !this.aidNumber                 = !!aidNumbers.add('Basic Equipment Create')
+    -- Aid Number
+    !this.aidNumber                 = !!aidNumbers.add('Basic Equipment Create')
 
-  -- UNDO
-  !this.undo.description('Basic Create Equipment')
-  !this.apply.setUndoable(!this.undo)
+    -- UNDO
+    !this.undo.description('Basic Create Equipment')
+    !this.apply.setUndoable(!this.undo)
 
-  !this.shipPositionFrame.visible = !this.isMarine
-  !this.positionFrame.visible     = !this.isMarine.not()
-  !this.switchToShip.visible      = !this.isMarine
+    !this.shipPositionFrame.visible = !this.isMarine
+    !this.positionFrame.visible     = !this.isMarine.not()
+    !this.switchToShip.visible      = !this.isMarine
 
-  VAR !coordinate COORDINATE
-  -- Link Position Input Gadgets to Objects
-  !this.positionLink.linkInput('!!equiBasic.positionLink',  !this.x, !this.y, !this.z)
+    VAR !coordinate COORDINATE
+    -- Link Position Input Gadgets to Objects
+    !this.positionLink.linkInput('!!equiBasic.positionLink',  !this.x, !this.y, !this.z)
 
-  -- Link Position Lock Gadgets to Objects
-  !this.positionLink.linkLock('!!equiBasic.positionLink',   !this.xFlag, !this.yFlag, !this.zFlag)
+    -- Link Position Lock Gadgets to Objects
+    !this.positionLink.linkLock('!!equiBasic.positionLink',   !this.xFlag, !this.yFlag, !this.zFlag)
 
-  -- Link Position Option Gadgets to Objects
-  !this.positionLink.linkOption('!!equiBasic.positionLink', !this.ew, !this.ns, !this.ud, !coordinate)
+    -- Link Position Option Gadgets to Objects
+    !this.positionLink.linkOption('!!equiBasic.positionLink', !this.ew, !this.ns, !this.ud, !coordinate)
 
-  -- Set Position Action
-  !this.positionLink.setAction('!!equiBasic.setPositionXYZ()')
+    -- Set Position Action
+    !this.positionLink.setAction('!!equiBasic.setPositionXYZ()')
 
-  -- Set defaults for form
-  !this.positionLink.position(!this.position, false, true)
-  !this.wrtElement = World
-  !this.wrt.val    = 'world'
-  !this.setWrt()
+    -- Set defaults for form
+    !this.positionLink.position(!this.position, false, true)
+    !this.wrtElement = World
+    !this.wrt.val    = 'world'
+    !this.setWrt()
 
 endmethod
 -- End of method
@@ -277,43 +278,43 @@ endmethod
 
 define method .initialise()
 
-  !this.currentElement = !!ce
+    !this.currentElement = !!ce
 
-  --var !list LIST
-  !types = !!ce.list
-  !currentType = !this.currentElement.type
+    --var !list LIST
+    !types       = !!ce.list
+    !currentType = !this.currentElement.type
 
-  if     ((!currentType eq |EQUI|)   or (!types.findFirst(|EQUI|).set())) then
-    !this.formTitle             = 'Equipment Creation'
-    !this.code.active = true
-    !this.inSpec.active = true
-    !this.paint.active = true
+    if     ((!currentType eq |EQUI|)   or (!types.findFirst(|EQUI|).set())) then
+        !this.formTitle     = 'Equipment Creation'
+        !this.code.active   = true
+        !this.inSpec.active = true
+        !this.paint.active  = true
 
-  elseif ((!currentType eq |AREADE|) or (!types.findFirst(|AREADE|).set())) then
-    !this.formTitle             = 'Area Creation'
-    !this.code.active = false
-    !this.inSpec.active = false
-    !this.paint.active = false
+    elseif ((!currentType eq |AREADE|) or (!types.findFirst(|AREADE|).set())) then
+        !this.formTitle     = 'Area Creation'
+        !this.code.active   = false
+        !this.inSpec.active = false
+        !this.paint.active  = false
 
-  elseif ((!currentType eq |DEMOPA|) or (!types.findFirst(|DEMOPA|).set())) then
-    !this.formTitle             = 'Demolition Creation'
-    !this.code.active = false
-    !this.inSpec.active = false
-    !this.paint.active = false
+    elseif ((!currentType eq |DEMOPA|) or (!types.findFirst(|DEMOPA|).set())) then
+        !this.formTitle     = 'Demolition Creation'
+        !this.code.active   = false
+        !this.inSpec.active = false
+        !this.paint.active  = false
 
-  else
-     -- None of the above
-  endif
+    else
+        -- None of the above
+    endif
 
-  -- Clear name field
-  !this.name.val = 'unset'
+    -- Clear name field
+    !this.name.val = 'unset'
 
-  -- Associate position option gadgets to link object
-  var !coordinate coordinate
-  !this.positionLink.linkOption('!!equiBasic.positionLink', !this.ew, !this.ns, !this.ud, !coordinate)
-  !this.positionLink.position(!this.position, false, true)
-  -- initialise position pick
-  !this.edgPick()
+    -- Associate position option gadgets to link object
+    var !coordinate coordinate
+    !this.positionLink.linkOption('!!equiBasic.positionLink', !this.ew, !this.ns, !this.ud, !coordinate)
+    !this.positionLink.position(!this.position, false, true)
+    -- initialise position pick
+    !this.edgPick()
 
 endmethod
 -- End of method
@@ -334,9 +335,9 @@ endmethod
 
 define method .close()
 
-  -- Clear graphics
-  !this.tidy()
-  !!edgCntrl.remove('Basic Equipment Create')
+    -- Clear graphics
+    !this.tidy()
+    !!edgCntrl.remove('Basic Equipment Create')
 
 endmethod
 -- End of method
@@ -357,8 +358,8 @@ endmethod
 
 define method .tidy()
 
-  -- Clear graphics
-  !!aidNumbers.hide(!this.aidNumber)
+    -- Clear graphics
+    !!aidNumbers.hide(!this.aidNumber)
 
 endmethod
 -- End of method
@@ -381,17 +382,17 @@ endmethod
 -- Define method
 define method .edgPick()
 
-  -- Define EDG positional pick
-  !packet                = object EDGPACKET()
-  !packet.positionLink('!!equiBasic.positionLink', 'Pick Position')
-  !packet.key            = 'equipmentPosition'
-  !packet.description    = 'Basic Equipment Create'
-  !packet.priority       = 1
-  !packet.remove         = false
-  !packet.type           = 'dbModify'
+    -- Define EDG positional pick
+    !packet             = object EDGPACKET()
+    !packet.positionLink('!!equiBasic.positionLink', 'Pick Position')
+    !packet.key         = 'equipmentPosition'
+    !packet.description = 'Basic Equipment Create'
+    !packet.priority    = 1
+    !packet.remove      = false
+    !packet.type        = 'dbModify'
 
-  -- Add into EDG packet
-  !!edgCntrl.add(!packet)
+    -- Add into EDG packet
+    !!edgCntrl.add(!packet)
 
 endmethod
 -- End of method definition for .edit(DBREF)
@@ -412,12 +413,12 @@ endmethod
 
 define method .apply()
 
-  -- create equipment element and handle any error
-  !this.createEquipment(!this.currentElement)
-  handle any
-    !!alert.error(!!error.text)
-  endhandle
-  !this.close()
+    -- create equipment element and handle any error
+    !this.createEquipment(!this.currentElement)
+    handle any
+        !!alert.error(!!error.text)
+    endhandle
+    !this.close()
 
 endmethod
 -- End of method
@@ -438,16 +439,16 @@ endmethod
 
 define method .feedback()
 
-  -- Check if the element name has a valid orientation
-  !orientation = !this.wrtElement.orientation
-  handle any
-    !orientation = object ORIENTATION('Z IS Z AND X IS X')
-  endhandle
-  !gphAxes        = object GPHAXES(!this.position, !orientation)
-  !gphAxes.detail = false
-  !gphAxes.xyz    = false
-  !gphAxes.height = 250mm
-  !!aidNumbers.replace(!this.aidNumber, !gphAxes)
+    -- Check if the element name has a valid orientation
+    !orientation = !this.wrtElement.orientation
+    handle any
+        !orientation = object ORIENTATION('Z IS Z AND X IS X')
+    endhandle
+    !gphAxes        = object GPHAXES(!this.position, !orientation)
+    !gphAxes.detail = false
+    !gphAxes.xyz    = false
+    !gphAxes.height = 250mm
+    !!aidNumbers.replace(!this.aidNumber, !gphAxes)
 
 endmethod
 -- End of method
@@ -468,58 +469,58 @@ endmethod
 
 define method .createEquipment(!element is DBREF)
 
-  !!ce = !element
+    !!ce = !element
 
-  !elementType = 'EQUI'
-  --var !list LIST
-  !types = !!ce.list
-  !currentType = !element.type
+    !elementType = 'EQUI'
+    --var !list LIST
+    !types       = !!ce.list
+    !currentType = !element.type
 
-  if   ((!currentType eq |EQUI|)   or (!types.findFirst(|EQUI|).set())) then
-     !elementType = |EQUI|
+    if   ((!currentType eq |EQUI|)   or (!types.findFirst(|EQUI|).set())) then
+        !elementType = |EQUI|
 
-  elseif ((!currentType eq |AREADE|) or (!types.findFirst(|AREADE|).set())) then
-     !elementType = |AREADE|
+    elseif ((!currentType eq |AREADE|) or (!types.findFirst(|AREADE|).set())) then
+        !elementType = |AREADE|
 
-  elseif ((!currentType eq |DEMOPA|) or (!types.findFirst(|DEMOPA|).set())) then
-     !elementType = |DEMOPA|
+    elseif ((!currentType eq |DEMOPA|) or (!types.findFirst(|DEMOPA|).set())) then
+        !elementType = |DEMOPA|
 
-  else
-     -- None of the above
-  endif
-
-  NEW $!elementType
-
-  if ((!this.name.val.empty().not()) and (!this.name.val neq 'unset')) then
-    NAME $!<this.name>
-
-  elseif (!!namOpt.auto()) then
-    !autoName = !!namOpt.nameString(!!ce, '', false, false)
-    if (!autoName.unset().not()) then
-       -- Attempt to do even if a leading slash is missing
-       if (!autoName.substring(1, 1) neq '/') then
-         !autoName = '/' + !autoName
-       endif
-       NAME $!autoName
-       handle any
-         !!alert.error(!!error.text)
-       endhandle
+    else
+        -- None of the above
     endif
-  endif
 
-  DESC |$!<this.description>|
-  FUNC |$!<this.function>|
-  if     (!elementType eq 'EQUI') then
-    DSCO |$!<this.code>|
-    INSC |$!<this.inSpec>|
-    PTSP |$!<this.paint>|
+    NEW $!elementType
 
-  elseif (!elementType eq 'DEMOPA') then
-    !this.demolitionSetup()
-  endif
+    if ((!this.name.val.empty().not()) and (!this.name.val neq 'unset')) then
+        NAME $!<this.name>
 
-  -- Modify position
-  !!ce.position  = !this.position
+    elseif (!!namOpt.auto()) then
+        !autoName = !!namOpt.nameString(!!ce, '', false, false)
+        if (!autoName.unset().not()) then
+            -- Attempt to do even if a leading slash is missing
+            if (!autoName.substring(1, 1) neq '/') then
+                !autoName = '/' + !autoName
+            endif
+            NAME $!autoName
+            handle any
+                !!alert.error(!!error.text)
+            endhandle
+        endif
+    endif
+
+    DESC |$!<this.description>|
+    FUNC |$!<this.function>|
+    if     (!elementType eq 'EQUI') then
+        DSCO |$!<this.code>|
+        INSC |$!<this.inSpec>|
+        PTSP |$!<this.paint>|
+
+    elseif (!elementType eq 'DEMOPA') then
+        !this.demolitionSetup()
+    endif
+
+    -- Modify position
+    !!ce.position  = !this.position
 
 endmethod
 -- End of method
@@ -540,13 +541,12 @@ endmethod
 
 define method .demolitionSetup()
 
-  !currentElement = !!ce
-  !!cmsys.executecommand('AVEVA.Laser.Reference.Laser.UI')
-  !!ce = !currentElement
+    !currentElement = !!ce
+    !!cmsys.executecommand('AVEVA.Laser.Reference.Laser.UI')
+    !!ce = !currentElement
 
 endmethod
 -- End of method
-
 
 ------------------------------------------------------------------------
 --
@@ -564,30 +564,30 @@ endmethod
 
 define method .isValidReference(!gadget is GADGET, !dummyString is STRING) is BOOLEAN
 
-  -- Initialise Variables
-  !value    = !gadget.val
+    -- Initialise Variables
+    !value    = !gadget.val
 
-  -- Assume 0 is always valid
-  if(!value.eq(0)) then
+    -- Assume 0 is always valid
+    if(!value.eq(0)) then
+        return true
+    endif
+
+    -- Check values are in range
+    if(!gadget.name().eq('XGRIDLINE')) then
+        !range  = !this.shipGrid.xRange()
+    elseif (!gadget.name().eq('YGRIDLINE')) then
+        !range  = !this.shipGrid.yRange()
+    elseif (!gadget.name().eq('ZGRIDLINE')) then
+        !range  = !this.shipGrid.zRange()
+    endif
+
+    -- Check value is valid
+    if(!gadget.val.between(!range[1], !range[2]).not()) then
+        return error 1 'Value must lie between $!range[1] and $!range[2]'
+    endif
+
+    -- Return
     return true
-  endif
-
-  -- Check values are in range
-  if(!gadget.name().eq('XGRIDLINE')) then
-    !range  = !this.shipGrid.xRange()
-  elseif (!gadget.name().eq('YGRIDLINE')) then
-    !range  = !this.shipGrid.yRange()
-  elseif (!gadget.name().eq('ZGRIDLINE')) then
-    !range  = !this.shipGrid.zRange()
-  endif
-
-  -- Check value is valid
-  if(!gadget.val.between(!range[1], !range[2]).not()) then
-    return error 1 'Value must lie between $!range[1] and $!range[2]'
-  endif
-
-  -- Return
-  return true
 
 endmethod
 -- End of method
@@ -608,10 +608,10 @@ endmethod
 
 define method .setPositionXYZ()
 
-  -- Get position
-  !this.position = !this.positionLink.get()
-  !this.setShipPosition(!this.position)
-  !this.feedback()
+    -- Get position
+    !this.position = !this.positionLink.get()
+    !this.setShipPosition(!this.position)
+    !this.feedback()
 
 endmethod
 -- End of method
@@ -632,15 +632,15 @@ endmethod
 
 define method .setPosition()
 
-  -- Get position
-  !this.position        = object POSITION('N0 WRT WORLD')
-  !this.position.east   = !this.xPosition.val
-  !this.position.north  = !this.yPosition.val
-  !this.position.up     = !this.zPosition.val
+    -- Get position
+    !this.position       = object POSITION('N0 WRT WORLD')
+    !this.position.east  = !this.xPosition.val
+    !this.position.north = !this.yPosition.val
+    !this.position.up    = !this.zPosition.val
 
-  -- Get ship position
-  !this.setShipPosition(!this.position)
-  !this.feedback()
+    -- Get ship position
+    !this.setShipPosition(!this.position)
+    !this.feedback()
 
 endmethod
 -- End of method
@@ -662,30 +662,30 @@ endmethod
 
 define method .setShipPosition(!position is POSITION)
 
-  if( !this.isMarine.not() ) then
-    return
-  endif
+    if( !this.isMarine.not() ) then
+        return
+    endif
 
-  -- Get ship position
-  !shipGridPosition   = !this.shipGrid.shipGridPosition(!position)
-  if( !shipGridPosition.valid() ) then
-    !this.xGridline.val = !shipGridPosition.xGridline
-    !this.xOffset.val   = !shipGridPosition.xOffset
-    !this.yGridline.val = !shipGridPosition.yGridline
-    !this.yOffset.val   = !shipGridPosition.yOffset
-    !this.zGridline.val = !shipGridPosition.zGridline
-    !this.zOffset.val   = !shipGridPosition.zOffset
+    -- Get ship position
+    !shipGridPosition   = !this.shipGrid.shipGridPosition(!position)
+    if( !shipGridPosition.valid() ) then
+        !this.xGridline.val = !shipGridPosition.xGridline
+        !this.xOffset.val   = !shipGridPosition.xOffset
+        !this.yGridline.val = !shipGridPosition.yGridline
+        !this.yOffset.val   = !shipGridPosition.yOffset
+        !this.zGridline.val = !shipGridPosition.zGridline
+        !this.zOffset.val   = !shipGridPosition.zOffset
 
-    -- Update position gadgets
-    !worldPosition      = !position.wrt(World)
-    !this.xPosition.val = !worldPosition.east
-    !this.yPosition.val = !worldPosition.north
-    !this.zPosition.val = !worldPosition.up
-  else
-    -- if the grid is not valid, use the world position
-    !this.shipPositionFrame.visible = false
-    !this.positionFrame.visible     = true
-  endif
+        -- Update position gadgets
+        !worldPosition      = !position.wrt(World)
+        !this.xPosition.val = !worldPosition.east
+        !this.yPosition.val = !worldPosition.north
+        !this.zPosition.val = !worldPosition.up
+    else
+        -- if the grid is not valid, use the world position
+        !this.shipPositionFrame.visible = false
+        !this.positionFrame.visible     = true
+    endif
 
 endmethod
 -- End of method
@@ -707,20 +707,20 @@ endmethod
 -- Define method
 define method .setWrt()
 
-  !elementName  = !!checkName(!this.wrt.val, 'OLD')
+    !elementName  = !!checkName(!this.wrt.val, 'OLD')
 
-  if (!elementName.set()) then
-    -- re-defined reference
-    !this.wrtElement = !elementName.dbRef()
-  else
-    -- no element found with that name; use current element
-  endif
+    if (!elementName.set()) then
+        -- re-defined reference
+        !this.wrtElement = !elementName.dbRef()
+    else
+        -- no element found with that name; use current element
+    endif
 
-  -- Set tagging method up
-  !this.positionLink.setWrt(!this.wrtElement)
+    -- Set tagging method up
+    !this.positionLink.setWrt(!this.wrtElement)
 
-  -- Set gadget with name of item
-  !this.wrt.val = !this.wrtElement.name
+    -- Set gadget with name of item
+    !this.wrt.val = !this.wrtElement.name
 
 endmethod
 -- End of method definition for .setWrt()
@@ -741,16 +741,16 @@ endmethod
 
 define method .setData()
 
-  -- Get new position
-  !this.position      = !this.shipGrid.position(!this.xGridline.val,!this.xOffset.val, !this.yGridline.val, !this.yOffset.val, !this.zGridline.val, !this.zOffset.val)
+    -- Get new position
+    !this.position      = !this.shipGrid.position(!this.xGridline.val,!this.xOffset.val, !this.yGridline.val, !this.yOffset.val, !this.zGridline.val, !this.zOffset.val)
 
-  -- Update position gadgets
-  !worldPosition      = !this.position.wrt(World)
-  !this.xPosition.val = !worldPosition.east
-  !this.yPosition.val = !worldPosition.north
-  !this.zPosition.val = !worldPosition.up
+    -- Update position gadgets
+    !worldPosition      = !this.position.wrt(World)
+    !this.xPosition.val = !worldPosition.east
+    !this.yPosition.val = !worldPosition.north
+    !this.zPosition.val = !worldPosition.up
 
-  !this.feedback()
+    !this.feedback()
 
 endmethod
 -- End of method
@@ -766,32 +766,38 @@ endmethod
 ------------------------------------------------------------------------
 define method .nameCheck()
 
-  !!nameGadget(!this.name, 'NEW')
+    !!nameGadget(!this.name, 'NEW')
 
 endmethod
 -- End of method
 
+
 ------------------------------------------------------------------------
 --
--- Method:      .switchPositionGadget()
+-- Method:      switchPositionGadget
 --
 -- Description: Switch between ship and standard position
 --
--- Method Type: Procedure
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+--    1   R      BOOLEAN    True if ship position, false if standard position
+-- Return:
+--   [Data Type] [Description]
 --
 ------------------------------------------------------------------------
 define method .switchPositionGadget(!ship is BOOLEAN)
 
-  if( !ship ) then
-    !this.shipPositionFrame.visible = true
-    !this.positionFrame.visible     = false
-    !this.setShipPosition(!this.position)
-  else
-    !this.shipPositionFrame.visible = false
-    !this.positionFrame.visible     = true
-    !this.positionLink.setWrt(!this.wrtElement)
-    !this.positionLink.position(!this.position, false, false)
-  endif
+    if( !ship ) then
+        !this.shipPositionFrame.visible = true
+        !this.positionFrame.visible     = false
+        !this.setShipPosition(!this.position)
+    else
+        !this.shipPositionFrame.visible = false
+        !this.positionFrame.visible     = true
+        !this.positionLink.setWrt(!this.wrtElement)
+        !this.positionLink.position(!this.position, false, false)
+    endif
 
 endmethod
 -- End of method

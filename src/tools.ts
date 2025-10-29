@@ -40,6 +40,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.reloadForm', 'Reload Form', this.reloadForm);
         this.registerCommand('pml.generateMethodsSummary', 'Generate Methods Summary', this.generateMethodsSummary);
         this.registerCommand('pml.updateMethodsSummary', 'Update Methods Summary', this.updateMethodsSummary);
+        this.registerCommand('pml.insertMethodDocBlock', 'Insert Method Documentation Block', this.insertMethodDocBlock);
 
         // Array helpers
         this.registerCommand('pml.makeListPath', 'Make List (Path)', this.makeListPath);
@@ -315,26 +316,30 @@ export class PMLToolsProvider implements vscode.Disposable {
         if (!editor) return;
 
         const selection = editor.selection;
-        let range: vscode.Range;
-        let text: string;
 
-        // If no selection, work with current line
-        if (selection.isEmpty) {
-            const line = editor.document.lineAt(selection.active.line);
-            range = line.range;
-            text = line.text;
-        } else {
-            // Work with selected text
-            range = new vscode.Range(selection.start, selection.end);
-            text = editor.document.getText(range);
+        // Always work with full lines, regardless of cursor position
+        const startLine = selection.start.line;
+        const endLine = selection.end.line;
+
+        // Build range from start of first line to end of last line
+        const firstLine = editor.document.lineAt(startLine);
+        const lastLine = editor.document.lineAt(endLine);
+        const range = new vscode.Range(
+            firstLine.range.start,
+            lastLine.range.end
+        );
+
+        // Get all lines in range
+        const lines: string[] = [];
+        for (let i = startLine; i <= endLine; i++) {
+            lines.push(editor.document.lineAt(i).text);
         }
 
         // Add -- at the beginning of each line
-        const lines = text.split('\n');
         const commented = lines.map(line => {
             // Skip empty lines
             if (line.trim() === '') return line;
-            // Add -- with appropriate spacing
+            // Add -- at the beginning (after indentation)
             const match = line.match(/^(\s*)/);
             const indent = match ? match[1] : '';
             const rest = line.substring(indent.length);
@@ -349,23 +354,28 @@ export class PMLToolsProvider implements vscode.Disposable {
         if (!editor) return;
 
         const selection = editor.selection;
-        let range: vscode.Range;
-        let text: string;
 
-        // If no selection, work with current line
-        if (selection.isEmpty) {
-            const line = editor.document.lineAt(selection.active.line);
-            range = line.range;
-            text = line.text;
-        } else {
-            // Work with selected text
-            range = new vscode.Range(selection.start, selection.end);
-            text = editor.document.getText(range);
+        // Always work with full lines, regardless of cursor position
+        const startLine = selection.start.line;
+        const endLine = selection.end.line;
+
+        // Build range from start of first line to end of last line
+        const firstLine = editor.document.lineAt(startLine);
+        const lastLine = editor.document.lineAt(endLine);
+        const range = new vscode.Range(
+            firstLine.range.start,
+            lastLine.range.end
+        );
+
+        // Get all lines in range
+        const lines: string[] = [];
+        for (let i = startLine; i <= endLine; i++) {
+            lines.push(editor.document.lineAt(i).text);
         }
 
-        const lines = text.split('\n');
+        // Remove -- from the beginning of each line
         const uncommented = lines.map(line => {
-            // Remove -- prefix (with optional leading spaces before --)
+            // Remove -- prefix (after optional indentation)
             // Pattern: optional spaces, then --, then optional space, then capture rest
             let result = line.replace(/^(\s*)--\s?/, '$1');
             // Also remove $* comments
@@ -373,7 +383,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return result;
         });
 
-        this.applyChangesToSelection(editor, range, uncommented.join('\n'), 'Removed comment prefixes');
+        this.applyChangesToSelection(editor, range, uncommented.join('\n'), 'Removed comments');
     };
 
     private alignPML = () => {
@@ -730,6 +740,88 @@ export class PMLToolsProvider implements vscode.Disposable {
         lines.push('');
 
         return lines.join('\n');
+    }
+
+    /**
+     * Insert AVEVA-standard method documentation block above method definition
+     */
+    private insertMethodDocBlock = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const position = editor.selection.active;
+        const document = editor.document;
+
+        // Check if we're on a method definition line or find next method below
+        const currentLine = document.lineAt(position.line).text;
+        let methodLine = position.line;
+        let methodName = '';
+
+        // Check current line for method definition
+        const methodMatch = currentLine.match(/define\s+method\s+\.(\w+)\s*\(([^)]*)\)/i);
+        if (methodMatch) {
+            methodName = methodMatch[1];
+        } else {
+            // Search for next method definition below cursor
+            for (let i = position.line + 1; i < document.lineCount; i++) {
+                const line = document.lineAt(i).text;
+                const match = line.match(/define\s+method\s+\.(\w+)\s*\(([^)]*)\)/i);
+                if (match) {
+                    methodLine = i;
+                    methodName = match[1];
+                    break;
+                }
+            }
+        }
+
+        if (!methodName) {
+            vscode.window.showWarningMessage('No method definition found at or below cursor');
+            return;
+        }
+
+        // Generate documentation block
+        const indent = this.getIndentation(document, methodLine);
+        const docBlock = [
+            `${indent}------------------------------------------------------------------------`,
+            `${indent}--`,
+            `${indent}-- Method:      ${methodName}`,
+            `${indent}--`,
+            `${indent}-- Description: `,
+            `${indent}--`,
+            `${indent}-- Method Type: Function/Procedure`,
+            `${indent}-- Arguments:`,
+            `${indent}--   [#] [R/RW] [Data Type] [Description]`,
+            `${indent}-- Return:`,
+            `${indent}--   [Data Type] [Description]`,
+            `${indent}--`,
+            `${indent}------------------------------------------------------------------------`,
+            ''
+        ].join('\n');
+
+        // Insert documentation block above method definition
+        await editor.edit(editBuilder => {
+            editBuilder.insert(new vscode.Position(methodLine, 0), docBlock);
+        });
+
+        // Move cursor to Description field for easy editing
+        const descriptionLine = methodLine + 4; // Line with "-- Description: "
+        const descriptionCol = indent.length + 16; // After "-- Description: "
+        editor.selection = new vscode.Selection(
+            new vscode.Position(descriptionLine, descriptionCol),
+            new vscode.Position(descriptionLine, descriptionCol)
+        );
+        editor.revealRange(new vscode.Range(methodLine, 0, descriptionLine + 5, 0));
+
+        vscode.window.showInformationMessage(`Documentation block inserted for method .${methodName}`);
+    };
+
+    /**
+     * Get indentation (leading whitespace) from a line
+     */
+    private getIndentation(document: vscode.TextDocument, lineNumber: number): string {
+        const line = document.lineAt(lineNumber).text;
+        const match = line.match(/^(\s*)/);
+        return match ? match[1] : '';
     }
 }
 

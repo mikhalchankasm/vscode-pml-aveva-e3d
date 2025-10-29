@@ -28,6 +28,13 @@ export class DefinitionProvider {
 			return this.findMethodDefinition(methodName);
 		}
 
+		// Check if word contains a dot (e.g., "var.methodName" or "this.methodName")
+		if (word.includes('.')) {
+			const lastDotIndex = word.lastIndexOf('.');
+			const methodName = word.substring(lastDotIndex + 1);
+			return this.findMethodDefinition(methodName);
+		}
+
 		// Check if previous character before word is a dot (for .methodName() calls)
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
@@ -89,12 +96,12 @@ export class DefinitionProvider {
 		let start = offset;
 		let end = offset;
 
-		// Expand backwards
-		while (start > 0 && this.isWordChar(text[start - 1])) {
+		// Expand backwards - stop at special characters like !, $, operators, etc.
+		while (start > 0 && this.isWordChar(text[start - 1]) && !this.isStopChar(text[start - 1])) {
 			start--;
 		}
 
-		// Expand forwards
+		// Expand forwards - include method name with dot
 		while (end < text.length && this.isWordChar(text[end])) {
 			end++;
 		}
@@ -112,5 +119,13 @@ export class DefinitionProvider {
 	 */
 	private isWordChar(char: string): boolean {
 		return /[a-zA-Z0-9_.]/.test(char);
+	}
+
+	/**
+	 * Check if character should stop backwards word expansion
+	 * Stops at variable prefixes (!, $), operators, delimiters, whitespace
+	 */
+	private isStopChar(char: string): boolean {
+		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
 	}
 }

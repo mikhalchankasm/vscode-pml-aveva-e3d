@@ -92,7 +92,7 @@ define method .testHover()
     !pipes    = .getAllPipes(|BORE gt 50|)
 
     do !i from !sequence - 1 to 1 by -1
-        skip if(!lBores[!i].eq(''))  ← без отступа
+        skip if(!lBores[!i].eq(''))  $*← без отступа
         !this.arriveBore = !lBores[!i].bore()
         break  ← без отступа
     enddo
@@ -100,4 +100,7 @@ define method .testHover()
 DRAWLIST
 
 endmethod
+
+!a.calculateSum(!myList)
+
 
