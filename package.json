@@ -235,27 +235,32 @@
       {
         "command": "pml.makeListPath",
         "title": "Make Array (add /)",
-        "category": "PML Array"
+        "category": "PML Array",
+        "icon": "$(file-symlink-directory)"
       },
       {
         "command": "pml.makeListString",
         "title": "Make Array (add |....|)",
-        "category": "PML Array"
+        "category": "PML Array",
+        "icon": "$(quote)"
       },
       {
         "command": "pml.makeListPathString",
         "title": "Make Array (add / and |....|)",
-        "category": "PML Array"
+        "category": "PML Array",
+        "icon": "$(symbol-string)"
       },
       {
         "command": "pml.reindexArray",
         "title": "ReIndex",
-        "category": "PML Array"
+        "category": "PML Array",
+        "icon": "$(list-ordered)"
       },
       {
         "command": "pml.addToArray",
         "title": "Add to Array",
-        "category": "PML Array"
+        "category": "PML Array",
+        "icon": "$(add)"
       },
       {
         "command": "pml.openButtonExample",
@@ -350,22 +355,22 @@
         {
           "submenu": "pml.quickActions",
           "when": "editorLangId == pml",
-          "group": "pml@1"
+          "group": "1_pml@1"
         },
         {
           "submenu": "pml.array",
           "when": "editorLangId == pml",
-          "group": "pml@2"
+          "group": "1_pml@2"
         },
         {
           "submenu": "pml.forms",
           "when": "editorLangId == pml",
-          "group": "pml@3"
+          "group": "1_pml@3"
         },
         {
           "submenu": "pml.examples",
           "when": "editorLangId == pml",
-          "group": "pml@4"
+          "group": "1_pml@4"
         }
       ],
       "pml.tools": [

@@ -719,7 +719,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const lines = selected.text.split('\n');
 
         // Находим все строки с массивами и определяем максимальный индекс
-        const arrayPattern = /^(\s*)(![\w.]+)\[(\d+)\](\s*=.*)$/;
+        const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=.*)$/;
         let maxIndex = 0;
         let arrayVarName = '';
         let indentSize = '';
@@ -795,7 +795,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const lines = selected.text.split('\n');
 
         // Находим существующие массивы и определяем параметры
-        const arrayPattern = /^(\s*)(![\w.]+)\[(\d+)\](\s*=\s*)(.*)$/;
+        const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
         let maxIndex = 0;
         let arrayVarName = '';
         let indentSize = '';
