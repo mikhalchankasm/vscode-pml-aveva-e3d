@@ -21,6 +21,7 @@ packages/**/src/**
 # Documentation and examples (reduce VSIX size)
 docs/**
 examples/**
+!examples/gadgets/**
 scripts/**
 test.pml
 test-*.js

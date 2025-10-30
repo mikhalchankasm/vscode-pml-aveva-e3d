@@ -821,7 +821,7 @@ export class PMLToolsProvider implements vscode.Disposable {
                     arrayVarName = match[2];
                     indentSize = match[1];
                     // Определяем формат по значению
-                    const value = match[5];
+                    const value = match[5].trim();
                     hasPath = value.startsWith('/') || value.startsWith("'/");
                     hasString = value.startsWith("'") || value.startsWith('|');
                 }
