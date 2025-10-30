@@ -266,6 +266,11 @@
         "command": "pml.openButtonExample",
         "title": "Button Gadgets",
         "category": "PML Examples"
+      },
+      {
+        "command": "pml.openFrameExample",
+        "title": "Frame Gadgets",
+        "category": "PML Examples"
       }
     ],
     "submenus": [
@@ -573,6 +578,10 @@
         {
           "command": "pml.openButtonExample",
           "group": "1_examples@1"
+        },
+        {
+          "command": "pml.openFrameExample",
+          "group": "1_examples@2"
         }
       ],
       "editor/title": [

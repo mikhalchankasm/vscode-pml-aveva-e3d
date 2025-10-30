@@ -53,6 +53,7 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         // Examples
         this.registerCommand('pml.openButtonExample', 'Button Gadgets Example', this.openButtonExample);
+        this.registerCommand('pml.openFrameExample', 'Frame Gadgets Example', this.openFrameExample);
     }
 
     private registerCommand(command: string, _title: string, callback: () => void) {
@@ -1140,6 +1141,35 @@ export class PMLToolsProvider implements vscode.Disposable {
             vscode.window.showInformationMessage('Button Gadgets example opened');
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to load Button Gadgets tutorial: ${error}`);
+        }
+    };
+
+    /**
+     * Open Frame Gadgets Example - loads tutorial from external file
+     */
+    private openFrameExample = async () => {
+        try {
+            // Find the extension path
+            const extensionPath = vscode.extensions.getExtension('mikhalchankasm.pml-aveva-e3d')?.extensionPath;
+            if (!extensionPath) {
+                vscode.window.showErrorMessage('Could not locate extension path');
+                return;
+            }
+
+            // Load tutorial content from file
+            const tutorialPath = path.join(extensionPath, 'examples', 'gadgets', 'FrameGadgets_Tutorial.md');
+
+            const content = fs.readFileSync(tutorialPath, 'utf8');
+
+            const document = await vscode.workspace.openTextDocument({
+                content,
+                language: 'markdown'
+            });
+
+            await vscode.window.showTextDocument(document);
+            vscode.window.showInformationMessage('Frame Gadgets example opened');
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to load Frame Gadgets tutorial: ${error}`);
         }
     };
 }

@@ -312,6 +312,96 @@
     ],
     "description": "Button at specific position"
   },
+  "Frame Normal": {
+    "prefix": "frame",
+    "body": [
+      "frame .${1:frName} |${2:Frame Title}| at ${3:x0} ${4:y0} width ${5:100} height ${6:30}",
+      "    ${7:-- Frame contents}",
+      "exit"
+    ],
+    "description": "Normal frame container"
+  },
+  "Frame at Position": {
+    "prefix": "frameat",
+    "body": [
+      "frame .${1:frName} |${2:Frame Title}| at ${3:xmax+2} ${4:ymin} width ${5:100} height ${6:30}",
+      "    ${7:-- Frame contents}",
+      "exit"
+    ],
+    "description": "Frame at specific position"
+  },
+  "Frame TabSet": {
+    "prefix": "frametabset",
+    "body": [
+      "frame tabset at ${1:x0} ${2:y0} width ${3:100} height ${4:50}",
+      "    frame .${5:frTab1} |${6:Tab 1}| at ${7:x0} ${8:y0} width ${9:100} height ${10:50}",
+      "        ${11:-- Tab 1 contents}",
+      "    exit",
+      "    ",
+      "    frame .${12:frTab2} |${13:Tab 2}| at ${14:x0} ${15:y0} width ${16:100} height ${17:50}",
+      "        ${18:-- Tab 2 contents}",
+      "    exit",
+      "exit"
+    ],
+    "description": "TabSet frame with tabbed pages"
+  },
+  "Frame Toolbar": {
+    "prefix": "frametoolbar",
+    "body": [
+      "frame .${1:frToolbar} toolbar |${2:Toolbar}|",
+      "    button .${3:btnTool1} |${4:Tool 1}| callback |!this.${5:onTool1}()| width ${6:10}",
+      "    button .${7:btnTool2} |${8:Tool 2}| callback |!this.${9:onTool2}()| width ${10:10}",
+      "exit"
+    ],
+    "description": "Toolbar frame (main forms only)"
+  },
+  "Frame Panel": {
+    "prefix": "framepanel",
+    "body": [
+      "frame panel at ${1:x0} ${2:y0} width ${3:100} height ${4:30}",
+      "    ${5:-- Panel contents}",
+      "exit"
+    ],
+    "description": "Panel frame (no border)"
+  },
+  "Frame Panel Indented": {
+    "prefix": "framepanelindent",
+    "body": [
+      "frame panel indent at ${1:x0} ${2:y0} width ${3:100} height ${4:30}",
+      "    ${5:-- Panel contents}",
+      "exit"
+    ],
+    "description": "Panel frame with 3D indent"
+  },
+  "Frame FoldUp Panel": {
+    "prefix": "framefoldup",
+    "body": [
+      "frame .${1:frFoldUp} folduppanel |${2:Fold-up Panel}| at ${3:x0} ${4:y0} width ${5:100} height ${6:30}",
+      "    ${7:-- Fold-up panel contents}",
+      "exit"
+    ],
+    "description": "Fold-up panel frame (expandable/collapsible)"
+  },
+  "Frame FoldUp with Background": {
+    "prefix": "framefoldupbg",
+    "body": [
+      "frame .${1:frFoldUp} folduppanel background ${2:lightGold} |${3:Fold-up Panel}| at ${4:x0} ${5:y0} width ${6:100} height ${7:30}",
+      "    ${8:-- Fold-up panel contents}",
+      "exit"
+    ],
+    "description": "Fold-up panel with background color"
+  },
+  "Frame Radio Group": {
+    "prefix": "frameradio",
+    "body": [
+      "frame .${1:frRadio} |${2:Radio Group}| at ${3:x0} ${4:y0} width ${5:100} height ${6:30} callback |!this.${7:onRadioSelect}()|",
+      "    rtoggle .${8:opt1} |${9:Option 1}| at ${10:x0} ${11:y0}",
+      "    rtoggle .${12:opt2} |${13:Option 2}| at ${14:x0} ${15:ymax+2}",
+      "    rtoggle .${16:opt3} |${17:Option 3}| at ${18:x0} ${19:ymax+2}",
+      "exit"
+    ],
+    "description": "Frame as radio button group with RTOGGLE gadgets"
+  },
   "Text Field": {
     "prefix": "textfield",
     "body": [
