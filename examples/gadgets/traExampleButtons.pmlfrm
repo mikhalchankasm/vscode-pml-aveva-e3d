@@ -1,0 +1,55 @@
+setup form !!traExampleButtons
+    !this.formTitle = |Buttons|
+    button .butt1 |Normal| width 8
+    button .butt2 linklabel |Link Label| at xmax+2.7 wid 6
+    button .butt3 |Yellow| at xmax+2.5 backg 4 width 8
+    button .butt4 |Deactive| at xmin.butt1 ymax width 8
+    button .butt5 |Child Form| form !!traExampleParagraphs width 9
+    button .butt6 toggle backg 4 call |!this.check()| pixmap wid 72 hei 23
+
+exit
+
+------------------------------------------------------------------------
+--
+-- Method:      traExampleButtons
+--
+-- Description: Constructor method for the traExampleButtons form
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
+define method .traExampleButtons()
+
+    -- Deactivate butt3 in CONSTRUCTOR method
+    !this.butt4.active = FALSE
+    -- Use built in method to apply pictures
+    !off               = !!pml.getPathName(|officon.png|)
+    !on                = !!pml.getPathName(|onicon.png|)
+    !this.butt6.addPixmap(!off, !on)
+
+endmethod
+
+------------------------------------------------------------------------
+--
+-- Method:      check
+--
+-- Description: Return the toggle button value to the command line
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
+define method .check()
+
+    -- Return the toggle button value to the command line
+    !check = !this.butt6.val
+    $p Value: $!check
+
+endmethod

@@ -652,6 +652,7 @@
     "watch:tsc": "tsc -watch -p ./",
     "esbuild-base": "node esbuild.js",
     "esbuild": "npm run esbuild-base -- --production",
+    "test": "npm --prefix packages/pml-language-server test",
     "pretest": "npm run compile",
     "lint": "eslint src --ext ts",
     "pack": "powershell -NoProfile -Command \"Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix; npx @vscode/vsce package --no-yarn\"",

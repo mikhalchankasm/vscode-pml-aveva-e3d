@@ -42,7 +42,8 @@
       "Bash(npm run pack:install:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []
