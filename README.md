@@ -21,6 +21,8 @@
 - 📋 **Signature Help** — Parameter hints for method calls
 - 🎯 **Hover Information** — Quick documentation on hover
 - 🗂️ **Workspace Indexing** — Fast symbol search across project
+- 📖 **Examples & Tutorials** — Built-in gadget examples and documentation (Button Gadgets, Forms, etc.)
+- 🔢 **Array Tools** — Smart array indexing, reindexing, and manipulation commands
 
 ### 🚀 Quick Start
 

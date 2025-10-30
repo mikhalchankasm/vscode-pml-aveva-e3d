@@ -22,8 +22,25 @@ setup form !!testButtonSnippets
     -- buttonpix       -> Button with pixmap
     -- buttonat        -> Button at specific position
 
+
 exit
 
+------------------------------------------------------------------------
+--
+-- Method:      testButtonSnippets
+--
+-- Description: 
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
 define method .testButtonSnippets()
     -- Constructor
+
+    
+
 endmethod

@@ -354,12 +354,12 @@
       "editor/context": [
         {
           "submenu": "pml.quickActions",
-          "when": "editorLangId == pml",
+          "when": "editorLangId == pml && editorHasSelection",
           "group": "1_pml@1"
         },
         {
           "submenu": "pml.array",
-          "when": "editorLangId == pml",
+          "when": "editorLangId == pml && editorHasSelection",
           "group": "1_pml@2"
         },
         {
