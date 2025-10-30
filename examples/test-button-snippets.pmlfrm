@@ -1,0 +1,29 @@
+-- Test file for button snippets
+-- Type snippet prefix and press Tab to expand
+-- Test each snippet below:
+
+setup form !!testButtonSnippets
+    !this.formTitle = |Button Snippets Test|
+
+    -- Try these snippet prefixes:
+    -- button          -> Basic button
+    -- buttoncall      -> Button with callback
+    -- buttonform      -> Button with child form
+    -- buttonok        -> OK button
+    -- buttoncancel    -> Cancel button
+    -- buttonapply     -> Apply button
+    -- buttonreset     -> Reset button
+    -- buttonhelp      -> Help button
+    -- buttondismiss   -> Dismiss button
+    -- buttontoggle    -> Toggle button
+    -- buttontogglepix -> Toggle with pixmap
+    -- buttonlink      -> Link label button
+    -- buttonbg        -> Button with background color
+    -- buttonpix       -> Button with pixmap
+    -- buttonat        -> Button at specific position
+
+exit
+
+define method .testButtonSnippets()
+    -- Constructor
+endmethod

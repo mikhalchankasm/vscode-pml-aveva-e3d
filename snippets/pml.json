@@ -207,12 +207,110 @@
     ],
     "description": "Import namespace"
   },
-  "Button": {
+  "Button Basic": {
     "prefix": "button",
     "body": [
-      "button .${1:btnName} text |${2:Button Text}| callback .${3:callbackMethod}()"
+      "button .${1:btnName} |${2:Button Text}| width ${3:10}"
     ],
-    "description": "Create a button"
+    "description": "Basic button"
+  },
+  "Button with Callback": {
+    "prefix": "buttoncall",
+    "body": [
+      "button .${1:btnName} |${2:Button Text}| callback |!this.${3:onButtonClick}()| width ${4:10}"
+    ],
+    "description": "Button with callback method"
+  },
+  "Button with Form": {
+    "prefix": "buttonform",
+    "body": [
+      "button .${1:btnName} |${2:More...}| form !!${3:ChildForm} width ${4:10}"
+    ],
+    "description": "Button that opens a child form"
+  },
+  "Button OK": {
+    "prefix": "buttonok",
+    "body": [
+      "button .${1:btnOk} |OK| callback |!this.${2:onOk}()| OK width ${3:8}"
+    ],
+    "description": "OK button with callback"
+  },
+  "Button Cancel": {
+    "prefix": "buttoncancel",
+    "body": [
+      "button .${1:btnCancel} |Cancel| CANCEL width ${2:8}"
+    ],
+    "description": "Cancel button (no callback needed)"
+  },
+  "Button Apply": {
+    "prefix": "buttonapply",
+    "body": [
+      "button .${1:btnApply} |Apply| callback |!this.${2:onApply}()| APPLY width ${3:8}"
+    ],
+    "description": "Apply button with callback"
+  },
+  "Button Reset": {
+    "prefix": "buttonreset",
+    "body": [
+      "button .${1:btnReset} |Reset| callback |!this.${2:onReset}()| RESET width ${3:8}"
+    ],
+    "description": "Reset button with callback"
+  },
+  "Button Help": {
+    "prefix": "buttonhelp",
+    "body": [
+      "button .${1:btnHelp} |Help| HELP width ${2:8}"
+    ],
+    "description": "Help button"
+  },
+  "Button Dismiss": {
+    "prefix": "buttondismiss",
+    "body": [
+      "button .${1:btnDismiss} |Dismiss| CANCEL"
+    ],
+    "description": "Dismiss button (closes form)"
+  },
+  "Button Toggle": {
+    "prefix": "buttontoggle",
+    "body": [
+      "button .${1:btnToggle} toggle |${2:Toggle Text}| callback |!this.${3:onToggle}()| width ${4:10}"
+    ],
+    "description": "Toggle button (pressed/unpressed states)"
+  },
+  "Button Toggle with Pixmap": {
+    "prefix": "buttontogglepix",
+    "body": [
+      "button .${1:btnToggle} toggle callback |!this.${2:onToggle}()| pixmap width ${3:72} height ${4:23}"
+    ],
+    "description": "Toggle button with pixmap images"
+  },
+  "Button Link Label": {
+    "prefix": "buttonlink",
+    "body": [
+      "button .${1:btnLink} linklabel |${2:Link Text}| callback |!this.${3:onLinkClick}()| width ${4:10}"
+    ],
+    "description": "Link label button (no border, underlines on hover)"
+  },
+  "Button with Background": {
+    "prefix": "buttonbg",
+    "body": [
+      "button .${1:btnName} |${2:Button Text}| background ${3:4} width ${4:10}"
+    ],
+    "description": "Button with background color"
+  },
+  "Button with Pixmap": {
+    "prefix": "buttonpix",
+    "body": [
+      "button .${1:btnName} pixmap /${2:filename} callback |!this.${3:onClick}()| width ${4:16} height ${5:16}"
+    ],
+    "description": "Button with pixmap image"
+  },
+  "Button at Position": {
+    "prefix": "buttonat",
+    "body": [
+      "button .${1:btnName} |${2:Button Text}| at ${3:xmax+2} ${4:ymin} width ${5:10}"
+    ],
+    "description": "Button at specific position"
   },
   "Text Field": {
     "prefix": "textfield",
