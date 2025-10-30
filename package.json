@@ -246,6 +246,11 @@
         "command": "pml.makeListPathString",
         "title": "Make List (Path String)",
         "category": "PML Array"
+      },
+      {
+        "command": "pml.openButtonExample",
+        "title": "Button Gadgets",
+        "category": "PML Examples"
       }
     ],
     "submenus": [
@@ -264,8 +269,13 @@
       },
       {
         "id": "pml.quickActions",
-        "label": "⚡ Quick Action PML",
+        "label": "PML - Quick Action",
         "icon": "$(zap)"
+      },
+      {
+        "id": "pml.examples",
+        "label": "Examples",
+        "icon": "$(book)"
       }
     ],
     "configuration": {
@@ -327,13 +337,8 @@
       "editor/context": [
         {
           "submenu": "pml.quickActions",
-          "when": "editorLangId == pml && editorHasSelection",
+          "when": "editorLangId == pml",
           "group": "1_modification"
-        },
-        {
-          "submenu": "pml.array",
-          "when": "editorLangId == pml && editorHasSelection",
-          "group": "2_array"
         }
       ],
       "pml.tools": [
@@ -408,6 +413,10 @@
         {
           "submenu": "pml.array",
           "group": "8_array"
+        },
+        {
+          "submenu": "pml.examples",
+          "group": "9_examples"
         }
       ],
       "pml.forms": [
@@ -514,6 +523,16 @@
         {
           "submenu": "pml.array",
           "group": "8_array"
+        },
+        {
+          "submenu": "pml.examples",
+          "group": "9_examples"
+        }
+      ],
+      "pml.examples": [
+        {
+          "command": "pml.openButtonExample",
+          "group": "1_examples@1"
         }
       ],
       "editor/title": [
