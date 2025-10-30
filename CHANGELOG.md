@@ -2,6 +2,47 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.0] - 2025-01-30
+
+### Added - Frame Gadgets Support
+
+- **Frame Gadgets Snippets** - 9 new snippets for all frame types
+  - `frame` - Normal frame container with border
+  - `frameat` - Frame at specific position
+  - `frametabset` - TabSet with multiple tabbed pages
+  - `frametoolbar` - Toolbar frame (main forms only)
+  - `framepanel` - Panel frame without visible border
+  - `framepanelindent` - Panel frame with 3D indent
+  - `framefoldup` - Fold-up panel (expandable/collapsible)
+  - `framefoldupbg` - Fold-up panel with background color
+  - `frameradio` - Radio button group with RTOGGLE gadgets
+
+- **Frame Gadgets Tutorial** - Comprehensive documentation
+  - Quick reference for all frame types
+  - Complete example forms with nested frames
+  - Members & methods reference tables
+  - Detailed sections for each of 5 frame types
+  - Best practices and FAQ (9 questions)
+  - Available via: PML - Examples, FAQ → Frame Gadgets
+
+- **V1.0 Planning Document** - Created detailed roadmap
+  - 6 phases to production release
+  - Timeline: 12-20 weeks (Q3 2025 target)
+  - Criteria for 1.0.0: Stable, Tested (>80%), Documented, Community-ready
+  - Current progress: ~75%
+
+### Fixed - Tutorial Files and Array Commands
+
+- **VSIX Include** - Tutorials now packaged correctly
+  - Updated .vscodeignore to include examples/gadgets/**
+  - ButtonGadgets_Tutorial.md and FrameGadgets_Tutorial.md now in VSIX
+  - Fixes "ENOENT: no such file or directory" error
+
+- **Array Commands** - Improved regex handling
+  - Fixed Add to Array for string arrays (e.g., `!items[1] = 'value'`)
+  - Fixed ReIndex for path arrays (e.g., `!paths[1] = /path/to/file`)
+  - Added .trim() to value detection before format checking
+
 ## [0.9.9] - 2025-01-29
 
 ### Added - Method Documentation and Comment Tools

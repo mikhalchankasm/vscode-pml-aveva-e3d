@@ -1,4 +1,70 @@
-# Release Notes - v0.9.9
+# Release Notes - v0.10.0
+
+**Release Date:** 2025-01-30
+
+## 🎯 What's New in v0.10.0
+
+### Frame Gadgets Support - Complete Implementation
+
+**New Snippets** (9 total):
+- ✅ **`frame`** - Normal frame container with border
+- ✅ **`frameat`** - Frame at specific position
+- ✅ **`frametabset`** - TabSet with multiple tabbed pages (nested frames)
+- ✅ **`frametoolbar`** - Toolbar frame (main forms only)
+- ✅ **`framepanel`** - Panel frame without visible border
+- ✅ **`framepanelindent`** - Panel frame with 3D indent effect
+- ✅ **`framefoldup`** - Fold-up panel (expandable/collapsible)
+- ✅ **`framefoldupbg`** - Fold-up panel with background color
+- ✅ **`frameradio`** - Radio button group with RTOGGLE gadgets
+
+**Frame Gadgets Tutorial**:
+- ✅ **Comprehensive documentation** (12KB): Quick reference, complete example form, members/methods tables
+- ✅ **Type-specific details**: All 5 frame types explained (Normal, TabSet, Toolbar, Panel, Fold-up)
+- ✅ **Nested frames example**: Shows proper hierarchy and tabset implementation
+- ✅ **Best practices** (8 recommendations): Naming, nesting, callbacks, positioning
+- ✅ **FAQ section** (9 questions): Common issues and solutions
+- ✅ **Menu integration**: Accessible via "PML - Examples, FAQ → Frame Gadgets"
+
+### V1.0 Planning Document
+- ✅ **Created roadmap**: V1.0_PLAN.md with 6 phases (Testing, Form Features, Documentation, Community, Performance, Enhanced Features)
+- ✅ **Timeline**: 12-20 weeks to production release
+- ✅ **Criteria defined**: Testing, stability, documentation, examples requirements for 1.0.0
+- ✅ **Current progress**: ~75% complete
+
+## 🐛 Bug Fixes
+
+### Tutorial Files Not Packaged in VSIX
+**Problem**: Opening Frame/Button examples failed with ENOENT error
+**Root Cause**: `.vscodeignore` excluded all `examples/**`
+**Fix**:
+- ✅ Added exception pattern `!examples/gadgets/**`
+- ✅ Copied ButtonGadgets_Tutorial.md to correct location
+- ✅ Verified both tutorials now included in VSIX (20.65 KB total)
+
+### Array Commands - Value Detection Failed
+**Problem**: ReIndex and Add to Array not working on path/string arrays
+**Test Cases**:
+```pml
+!paths[1] = /path/to/file1  -- ReIndex failed
+!items[1] = 'first item'    -- Add to Array failed
+```
+**Root Cause**: Value (`match[5]`) not trimmed before format checking
+**Fix**:
+- ✅ Added `.trim()` before `startsWith()` checks in tools.ts:824
+- ✅ Tested with path arrays: `!paths[n] = /path/to/file`
+- ✅ Tested with string arrays: `!items[n] = 'string value'`
+
+## 📦 Installation
+
+**GitHub Release:** [v0.10.0](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.0)
+
+**MD5 Checksum:** `b132c42e8e1b4171d32bb9b3e965b276`
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.9.9
 
 **Release Date:** 2025-01-29
 
