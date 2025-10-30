@@ -234,17 +234,27 @@
       },
       {
         "command": "pml.makeListPath",
-        "title": "Make List (Path)",
+        "title": "Make Array (add /)",
         "category": "PML Array"
       },
       {
         "command": "pml.makeListString",
-        "title": "Make List (String)",
+        "title": "Make Array (add |....|)",
         "category": "PML Array"
       },
       {
         "command": "pml.makeListPathString",
-        "title": "Make List (Path String)",
+        "title": "Make Array (add / and |....|)",
+        "category": "PML Array"
+      },
+      {
+        "command": "pml.reindexArray",
+        "title": "ReIndex",
+        "category": "PML Array"
+      },
+      {
+        "command": "pml.addToArray",
+        "title": "Add to Array",
         "category": "PML Array"
       },
       {
@@ -261,11 +271,13 @@
       },
       {
         "id": "pml.forms",
-        "label": "Forms"
+        "label": "PML - Forms",
+        "icon": "$(file-code)"
       },
       {
         "id": "pml.array",
-        "label": "Array"
+        "label": "PML - Array",
+        "icon": "$(symbol-array)"
       },
       {
         "id": "pml.quickActions",
@@ -274,7 +286,7 @@
       },
       {
         "id": "pml.examples",
-        "label": "Examples",
+        "label": "PML - Examples, FAQ",
         "icon": "$(book)"
       }
     ],
@@ -338,7 +350,22 @@
         {
           "submenu": "pml.quickActions",
           "when": "editorLangId == pml",
-          "group": "1_modification"
+          "group": "pml@1"
+        },
+        {
+          "submenu": "pml.array",
+          "when": "editorLangId == pml",
+          "group": "pml@2"
+        },
+        {
+          "submenu": "pml.forms",
+          "when": "editorLangId == pml",
+          "group": "pml@3"
+        },
+        {
+          "submenu": "pml.examples",
+          "when": "editorLangId == pml",
+          "group": "pml@4"
         }
       ],
       "pml.tools": [
@@ -449,6 +476,14 @@
         {
           "command": "pml.makeListPathString",
           "group": "1_array@3"
+        },
+        {
+          "command": "pml.reindexArray",
+          "group": "2_reindex@1"
+        },
+        {
+          "command": "pml.addToArray",
+          "group": "3_add@1"
         }
       ],
       "pml.quickActions": [

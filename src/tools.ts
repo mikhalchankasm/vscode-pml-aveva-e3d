@@ -43,9 +43,11 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.insertMethodDocBlock', 'Insert Method Documentation Block', this.insertMethodDocBlock);
 
         // Array helpers
-        this.registerCommand('pml.makeListPath', 'Make List (Path)', this.makeListPath);
-        this.registerCommand('pml.makeListString', 'Make List (String)', this.makeListString);
-        this.registerCommand('pml.makeListPathString', 'Make List (Path String)', this.makeListPathString);
+        this.registerCommand('pml.makeListPath', 'Make Array (add /)', this.makeListPath);
+        this.registerCommand('pml.makeListString', 'Make Array (add |....|)', this.makeListString);
+        this.registerCommand('pml.makeListPathString', 'Make Array (add / and |....|)', this.makeListPathString);
+        this.registerCommand('pml.reindexArray', 'ReIndex', this.reindexArray);
+        this.registerCommand('pml.addToArray', 'Add to Array', this.addToArray);
 
         // Examples
         this.registerCommand('pml.openButtonExample', 'Button Gadgets Example', this.openButtonExample);
@@ -702,6 +704,168 @@ export class PMLToolsProvider implements vscode.Disposable {
         });
 
         this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Created array list');
+    };
+
+    /**
+     * ReIndex - перенумеровывает индексы массива, начиная с текущего максимального индекса + 1
+     */
+    private reindexArray = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
+
+        // Находим все строки с массивами и определяем максимальный индекс
+        const arrayPattern = /^(\s*)(![\w.]+)\[(\d+)\](\s*=.*)$/;
+        let maxIndex = 0;
+        let arrayVarName = '';
+        let indentSize = '';
+
+        // Сначала проходим по всем строкам и находим максимальный индекс
+        for (const line of lines) {
+            const match = line.match(arrayPattern);
+            if (match) {
+                const index = parseInt(match[3], 10);
+                if (index > maxIndex) {
+                    maxIndex = index;
+                }
+                if (!arrayVarName) {
+                    arrayVarName = match[2];
+                    indentSize = match[1];
+                }
+            }
+        }
+
+        // Если массивов не найдено, пробуем найти в контексте выше выделения
+        if (!arrayVarName) {
+            const textAbove = editor.document.getText(
+                new vscode.Range(
+                    new vscode.Position(Math.max(0, selected.range.start.line - 50), 0),
+                    selected.range.start
+                )
+            );
+            const aboveLines = textAbove.split('\n').reverse();
+            for (const line of aboveLines) {
+                const match = line.match(arrayPattern);
+                if (match) {
+                    maxIndex = parseInt(match[3], 10);
+                    arrayVarName = match[2];
+                    indentSize = match[1];
+                    break;
+                }
+            }
+        }
+
+        if (!arrayVarName) {
+            vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте или выше');
+            return;
+        }
+
+        // Перенумеровываем строки
+        let currentIndex = maxIndex + 1;
+        const maxIndexLength = (maxIndex + lines.length).toString().length;
+
+        const result = lines.map(line => {
+            const match = line.match(arrayPattern);
+            if (match) {
+                const idx = currentIndex.toString().padEnd(maxIndexLength);
+                const newLine = `${indentSize}${arrayVarName}[${idx}]${match[4]}`;
+                currentIndex++;
+                return newLine;
+            }
+            return line;
+        });
+
+        await this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Array indices reindexed');
+    };
+
+    /**
+     * Add to Array - добавляет выделенные строки как новые элементы массива
+     */
+    private addToArray = async () => {
+        const editor = this.getActiveEditor();
+        if (!editor) return;
+
+        const selected = this.getSelectedTextOrShowError(editor);
+        if (!selected) return;
+
+        const lines = selected.text.split('\n');
+
+        // Находим существующие массивы и определяем параметры
+        const arrayPattern = /^(\s*)(![\w.]+)\[(\d+)\](\s*=\s*)(.*)$/;
+        let maxIndex = 0;
+        let arrayVarName = '';
+        let indentSize = '';
+        let hasPath = false;
+        let hasString = false;
+
+        const arrayLines: string[] = [];
+        const nonArrayLines: string[] = [];
+
+        // Разделяем строки на массивы и не-массивы
+        for (const line of lines) {
+            const match = line.match(arrayPattern);
+            if (match) {
+                arrayLines.push(line);
+                const index = parseInt(match[3], 10);
+                if (index > maxIndex) {
+                    maxIndex = index;
+                }
+                if (!arrayVarName) {
+                    arrayVarName = match[2];
+                    indentSize = match[1];
+                    // Определяем формат по значению
+                    const value = match[5];
+                    hasPath = value.startsWith('/') || value.startsWith("'/");
+                    hasString = value.startsWith("'") || value.startsWith('|');
+                }
+            } else if (line.trim().length > 0) {
+                nonArrayLines.push(line);
+            }
+        }
+
+        if (!arrayVarName) {
+            vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте');
+            return;
+        }
+
+        if (nonArrayLines.length === 0) {
+            vscode.window.showInformationMessage('Нет строк для добавления в массив');
+            return;
+        }
+
+        // Создаем новые элементы массива
+        const maxIndexLength = (maxIndex + nonArrayLines.length).toString().length;
+        let currentIndex = maxIndex + 1;
+
+        const newArrayElements = nonArrayLines.map(line => {
+            const trimmedLine = line.trim();
+            const idx = currentIndex.toString().padEnd(maxIndexLength);
+
+            // Определяем формат значения
+            let value: string;
+            if (hasPath && hasString) {
+                value = `'/${trimmedLine}'`;
+            } else if (hasPath) {
+                value = `/${trimmedLine}`;
+            } else if (hasString) {
+                value = `'${trimmedLine}'`;
+            } else {
+                value = trimmedLine;
+            }
+
+            currentIndex++;
+            return `${indentSize}${arrayVarName}[${idx}] = ${value}`;
+        });
+
+        // Объединяем существующие массивы и новые элементы
+        const result = [...arrayLines, ...newArrayElements];
+
+        await this.applyChangesToSelection(editor, selected.range, result.join('\n'),
+            `Added ${nonArrayLines.length} items to array`);
     };
 
     // Form documentation helpers
