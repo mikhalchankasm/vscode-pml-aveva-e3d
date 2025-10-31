@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.9.9-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.10.0-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -21,15 +21,17 @@
 - 📋 **Signature Help** — Parameter hints for method calls
 - 🎯 **Hover Information** — Quick documentation on hover
 - 🗂️ **Workspace Indexing** — Fast symbol search across project
-- 📖 **Examples & Tutorials** — Built-in gadget examples and documentation (Button Gadgets, Forms, etc.)
+- 📖 **Examples & Tutorials** — Built-in gadget examples and documentation (Button Gadgets, Frame Gadgets, etc.)
 - 🔢 **Array Tools** — Smart array indexing, reindexing, and manipulation commands
+- 📝 **Form Gadget Snippets** — Code snippets for Button, Frame, and other form gadgets
+- 📚 **Context Menus** — Quick access to sorting, array manipulation, and form tools
 
 ### 🚀 Quick Start
 
 #### Installation
 
 **Option 1: From GitHub Releases** (Recommended)
-1. Download `pml-aveva-e3d-0.9.9.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Download `pml-aveva-e3d-0.10.0.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. In VSCode: `Extensions` → `...` → `Install from VSIX`
 3. Reload VSCode
 
@@ -112,7 +114,7 @@ MIT License - see [LICENSE](LICENSE)
 #### Установка
 
 **Вариант 1: Из GitHub Releases** (Рекомендуется)
-1. Скачайте `pml-aveva-e3d-0.7.0.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Скачайте `pml-aveva-e3d-0.10.0.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. В VSCode: `Расширения` → `...` → `Установить из VSIX`
 3. Перезагрузите VSCode
 
