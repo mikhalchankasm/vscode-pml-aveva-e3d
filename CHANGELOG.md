@@ -2,7 +2,7 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
-## [0.10.0] - 2025-01-30
+## [0.10.0] - 2025-01-31
 
 ### Added - Frame Gadgets Support
 
@@ -30,6 +30,23 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - Timeline: 12-20 weeks (Q3 2025 target)
   - Criteria for 1.0.0: Stable, Tested (>80%), Documented, Community-ready
   - Current progress: ~75%
+
+- **LSP Configuration Settings** - Exposed server settings in UI
+  - `pml.typeInference.enabled` - Toggle type inference
+  - `pml.inlayHints.enabled` - Show/hide inlay hints
+  - `pml.inlayHints.parameterNames` - Parameter name hints
+  - `pml.diagnostics.typeChecking` - Type checking diagnostics
+  - `pml.diagnostics.unusedVariables` - Unused variable warnings
+  - `pml.diagnostics.arrayIndexZero` - Warn on 0-based array indices
+  - `pml.indexing.exclude` - Configure files to exclude from indexing
+
+### Improved - VSIX Package Size
+
+- **Reduced Package Size** - Excluded development files
+  - `hide_examples/**` excluded (~458 KB of training materials)
+  - `objects/**` excluded (~133 KB of knowledge base)
+  - Only essential tutorial files included (examples/gadgets/)
+  - **Result**: 2.07 MB (42 files) vs 2.38 MB (77 files) - 310 KB smaller (13% reduction)
 
 ### Fixed - Tutorial Files and Array Commands
 

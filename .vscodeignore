@@ -22,12 +22,16 @@ packages/**/src/**
 docs/**
 examples/**
 !examples/gadgets/**
+hide_examples/**
 scripts/**
 test.pml
 test-*.js
 README_DEV.md
 RELEASE_NOTES_*.md
 .github/**
+
+# Knowledge base - exclude from VSIX (used only for development)
+objects/**
 
 # Old VSIX files
 *.vsix

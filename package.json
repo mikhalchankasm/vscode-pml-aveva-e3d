@@ -352,6 +352,53 @@
             "warning"
           ],
           "description": "Detect typos in PML keywords (CURRENTLY DISABLED - parser catches syntax errors instead. Use 'off')"
+        },
+        "pml.typeInference.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable type inference for variables and expressions"
+        },
+        "pml.inlayHints.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show inlay hints for parameter names and types"
+        },
+        "pml.inlayHints.parameterNames": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show parameter names in function calls"
+        },
+        "pml.diagnostics.typeChecking": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable type checking diagnostics"
+        },
+        "pml.diagnostics.unusedVariables": {
+          "type": "boolean",
+          "default": false,
+          "description": "Warn about unused variables"
+        },
+        "pml.diagnostics.arrayIndexZero": {
+          "type": "boolean",
+          "default": true,
+          "description": "Warn when array index starts from 0 (PML arrays are 1-based)"
+        },
+        "pml.indexing.exclude": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/out/**",
+            "**/docs/**",
+            "**/scripts/**",
+            "**/.git/**",
+            "**/.vscode/**",
+            "**/examples/**",
+            "**/hide_examples/**"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Glob patterns for files to exclude from workspace indexing"
         }
       }
     },

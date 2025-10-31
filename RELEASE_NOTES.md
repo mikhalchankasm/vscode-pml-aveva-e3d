@@ -1,6 +1,6 @@
 # Release Notes - v0.10.0
 
-**Release Date:** 2025-01-30
+**Release Date:** 2025-01-31
 
 ## 🎯 What's New in v0.10.0
 
@@ -31,6 +31,24 @@
 - ✅ **Criteria defined**: Testing, stability, documentation, examples requirements for 1.0.0
 - ✅ **Current progress**: ~75% complete
 
+### LSP Configuration Settings
+- ✅ **Type Inference**: `pml.typeInference.enabled` - Toggle type inference on/off
+- ✅ **Inlay Hints**: `pml.inlayHints.enabled`, `pml.inlayHints.parameterNames` - Show parameter hints
+- ✅ **Diagnostics**: `pml.diagnostics.typeChecking`, `pml.diagnostics.unusedVariables`, `pml.diagnostics.arrayIndexZero`
+- ✅ **Indexing**: `pml.indexing.exclude` - Configure which files to exclude from workspace indexing
+
+## ⚡ Performance Improvements
+
+### VSIX Package Size Reduction
+**Before**: 2.38 MB (77 files)
+**After**: 2.07 MB (42 files)
+**Reduction**: 310 KB (13% smaller, 35 fewer files)
+
+**What was excluded**:
+- ✅ `hide_examples/**` - Training materials (~458 KB)
+- ✅ `objects/**` - Development knowledge base (~133 KB)
+- ✅ Only essential tutorials kept in `examples/gadgets/`
+
 ## 🐛 Bug Fixes
 
 ### Tutorial Files Not Packaged in VSIX
@@ -58,7 +76,7 @@
 
 **GitHub Release:** [v0.10.0](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.0)
 
-**MD5 Checksum:** `b132c42e8e1b4171d32bb9b3e965b276`
+**MD5 Checksum:** `814edfc3fb4d33ee07e5c6b8b88954c6`
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
