@@ -2,7 +2,7 @@
  * Workspace Indexer - Indexes all PML files in workspace
  */
 
-import { TextDocuments, Connection } from 'vscode-languageserver/node';
+import { Connection } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { Parser } from '../parser/parser';

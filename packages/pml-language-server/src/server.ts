@@ -13,16 +13,10 @@ import {
 	DidChangeConfigurationNotification,
 	TextDocumentSyncKind,
 	InitializeResult,
-	CompletionItem,
-	CompletionItemKind,
-	TextDocumentPositionParams,
-	Hover,
-	MarkedString,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { Parser, ParseError } from './parser/parser';
-import { Program } from './ast/nodes';
+import { Parser } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
 import { SymbolIndex } from './index/symbolIndex';
 import { WorkspaceIndexer } from './index/workspaceIndexer';
@@ -59,6 +53,7 @@ const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hasDiagnosticRelatedInformationCapability = false;
 
 connection.onInitialize((params: InitializeParams) => {

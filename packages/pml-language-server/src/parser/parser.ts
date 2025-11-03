@@ -3,6 +3,10 @@
  * Recursive Descent Parser - converts tokens to AST
  */
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-mixed-spaces-and-tabs */
+/* eslint-disable no-constant-condition */
+
 import { Token, TokenType } from './tokens';
 import { Lexer } from './lexer';
 import {
@@ -962,7 +966,7 @@ export class Parser {
 	 */
 	private parseAssignment(): Expression {
 		// Parse left side (identifier or member expression)
-		let left = this.parseLogicalOr();
+		const left = this.parseLogicalOr();
 
 		// Check if this is an assignment
 		if (this.match(TokenType.ASSIGN)) {

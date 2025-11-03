@@ -24,14 +24,15 @@ export class ArrayIndexChecker {
 				this.checkExpression((stmt as any).expression);
 				break;
 
-			case 'MethodDefinition':
+			case 'MethodDefinition': {
 				const method = stmt as any;
 				for (const bodyStmt of method.body) {
 					this.checkStatement(bodyStmt);
 				}
 				break;
+			}
 
-			case 'IfStatement':
+			case 'IfStatement': {
 				const ifStmt = stmt as any;
 				this.checkExpression(ifStmt.test);
 				for (const thenStmt of ifStmt.consequent) {
@@ -49,8 +50,9 @@ export class ArrayIndexChecker {
 					}
 				}
 				break;
+			}
 
-			case 'DoStatement':
+			case 'DoStatement': {
 				const doStmt = stmt as any;
 				if (doStmt.collection) this.checkExpression(doStmt.collection);
 				if (doStmt.condition) this.checkExpression(doStmt.condition);
@@ -58,20 +60,23 @@ export class ArrayIndexChecker {
 					this.checkStatement(bodyStmt);
 				}
 				break;
+			}
 
-			case 'ReturnStatement':
+			case 'ReturnStatement': {
 				const returnStmt = stmt as any;
 				if (returnStmt.argument) {
 					this.checkExpression(returnStmt.argument);
 				}
 				break;
+			}
 
-			case 'VariableDeclaration':
+			case 'VariableDeclaration': {
 				const varDecl = stmt as any;
 				if (varDecl.initializer) {
 					this.checkExpression(varDecl.initializer);
 				}
 				break;
+			}
 		}
 	}
 
@@ -79,7 +84,7 @@ export class ArrayIndexChecker {
 		if (!expr) return;
 
 		switch (expr.type) {
-			case 'MemberExpression':
+			case 'MemberExpression': {
 				const member = expr as MemberExpression;
 				// Check if it's array access with [0]
 				if (member.computed && member.property) {
@@ -102,38 +107,44 @@ export class ArrayIndexChecker {
 				// Recursively check object
 				this.checkExpression(member.object);
 				break;
+			}
 
-			case 'CallExpression':
+			case 'CallExpression': {
 				const call = expr as any;
 				this.checkExpression(call.callee);
 				for (const arg of call.arguments) {
 					this.checkExpression(arg);
 				}
 				break;
+			}
 
-			case 'BinaryExpression':
+			case 'BinaryExpression': {
 				const binary = expr as any;
 				this.checkExpression(binary.left);
 				this.checkExpression(binary.right);
 				break;
+			}
 
-			case 'UnaryExpression':
+			case 'UnaryExpression': {
 				const unary = expr as any;
 				this.checkExpression(unary.argument);
 				break;
+			}
 
-			case 'AssignmentExpression':
+			case 'AssignmentExpression': {
 				const assignment = expr as any;
 				this.checkExpression(assignment.left);
 				this.checkExpression(assignment.right);
 				break;
+			}
 
-			case 'ArrayExpression':
+			case 'ArrayExpression': {
 				const arrayExpr = expr as any;
 				for (const element of arrayExpr.elements) {
 					this.checkExpression(element);
 				}
 				break;
+			}
 		}
 	}
 }

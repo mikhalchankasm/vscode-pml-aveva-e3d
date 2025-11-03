@@ -3,7 +3,7 @@
  */
 
 import { DocumentSymbol, DocumentSymbolParams, SymbolKind as LSPSymbolKind } from 'vscode-languageserver/node';
-import { SymbolIndex, SymbolKind } from '../index/symbolIndex';
+import { SymbolIndex } from '../index/symbolIndex';
 
 export class DocumentSymbolProvider {
 	constructor(private symbolIndex: SymbolIndex) {}

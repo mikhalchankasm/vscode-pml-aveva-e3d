@@ -720,7 +720,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         if (!selected) return;
 
         // Удаляем \r (carriage return) и разбиваем на строки
-        let lines = selected.text.replace(/\r/g, '').split('\n');
+        const lines = selected.text.replace(/\r/g, '').split('\n');
 
         // Убираем пустые строки в начале и конце выделения
         while (lines.length > 0 && lines[0].trim() === '') {
@@ -809,7 +809,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         if (!selected) return;
 
         // Удаляем \r (carriage return) и разбиваем на строки
-        let lines = selected.text.replace(/\r/g, '').split('\n');
+        const lines = selected.text.replace(/\r/g, '').split('\n');
 
         // Убираем пустые строки в начале и конце выделения
         while (lines.length > 0 && lines[0].trim() === '') {

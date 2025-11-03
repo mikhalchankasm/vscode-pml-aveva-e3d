@@ -4,7 +4,7 @@
 
 import { Hover, HoverParams, MarkupKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { SymbolIndex, MethodInfo } from '../index/symbolIndex';
+import { SymbolIndex } from '../index/symbolIndex';
 
 export class HoverProvider {
 	// Built-in PML methods documentation
@@ -96,7 +96,7 @@ export class HoverProvider {
 		if (methodMatch) {
 			const methodName = methodMatch[1];
 			// Try each type to find the method
-			for (const [typeName, methods] of this.builtInDocs.entries()) {
+			for (const [, methods] of this.builtInDocs.entries()) {
 				const doc = methods.get(methodName.toLowerCase());
 				if (doc) {
 					return {

@@ -2,8 +2,8 @@
  * Symbol Index - Fast lookup of symbols across workspace
  */
 
-import { Range, Location } from 'vscode-languageserver/node';
-import { Program, MethodDefinition, ObjectDefinition, FormDefinition, FrameDefinition } from '../ast/nodes';
+import { Range } from 'vscode-languageserver/node';
+import { Program, MethodDefinition, ObjectDefinition, FormDefinition } from '../ast/nodes';
 import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
 
 /**
