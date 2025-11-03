@@ -12,7 +12,7 @@ import { PMLFormatter } from './formatter';
 import { PMLToolsProvider } from './tools';
 import { PMLMethodCommands } from './methodCommands';
 import { PMLCodeActionProvider } from './codeActions';
-import { activateLanguageServer, deactivateLanguageServer } from './languageClient';
+import { activateLanguageServer, deactivateLanguageServer, ClientState } from './languageClient';
 import { sortMethodsAscending, sortMethodsDescending } from './commands/sortMethods';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -26,7 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Monitor client state for unexpected shutdowns
         client.onDidChangeState((event) => {
-            if (event.newState === 2) { // ClientState.Stopped
+            if (event.newState === ClientState.Stopped) {
                 console.error('Language Server stopped unexpectedly');
                 vscode.window.showWarningMessage(
                     'PML Language Server stopped. Some features may be unavailable.',

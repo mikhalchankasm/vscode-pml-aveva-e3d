@@ -10,10 +10,14 @@ import {
 	LanguageClient,
 	LanguageClientOptions,
 	ServerOptions,
-	TransportKind
+	TransportKind,
+	State as ClientState
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined;
+
+// Re-export ClientState for use in extension.ts
+export { ClientState };
 
 export function activateLanguageServer(context: ExtensionContext): LanguageClient {
 	// The server is implemented in node

@@ -390,19 +390,36 @@
           "description": "Show parameter names in function calls"
         },
         "pml.diagnostics.typeChecking": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable type checking diagnostics"
+          "type": "string",
+          "default": "error",
+          "enum": ["off", "warning", "error"],
+          "enumDescriptions": [
+            "Disable type checking",
+            "Show type errors as warnings",
+            "Show type errors as errors"
+          ],
+          "description": "Type checking diagnostics severity"
         },
         "pml.diagnostics.unusedVariables": {
-          "type": "boolean",
-          "default": false,
-          "description": "Warn about unused variables"
+          "type": "string",
+          "default": "off",
+          "enum": ["off", "warning"],
+          "enumDescriptions": [
+            "Don't check for unused variables",
+            "Warn about unused variables"
+          ],
+          "description": "Unused variables diagnostics severity"
         },
         "pml.diagnostics.arrayIndexZero": {
-          "type": "boolean",
-          "default": true,
-          "description": "Warn when array index starts from 0 (PML arrays are 1-based)"
+          "type": "string",
+          "default": "error",
+          "enum": ["off", "warning", "error"],
+          "enumDescriptions": [
+            "Don't check array indices",
+            "Warn about zero-based array indices",
+            "Error on zero-based array indices"
+          ],
+          "description": "Array index checking (PML arrays are 1-based)"
         },
         "pml.indexing.exclude": {
           "type": "array",

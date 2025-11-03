@@ -122,18 +122,37 @@ connection.onInitialized(async () => {
 		});
 	}
 
-	// Index workspace on startup
+	// Index workspace on startup with progress indicator
 	try {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
 		if (workspaceFolders && workspaceFolders.length > 0) {
 			const folders = workspaceFolders.map(f => {
-				// Decode URI: file:///d%3A/path -> d:/path -> d:\path
+				// Decode URI: file:///d%3A/path -> d:/path -> d:\path (Windows-specific)
 				const decoded = decodeURIComponent(f.uri);
 				return decoded.replace('file:///', '').replace(/\//g, '\\');
 			});
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
+
+			// Create progress indicator
+			const token = 'pml-indexing-' + Date.now();
+			await connection.sendRequest('window/workDoneProgress/create', { token });
+
+			connection.sendProgress('$/progress', token, {
+				kind: 'begin',
+				title: 'PML',
+				message: 'Indexing workspace...',
+				cancellable: false
+			});
+
+			// Index workspace
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
+
+			connection.sendProgress('$/progress', token, {
+				kind: 'end',
+				message: `Indexed ${stats.files} files`
+			});
+
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
 		}
 	} catch (error: unknown) {
