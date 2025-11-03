@@ -1,4 +1,43 @@
-# Release Notes - v0.10.0
+# Release Notes - v0.10.1
+
+**Release Date:** 2025-02-01
+
+## 🔧 What's New in v0.10.1
+
+### Repository Hygiene & Git Best Practices
+
+**Fixed - Critical (P0)**:
+- ✅ **`.gitignore` updated** - Now properly excludes:
+  - VSIX packages (`*.vsix`) - store only in GitHub Releases
+  - IDE local settings (`.claude/settings.local.json`, `*.local.*`)
+  - Source maps (`*.map`)
+  - Build artifacts (`dist/`, `build/`, `*.tsbuildinfo`)
+  - Logs and cache (`*.log`, `.cache/`, `tmp/`)
+  - Environment files (`.env`, `.env.local`)
+
+**Removed from Repository**:
+- ✅ `pml-aveva-e3d-0.10.0.vsix` (2.08 MB) - moved to GitHub Releases only
+- ✅ `.claude/settings.local.json` - IDE-specific local settings
+
+**Documentation**:
+- ✅ Updated `.claude/claude.md` - Clarified VSIX storage policy (Releases only)
+
+### Impact
+- Cleaner repository without binary files
+- No IDE settings conflicts between developers
+- Follows Git best practices for artifact storage
+
+## 📦 Installation
+
+**GitHub Release:** [v0.10.1](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.1)
+
+**MD5 Checksum:** `8915ba375fd3e636b068aff46b063f6e`
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.10.0
 
 **Release Date:** 2025-01-31
 
