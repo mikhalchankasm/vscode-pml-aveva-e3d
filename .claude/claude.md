@@ -56,8 +56,8 @@ A release stage is complete only after every step below has been executed and re
 5. **Roadmap update**  
    Sync `ROADMAP.md` with completed work and new plans. Confirm it reflects the current project version and status.
 
-6. **GitHub release**  
-   Create or update the GitHub release, attach the fresh VSIX, add release notes and a checksum, and ensure alignment with the changelog and roadmap. Keep exactly one authoritative release-notes entry for the release; delete obsolete change-note files and outdated local VSIX packages so only the latest artefacts remain tracked.
+6. **GitHub release**
+   Create or update the GitHub release, attach the fresh VSIX, add release notes and a checksum, and ensure alignment with the changelog and roadmap. Keep exactly one authoritative release-notes entry for the release; delete obsolete change-note files. **IMPORTANT**: VSIX files should ONLY be stored in GitHub Releases, NOT in the git repository (they are excluded via `.gitignore`).
 
 7. **Final actions**  
    Update auxiliary communication channels (issue tracker, wiki, docs). Record the stage outcome in internal logs if needed. Verify every checklist item is closed before moving forward.

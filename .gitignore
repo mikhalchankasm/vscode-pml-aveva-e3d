@@ -1,16 +1,55 @@
 # Node
 node_modules/
 npm-debug.log*
+npm-error.log
 package-lock.json
+.yarn-integrity
 
 # Build output
 out/
+dist/
+build/
+*.tsbuildinfo
 
-# VSIX packages - commented out to allow committing releases
-# pml-aveva-e3d-*.vsix
+# VSIX packages - store in GitHub Releases, not in repo
+pml-aveva-e3d-*.vsix
+*.vsix
+
+# Source maps
+*.map
+**/*.map
+
+# IDE local settings
+.claude/settings.local.json
+.vscode-test/
+*.local.json
+*.local.*
 
 # OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
+# Logs and cache
+*.log
+*.cache
+.cache/
+.temp/
+tmp/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.bak
