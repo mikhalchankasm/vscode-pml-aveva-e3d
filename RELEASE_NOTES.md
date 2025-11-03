@@ -41,8 +41,8 @@
 
 ### VSIX Package Size Reduction
 **Before**: 2.38 MB (77 files)
-**After**: 2.07 MB (42 files)
-**Reduction**: 310 KB (13% smaller, 35 fewer files)
+**After**: 2.08 MB (44 files)
+**Reduction**: 300 KB (12.6% smaller, 33 fewer files)
 
 **What was excluded**:
 - ✅ `hide_examples/**` - Training materials (~458 KB)
@@ -76,7 +76,7 @@
 
 **GitHub Release:** [v0.10.0](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.0)
 
-**MD5 Checksum:** `814edfc3fb4d33ee07e5c6b8b88954c6`
+**MD5 Checksum:** `e8cb40860d1ab6dfdf8c8afb796bbe25`
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
 

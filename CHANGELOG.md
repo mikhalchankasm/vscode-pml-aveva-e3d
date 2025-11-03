@@ -46,7 +46,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
   - `hide_examples/**` excluded (~458 KB of training materials)
   - `objects/**` excluded (~133 KB of knowledge base)
   - Only essential tutorial files included (examples/gadgets/)
-  - **Result**: 2.07 MB (42 files) vs 2.38 MB (77 files) - 310 KB smaller (13% reduction)
+  - **Result**: 2.08 MB (44 files) vs 2.38 MB (77 files) - 300 KB smaller (12.6% reduction)
 
 ### Fixed - Tutorial Files and Array Commands
 
