@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.1] - 2025-02-01
+
+### Fixed - Documentation
+
+- **README.md** - Fixed encoding issues in Russian section
+- **packages/pml-language-server/README.md** - Complete rewrite to reflect current LSP implementation
+- **ROADMAP.md** - Simplified by removing detailed version history (moved to CHANGELOG)
+- **CONTRIBUTING.md** - Fixed broken links to non-existent files
+- **V1.0_PLAN.md** - Fixed encoding and translated to English
+- **objects/README.md** - Fixed encoding issues
+
+### Added - Documentation
+
+- **Architecture** - Added `.editorconfig` for standardized formatting
+- **Security** - Documented path traversal protection in ARCHITECTURE_ANALYSIS.md
+
 ## [0.10.0] - 2025-01-31
 
 ### Added - Frame Gadgets Support
