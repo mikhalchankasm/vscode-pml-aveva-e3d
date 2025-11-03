@@ -719,7 +719,20 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
+        // Удаляем \r (carriage return) и разбиваем на строки
+        let lines = selected.text.replace(/\r/g, '').split('\n');
+
+        // Убираем пустые строки в начале и конце выделения
+        while (lines.length > 0 && lines[0].trim() === '') {
+            lines.shift();
+        }
+        while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
+            lines.pop();
+        }
+
+        console.log(`[ReIndex] Selected text length: ${selected.text.length}`);
+        console.log(`[ReIndex] Lines count after trimming: ${lines.length}`);
+        console.log(`[ReIndex] Lines array:`, lines);
 
         // Находим все строки с массивами и определяем максимальный индекс
         const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
@@ -774,17 +787,22 @@ export class PMLToolsProvider implements vscode.Disposable {
         const arrayLinesCount = lines.filter(line => line.match(arrayPattern)).length;
         const maxIndexLength = arrayLinesCount.toString().length;
 
+        console.log(`[ReIndex] Starting reindex: arrayVar="${arrayVarName}", arrayLines=${arrayLinesCount}, maxIndexLength=${maxIndexLength}`);
+
         const result = lines.map(line => {
             const match = line.match(arrayPattern);
             if (match) {
                 const idx = currentIndex.toString().padStart(maxIndexLength);
-                const newLine = `${indentSize}${arrayVarName}[${idx}] = ${match[5]}`;
+                // Preserve formatting: match[4] contains spaces around =, match[5] contains value
+                const newLine = `${indentSize}${arrayVarName}[${idx}]${match[4]}${match[5]}`;
+                console.log(`[ReIndex] ${currentIndex}: "${line}" -> "${newLine}"`);
                 currentIndex++;
                 return newLine;
             }
             return line;
         });
 
+        console.log(`[ReIndex] Reindex complete. Applying changes...`);
         await this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Array indices reindexed');
     };
 
@@ -798,7 +816,16 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
+        // Удаляем \r (carriage return) и разбиваем на строки
+        let lines = selected.text.replace(/\r/g, '').split('\n');
+
+        // Убираем пустые строки в начале и конце выделения
+        while (lines.length > 0 && lines[0].trim() === '') {
+            lines.shift();
+        }
+        while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
+            lines.pop();
+        }
 
         // Находим существующие массивы и определяем параметры
         const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;

@@ -945,7 +945,8 @@ export class Parser {
 	 * Parse expression statement
 	 */
 	private parseExpressionStatement(): ExpressionStatement | null {
-		const expr = this.parseExpression();
+		// Check for assignment expression first: !var[index] = value or !var = value
+		const expr = this.parseAssignment();
 		if (!expr) return null;
 
 		return {
@@ -953,6 +954,35 @@ export class Parser {
 			expression: expr,
 			range: expr.range
 		};
+	}
+
+	/**
+	 * Parse assignment expression (!var = value, !var[index] = value)
+	 * Assignment has lower precedence than logical operators
+	 */
+	private parseAssignment(): Expression {
+		// Parse left side (identifier or member expression)
+		let left = this.parseLogicalOr();
+
+		// Check if this is an assignment
+		if (this.match(TokenType.ASSIGN)) {
+			const assignToken = this.previous();
+			const right = this.parseAssignment(); // Right-associative: a = b = c
+
+			// Validate left side - must be identifier or member expression
+			if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
+				throw this.error(assignToken, "Invalid assignment target");
+			}
+
+			return {
+				type: 'AssignmentExpression',
+				left: left as Identifier | MemberExpression,
+				right,
+				range: this.createRangeFromNodes(left, right)
+			};
+		}
+
+		return left;
 	}
 
 	/**
