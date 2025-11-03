@@ -2,6 +2,68 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.2] - 2025-02-02
+
+### Fixed - Critical Bugs
+
+- **ReIndex & AddToArray Commands** - Fixed critical CRLF bug on Windows
+  - Root cause: Windows line endings (`\r\n`) were not handled correctly
+  - Commands were splitting by `\n` only, leaving `\r` at line ends
+  - Regex patterns failed to match lines with trailing `\r`
+  - Result: Only last line (without `\r`) was processed
+  - **Fix**: Added `.replace(/\r/g, '')` before processing in both commands
+  - Now works correctly on all platforms (Windows, Linux, macOS)
+
+- **Empty Line Handling** - Improved selection trimming
+  - ReIndex and AddToArray now trim empty lines at start/end of selection
+  - Preserves intentional empty lines within array content
+  - More forgiving user experience when selecting text
+
+### Added - UI Enhancements
+
+- **Context Menu Icons** - Added 20+ icons to commands
+  - Sort commands: `$(sort-precedence)`, `$(text-size)`, `$(symbol-numeric)`
+  - Duplicate removal: `$(chrome-minimize)`, `$(exclude)`
+  - Whitespace: `$(dash)`, `$(whitespace)`, `$(remove)`
+  - Extract: `$(symbol-variable)`, `$(symbol-method)`
+  - Comments: `$(comment)`, `$(comment-unresolved)`
+  - Forms: `$(refresh)`, `$(list-tree)`, `$(sync)`, `$(note)`
+  - Examples: `$(circle-large-outline)`, `$(window)`
+  - Icons visible in Command Palette (`Ctrl+Shift+P`)
+
+### Improved - Documentation
+
+- **LSP README** - Complete rewrite of `packages/pml-language-server/README.md`
+  - Removed "Alpha" status - LSP is production-ready
+  - Updated feature list: all implemented features marked ✅
+  - Added performance metrics (startup, indexing, memory usage)
+  - Documented configuration options
+  - Added known limitations section
+  - Removed outdated TODO items
+
+### Fixed - Code Quality (P0/P1)
+
+- **Error Typing** - Fixed untyped errors in 4 locations
+  - `src/tools.ts`: Button/Frame Gadgets loaders
+  - `packages/pml-language-server/src/server.ts`: workspace indexing, parser crashes
+  - Changed `catch (error)` → `catch (error: unknown)` with proper type guards
+
+- **Documentation Links** - Fixed broken references
+  - `CONTRIBUTING.md`: Removed links to non-existent files
+  - `README.md`: Fixed `changelog.md` → `CHANGELOG.md` (case sensitive)
+  - Updated references to point to existing documentation
+
+- **Repository Hygiene** - Cleaned up git tracking
+  - Removed outdated TODO comments
+  - Added `ARCHITECTURE_ANALYSIS.md` to repository
+  - Cleaned up test file artifacts
+
+### Changed - Code Cleanup
+
+- **Debug Logging** - Removed console.log statements from production code
+  - Cleaned up ReIndex and AddToArray debug logs
+  - Keeps codebase cleaner and reduces console noise
+
 ## [0.10.1] - 2025-02-01
 
 ### Fixed - Documentation

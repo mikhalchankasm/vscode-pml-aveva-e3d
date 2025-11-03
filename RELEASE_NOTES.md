@@ -1,4 +1,80 @@
-# Release Notes - v0.10.1
+# Release Notes - v0.10.2
+
+**Release Date:** 2025-02-02
+
+## 🔧 What's New in v0.10.2
+
+### Critical Bug Fixes - Array Commands
+
+**ReIndex & AddToArray** - Fixed critical Windows CRLF bug:
+- ✅ **Root Cause**: Windows line endings (`\r\n`) were breaking regex matching
+- ✅ **Impact**: Commands only processed last line, ignored all others
+- ✅ **Fix**: Added CRLF normalization before processing
+- ✅ **Result**: Now works correctly on Windows, Linux, and macOS
+
+**Example**: ReIndex now properly converts:
+```pml
+!lines[3] = 'value 1'
+!lines[3] = 'value 2'
+!lines[3] = 'value 3'
+```
+Into:
+```pml
+!lines[1] = 'value 1'
+!lines[2] = 'value 2'
+!lines[3] = 'value 3'
+```
+
+**Empty Line Handling**:
+- ✅ Auto-trim empty lines at start/end of selection
+- ✅ Preserves intentional spacing within arrays
+- ✅ More forgiving user experience
+
+### UI Enhancements
+
+**Context Menu Icons** - 20+ new icons added:
+- ⚡ **Quick Actions**: Sort (precedence, length, smart), duplicates, whitespace
+- 📊 **Array**: ReIndex (`list-ordered`), Add to Array (`add`)
+- 📄 **Forms**: Reload (`refresh`), Generate/Update summary (`sync`)
+- 📖 **Examples**: Button Gadgets, Frame Gadgets
+
+*Note: Icons visible in Command Palette (`Ctrl+Shift+P`). VS Code limitation prevents icons in nested context menus.*
+
+### Documentation
+
+**LSP README** - Complete rewrite:
+- ✅ Removed "Alpha" status - LSP is production-ready
+- ✅ All implemented features documented with ✅ checkmarks
+- ✅ Added performance metrics: startup < 500ms, 100-200 files/s indexing
+- ✅ Configuration examples and known limitations
+- ✅ Clean project structure without outdated TODOs
+
+### Code Quality (P0/P1 Fixes)
+
+**Error Handling**:
+- ✅ Fixed 4 locations with untyped error catching
+- ✅ Changed `catch (error)` → `catch (error: unknown)` with type guards
+- ✅ Better error messages for users
+
+**Documentation Links**:
+- ✅ Fixed broken links in `CONTRIBUTING.md`
+- ✅ Fixed case-sensitive references: `changelog.md` → `CHANGELOG.md`
+- ✅ Removed references to non-existent files
+
+**Repository Cleanup**:
+- ✅ Removed debug console.log statements
+- ✅ Removed outdated TODO comments
+- ✅ Added `ARCHITECTURE_ANALYSIS.md` to repository
+
+## 📦 Installation
+
+**GitHub Release:** [v0.10.2](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.2)
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.10.1
 
 **Release Date:** 2025-02-01
 

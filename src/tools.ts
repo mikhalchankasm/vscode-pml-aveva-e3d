@@ -730,10 +730,6 @@ export class PMLToolsProvider implements vscode.Disposable {
             lines.pop();
         }
 
-        console.log(`[ReIndex] Selected text length: ${selected.text.length}`);
-        console.log(`[ReIndex] Lines count after trimming: ${lines.length}`);
-        console.log(`[ReIndex] Lines array:`, lines);
-
         // Находим все строки с массивами и определяем максимальный индекс
         const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
         let maxIndex = 0;
@@ -787,22 +783,18 @@ export class PMLToolsProvider implements vscode.Disposable {
         const arrayLinesCount = lines.filter(line => line.match(arrayPattern)).length;
         const maxIndexLength = arrayLinesCount.toString().length;
 
-        console.log(`[ReIndex] Starting reindex: arrayVar="${arrayVarName}", arrayLines=${arrayLinesCount}, maxIndexLength=${maxIndexLength}`);
-
         const result = lines.map(line => {
             const match = line.match(arrayPattern);
             if (match) {
                 const idx = currentIndex.toString().padStart(maxIndexLength);
                 // Preserve formatting: match[4] contains spaces around =, match[5] contains value
                 const newLine = `${indentSize}${arrayVarName}[${idx}]${match[4]}${match[5]}`;
-                console.log(`[ReIndex] ${currentIndex}: "${line}" -> "${newLine}"`);
                 currentIndex++;
                 return newLine;
             }
             return line;
         });
 
-        console.log(`[ReIndex] Reindex complete. Applying changes...`);
         await this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Array indices reindexed');
     };
 

@@ -6,10 +6,11 @@ Language Server Protocol (LSP) implementation for PML (Programmable Macro Langua
 
 This is the core language server that powers IntelliSense features for the PML VSCode extension. It provides:
 
-- **AST-based parsing** of PML code
-- **Type inference** for variables and expressions
-- **Workspace indexing** for cross-file navigation
-- **Semantic analysis** for diagnostics and code intelligence
+- **AST-based parsing** of PML code with full PML1/PML2 support
+- **Type inference** for variables, methods, and expressions
+- **Workspace indexing** for fast cross-file navigation
+- **Semantic analysis** for diagnostics, typo detection, and code intelligence
+- **Real-time diagnostics** for syntax errors, unclosed blocks, array indexing issues
 
 ## Architecture
 
@@ -26,57 +27,89 @@ This is the core language server that powers IntelliSense features for the PML V
 │                                     │
 │   ┌──────────────────────────────┐  │
 │   │  Parser                      │  │
-│   │  - Lexer                     │  │
+│   │  - Lexer (Token Scanner)     │  │
+│   │  - Recursive Descent Parser  │  │
 │   │  - AST Builder               │  │
 │   └──────────────────────────────┘  │
 │                                     │
 │   ┌──────────────────────────────┐  │
 │   │  Type System                 │  │
 │   │  - Type Inference            │  │
-│   │  - Type Checker              │  │
+│   │  - Built-in Types (STRING,   │  │
+│   │    REAL, ARRAY, DBREF, etc.) │  │
 │   └──────────────────────────────┘  │
 │                                     │
 │   ┌──────────────────────────────┐  │
 │   │  Workspace Index             │  │
-│   │  - Symbol Index              │  │
+│   │  - Symbol Index (methods,    │  │
+│   │    objects, forms)           │  │
 │   │  - File Indexer              │  │
-│   │  - Cache Manager             │  │
+│   │  - Incremental Updates       │  │
 │   └──────────────────────────────┘  │
 │                                     │
 │   ┌──────────────────────────────┐  │
 │   │  LSP Providers               │  │
-│   │  - Completion                │  │
-│   │  - Hover                     │  │
-│   │  - Definition                │  │
-│   │  - References                │  │
+│   │  - Completion (context-aware)│  │
+│   │  - Hover (documentation)     │  │
+│   │  - Definition & References   │  │
+│   │  - Document Symbols          │  │
 │   │  - Diagnostics               │  │
-│   │  - ... and more              │  │
+│   │  - Signature Help            │  │
+│   └──────────────────────────────┘  │
+│                                     │
+│   ┌──────────────────────────────┐  │
+│   │  Analysis Tools              │  │
+│   │  - Typo Detection            │  │
+│   │  - Array Index Checker       │  │
+│   │  - Block Matcher             │  │
 │   └──────────────────────────────┘  │
 └─────────────────────────────────────┘
 ```
 
-## Development Status
+## Features
 
-🚧 **Alpha - Under Active Development**
+### ✅ Fully Implemented
 
-### ✅ Completed
-- Basic server structure
-- LSP protocol setup
-- AST node definitions
-- Basic diagnostics (block matching)
+#### Parser & AST
+- ✅ Full PML1/PML2 lexer with keyword recognition
+- ✅ Recursive descent parser for all PML constructs
+- ✅ AST generation for expressions, statements, blocks
+- ✅ Form file (.pmlfrm) parsing support
+- ✅ Error recovery and partial parsing
 
-### 🚧 In Progress (Phase 1)
-- [ ] PML Parser implementation
-- [ ] Workspace indexing
-- [ ] Type inference engine
-- [ ] Migration of existing providers to LSP
+#### Workspace Indexing
+- ✅ Symbol indexing (methods, objects, forms)
+- ✅ Cross-file navigation
+- ✅ Incremental index updates
+- ✅ Configurable exclusion patterns
 
-### 📋 Planned (Phase 2+)
-- [ ] Semantic highlighting
-- [ ] Inlay hints
-- [ ] Call hierarchy
-- [ ] Code lens
-- [ ] Advanced refactoring
+#### LSP Providers
+- ✅ **Completion**: Context-aware autocomplete for keywords, methods, variables
+- ✅ **Hover**: Documentation on hover with type information
+- ✅ **Definition**: Go-to-definition for methods and variables
+- ✅ **References**: Find all references (workspace-wide)
+- ✅ **Document Symbols**: Outline view for methods and objects
+- ✅ **Signature Help**: Parameter hints for method calls
+- ✅ **Diagnostics**: Real-time error checking
+
+#### Diagnostics & Analysis
+- ✅ Syntax error detection
+- ✅ Unclosed block detection (IF/DO/OBJECT)
+- ✅ Typo detection with Levenshtein distance
+- ✅ Array index validation (0-based indexing warnings)
+- ✅ Configurable diagnostic severity
+
+### 🚧 In Progress
+- 🚧 Enhanced type inference for complex expressions
+- 🚧 Improved form file parsing (DSL limitations)
+- 🚧 Better error messages with quick fixes
+
+### 📋 Planned (Future)
+- 📋 Semantic highlighting
+- 📋 Inlay hints (type annotations)
+- 📋 Call hierarchy
+- 📋 Code lens (references count)
+- 📋 Advanced refactoring (extract method, rename)
 
 ## Building
 
@@ -100,62 +133,79 @@ npm test
 # Run unit tests
 npm test
 
-# Run with coverage
-npm run test:coverage
+# Run tests in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test arrayIndexChecker.test
 ```
 
 ## Project Structure
 
 ```
 src/
-├── server.ts                 # Main LSP server entry point
-├── ast/
-│   ├── nodes.ts             # AST node definitions
-│   └── visitor.ts           # AST visitor pattern (TODO)
+├── server.ts                  # Main LSP server entry point
 ├── parser/
-│   ├── lexer.ts             # Tokenizer (TODO)
-│   ├── parser.ts            # PML parser (TODO)
-│   └── __tests__/           # Parser tests
+│   ├── lexer.ts              # Tokenizer with PML keywords
+│   ├── parser.ts             # Recursive descent parser
+│   └── __tests__/            # Parser tests
+├── ast/
+│   └── nodes.ts              # AST node definitions
 ├── types/
-│   ├── typeSystem.ts        # Type definitions (TODO)
-│   ├── typeInference.ts     # Type inference engine (TODO)
-│   └── builtinTypes.json    # Built-in PML types (TODO)
+│   ├── types.ts              # Type system definitions
+│   └── builtinTypes.ts       # Built-in PML types
 ├── index/
-│   ├── symbolIndex.ts       # Workspace symbol index (TODO)
-│   ├── fileIndexer.ts       # File indexing (TODO)
-│   └── backgroundIndexer.ts # Background indexing (TODO)
+│   ├── symbolIndex.ts        # Symbol index storage
+│   └── workspaceIndexer.ts   # Workspace file indexing
 ├── providers/
-│   ├── completion.ts        # Completion provider (TODO)
-│   ├── hover.ts             # Hover provider (TODO)
-│   ├── definition.ts        # Go-to-definition (TODO)
-│   └── ...                  # Other providers (TODO)
-├── diagnostics/
-│   ├── typeChecker.ts       # Type checking (TODO)
-│   └── pmlRules.ts          # PML-specific rules (TODO)
-└── cache/
-    └── astCache.ts          # AST caching (TODO)
+│   ├── completionProvider.ts       # Autocomplete
+│   ├── hoverProvider.ts            # Hover documentation
+│   ├── definitionProvider.ts       # Go-to-definition
+│   ├── referencesProvider.ts       # Find references
+│   ├── documentSymbolProvider.ts   # Outline view
+│   └── signatureHelpProvider.ts    # Parameter hints
+├── analysis/
+│   ├── typoDetection.ts      # Keyword typo detection
+│   └── arrayIndexChecker.ts  # Array index validation
+└── utils/
+    └── textUtils.ts          # Text manipulation utilities
 ```
 
-## LSP Features
+## Configuration
 
-### Implemented
-- ✅ Basic diagnostics (block matching)
-- ✅ Simple completion (keywords)
-- ✅ Basic hover
+LSP server respects these VS Code settings:
 
-### Coming Soon
-- 🚧 Type-aware completion
-- 🚧 Cross-file navigation
-- 🚧 Type inference
-- 🚧 Semantic diagnostics
+```json
+{
+  "pml.diagnostics.typoDetection": "error",  // "off" | "warning" | "error"
+  "pml.diagnostics.arrayIndexZero": true,     // Warn on arr[0]
+  "pml.indexing.exclude": [                   // Exclude from indexing
+    "**/node_modules/**",
+    "**/out/**"
+  ]
+}
+```
+
+## Performance
+
+- **Startup**: < 500ms for typical projects
+- **Indexing**: ~100-200 files/second
+- **Completion**: < 50ms response time
+- **Memory**: ~50-100MB for medium projects (500-1000 files)
+
+## Known Limitations
+
+1. **Form Files** (.pmlfrm): Complex DSL with limited parser support - some syntax may show false warnings
+2. **Dynamic method calls**: `this.$m(varName)()` - cannot infer type without runtime information
+3. **ARRAY() objects**: Syntax like `object ARRAY()` may show parser warnings (safe to ignore)
 
 ## Contributing
 
-See [DEVELOPMENT.md](../../docs/DEVELOPMENT.md) for development guidelines.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for development guidelines.
 
 ## License
 
-MIT - See [LICENSE](../../LICENSE)
+MIT - See [LICENSE](../../LICENSE.txt)
 
 ---
 

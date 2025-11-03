@@ -18,6 +18,19 @@ define method .testSkipIf()
     enddo
 endmethod
 
+------------------------------------------------------------------------
+--
+-- Method:      testBreakContinue
+--
+-- Description: 
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
 define method .testBreakContinue()
     !count = 0
     
