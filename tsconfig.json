@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noImplicitOverride": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", ".vscode-test", "packages/**/*", "out/**/*"]
