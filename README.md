@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.10.0-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.10.1-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -31,7 +31,7 @@
 #### Installation
 
 **Option 1: From GitHub Releases** (Recommended)
-1. Download `pml-aveva-e3d-0.10.0.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Download `pml-aveva-e3d-0.10.1.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. In VSCode: `Extensions` → `...` → `Install from VSIX`
 3. Reload VSCode
 
@@ -54,7 +54,8 @@ npm run pack  # Creates pml-aveva-e3d-X.X.X.vsix
 
 ### 📚 Documentation
 
-- [changelog.md](changelog.md) - Version history and updates
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
+- [CHANGELOG.md](CHANGELOG.md) - Version history and updates
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute to the project
 - [examples/](examples/) - PML code examples for testing
 
@@ -114,7 +115,7 @@ MIT License - see [LICENSE](LICENSE)
 #### Установка
 
 **Вариант 1: Из GitHub Releases** (Рекомендуется)
-1. Скачайте `pml-aveva-e3d-0.10.0.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Скачайте `pml-aveva-e3d-0.10.1.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. В VSCode: `Расширения` → `...` → `Установить из VSIX`
 3. Перезагрузите VSCode
 
@@ -137,7 +138,8 @@ npm run pack  # Создаёт pml-aveva-e3d-X.X.X.vsix
 
 ### 📚 Документация
 
-- [changelog.md](changelog.md) - История версий и обновлений
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Решение распространенных проблем
+- [CHANGELOG.md](CHANGELOG.md) - История версий и обновлений
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Как внести вклад в проект
 - [examples/](examples/) - Примеры PML кода для тестирования
 

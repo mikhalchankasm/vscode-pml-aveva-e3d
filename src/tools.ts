@@ -1139,8 +1139,9 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             await vscode.window.showTextDocument(document);
             vscode.window.showInformationMessage('Button Gadgets example opened');
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to load Button Gadgets tutorial: ${error}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            vscode.window.showErrorMessage(`Failed to load Button Gadgets tutorial: ${message}`);
         }
     };
 
@@ -1168,8 +1169,9 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             await vscode.window.showTextDocument(document);
             vscode.window.showInformationMessage('Frame Gadgets example opened');
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to load Frame Gadgets tutorial: ${error}`);
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            vscode.window.showErrorMessage(`Failed to load Frame Gadgets tutorial: ${message}`);
         }
     };
 }

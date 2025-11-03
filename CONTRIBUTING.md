@@ -33,7 +33,7 @@ Thank you for your interest in improving this extension! 🎉
 
 ### Local Build and Installation
 
-See [`scripts/LOCAL_DEV.md`](scripts/LOCAL_DEV.md):
+Build and install the extension locally:
 
 ```bash
 npm run pack:install         # Build and install
@@ -96,18 +96,18 @@ chore: update dependencies
 ### 🔴 Hard Tasks
 
 - Implement Tree-sitter parser for PML
-- Create Language Server Protocol (LSP)
+- Enhance Language Server Protocol (LSP) implementation
 - Add AVEVA E3D integration
 - Debugger adapter
 
-See full list in [`docs/TODO.md`](docs/TODO.md) and [`docs/BACKLOG_STATUS.md`](docs/BACKLOG_STATUS.md).
+See [ROADMAP.md](ROADMAP.md) for current development plans.
 
 ## Pull Requests
 
 1. Create a branch from `main`
 2. Make your changes
 3. Add tests (if applicable)
-4. Update `docs/CHANGELOG.md` in the `[Unreleased]` section
+4. Update [CHANGELOG.md](CHANGELOG.md) in the `[Unreleased]` section
 5. Create a PR with description:
    - What was changed
    - Why (link to issue)
@@ -169,7 +169,7 @@ Edit `syntaxes/pml.tmLanguage.json`:
 
 ## Code of Conduct
 
-Be respectful to other contributors. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Be respectful to other contributors. Treat everyone with kindness and professionalism.
 
 ---
 

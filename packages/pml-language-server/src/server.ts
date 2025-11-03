@@ -141,8 +141,9 @@ connection.onInitialized(async () => {
 			const stats = symbolIndex.getStats();
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
 		}
-	} catch (error) {
-		connection.console.error(`Failed to index workspace: ${error}`);
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		connection.console.error(`Failed to index workspace: ${message}`);
 	}
 
 	connection.console.log('PML Language Server initialized');
@@ -340,9 +341,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 
 		connection.console.log(`Parsed ${textDocument.uri}: ${parseResult.errors.length} parse errors, ${diagnostics.length} total diagnostics, ${parseResult.ast.body.length} top-level statements`);
 
-	} catch (error) {
+	} catch (error: unknown) {
 		// Fallback: if parser crashes completely
-		connection.console.error(`Parser crash on ${textDocument.uri}: ${error}`);
+		const message = error instanceof Error ? error.message : String(error);
+		connection.console.error(`Parser crash on ${textDocument.uri}: ${message}`);
 
 		diagnostics.push({
 			severity: DiagnosticSeverity.Error,
@@ -350,7 +352,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 				start: { line: 0, character: 0 },
 				end: { line: 0, character: 0 }
 			},
-			message: `Parser error: ${error}`,
+			message: `Parser error: ${message}`,
 			source: 'pml-parser'
 		});
 	}

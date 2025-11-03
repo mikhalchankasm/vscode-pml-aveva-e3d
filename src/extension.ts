@@ -19,8 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('✅ PML extension activated');
     console.log('Extension path:', context.extensionPath);
 
-    // Activate Language Server (Phase 1 - LSP)
-    // TODO: Once LSP is fully implemented, this will replace the providers below
+    // Activate Language Server (LSP)
     try {
         const client = activateLanguageServer(context);
         console.log('✅ PML Language Server client started');
