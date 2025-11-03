@@ -20,21 +20,21 @@
 !items[1] = 'first item'
 !items[2] = 'second item'
 !items[3] = 'third item'
-!items[4] = 'some value 1'
-!items[5] = 'some value 2'
-!items[6] = 'some value 3'
+some value 1
+some value 2
+some value 3
 
 -- Test 3: Make Array commands
 -- Select plain values below and use: PML - Array -> Make Array (add /)
-!list[1] = /value1
-!list[2] = /value2
-!list[3] = /value3
+value1
+value2
+value3
 
 -- Test 4: ReIndex with path arrays
 !list[1] =  'path/to/file1'
 !list[2] =  'path/to/file2'
 !list[3] =  'path/to/file3'
 !list[4] =  'path/to/file4'
-!list[ 9] = 'path/to/file5'
+!list[5] = 'path/to/file5'
 
 
