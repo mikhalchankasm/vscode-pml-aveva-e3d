@@ -47,16 +47,20 @@
 11. ⚠️ Валидация входных данных в tools.ts (частично)
 12. ⚠️ Прогресс-индикатор для индексации
 
+### ✅ Средние (P2) - ВЫПОЛНЕНО:
+13. ✅ Pre-commit hooks (husky + lint-staged)
+14. ✅ TypeScript strict config (noImplicitOverride)
+
 ### Средние (P2):
-13. Разбить formatter на модули
-14. Добавить pre-commit hooks
-15. Увеличить покрытие тестами
-16. Добавить ADR документацию
+15. Разбить formatter на модули
+16. Увеличить покрытие тестами
+17. Добавить ADR документацию
+18. ⚠️ noUncheckedIndexedAccess (требует рефакторинга ~115 мест)
 
 ### Низкие (P3):
-17. Dependency Injection
-18. Worker threads для индексации
-19. Расширенное логирование
+19. Dependency Injection
+20. Worker threads для индексации
+21. Расширенное логирование
 
 ---
 
@@ -298,25 +302,48 @@ class ErrorHandler {
 
 ## КОНФИГУРАЦИЯ И ИНСТРУМЕНТЫ
 
-### 12. ПРОБЛЕМЫ С КОНФИГУРАЦИЕЙ TYPESCRIPT
+### ~~12. ПРОБЛЕМЫ С КОНФИГУРАЦИЕЙ TYPESCRIPT~~ ✅ ЧАСТИЧНО ИСПРАВЛЕНО
 
-**Проблема**: В `tsconfig.json` отсутствуют некоторые строгие проверки:
-- `noUncheckedIndexedAccess` - отсутствует
-- `noImplicitOverride` - отсутствует
+**Статус**: ✅ Частично исправлено
 
-**Рекомендация**: Добавить для повышения типобезопасности:
+**Что добавлено**:
+- ✅ `noImplicitOverride: true` - требует явного `override` при переопределении методов
+
+**Что НЕ добавлено**:
+- ⚠️ `noUncheckedIndexedAccess: true` - откатили из-за 115 ошибок компиляции
+- Может быть добавлено позже в рамках отдельного рефакторинга
+
+**Текущее состояние** (tsconfig.json и packages/pml-language-server/tsconfig.json):
 ```json
 {
   "compilerOptions": {
-    "noUncheckedIndexedAccess": true,
+    "strict": true,
     "noImplicitOverride": true
   }
 }
 ```
 
-### 13. ОТСУТСТВИЕ PRE-COMMIT HOOKS
+### ~~13. ОТСУТСТВИЕ PRE-COMMIT HOOKS~~ ✅ ИСПРАВЛЕНО
 
-**Рекомендация**: Добавить husky + lint-staged для проверки кода перед коммитом.
+**Статус**: ✅ Исправлено
+
+**Что добавлено**:
+- ✅ Установлены `husky` v9.1.7 и `lint-staged` v16.2.6
+- ✅ Создан `.husky/pre-commit` hook
+- ✅ Настроен `lint-staged` в package.json для автоматического `eslint --fix`
+
+**Конфигурация** (package.json):
+```json
+{
+  "lint-staged": {
+    "*.{ts,js}": [
+      "eslint --fix"
+    ]
+  }
+}
+```
+
+**Результат**: Теперь перед каждым коммитом автоматически запускается ESLint с auto-fix для всех TypeScript/JavaScript файлов.
 
 ---
 
@@ -643,16 +670,20 @@ case 'MethodDefinition': {
 11. ⚠️ Валидация входных данных в tools.ts (частично)
 12. ⚠️ Прогресс-индикатор для индексации
 
+### ✅ Средние (P2) - ВЫПОЛНЕНО:
+13. ✅ Pre-commit hooks (husky + lint-staged)
+14. ✅ TypeScript strict config (noImplicitOverride)
+
 ### Средние (P2):
-13. Разбить formatter на модули
-14. Добавить pre-commit hooks
-15. Увеличить покрытие тестами
-16. Добавить ADR документацию
+15. Разбить formatter на модули
+16. Увеличить покрытие тестами
+17. Добавить ADR документацию
+18. ⚠️ noUncheckedIndexedAccess (требует рефакторинга ~115 мест)
 
 ### Низкие (P3):
-17. Dependency Injection
-18. Worker threads для индексации
-19. Расширенное логирование
+19. Dependency Injection
+20. Worker threads для индексации
+21. Расширенное логирование
 
 ---
 
