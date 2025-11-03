@@ -76,11 +76,33 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 	return client;
 }
 
-export function deactivateLanguageServer(): Thenable<void> | undefined {
+export async function deactivateLanguageServer(): Promise<void> {
 	if (!client) {
-		return undefined;
+		return;
 	}
-	return client.stop();
+
+	try {
+		// Give the client time to gracefully shutdown (max 5 seconds)
+		const timeout = new Promise<void>((resolve) => {
+			setTimeout(() => {
+				console.warn('Language server shutdown timeout (5s), forcing stop');
+				resolve();
+			}, 5000);
+		});
+
+		await Promise.race([
+			client.stop(),
+			timeout
+		]);
+
+		console.log('Language server stopped successfully');
+	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error('Error stopping language server:', message);
+		// Continue even if error - we're shutting down anyway
+	} finally {
+		client = undefined;
+	}
 }
 
 export function getLanguageClient(): LanguageClient | undefined {

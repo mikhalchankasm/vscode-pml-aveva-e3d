@@ -92,14 +92,50 @@ export class WorkspaceIndexer {
 	}
 
 	/**
+	 * Validate path is within workspace (security check)
+	 */
+	private isValidPath(filePath: string, workspaceRoot: string): boolean {
+		try {
+			const resolved = path.resolve(filePath);
+			const root = path.resolve(workspaceRoot);
+
+			// Check path is within workspace
+			if (!resolved.startsWith(root)) {
+				this.connection.console.error(`Path traversal detected: ${filePath} is outside workspace ${workspaceRoot}`);
+				return false;
+			}
+
+			// Check for path traversal attempts
+			const normalized = path.normalize(resolved);
+			if (normalized.includes('..')) {
+				this.connection.console.error(`Invalid path detected: ${filePath} contains '..'`);
+				return false;
+			}
+
+			return true;
+		} catch (error) {
+			this.connection.console.error(`Path validation failed for ${filePath}: ${error}`);
+			return false;
+		}
+	}
+
+	/**
 	 * Find all .pml files in directory (ASYNC version)
 	 */
 	private async findPMLFiles(dirPath: string): Promise<string[]> {
 		const pmlFiles: string[] = [];
 		const extensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
-		const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode'];
+		const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode', 'examples', 'hide_examples'];
+
+		// Resolve workspace root for validation
+		const workspaceRoot = path.resolve(dirPath);
 
 		const scanDirectory = async (dir: string): Promise<void> => {
+			// Validate directory path
+			if (!this.isValidPath(dir, workspaceRoot)) {
+				return;
+			}
+
 			try {
 				const entries = await fs.readdir(dir, { withFileTypes: true });
 
@@ -115,7 +151,10 @@ export class WorkspaceIndexer {
 					} else if (entry.isFile()) {
 						const ext = path.extname(entry.name).toLowerCase();
 						if (extensions.includes(ext)) {
-							pmlFiles.push(fullPath);
+							// Validate file path before adding
+							if (this.isValidPath(fullPath, workspaceRoot)) {
+								pmlFiles.push(fullPath);
+							}
 						}
 					}
 				}

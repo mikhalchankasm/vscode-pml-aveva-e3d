@@ -22,11 +22,41 @@ export function activate(context: vscode.ExtensionContext) {
     // Activate Language Server (Phase 1 - LSP)
     // TODO: Once LSP is fully implemented, this will replace the providers below
     try {
-        activateLanguageServer(context);
+        const client = activateLanguageServer(context);
         console.log('✅ PML Language Server client started');
-    } catch (error) {
-        console.error('❌ Failed to start PML Language Server:', error);
-        vscode.window.showErrorMessage(`PML Language Server failed to start: ${error}`);
+
+        // Monitor client state for unexpected shutdowns
+        client.onDidChangeState((event) => {
+            if (event.newState === 2) { // ClientState.Stopped
+                console.error('Language Server stopped unexpectedly');
+                vscode.window.showWarningMessage(
+                    'PML Language Server stopped. Some features may be unavailable.',
+                    'View Output'
+                ).then(selection => {
+                    if (selection === 'View Output') {
+                        vscode.commands.executeCommand('workbench.action.output.toggleOutput');
+                    }
+                });
+            }
+        });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
+
+        console.error('❌ Failed to start PML Language Server:', message, stack);
+
+        // Show detailed error message with action
+        vscode.window.showErrorMessage(
+            `PML Language Server failed to start: ${message}. ` +
+            `Please check the Output panel for details.`,
+            'View Output'
+        ).then(selection => {
+            if (selection === 'View Output') {
+                vscode.commands.executeCommand('workbench.action.output.toggleOutput');
+            }
+        });
+
+        // Continue with basic functionality (formatter, tools) even if LSP fails
     }
 
     // Register formatter
