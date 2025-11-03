@@ -11,7 +11,7 @@
 !lines[3] = 'string value 5'
 !lines[3] = 'string value 6'
 !lines[3] = 'string value 7'
-!lines[ 6] = 'string value 8'
+!lines[ 8] = 'string value 8'
 
 -- Test 2: Add to Array command
 -- Select the array and plain values below, then use: PML - Array -> Add to Array

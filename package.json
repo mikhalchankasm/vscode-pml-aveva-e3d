@@ -110,77 +110,92 @@
       {
         "command": "pml.sortLinesAsc",
         "title": "Sort Lines A-Z",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(sort-precedence)"
       },
       {
         "command": "pml.sortLinesDesc",
         "title": "Sort Lines Z-A",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(sort-precedence)"
       },
       {
         "command": "pml.sortLinesLength",
         "title": "Sort Lines by Length",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(text-size)"
       },
       {
         "command": "pml.sortLinesSmart",
         "title": "Smart Natural Sort",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(symbol-numeric)"
       },
       {
         "command": "pml.removeDuplicates",
         "title": "Remove Duplicate Lines",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(chrome-minimize)"
       },
       {
         "command": "pml.removeConsecutiveDuplicates",
         "title": "Remove Consecutive Duplicates",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(exclude)"
       },
       {
         "command": "pml.removeEmptyLines",
         "title": "Remove Empty Lines",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(dash)"
       },
       {
         "command": "pml.removeWhitespaceLines",
         "title": "Remove Whitespace-Only Lines",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(whitespace)"
       },
       {
         "command": "pml.trimWhitespace",
         "title": "Trim Trailing Whitespace",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(remove)"
       },
       {
         "command": "pml.tabsToSpaces",
         "title": "Convert Tabs to Spaces",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(arrow-right)"
       },
       {
         "command": "pml.spacesToTabs",
         "title": "Convert Spaces to Tabs",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(arrow-left)"
       },
       {
         "command": "pml.extractVariables",
         "title": "Extract Variables",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(symbol-variable)"
       },
       {
         "command": "pml.extractMethods",
         "title": "Extract Methods",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(symbol-method)"
       },
       {
         "command": "pml.addComments",
         "title": "Add Comments",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(comment)"
       },
       {
         "command": "pml.removeComments",
         "title": "Remove Comments",
-        "category": "PML Tools"
+        "category": "PML Tools",
+        "icon": "$(comment-unresolved)"
       },
       {
         "command": "pml.alignPML",
@@ -215,22 +230,26 @@
       {
         "command": "pml.reloadForm",
         "title": "Reload Form",
-        "category": "PML Forms"
+        "category": "PML Forms",
+        "icon": "$(refresh)"
       },
       {
         "command": "pml.generateMethodsSummary",
         "title": "Generate Methods Summary",
-        "category": "PML Forms"
+        "category": "PML Forms",
+        "icon": "$(list-tree)"
       },
       {
         "command": "pml.updateMethodsSummary",
         "title": "Update Methods Summary",
-        "category": "PML Forms"
+        "category": "PML Forms",
+        "icon": "$(sync)"
       },
       {
         "command": "pml.insertMethodDocBlock",
         "title": "Insert Method Documentation Block",
-        "category": "PML Forms"
+        "category": "PML Forms",
+        "icon": "$(note)"
       },
       {
         "command": "pml.makeListPath",
@@ -265,12 +284,14 @@
       {
         "command": "pml.openButtonExample",
         "title": "Button Gadgets",
-        "category": "PML Examples"
+        "category": "PML Examples",
+        "icon": "$(circle-large-outline)"
       },
       {
         "command": "pml.openFrameExample",
         "title": "Frame Gadgets",
-        "category": "PML Examples"
+        "category": "PML Examples",
+        "icon": "$(window)"
       }
     ],
     "submenus": [

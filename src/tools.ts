@@ -767,9 +767,12 @@ export class PMLToolsProvider implements vscode.Disposable {
             return;
         }
 
-        // Перенумеровываем строки
-        let currentIndex = maxIndex + 1;
-        const maxIndexLength = (maxIndex + lines.length).toString().length;
+        // Перенумеровываем строки начиная с 1
+        let currentIndex = 1;
+
+        // Подсчитываем количество строк массива для определения длины индекса
+        const arrayLinesCount = lines.filter(line => line.match(arrayPattern)).length;
+        const maxIndexLength = arrayLinesCount.toString().length;
 
         const result = lines.map(line => {
             const match = line.match(arrayPattern);
