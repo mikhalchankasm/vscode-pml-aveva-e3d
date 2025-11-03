@@ -136,8 +136,9 @@ export class HoverProvider {
 		content += ')\n```\n\n';
 
 		// Add location
-		const uri = method.uri.replace('file:///', '');
-		const filePath = uri.split('/').pop() || uri;
+		// Extract filename from URI (handle both file:/// and file:// schemes)
+		const uriMatch = method.uri.match(/[/\\]([^/\\]+)$/);
+		const filePath = uriMatch ? uriMatch[1] : method.uri;
 		const line = method.range.start.line + 1;
 		content += `📁 Defined in: **${filePath}:${line}**\n\n`;
 

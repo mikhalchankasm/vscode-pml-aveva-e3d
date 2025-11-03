@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 
 export class PMLToolsProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
@@ -1152,7 +1152,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             // Load tutorial content from file
             const tutorialPath = path.join(extensionPath, 'examples', 'gadgets', 'ButtonGadgets_Tutorial.md');
 
-            const content = fs.readFileSync(tutorialPath, 'utf8');
+            const content = await fs.readFile(tutorialPath, 'utf8');
 
             const document = await vscode.workspace.openTextDocument({
                 content,
@@ -1182,7 +1182,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             // Load tutorial content from file
             const tutorialPath = path.join(extensionPath, 'examples', 'gadgets', 'FrameGadgets_Tutorial.md');
 
-            const content = fs.readFileSync(tutorialPath, 'utf8');
+            const content = await fs.readFile(tutorialPath, 'utf8');
 
             const document = await vscode.workspace.openTextDocument({
                 content,
