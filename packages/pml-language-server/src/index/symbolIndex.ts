@@ -80,7 +80,10 @@ export class SymbolIndex {
 	private fileSymbols: Map<string, FileSymbols> = new Map();
 
 	// Map: file URI -> document text (for comment extraction)
+	// Limited cache to prevent memory issues on large workspaces
 	private documentTexts: Map<string, string> = new Map();
+	private readonly MAX_CACHED_DOCUMENTS = 100;  // Limit to 100 most recent files
+	private documentAccessOrder: string[] = [];  // LRU tracking
 
 	/**
 	 * Index a file's AST
@@ -89,9 +92,9 @@ export class SymbolIndex {
 		// Remove old symbols from this file
 		this.removeFile(uri);
 
-		// Store document text for comment extraction
+		// Store document text for comment extraction with LRU eviction
 		if (documentText) {
-			this.documentTexts.set(uri, documentText);
+			this.addDocumentTextWithLRU(uri, documentText);
 		}
 
 		const fileSymbols: FileSymbols = {
@@ -353,6 +356,29 @@ export class SymbolIndex {
 			index.delete(key);
 		} else {
 			index.set(key, filtered);
+		}
+	}
+
+	/**
+	 * Add document text with LRU eviction to limit memory usage
+	 */
+	private addDocumentTextWithLRU(uri: string, text: string): void {
+		// Remove from access order if already exists
+		const existingIndex = this.documentAccessOrder.indexOf(uri);
+		if (existingIndex !== -1) {
+			this.documentAccessOrder.splice(existingIndex, 1);
+		}
+
+		// Add to end (most recently used)
+		this.documentAccessOrder.push(uri);
+		this.documentTexts.set(uri, text);
+
+		// Evict oldest if over limit
+		if (this.documentTexts.size > this.MAX_CACHED_DOCUMENTS) {
+			const oldestUri = this.documentAccessOrder.shift();
+			if (oldestUri) {
+				this.documentTexts.delete(oldestUri);
+			}
 		}
 	}
 }

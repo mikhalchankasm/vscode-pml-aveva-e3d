@@ -9,16 +9,57 @@ import { Parser } from '../parser/parser';
 import { SymbolIndex } from './symbolIndex';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { minimatch } from 'minimatch';
 
 export class WorkspaceIndexer {
 	private symbolIndex: SymbolIndex;
 	private connection: Connection;
 	private parser: Parser = new Parser();
 	private indexingInProgress: boolean = false;
+	private excludePatterns: string[] = [];
 
 	constructor(symbolIndex: SymbolIndex, connection: Connection) {
 		this.symbolIndex = symbolIndex;
 		this.connection = connection;
+	}
+
+	/**
+	 * Load exclusion patterns from configuration
+	 */
+	private async loadExclusionPatterns(): Promise<void> {
+		try {
+			const config = await this.connection.workspace.getConfiguration('pml.indexing');
+			this.excludePatterns = (config?.exclude as string[]) || [];
+			this.connection.console.log(`Loaded ${this.excludePatterns.length} exclusion patterns: ${this.excludePatterns.join(', ')}`);
+		} catch (error) {
+			// Fallback to defaults if config read fails
+			this.excludePatterns = [
+				'**/node_modules/**',
+				'**/out/**',
+				'**/docs/**',
+				'**/scripts/**',
+				'**/.git/**',
+				'**/.vscode/**',
+				'**/examples/**',
+				'**/hide_examples/**'
+			];
+			this.connection.console.warn(`Failed to load exclusion config, using defaults: ${error}`);
+		}
+	}
+
+	/**
+	 * Check if path should be excluded based on glob patterns
+	 */
+	private shouldExclude(filePath: string, workspaceRoot: string): boolean {
+		// Convert to relative path for matching
+		const relativePath = path.relative(workspaceRoot, filePath).replace(/\\/g, '/');
+
+		for (const pattern of this.excludePatterns) {
+			if (minimatch(relativePath, pattern, { dot: true })) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -65,6 +106,9 @@ export class WorkspaceIndexer {
 		const startTime = Date.now();
 
 		try {
+			// Load exclusion patterns from configuration
+			await this.loadExclusionPatterns();
+
 			this.connection.console.log('Starting workspace indexing...');
 
 			let totalFiles = 0;
@@ -99,16 +143,20 @@ export class WorkspaceIndexer {
 			const resolved = path.resolve(filePath);
 			const root = path.resolve(workspaceRoot);
 
-			// Check path is within workspace
-			if (!resolved.startsWith(root)) {
+			// Ensure root ends with separator for proper boundary checking
+			const rootWithSep = root.endsWith(path.sep) ? root : root + path.sep;
+
+			// Check path is within workspace with proper boundary check
+			// This prevents false positives like C:\proj1 vs C:\proj10
+			if (resolved !== root && !resolved.startsWith(rootWithSep)) {
 				this.connection.console.error(`Path traversal detected: ${filePath} is outside workspace ${workspaceRoot}`);
 				return false;
 			}
 
-			// Check for path traversal attempts
-			const normalized = path.normalize(resolved);
-			if (normalized.includes('..')) {
-				this.connection.console.error(`Invalid path detected: ${filePath} contains '..'`);
+			// Additional check: verify relative path doesn't escape
+			const relative = path.relative(root, resolved);
+			if (relative.startsWith('..')) {
+				this.connection.console.error(`Invalid path detected: ${filePath} escapes workspace boundary`);
 				return false;
 			}
 
@@ -125,7 +173,6 @@ export class WorkspaceIndexer {
 	private async findPMLFiles(dirPath: string): Promise<string[]> {
 		const pmlFiles: string[] = [];
 		const extensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
-		const excludedDirs = ['node_modules', 'out', 'objects', 'docs', 'scripts', '.git', '.vscode', 'examples', 'hide_examples'];
 
 		// Resolve workspace root for validation
 		const workspaceRoot = path.resolve(dirPath);
@@ -136,16 +183,25 @@ export class WorkspaceIndexer {
 				return;
 			}
 
+			// Check if directory should be excluded
+			if (this.shouldExclude(dir, workspaceRoot)) {
+				return;
+			}
+
 			try {
 				const entries = await fs.readdir(dir, { withFileTypes: true });
 
 				for (const entry of entries) {
 					const fullPath = path.join(dir, entry.name);
 
-					// Skip excluded directories
+					// Check if path should be excluded (applies to both files and directories)
+					if (this.shouldExclude(fullPath, workspaceRoot)) {
+						continue;
+					}
+
 					if (entry.isDirectory()) {
-						const dirName = entry.name;
-						if (!dirName.startsWith('.') && !excludedDirs.includes(dirName)) {
+						// Skip hidden directories
+						if (!entry.name.startsWith('.')) {
 							await scanDirectory(fullPath);
 						}
 					} else if (entry.isFile()) {

@@ -16,6 +16,7 @@ import {
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 import { Parser } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
 import { SymbolIndex } from './index/symbolIndex';
@@ -127,9 +128,11 @@ connection.onInitialized(async () => {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
 		if (workspaceFolders && workspaceFolders.length > 0) {
 			const folders = workspaceFolders.map(f => {
-				// Decode URI: file:///d%3A/path -> d:/path -> d:\path (Windows-specific)
-				const decoded = decodeURIComponent(f.uri);
-				return decoded.replace('file:///', '').replace(/\//g, '\\');
+				// Parse URI properly to handle both local paths and UNC paths
+				// file:///d:/path -> d:\path (Windows local)
+				// file://server/share/path -> \\server\share\path (UNC)
+				const uri = URI.parse(f.uri);
+				return uri.fsPath;  // Handles all cases correctly cross-platform
 			});
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 
