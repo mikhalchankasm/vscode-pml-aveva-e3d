@@ -2,6 +2,43 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.3] - 2025-02-02
+
+### Added - Major Features
+
+- **Workspace-Wide References Search** - "Find All References" (Shift+F12) now searches across entire workspace
+  - Previously limited to current file only
+  - Now searches all indexed files in workspace
+  - Uses LRU cache for fast performance (no additional I/O)
+  - Supports methods, objects, and forms
+  - Added object instantiation pattern: `OBJECT MyObject()`
+  - Matches LSP standard behavior
+
+### Fixed - Code Quality & Performance
+
+- **Code Quality Improvements** (3 medium-priority fixes)
+  - Menu conditions: Fixed VSCode `when` clause syntax - added quotes around file extensions
+  - Async I/O: Converted `fs.readFileSync` to async `fs.readFile` in tutorial loaders
+  - Hover path parsing: Improved cross-platform URI handling with regex
+
+- **Workspace Indexing Improvements** (1 critical + 3 medium-priority fixes)
+  - **Critical**: UNC path support - proper handling of `\\server\share` network paths
+  - Path validation: Improved boundary checking (prevents `C:\proj1` vs `C:\proj10` false positives)
+  - Memory limits: Added LRU cache with 100 files max to prevent memory growth
+  - User exclusions: Implemented `pml.indexing.exclude` configuration support with glob patterns
+
+### Improved - LSP Features
+
+- **Type Safety** - Fixed diagnostics configuration type mismatch
+  - Changed from boolean to string enum: `'off' | 'warning' | 'error'`
+  - Users can now properly configure diagnostic severity levels
+  - Added helpful `enumDescriptions` for VSCode UI
+
+- **Progress Indicators** - Added workspace indexing progress notification
+  - Shows "PML: Indexing workspace..." during startup
+  - Displays completion status with file count
+  - Better UX for large workspaces
+
 ## [0.10.2] - 2025-02-02
 
 ### Fixed - Critical Bugs

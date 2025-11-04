@@ -1,4 +1,81 @@
-# Release Notes - v0.10.2
+# Release Notes - v0.10.3
+
+**Release Date:** 2025-02-02
+
+## 🚀 What's New in v0.10.3
+
+### Major Feature - Workspace-Wide References
+
+**Find All References (Shift+F12)** now searches across entire workspace:
+- ✅ **Previously**: Limited to current file only
+- ✅ **Now**: Searches all indexed files in workspace
+- ✅ **Performance**: Uses LRU cache (no additional disk I/O)
+- ✅ **Coverage**: Methods, objects, forms, object instantiations
+- ✅ **LSP Standard**: Matches expected Language Server Protocol behavior
+
+**Example Usage**:
+```pml
+define method .calculateTotal(!items is ARRAY)
+  -- Implementation
+endmethod
+
+!result = !this.calculateTotal(!myItems)  -- Press Shift+F12 here
+```
+Now finds ALL usages across your entire project, not just this file!
+
+### Critical Fixes - Workspace Indexing
+
+**UNC Path Support** (Critical):
+- ✅ **Problem**: Network paths like `\\server\share\project` failed to index
+- ✅ **Solution**: Proper URI parsing with `URI.parse().fsPath`
+- ✅ **Impact**: Works correctly in corporate Windows networks
+
+**Security Improvements**:
+- ✅ **Path Validation**: Improved boundary checking (prevents `C:\proj1` vs `C:\proj10` false positives)
+- ✅ **Symlink Safety**: Added `path.relative()` validation to catch junction/symlink escapes
+- ✅ **Memory Limits**: LRU cache with 100 files max prevents memory growth on large workspaces
+
+**User Configuration**:
+- ✅ **Exclusions**: `pml.indexing.exclude` now actually works with glob patterns
+- ✅ **Example**: `["**/node_modules/**", "**/out/**", "**/my_old_code/**"]`
+- ✅ **Fast**: Uses `minimatch` for efficient pattern matching
+
+### Code Quality Improvements
+
+**Type Safety**:
+- ✅ **Diagnostics Config**: Fixed boolean → string enum mismatch
+- ✅ **User Control**: Can now set `"off"`, `"warning"`, or `"error"` for each diagnostic
+- ✅ **UI Enhancement**: Added helpful descriptions in VSCode settings
+
+**Menu Fixes**:
+- ✅ **VSCode `when` clauses**: Fixed unquoted file extensions (30+ menu items)
+- ✅ **Before**: `resourceExtname == .pml` (incorrect)
+- ✅ **After**: `resourceExtname == '.pml'` (correct)
+
+**Async I/O**:
+- ✅ **Tutorial Loading**: Converted blocking `fs.readFileSync` → async `fs.readFile`
+- ✅ **Impact**: No more UI freezes when opening Button/Frame Gadgets tutorials on slow disks
+
+**Path Handling**:
+- ✅ **Hover Provider**: Improved cross-platform path parsing (regex instead of string manipulation)
+- ✅ **Supports**: Both `file:///` and `file://` schemes, forward/backward slashes
+
+### Progress Indicators
+
+**Workspace Indexing**:
+- ✅ Shows "PML: Indexing workspace..." notification during startup
+- ✅ Displays completion: "Indexed 156 files"
+- ✅ Better UX for large workspaces (500+ files)
+
+## 📦 Installation
+
+**GitHub Release:** [v0.10.3](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.3)
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.10.2
 
 **Release Date:** 2025-02-02
 
