@@ -584,33 +584,31 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.9.9
-**Released:** 2025-01-29
+**Version:** 0.10.3
+**Released:** 2025-02-02
 
 **Statistics:**
-- Extension size: **2.09 MB** (bundled with esbuild, 7.5x smaller than v0.7.3)
-- Files in VSIX: 56 files (previously 1632 before v0.8.0)
-- LSP features: 13+ providers (with documentation extraction)
-- Commands: 30 (added Insert Method Documentation Block)
-- Diagnostics: 3 types (parse-error-based typo detection, array index checker, parser errors)
-- Operators: 15+ (including OF, comparison operator aliases)
-- Keywords: 78+ (added SKIP token)
-- Form support: Advanced parsing with documentation generation
-- Documentation: Comment-based method docs with JSDoc and AVEVA `$p` marker support
+- Extension size: **2.1 MB** (bundled with esbuild)
+- Files in VSIX: 62 files
+- LSP features: 13+ providers (with workspace-wide references)
+- Commands: 30+ (with array manipulation tools)
+- Diagnostics: 3 types (configurable severity levels)
+- Form support: Advanced parsing with Frame Gadgets
 - Tests: **38 tests passing, 2 skipped** (20 parser + 18 typo detector)
-- VSIX Storage: **Repository contains only latest version**; historical versions in GitHub Releases
+- VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.9.9):**
-- ✅ **F12 Complete Fix** - Works on ALL patterns: `!var.method()`, `!this.method()`, `.method()`
-- ✅ **Skip Statement Support** - Parser handles `skip` and `skip if(condition)`
-- ✅ **Insert Method Documentation Block** - AVEVA-standard documentation template command
-- ✅ **Comment Commands Enhanced** - Line-based operation regardless of cursor position
+**Recent Changes (v0.10.3):**
+- ✅ **Workspace-Wide References** - Find All References (Shift+F12) searches entire workspace
+- ✅ **UNC Path Support** - Network paths `\\server\share` work correctly
+- ✅ **Memory Management** - LRU cache with 100 files max prevents memory growth
+- ✅ **User Exclusions** - `pml.indexing.exclude` configuration now works
+- ✅ **Code Quality** - Menu conditions, async I/O, type safety improvements
 
-**Previous Changes (v0.9.7-v0.9.8):**
-- ✅ **Form Documentation** (v0.9.7) - Auto-generate methods summary tables from `$p` markers
-- ✅ **Go to Definition Partial Fix** (v0.9.7) - F12 works on `.methodName()` (completed in v0.9.9)
-- ✅ **Hover Documentation** (v0.9.7) - Shows method docs from `$p` and `--` comments
-- ✅ **Form Header Snippet** (v0.9.7) - `formheader` snippet for .pmlfrm files
+**Previous Changes (v0.10.0-v0.10.2):**
+- ✅ **Frame Gadgets** (v0.10.0) - 9 snippets + comprehensive tutorial
+- ✅ **CRLF Bug Fix** (v0.10.2) - ReIndex & AddToArray work on Windows
+- ✅ **Context Menu Icons** (v0.10.2) - 20+ visual icons for commands
+- ✅ **Repository Cleanup** (v0.10.1) - VSIX files moved to GitHub Releases only
 - ✅ **Dead Code Removal** (v0.9.8) - Removed obsolete src/diagnostics.ts
 - ✅ **Release Docs Update** (v0.9.8) - UTF-8 encoding, 0.9.x examples, VSIX storage policy
 - ✅ **IntelliSense for Forms** (v0.9.7) - Only show form methods in .pmlfrm files
