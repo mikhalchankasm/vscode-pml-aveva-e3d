@@ -219,6 +219,20 @@ export class SymbolIndex {
 	}
 
 	/**
+	 * Get all indexed file URIs
+	 */
+	public getAllFileUris(): string[] {
+		return Array.from(this.fileSymbols.keys());
+	}
+
+	/**
+	 * Get document text for a file (if cached)
+	 */
+	public getDocumentText(uri: string): string | undefined {
+		return this.documentTexts.get(uri);
+	}
+
+	/**
 	 * Search symbols by query (fuzzy)
 	 */
 	public searchSymbols(query: string): SymbolInfo[] {

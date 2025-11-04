@@ -45,42 +45,80 @@ export class ReferencesProvider {
 			}
 		}
 
-		// Scan current document for references to this method
-		if (methods.length > 0) {
-			const currentFileRefs = this.findReferencesInDocument(document, symbolName);
-			references.push(...currentFileRefs);
+		// Scan all workspace files for references (not just current document)
+		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
+			const workspaceRefs = this.findReferencesInWorkspace(symbolName);
+			references.push(...workspaceRefs);
 		}
 
 		return references.length > 0 ? references : null;
 	}
 
 	/**
-	 * Find all references to a symbol in a document
+	 * Find all references to a symbol across the entire workspace
 	 */
-	private findReferencesInDocument(document: TextDocument, symbolName: string): Location[] {
-		const text = document.getText();
+	private findReferencesInWorkspace(symbolName: string): Location[] {
+		const references: Location[] = [];
+		const allFileUris = this.symbolIndex.getAllFileUris();
+
+		for (const fileUri of allFileUris) {
+			// Try to get cached document text first
+			const cachedText = this.symbolIndex.getDocumentText(fileUri);
+
+			// If text is cached, search it
+			if (cachedText) {
+				const fileRefs = this.findReferencesInText(cachedText, fileUri, symbolName);
+				references.push(...fileRefs);
+			} else {
+				// Fallback: try to get open document
+				const openDoc = this.documents.get(fileUri);
+				if (openDoc) {
+					const fileRefs = this.findReferencesInText(openDoc.getText(), fileUri, symbolName);
+					references.push(...fileRefs);
+				}
+			}
+		}
+
+		return references;
+	}
+
+	/**
+	 * Find all references to a symbol in text
+	 */
+	private findReferencesInText(text: string, fileUri: string, symbolName: string): Location[] {
 		const references: Location[] = [];
 
 		// Pattern to match method calls: .methodName( or variable.methodName(
+		// Also match object instantiations: OBJECT ObjectName()
 		const patterns = [
 			new RegExp(`\\.${symbolName}\\s*\\(`, 'gi'),  // Direct call: .methodName()
-			new RegExp(`\\w+\\.${symbolName}\\s*\\(`, 'gi')  // Variable call: !var.methodName()
+			new RegExp(`\\w+\\.${symbolName}\\s*\\(`, 'gi'),  // Variable call: !var.methodName()
+			new RegExp(`\\bOBJECT\\s+${symbolName}\\s*\\(`, 'gi')  // Object instantiation: OBJECT MyObject()
 		];
 
 		for (const pattern of patterns) {
 			let match;
 			while ((match = pattern.exec(text)) !== null) {
-				// Find the exact position of the method name (not the dot or parenthesis)
+				// Find the exact position of the symbol name (not the dot or parenthesis)
 				const matchText = match[0];
 				const methodNameIndex = matchText.lastIndexOf(symbolName);
 				const startOffset = match.index + methodNameIndex;
 				const endOffset = startOffset + symbolName.length;
 
+				// Calculate line and character position manually
+				const lines = text.substring(0, startOffset).split('\n');
+				const line = lines.length - 1;
+				const character = lines[lines.length - 1].length;
+
+				const endLines = text.substring(0, endOffset).split('\n');
+				const endLine = endLines.length - 1;
+				const endCharacter = endLines[endLines.length - 1].length;
+
 				references.push(Location.create(
-					document.uri,
+					fileUri,
 					{
-						start: document.positionAt(startOffset),
-						end: document.positionAt(endOffset)
+						start: { line, character },
+						end: { line: endLine, character: endCharacter }
 					}
 				));
 			}
