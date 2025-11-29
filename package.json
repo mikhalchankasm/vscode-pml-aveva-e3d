@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.10.3",
+  "version": "0.10.5",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -250,6 +250,12 @@
         "title": "Insert Method Documentation Block",
         "category": "PML Forms",
         "icon": "$(note)"
+      },
+      {
+        "command": "pml.makeListBasic",
+        "title": "Basic Array",
+        "category": "PML Array",
+        "icon": "$(symbol-array)"
       },
       {
         "command": "pml.makeListPath",
@@ -561,16 +567,20 @@
       ],
       "pml.array": [
         {
-          "command": "pml.makeListPath",
+          "command": "pml.makeListBasic",
           "group": "1_array@1"
         },
         {
-          "command": "pml.makeListString",
+          "command": "pml.makeListPath",
           "group": "1_array@2"
         },
         {
-          "command": "pml.makeListPathString",
+          "command": "pml.makeListString",
           "group": "1_array@3"
+        },
+        {
+          "command": "pml.makeListPathString",
+          "group": "1_array@4"
         },
         {
           "command": "pml.reindexArray",

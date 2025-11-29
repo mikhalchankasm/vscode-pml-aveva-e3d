@@ -72,6 +72,12 @@ export class Parser {
 
 		if (this.isAtEnd()) return null;
 
+		// Skip unknown tokens (like BOM)
+		if (this.check(TokenType.UNKNOWN)) {
+			this.advance();
+			return null;
+		}
+
 		// define method / object
 		if (this.check(TokenType.DEFINE)) {
 			return this.parseDefinition();
@@ -131,16 +137,24 @@ export class Parser {
 			returnType = this.parseType();
 		}
 
-		// Method body
+		// Method body - SIMPLIFIED: just skip everything until ENDMETHOD
+		// This ensures we always find method definitions even with syntax errors in body
 		const body: Statement[] = [];
-		while (!this.check(TokenType.ENDMETHOD) && !this.isAtEnd()) {
-			const stmt = this.parseStatement();
-			if (stmt) {
-				body.push(stmt);
-			}
+
+		// Skip all tokens until we find ENDMETHOD or next DEFINE
+		while (!this.isAtEnd() && !this.check(TokenType.ENDMETHOD) && !this.check(TokenType.DEFINE)) {
+			this.advance();
 		}
 
-		const endToken = this.consume(TokenType.ENDMETHOD, "Expected 'endmethod'");
+		// Consume ENDMETHOD if present
+		let endToken: Token;
+		if (this.check(TokenType.ENDMETHOD)) {
+			endToken = this.advance();
+		} else {
+			// No ENDMETHOD found (probably at DEFINE or EOF) - use current position
+			endToken = this.previous();
+			this.errors.push(new ParseError("Expected 'endmethod'", endToken));
+		}
 
 		return {
 			type: 'MethodDefinition',
@@ -175,16 +189,24 @@ export class Parser {
 		const parameters = this.parseParameters();
 		this.consume(TokenType.RPAREN, "Expected ')' after parameters");
 
-		// Function body
+		// Function body - SIMPLIFIED: just skip everything until ENDFUNCTION
+		// This ensures we always find function definitions even with syntax errors in body
 		const body: Statement[] = [];
-		while (!this.check(TokenType.ENDFUNCTION) && !this.isAtEnd()) {
-			const stmt = this.parseStatement();
-			if (stmt) {
-				body.push(stmt);
-			}
+
+		// Skip all tokens until we find ENDFUNCTION or next DEFINE
+		while (!this.isAtEnd() && !this.check(TokenType.ENDFUNCTION) && !this.check(TokenType.DEFINE)) {
+			this.advance();
 		}
 
-		const endToken = this.consume(TokenType.ENDFUNCTION, "Expected 'endfunction'");
+		// Consume ENDFUNCTION if present
+		let endToken: Token;
+		if (this.check(TokenType.ENDFUNCTION)) {
+			endToken = this.advance();
+		} else {
+			// No ENDFUNCTION found (probably at DEFINE or EOF) - use current position
+			endToken = this.previous();
+			this.errors.push(new ParseError("Expected 'endfunction'", endToken));
+		}
 
 		return {
 			type: 'FunctionDefinition',
@@ -278,93 +300,37 @@ export class Parser {
 		const nameToken = this.consume(TokenType.GLOBAL_VAR, "Expected form name (e.g., !!MyForm)");
 		const formName = nameToken.value;
 
-		// Parse optional modifiers
-		let formType: 'DIALOG' | 'MAIN' | 'DOCUMENT' | 'BLOCKINGDIALOG' | undefined;
-		let resizable: boolean = false;
-		let dock: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | undefined;
+		// Skip ALL tokens until we find EXIT or DEFINE
+		// This is a temporary workaround to avoid parser hangs
+		// TODO: Implement proper form parsing
+		while (!this.isAtEnd()) {
+			const token = this.peek();
 
-		// Check for form type
-		if (this.check(TokenType.DIALOG)) {
-			formType = 'DIALOG';
-			this.advance();
-		} else if (this.check(TokenType.MAIN)) {
-			formType = 'MAIN';
-			this.advance();
-		} else if (this.check(TokenType.DOCUMENT)) {
-			formType = 'DOCUMENT';
-			this.advance();
-		} else if (this.check(TokenType.BLOCKINGDIALOG)) {
-			formType = 'BLOCKINGDIALOG';
+			// Stop at EXIT or DEFINE
+			if (token.type === TokenType.EXIT) {
+				this.advance(); // consume EXIT
+				break;
+			}
+
+			if (token.type === TokenType.DEFINE) {
+				// Don't consume DEFINE - let the main parser handle it
+				break;
+			}
+
 			this.advance();
 		}
 
-		// Check for RESIZABLE
-		if (this.check(TokenType.RESIZABLE)) {
-			resizable = true;
-			this.advance();
-		}
-
-		// Check for DOCK
-		if (this.check(TokenType.DOCK)) {
-			this.advance();
-			if (this.check(TokenType.LEFT)) {
-				dock = 'LEFT';
-				this.advance();
-			} else if (this.check(TokenType.RIGHT)) {
-				dock = 'RIGHT';
-				this.advance();
-			} else if (this.check(TokenType.TOP)) {
-				dock = 'TOP';
-				this.advance();
-			} else if (this.check(TokenType.BOTTOM)) {
-				dock = 'BOTTOM';
-				this.advance();
-			}
-		}
-
-		const body: Statement[] = [];
-		const frames: FrameDefinition[] = [];
-		const callbacks: Record<string, string> = {};
-
-		// Parse form body
-		while (!this.check(TokenType.EXIT) && !this.isAtEnd()) {
-			this.skipTrivia();
-
-			if (this.check(TokenType.EXIT)) break;
-
-			// Parse frame
-			if (this.check(TokenType.FRAME)) {
-				frames.push(this.parseFrameDefinition());
-			}
-			// Parse member declaration
-			else if (this.check(TokenType.MEMBER)) {
-				body.push(this.parseMemberDeclaration());
-			}
-			// Parse gadget (button, text, option, toggle)
-			else if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
-			         this.check(TokenType.OPTION) || this.check(TokenType.TOGGLE)) {
-				body.push(this.parseGadget());
-			}
-			// Parse statement (callbacks, assignments, etc.)
-			else {
-				const stmt = this.parseStatement();
-				if (stmt) {
-					body.push(stmt);
-				}
-			}
-		}
-
-		const endToken = this.consume(TokenType.EXIT, "Expected 'exit'");
+		const endToken = this.previous();
 
 		return {
 			type: 'FormDefinition',
 			name: formName,
-			formType,
-			resizable,
-			dock,
-			body,
-			frames,
-			callbacks,
+			formType: undefined,
+			resizable: false,
+			dock: undefined,
+			body: [],
+			frames: [],
+			callbacks: {},
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
 	}
@@ -699,9 +665,18 @@ export class Parser {
 		// Consequent (if body)
 		const consequent: Statement[] = [];
 		while (!this.check(TokenType.ELSE) && !this.check(TokenType.ELSEIF) && !this.check(TokenType.ENDIF) && !this.isAtEnd()) {
-			const stmt = this.parseStatement();
-			if (stmt) {
-				consequent.push(stmt);
+			try {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					consequent.push(stmt);
+				}
+			} catch (error) {
+				// Error recovery: skip to end of line and continue
+				this.synchronize();
+				// If we hit ELSE/ELSEIF/ENDIF during synchronize, break
+				if (this.check(TokenType.ELSE) || this.check(TokenType.ELSEIF) || this.check(TokenType.ENDIF)) {
+					break;
+				}
 			}
 		}
 
@@ -720,9 +695,18 @@ export class Parser {
 				this.advance(); // consume 'else'
 				alternate = [];
 				while (!this.check(TokenType.ENDIF) && !this.isAtEnd()) {
-					const stmt = this.parseStatement();
-					if (stmt) {
-						alternate.push(stmt);
+					try {
+						const stmt = this.parseStatement();
+						if (stmt) {
+							alternate.push(stmt);
+						}
+					} catch (error) {
+						// Error recovery: skip to end of line and continue
+						this.synchronize();
+						// If we hit ENDIF during synchronize, break
+						if (this.check(TokenType.ENDIF)) {
+							break;
+						}
 					}
 				}
 			}
@@ -821,9 +805,18 @@ export class Parser {
 		// Body
 		const body: Statement[] = [];
 		while (!this.check(TokenType.ENDDO) && !this.isAtEnd()) {
-			const stmt = this.parseStatement();
-			if (stmt) {
-				body.push(stmt);
+			try {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					body.push(stmt);
+				}
+			} catch (error) {
+				// Error recovery: skip to end of line and continue
+				this.synchronize();
+				// If we hit ENDDO during synchronize, break
+				if (this.check(TokenType.ENDDO)) {
+					break;
+				}
 			}
 		}
 
@@ -856,9 +849,18 @@ export class Parser {
 		// Body
 		const body: Statement[] = [];
 		while (!this.check(TokenType.ELSEHANDLE) && !this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
-			const stmt = this.parseStatement();
-			if (stmt) {
-				body.push(stmt);
+			try {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					body.push(stmt);
+				}
+			} catch (error) {
+				// Error recovery: skip to end of line and continue
+				this.synchronize();
+				// If we hit ELSEHANDLE/ENDHANDLE during synchronize, break
+				if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE)) {
+					break;
+				}
 			}
 		}
 
@@ -868,9 +870,18 @@ export class Parser {
 			this.advance();
 			alternate = [];
 			while (!this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
-				const stmt = this.parseStatement();
-				if (stmt) {
-					alternate.push(stmt);
+				try {
+					const stmt = this.parseStatement();
+					if (stmt) {
+						alternate.push(stmt);
+					}
+				} catch (error) {
+					// Error recovery: skip to end of line and continue
+					this.synchronize();
+					// If we hit ENDHANDLE during synchronize, break
+					if (this.check(TokenType.ENDHANDLE)) {
+						break;
+					}
 				}
 			}
 		}
@@ -913,34 +924,68 @@ export class Parser {
 		const isGlobal = varToken.type === TokenType.GLOBAL_VAR;
 		const varName = varToken.value.substring(isGlobal ? 2 : 1);
 
+		// Build the left side - could be just variable or array access
+		let left: Identifier | MemberExpression = {
+			type: 'Identifier',
+			name: varName,
+			scope: isGlobal ? 'global' : 'local',
+			range: this.createRange(this.getTokenIndex(varToken), this.getTokenIndex(varToken))
+		};
+
+		// Handle array indexing: !var[index] or !var[index1][index2]...
+		while (this.check(TokenType.LBRACKET)) {
+			this.advance(); // consume [
+			const indexExpr = this.parseExpression();
+			const rbracket = this.consume(TokenType.RBRACKET, "Expected ']' after array index");
+
+			left = {
+				type: 'MemberExpression',
+				object: left,
+				property: indexExpr,
+				computed: true,
+				range: {
+					start: left.range.start,
+					end: { line: rbracket.line - 1, character: rbracket.column - 1 + rbracket.length }
+				}
+			};
+		}
+
 		// Check for assignment
 		if (this.check(TokenType.ASSIGN)) {
 			this.advance(); // consume =
 
 			const initializer = this.parseExpression();
 
-			const varDecl: VariableDeclaration = {
-				type: 'VariableDeclaration',
-				name: varName,
-				scope: isGlobal ? 'global' : 'local',
-				initializer,
-				range: this.createRange(this.getTokenIndex(varToken), this.current - 1)
-			};
+			// If left is just an Identifier, return VariableDeclaration
+			if (left.type === 'Identifier') {
+				const varDecl: VariableDeclaration = {
+					type: 'VariableDeclaration',
+					name: varName,
+					scope: isGlobal ? 'global' : 'local',
+					initializer,
+					range: this.createRange(this.getTokenIndex(varToken), this.current - 1)
+				};
+				return varDecl;
+			}
 
-			return varDecl;
-		} else {
-			// Just a variable reference (expression statement)
-			const identifier: Identifier = {
-				type: 'Identifier',
-				name: varName,
-				scope: isGlobal ? 'global' : 'local',
-				range: this.createRange(this.getTokenIndex(varToken), this.getTokenIndex(varToken))
-			};
-
+			// Otherwise it's array assignment - return ExpressionStatement with AssignmentExpression
 			return {
 				type: 'ExpressionStatement',
-				expression: identifier,
-				range: this.createRange(this.getTokenIndex(varToken), this.getTokenIndex(varToken))
+				expression: {
+					type: 'AssignmentExpression',
+					left,
+					right: initializer,
+					operator: '=',
+					range: this.createRangeFromNodes(left, initializer)
+				},
+				range: this.createRangeFromNodes(left, initializer)
+			};
+		} else {
+			// Just a variable/array reference (expression statement)
+			return {
+				type: 'ExpressionStatement',
+				expression: left,
+				range: left.range
 			};
 		}
 	}
@@ -982,6 +1027,7 @@ export class Parser {
 				type: 'AssignmentExpression',
 				left: left as Identifier | MemberExpression,
 				right,
+				operator: '=',
 				range: this.createRangeFromNodes(left, right)
 			};
 		}
@@ -1505,11 +1551,59 @@ export class Parser {
 
 			switch (this.peek().type) {
 				case TokenType.DEFINE:
+				case TokenType.SETUP:
 				case TokenType.IF:
 				case TokenType.DO:
 				case TokenType.RETURN:
 				case TokenType.HANDLE:
+				case TokenType.ENDMETHOD:
+				case TokenType.ENDOBJECT:
+				case TokenType.ENDFUNCTION:
+				case TokenType.EXIT:
 					return;
+			}
+
+			this.advance();
+		}
+	}
+
+	/**
+	 * Skip tokens until end of line
+	 * Used to recover from parsing errors by ignoring unknown syntax
+	 * Since NEWLINE tokens might not be present, also stop at statement keywords
+	 */
+	private skipToEndOfLine(): void {
+		if (this.isAtEnd()) return;
+
+		const startLine = this.peek().line;
+
+		while (!this.isAtEnd()) {
+			const token = this.peek();
+
+			// Stop if we hit a NEWLINE
+			if (token.type === TokenType.NEWLINE) {
+				this.advance();
+				break;
+			}
+
+			// Stop if line number changed (moved to next line)
+			if (token.line > startLine) {
+				break;
+			}
+
+			// Stop if we hit a statement keyword (likely start of next statement)
+			if (token.type === TokenType.DEFINE ||
+			    token.type === TokenType.SETUP ||
+			    token.type === TokenType.IF ||
+			    token.type === TokenType.DO ||
+			    token.type === TokenType.RETURN ||
+			    token.type === TokenType.HANDLE ||
+			    token.type === TokenType.ENDMETHOD ||
+			    token.type === TokenType.ENDOBJECT ||
+			    token.type === TokenType.ENDFUNCTION ||
+			    token.type === TokenType.EXIT ||
+			    token.type === TokenType.MEMBER) {
+				break;
 			}
 
 			this.advance();

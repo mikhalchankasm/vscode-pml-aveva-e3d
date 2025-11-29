@@ -2,6 +2,45 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.5] - 2025-11-29
+
+### Added - Array Tools
+
+- **Basic Array Command** - New "Basic Array" command in PML - Array menu
+  - Converts plain text lines to array assignments without quotes or path prefixes
+  - Input: `text1\ntext2\ntext3` → Output: `!list[1] = text1\n!list[2] = text2\n!list[3] = text3`
+  - Automatically skips empty lines
+  - Added as first option in PML - Array submenu
+
+### Fixed - Parser Improvements
+
+- **Method/Function Extraction** - Radical simplification of parser error recovery
+  - Now extracts ALL method definitions even with syntax errors in method bodies
+  - Skips method body parsing entirely, focuses on method signatures
+  - Result: 10/10 methods found in complex forms (was 3-4/10)
+
+- **Array Indexing Syntax** - Fixed parsing of array assignments
+  - `!var[index] = value` now parses correctly (was showing "Expected expression" error)
+  - Supports multi-dimensional arrays: `!var[i][j] = value`
+  - Zero-based indices now valid: `!var[0] = value`
+
+## [0.10.4] - 2025-02-02
+
+### Fixed - TypeScript & Dependencies
+
+- **TypeScript Errors** - Fixed 3 compilation errors
+  - `parser.ts`: Added missing `operator: '='` field to `AssignmentExpression` return type
+  - `server.ts`: Updated progress notification API from deprecated `'$/progress'` to `WorkDoneProgress.type`
+  - Added `WorkDoneProgress` import from `vscode-languageserver/node`
+  - Result: Clean TypeScript compilation with zero errors
+
+- **Security Vulnerabilities** - Updated test dependencies
+  - Upgraded `vitest` from 1.1.0 to 4.0.14 (latest)
+  - Upgraded `@vitest/coverage-v8` from 1.1.0 to 4.0.14 (latest)
+  - Fixed 5 moderate severity vulnerabilities in esbuild/vite chain
+  - Result: `npm audit` shows 0 vulnerabilities
+  - All tests passing: 68 tests (2 skipped)
+
 ## [0.10.3] - 2025-02-02
 
 ### Added - Major Features

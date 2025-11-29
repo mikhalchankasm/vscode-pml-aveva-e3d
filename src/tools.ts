@@ -45,6 +45,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.insertMethodDocBlock', 'Insert Method Documentation Block', this.insertMethodDocBlock);
 
         // Array helpers
+        this.registerCommand('pml.makeListBasic', 'Basic Array', this.makeListBasic);
         this.registerCommand('pml.makeListPath', 'Make Array (add /)', this.makeListPath);
         this.registerCommand('pml.makeListString', 'Make Array (add |....|)', this.makeListString);
         this.registerCommand('pml.makeListPathString', 'Make Array (add / and |....|)', this.makeListPathString);
@@ -644,6 +645,10 @@ export class PMLToolsProvider implements vscode.Disposable {
     };
 
     // Array helpers
+    private makeListBasic = async () => {
+        await this.makeListHelper('');
+    };
+
     private makeListPath = async () => {
         await this.makeListHelper('/');
     };
