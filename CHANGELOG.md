@@ -2,6 +2,26 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.10.6] - 2026-01-04
+
+### Fixed - Critical Parser & LSP Improvements
+
+- **Full Method/Function Body Parsing** - Parser now properly parses statements inside methods/functions
+  - Previously: Parser skipped all tokens until `endmethod`/`endfunction`, returning empty `body: []`
+  - Now: Uses `parseStatement()` to build complete AST with all statements
+  - Result: ArrayIndexChecker and semantic analyzers now work inside methods
+  - Fixed 7 failing tests in parser.test.ts and arrayIndexChecker.test.ts
+
+- **Workspace-Wide References from Disk** - References Provider now reads files from disk as fallback
+  - Previously: Files not in LRU cache (100 files) and not open were silently skipped
+  - Now: Falls back to `fs.readFileSync()` when file not cached or open
+  - Result: Find All References (Shift+F12) finds all usages in entire workspace
+
+- **File Watcher for Index Updates** - Added `onDidChangeWatchedFiles` handler
+  - Previously: Index only updated at startup and for open files
+  - Now: Files created/modified/deleted outside editor are automatically reindexed
+  - Result: Go to Definition and Find References stay current with external changes
+
 ## [0.10.5] - 2025-11-29
 
 ### Added - Array Tools

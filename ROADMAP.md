@@ -594,15 +594,21 @@ Development plans and progress tracking.
 - Commands: 30+ (with array manipulation tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **38 tests passing, 2 skipped** (20 parser + 18 typo detector)
+- Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.10.3):**
-- ✅ **Workspace-Wide References** - Find All References (Shift+F12) searches entire workspace
-- ✅ **UNC Path Support** - Network paths `\\server\share` work correctly
-- ✅ **Memory Management** - LRU cache with 100 files max prevents memory growth
-- ✅ **User Exclusions** - `pml.indexing.exclude` configuration now works
-- ✅ **Code Quality** - Menu conditions, async I/O, type safety improvements
+**Recent Changes (v0.10.6):**
+- ✅ **Full Method Body Parsing** - Parser now parses statements inside methods/functions (was skipping)
+- ✅ **Semantic Analysis Inside Methods** - ArrayIndexChecker and other analyzers now work inside method bodies
+- ✅ **References from Disk Fallback** - Files not in LRU cache are read from disk (no more missing references)
+- ✅ **File Watcher Support** - Index updates when files change outside editor
+- ✅ **Tests Fixed** - All 70 tests passing (fixed 7 parser/arrayIndexChecker failures)
+
+**Previous Changes (v0.10.3-v0.10.5):**
+- ✅ **Workspace-Wide References** (v0.10.3) - Find All References (Shift+F12) searches entire workspace
+- ✅ **UNC Path Support** (v0.10.3) - Network paths `\\server\share` work correctly
+- ✅ **Memory Management** (v0.10.3) - LRU cache with 100 files max prevents memory growth
+- ✅ **Basic Array Command** (v0.10.5) - Convert plain text to array assignments
 
 **Previous Changes (v0.10.0-v0.10.2):**
 - ✅ **Frame Gadgets** (v0.10.0) - 9 snippets + comprehensive tutorial

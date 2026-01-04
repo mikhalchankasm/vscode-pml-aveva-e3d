@@ -1,4 +1,46 @@
-# Release Notes - v0.10.3
+# Release Notes - v0.10.6
+
+**Release Date:** 2026-01-04
+
+## 🔧 What's New in v0.10.6
+
+### Critical Parser Fixes
+
+**Full Method/Function Body Parsing**:
+- ✅ **Previously**: Parser skipped method/function bodies entirely, returning `body: []`
+- ✅ **Now**: Parses all statements (if, do, return, assignments, etc.) inside methods
+- ✅ **Impact**: ArrayIndexChecker and semantic analysis now work inside methods
+- ✅ **Tests**: Fixed 7 failing tests in parser.test.ts and arrayIndexChecker.test.ts
+
+### LSP Improvements
+
+**Workspace-Wide References from Disk**:
+- ✅ **Previously**: Files not in LRU cache (100 files) were silently skipped
+- ✅ **Now**: Falls back to reading files from disk when not cached
+- ✅ **Impact**: Find All References (Shift+F12) finds usages in ALL workspace files
+
+**File Watcher for Index Updates**:
+- ✅ **Previously**: Index only updated at startup and for open files
+- ✅ **Now**: `onDidChangeWatchedFiles` handler reindexes external changes
+- ✅ **Impact**: Go to Definition and References stay current with external edits
+
+## 📦 Installation
+
+**GitHub Release:** [v0.10.6](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.6)
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.10.5
+
+**Release Date:** 2025-11-29
+
+See [CHANGELOG.md](CHANGELOG.md) for v0.10.5 details.
+
+---
+
+# Previous Release - v0.10.3
 
 **Release Date:** 2025-02-02
 
