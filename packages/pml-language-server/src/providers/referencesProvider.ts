@@ -4,6 +4,8 @@
 
 import { Location, ReferenceParams, TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
+import * as fs from 'fs';
 import { SymbolIndex } from '../index/symbolIndex';
 
 export class ReferencesProvider {
@@ -75,6 +77,13 @@ export class ReferencesProvider {
 				if (openDoc) {
 					const fileRefs = this.findReferencesInText(openDoc.getText(), fileUri, symbolName);
 					references.push(...fileRefs);
+				} else {
+					// Last resort: read file from disk
+					const fileText = this.readFileFromDisk(fileUri);
+					if (fileText) {
+						const fileRefs = this.findReferencesInText(fileText, fileUri, symbolName);
+						references.push(...fileRefs);
+					}
 				}
 			}
 		}
@@ -155,5 +164,18 @@ export class ReferencesProvider {
 
 	private isWordChar(char: string): boolean {
 		return /[a-zA-Z0-9_.]/.test(char) || char === '!';
+	}
+
+	/**
+	 * Read file content from disk as fallback when not cached
+	 */
+	private readFileFromDisk(fileUri: string): string | undefined {
+		try {
+			const filePath = URI.parse(fileUri).fsPath;
+			return fs.readFileSync(filePath, 'utf-8');
+		} catch {
+			// File doesn't exist or can't be read
+			return undefined;
+		}
 	}
 }

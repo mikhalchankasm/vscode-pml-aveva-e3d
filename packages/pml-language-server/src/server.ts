@@ -13,10 +13,14 @@ import {
 	DidChangeConfigurationNotification,
 	TextDocumentSyncKind,
 	InitializeResult,
+	WorkDoneProgressServerReporter,
+	FileChangeType,
+	DidChangeWatchedFilesParams,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
+import * as fs from 'fs';
 import { Parser } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
 import { SymbolIndex } from './index/symbolIndex';
@@ -124,6 +128,7 @@ connection.onInitialized(async () => {
 	}
 
 	// Index workspace on startup with progress indicator
+	let startupProgress: WorkDoneProgressServerReporter | undefined;
 	try {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
 		if (workspaceFolders && workspaceFolders.length > 0) {
@@ -136,34 +141,79 @@ connection.onInitialized(async () => {
 			});
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 
-			// Create progress indicator
-			const token = 'pml-indexing-' + Date.now();
-			await connection.sendRequest('window/workDoneProgress/create', { token });
-
-			connection.sendProgress('$/progress', token, {
-				kind: 'begin',
-				title: 'PML',
-				message: 'Indexing workspace...',
-				cancellable: false
-			});
+			startupProgress = await connection.window.createWorkDoneProgress();
+			startupProgress.begin('PML', undefined, 'Indexing workspace...', false);
 
 			// Index workspace
 			await workspaceIndexer.indexWorkspace(folders);
 			const stats = symbolIndex.getStats();
 
-			connection.sendProgress('$/progress', token, {
-				kind: 'end',
-				message: `Indexed ${stats.files} files`
-			});
+			startupProgress.report(100, `Indexed ${stats.files} files`);
+			startupProgress.done();
+			startupProgress = undefined;
 
 			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
 		}
 	} catch (error: unknown) {
+		// Ensure any progress indicator is closed on error
+		if (startupProgress) {
+			try {
+				startupProgress.done();
+			} catch {
+				// ignore secondary errors
+			}
+		}
 		const message = error instanceof Error ? error.message : String(error);
 		connection.console.error(`Failed to index workspace: ${message}`);
 	}
 
 	connection.console.log('PML Language Server initialized');
+});
+
+/**
+ * File Watcher - Handle changes to files on disk (not opened in editor)
+ * This ensures the index stays up-to-date when files are modified externally
+ */
+connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
+	const pmlExtensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
+	const parser = new Parser();
+
+	for (const change of params.changes) {
+		const fileUri = change.uri;
+		const ext = fileUri.substring(fileUri.lastIndexOf('.')).toLowerCase();
+
+		// Only process PML files
+		if (!pmlExtensions.includes(ext)) {
+			continue;
+		}
+
+		try {
+			if (change.type === FileChangeType.Deleted) {
+				// File deleted - remove from index
+				symbolIndex.removeFile(fileUri);
+				connection.console.log(`File deleted, removed from index: ${fileUri}`);
+			} else if (change.type === FileChangeType.Created || change.type === FileChangeType.Changed) {
+				// File created or changed - reindex it
+				// Skip if the file is open in editor (will be handled by onDidChangeContent)
+				if (documents.get(fileUri)) {
+					continue;
+				}
+
+				// Read file from disk and reindex
+				const filePath = URI.parse(fileUri).fsPath;
+				const content = fs.readFileSync(filePath, 'utf-8');
+				const parseResult = parser.parse(content);
+
+				if (parseResult.ast) {
+					symbolIndex.indexFile(fileUri, parseResult.ast, 0, content);
+					connection.console.log(`File ${change.type === FileChangeType.Created ? 'created' : 'changed'}, reindexed: ${fileUri}`);
+				}
+			}
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			connection.console.warn(`Failed to process file change for ${fileUri}: ${message}`);
+		}
+	}
 });
 
 // PML Settings interface

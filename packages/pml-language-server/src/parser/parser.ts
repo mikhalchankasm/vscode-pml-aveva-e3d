@@ -137,13 +137,23 @@ export class Parser {
 			returnType = this.parseType();
 		}
 
-		// Method body - SIMPLIFIED: just skip everything until ENDMETHOD
-		// This ensures we always find method definitions even with syntax errors in body
+		// Method body - parse statements until ENDMETHOD
 		const body: Statement[] = [];
 
-		// Skip all tokens until we find ENDMETHOD or next DEFINE
 		while (!this.isAtEnd() && !this.check(TokenType.ENDMETHOD) && !this.check(TokenType.DEFINE)) {
-			this.advance();
+			try {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					body.push(stmt);
+				}
+			} catch (error) {
+				// Error recovery: skip to end of line and continue
+				this.synchronize();
+				// If we hit ENDMETHOD/DEFINE during synchronize, break
+				if (this.check(TokenType.ENDMETHOD) || this.check(TokenType.DEFINE)) {
+					break;
+				}
+			}
 		}
 
 		// Consume ENDMETHOD if present
@@ -189,13 +199,23 @@ export class Parser {
 		const parameters = this.parseParameters();
 		this.consume(TokenType.RPAREN, "Expected ')' after parameters");
 
-		// Function body - SIMPLIFIED: just skip everything until ENDFUNCTION
-		// This ensures we always find function definitions even with syntax errors in body
+		// Function body - parse statements until ENDFUNCTION
 		const body: Statement[] = [];
 
-		// Skip all tokens until we find ENDFUNCTION or next DEFINE
 		while (!this.isAtEnd() && !this.check(TokenType.ENDFUNCTION) && !this.check(TokenType.DEFINE)) {
-			this.advance();
+			try {
+				const stmt = this.parseStatement();
+				if (stmt) {
+					body.push(stmt);
+				}
+			} catch (error) {
+				// Error recovery: skip to end of line and continue
+				this.synchronize();
+				// If we hit ENDFUNCTION/DEFINE during synchronize, break
+				if (this.check(TokenType.ENDFUNCTION) || this.check(TokenType.DEFINE)) {
+					break;
+				}
+			}
 		}
 
 		// Consume ENDFUNCTION if present
