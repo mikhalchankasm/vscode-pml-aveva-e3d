@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.10.6",
+  "version": "0.11.0",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -379,21 +379,6 @@
             "warning"
           ],
           "description": "Detect typos in PML keywords (CURRENTLY DISABLED - parser catches syntax errors instead. Use 'off')"
-        },
-        "pml.typeInference.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable type inference for variables and expressions"
-        },
-        "pml.inlayHints.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show inlay hints for parameter names and types"
-        },
-        "pml.inlayHints.parameterNames": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show parameter names in function calls"
         },
         "pml.diagnostics.typeChecking": {
           "type": "string",

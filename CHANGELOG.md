@@ -2,6 +2,44 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.0] - 2026-01-06
+
+### Added - New Features
+
+- **Rename Symbol (F2)** - Workspace-wide symbol renaming
+  - Rename methods, objects, forms, and variables across all files
+  - Validates new name format for each symbol type
+  - Methods: `.oldName` → `.newName`
+  - Variables: `!oldVar` → `!newVar`, `!!globalVar` → `!!newGlobalVar`
+  - Preview changes before applying
+
+- **Semantic Highlighting** - Enhanced syntax highlighting via LSP
+  - Variables (`!local`, `!!global`) highlighted distinctly
+  - Method names (`.methodName`) with definition detection
+  - Parameters in method signatures
+  - Type keywords (STRING, REAL, BOOLEAN, ARRAY, DBREF)
+  - Control flow keywords (if, do, handle, etc.)
+  - Comments and string literals
+
+- **Workspace Indexing Progress** - Visual feedback during startup
+  - Progress bar shows "Indexed X/Y files" during workspace scan
+  - Reports percentage completion
+  - Final summary: "Indexed N files, M methods, K objects"
+
+### Improved - Better Error Messages
+
+- **Context-Aware Parser Errors** - Errors now include helpful suggestions
+  - Array index errors: "PML arrays are 1-indexed. Use arr[1], not arr[0]"
+  - Method syntax: "Method names must start with a dot: .myMethodName"
+  - Missing keywords: "Did you mean 'define'?" for typos like 'defne'
+  - Loop/condition context: "Every 'do' loop must end with 'enddo'"
+
+### Removed - Dead Settings
+
+- Removed non-functional `pml.typeInference.enabled` setting
+- Removed non-functional `pml.inlayHints.enabled` and `pml.inlayHints.parameterNames`
+- These features were never implemented; settings were confusing users
+
 ## [0.10.6] - 2026-01-04
 
 ### Fixed - Critical Parser & LSP Improvements

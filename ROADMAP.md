@@ -441,7 +441,44 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
-### v0.9.0 - Q2 2025
+### v0.11.0 - 2026-01-06 ✅ COMPLETED
+
+### New Features Implemented
+
+- [x] **Rename Symbol (F2)** ✅ COMPLETED
+  - Rename methods with updates to all calls
+  - Rename variables (local and global)
+  - Rename objects and forms
+  - Validates new name format
+  - Preview before applying
+
+- [x] **Semantic Highlighting** ✅ COMPLETED
+  - Variables highlighted distinctly (`!local`, `!!global`)
+  - Method names with definition detection
+  - Parameters in method signatures
+  - Type keywords (STRING, REAL, BOOLEAN, etc.)
+  - Control flow keywords highlighted
+  - Comments and string literals
+
+- [x] **Workspace Indexing Progress** ✅ COMPLETED
+  - Progress bar during startup indexing
+  - "Indexed X/Y files" percentage reporting
+  - Final summary of indexed symbols
+
+- [x] **Context-Aware Parser Errors** ✅ COMPLETED
+  - Errors include helpful suggestions
+  - Array index errors explain 1-based indexing
+  - Method syntax hints
+  - Typo suggestions for keywords
+  - Loop/condition context messages
+
+- [x] **Dead Settings Cleanup** ✅ COMPLETED
+  - Removed non-functional typeInference settings
+  - Removed non-functional inlayHints settings
+
+---
+
+### v1.0.0 - Target Release
 
 ### Type Inference (Re-implementation)
 
@@ -457,12 +494,6 @@ Development plans and progress tracking.
   - Filter completions by type
 
 ### Refactoring
-
-- [ ] **Rename Symbol**
-  - Rename methods with updates to all calls
-  - Rename variables safely
-  - Rename in callback strings
-  - Preview before applying
 
 - [ ] **Extract Method**
   - Selection → new method

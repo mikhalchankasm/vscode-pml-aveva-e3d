@@ -32,6 +32,8 @@ import { WorkspaceSymbolProvider } from './providers/workspaceSymbolProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
+import { RenameProvider } from './providers/renameProvider';
+import { SemanticTokensProvider, semanticTokensLegend } from './providers/semanticTokensProvider';
 import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
 
 // Create a connection for the server
@@ -55,6 +57,8 @@ const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
+const renameProvider = new RenameProvider(symbolIndex, documents);
+const semanticTokensProvider = new SemanticTokensProvider(documents);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
@@ -94,10 +98,17 @@ connection.onInitialize((params: InitializeParams) => {
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
 			},
-			// TODO: Implement these providers
-			// renameProvider: true,
+			// Rename Provider (F2)
+			renameProvider: {
+				prepareProvider: true
+			},
+			// Semantic Tokens (enhanced syntax highlighting)
+			semanticTokensProvider: {
+				legend: semanticTokensLegend,
+				full: true,
+				delta: false
+			},
 			// Future providers (Phase 2+)
-			// semanticTokensProvider: {...},
 			// inlayHintProvider: {...},
 			// callHierarchyProvider: true,
 			// codeLensProvider: {...},
@@ -142,13 +153,12 @@ connection.onInitialized(async () => {
 			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
 
 			startupProgress = await connection.window.createWorkDoneProgress();
-			startupProgress.begin('PML', undefined, 'Indexing workspace...', false);
+			startupProgress.begin('PML', 0, 'Scanning workspace...', false);
 
-			// Index workspace
-			await workspaceIndexer.indexWorkspace(folders);
+			// Index workspace with progress reporting
+			await workspaceIndexer.indexWorkspace(folders, startupProgress);
 			const stats = symbolIndex.getStats();
 
-			startupProgress.report(100, `Indexed ${stats.files} files`);
 			startupProgress.done();
 			startupProgress = undefined;
 
@@ -222,14 +232,6 @@ interface PMLSettings {
 	trace: {
 		server: string;
 	};
-	typeInference: {
-		enabled: boolean;
-		strictMode: boolean;
-	};
-	inlayHints: {
-		variableTypes: boolean;
-		parameterNames: boolean;
-	};
 	diagnostics: {
 		typeChecking: 'error' | 'warning' | 'off';
 		unusedVariables: 'warning' | 'off';
@@ -243,14 +245,6 @@ const defaultSettings: PMLSettings = {
 	maxNumberOfProblems: 1000,
 	trace: {
 		server: 'off'
-	},
-	typeInference: {
-		enabled: true,
-		strictMode: false
-	},
-	inlayHints: {
-		variableTypes: true,
-		parameterNames: true
 	},
 	diagnostics: {
 		typeChecking: 'error',
@@ -484,6 +478,24 @@ connection.onSignatureHelp(params => {
 	if (!document) return null;
 
 	return signatureHelpProvider.provide(params, document);
+});
+
+/**
+ * Rename Provider (F2)
+ */
+connection.onPrepareRename(params => {
+	return renameProvider.prepareRename(params);
+});
+
+connection.onRenameRequest(params => {
+	return renameProvider.provide(params);
+});
+
+/**
+ * Semantic Tokens Provider (enhanced syntax highlighting)
+ */
+connection.languages.semanticTokens.on(params => {
+	return semanticTokensProvider.provideFull(params);
 });
 
 // Make the text document manager listen on the connection

@@ -9,6 +9,7 @@
 
 import { Token, TokenType } from './tokens';
 import { Lexer } from './lexer';
+import { getEnhancedErrorMessage, ErrorContext } from './errorMessages';
 import {
 	Program, Statement, Expression, MethodDefinition, FunctionDefinition, ObjectDefinition, FormDefinition,
 	FrameDefinition, VariableDeclaration, MemberDeclaration, Parameter, IfStatement, DoStatement,
@@ -25,6 +26,7 @@ export class Parser {
 	private tokens: Token[] = [];
 	private current: number = 0;
 	private errors: ParseError[] = [];
+	private parsingContext: ErrorContext['context'] = undefined;
 
 	/**
 	 * Parse source code into AST
@@ -116,6 +118,9 @@ export class Parser {
 	 * endmethod
 	 */
 	private parseMethodDefinition(startToken: Token): MethodDefinition {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'method';
+
 		this.consume(TokenType.METHOD_KW, "Expected 'method'");
 
 		// Parse documentation (JSDoc comments before method)
@@ -166,6 +171,8 @@ export class Parser {
 			this.errors.push(new ParseError("Expected 'endmethod'", endToken));
 		}
 
+		this.parsingContext = previousContext;
+
 		return {
 			type: 'MethodDefinition',
 			name: methodName,
@@ -185,6 +192,9 @@ export class Parser {
 	 * endfunction
 	 */
 	private parseFunctionDefinition(startToken: Token): FunctionDefinition {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'function';
+
 		this.consume(TokenType.FUNCTION, "Expected 'function'");
 
 		// Parse documentation (JSDoc comments before function)
@@ -228,6 +238,8 @@ export class Parser {
 			this.errors.push(new ParseError("Expected 'endfunction'", endToken));
 		}
 
+		this.parsingContext = previousContext;
+
 		return {
 			type: 'FunctionDefinition',
 			name: functionName,
@@ -249,6 +261,9 @@ export class Parser {
 	 * endobject
 	 */
 	private parseObjectDefinition(startToken: Token): ObjectDefinition {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'object';
+
 		this.consume(TokenType.OBJECT, "Expected 'object'");
 
 		const nameToken = this.consume(TokenType.IDENTIFIER, "Expected object name");
@@ -291,6 +306,8 @@ export class Parser {
 
 		const endToken = this.consume(TokenType.ENDOBJECT, "Expected 'endobject'");
 
+		this.parsingContext = previousContext;
+
 		return {
 			type: 'ObjectDefinition',
 			name: objectName,
@@ -301,19 +318,14 @@ export class Parser {
 
 	/**
 	 * Parse form definition
-	 * setup form !!MyForm
-	 *   frame .myFrame
-	 *     ...
-	 *   exit
-	 * exit
-	 */
-	/**
-	 * Parse form definition
 	 * setup form !!name [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE] [DOCK direction]
 	 *   ...
 	 * exit
 	 */
 	private parseFormDefinition(): FormDefinition {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'form';
+
 		const startToken = this.consume(TokenType.SETUP, "Expected 'setup'");
 		this.consume(TokenType.FORM, "Expected 'form'");
 
@@ -341,6 +353,8 @@ export class Parser {
 		}
 
 		const endToken = this.previous();
+
+		this.parsingContext = previousContext;
 
 		return {
 			type: 'FormDefinition',
@@ -667,6 +681,9 @@ export class Parser {
 	 * Parse if statement
 	 */
 	private parseIfStatement(): IfStatement {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'condition';
+
 		// Accept either 'if' or 'elseif' (for recursive elseif handling)
 		let startToken: Token;
 		if (this.check(TokenType.IF)) {
@@ -734,6 +751,8 @@ export class Parser {
 			endToken = this.consume(TokenType.ENDIF, "Expected 'endif'");
 		}
 
+		this.parsingContext = previousContext;
+
 		return {
 			type: 'IfStatement',
 			test,
@@ -776,6 +795,9 @@ export class Parser {
 	 * Parse do statement
 	 */
 	private parseDoStatement(): DoStatement {
+		const previousContext = this.parsingContext;
+		this.parsingContext = 'loop';
+
 		const startToken = this.consume(TokenType.DO, "Expected 'do'");
 
 		let variant: 'values' | 'index' | 'from-to' | 'while' = 'while';
@@ -841,6 +863,8 @@ export class Parser {
 		}
 
 		const endToken = this.consume(TokenType.ENDDO, "Expected 'enddo'");
+
+		this.parsingContext = previousContext;
 
 		return {
 			type: 'DoStatement',
@@ -1557,7 +1581,13 @@ export class Parser {
 	}
 
 	private error(token: Token, message: string): ParseError {
-		const error = new ParseError(message, token);
+		// Enhance error message with context-specific suggestions
+		const enhancedMessage = getEnhancedErrorMessage({
+			expected: message,
+			got: token,
+			context: this.parsingContext
+		});
+		const error = new ParseError(enhancedMessage, token);
 		this.errors.push(error);
 		return error;
 	}

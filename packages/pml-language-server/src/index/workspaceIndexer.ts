@@ -2,7 +2,7 @@
  * Workspace Indexer - Indexes all PML files in workspace
  */
 
-import { Connection } from 'vscode-languageserver/node';
+import { Connection, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { Parser } from '../parser/parser';
@@ -95,8 +95,13 @@ export class WorkspaceIndexer {
 
 	/**
 	 * Index entire workspace (all .pml files)
+	 * @param workspaceFolders Array of workspace folder paths
+	 * @param progress Optional progress reporter for UI feedback
 	 */
-	public async indexWorkspace(workspaceFolders: string[]): Promise<void> {
+	public async indexWorkspace(
+		workspaceFolders: string[],
+		progress?: WorkDoneProgressServerReporter
+	): Promise<void> {
 		if (this.indexingInProgress) {
 			this.connection.console.warn('Indexing already in progress');
 			return;
@@ -111,13 +116,26 @@ export class WorkspaceIndexer {
 
 			this.connection.console.log('Starting workspace indexing...');
 
-			let totalFiles = 0;
+			// First pass: collect all files to get total count
+			const allFiles: string[] = [];
 			for (const folder of workspaceFolders) {
 				const files = await this.findPMLFiles(folder);
-				totalFiles += files.length;
+				allFiles.push(...files);
+			}
 
-				for (const file of files) {
-					await this.indexFile(file);
+			const totalFiles = allFiles.length;
+			this.connection.console.log(`Found ${totalFiles} PML files to index`);
+
+			// Second pass: index files with progress reporting
+			let indexedCount = 0;
+			for (const file of allFiles) {
+				await this.indexFile(file);
+				indexedCount++;
+
+				// Report progress every 10 files or at completion
+				if (progress && (indexedCount % 10 === 0 || indexedCount === totalFiles)) {
+					const percentage = Math.round((indexedCount / totalFiles) * 100);
+					progress.report(percentage, `Indexed ${indexedCount}/${totalFiles} files`);
 				}
 			}
 

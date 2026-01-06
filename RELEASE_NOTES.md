@@ -1,34 +1,61 @@
-# Release Notes - v0.10.6
+# Release Notes - v0.11.0
 
-**Release Date:** 2026-01-04
+**Release Date:** 2026-01-06
 
-## 🔧 What's New in v0.10.6
+## 🚀 What's New in v0.11.0
 
-### Critical Parser Fixes
+### New Features
 
-**Full Method/Function Body Parsing**:
-- ✅ **Previously**: Parser skipped method/function bodies entirely, returning `body: []`
-- ✅ **Now**: Parses all statements (if, do, return, assignments, etc.) inside methods
-- ✅ **Impact**: ArrayIndexChecker and semantic analysis now work inside methods
-- ✅ **Tests**: Fixed 7 failing tests in parser.test.ts and arrayIndexChecker.test.ts
+**Rename Symbol (F2)**:
+- ✅ Workspace-wide symbol renaming
+- ✅ Rename methods: `.oldName` → `.newName`
+- ✅ Rename variables: `!oldVar` → `!newVar`, `!!globalVar` → `!!newGlobalVar`
+- ✅ Rename objects and forms across all files
+- ✅ Validates new name format for each symbol type
 
-### LSP Improvements
+**Semantic Highlighting**:
+- ✅ Variables (`!local`, `!!global`) highlighted distinctly
+- ✅ Method names with definition vs. call detection
+- ✅ Parameters in method signatures
+- ✅ Type keywords (STRING, REAL, BOOLEAN, ARRAY, DBREF)
+- ✅ Control flow keywords (if, do, handle, etc.)
+- ✅ Comments and string literals
 
-**Workspace-Wide References from Disk**:
-- ✅ **Previously**: Files not in LRU cache (100 files) were silently skipped
-- ✅ **Now**: Falls back to reading files from disk when not cached
-- ✅ **Impact**: Find All References (Shift+F12) finds usages in ALL workspace files
+**Workspace Indexing Progress**:
+- ✅ Progress bar shows "Indexed X/Y files" during startup
+- ✅ Percentage reporting every 10 files
+- ✅ Final summary of indexed symbols
 
-**File Watcher for Index Updates**:
-- ✅ **Previously**: Index only updated at startup and for open files
-- ✅ **Now**: `onDidChangeWatchedFiles` handler reindexes external changes
-- ✅ **Impact**: Go to Definition and References stay current with external edits
+### Improved Error Messages
+
+**Context-Aware Parser Errors**:
+- ✅ Array index errors: "PML arrays are 1-indexed. Use arr[1], not arr[0]"
+- ✅ Method syntax: "Method names must start with a dot: .myMethodName"
+- ✅ Typo suggestions: "Did you mean 'define'?" for typos like 'defne'
+- ✅ Loop/condition context: "Every 'do' loop must end with 'enddo'"
+
+### Cleanup
+
+**Removed Dead Settings**:
+- ❌ `pml.typeInference.enabled` (never implemented)
+- ❌ `pml.inlayHints.enabled` (never implemented)
+- ❌ `pml.inlayHints.parameterNames` (never implemented)
 
 ## 📦 Installation
 
-**GitHub Release:** [v0.10.6](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.10.6)
+**GitHub Release:** [v0.11.0](https://github.com/anthropics/vscode-pml-extension/releases/tag/v0.11.0)
+
+**Checksum (MD5):** _see GitHub release_
 
 See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.10.6
+
+**Release Date:** 2026-01-04
+
+See [CHANGELOG.md](CHANGELOG.md) for v0.10.6 details.
 
 ---
 
