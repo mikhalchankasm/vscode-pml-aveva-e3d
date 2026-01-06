@@ -17,6 +17,12 @@ type LightweightMethod = {
 	documentation?: string;
 };
 
+type DocumentVariable = {
+	name: string;           // Full name including ! or !!
+	isGlobal: boolean;      // true if !! prefix
+	line: number;           // Line where first defined
+};
+
 export class CompletionProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
 
@@ -53,6 +59,17 @@ export class CompletionProvider {
 			return [];
 		}
 
+		// Check if typing a variable (starts with ! or !!)
+		const variableMatch = textBeforeCursor.match(/(!!?[A-Za-z0-9_]*)$/);
+		if (variableMatch) {
+			const prefix = variableMatch[1];
+			// Only trigger after at least 2 characters (! + one letter) for better UX
+			if (prefix.length >= 2) {
+				const variableCompletions = this.getDocumentVariableCompletions(document);
+				items.push(...variableCompletions);
+			}
+		}
+
 		// Keywords and snippets
 		items.push(...this.getKeywordCompletions());
 		items.push(...this.getSnippetCompletions());
@@ -60,25 +77,15 @@ export class CompletionProvider {
 		// Global functions
 		items.push(...this.getGlobalFunctionCompletions());
 
-		// Workspace symbols (methods, objects)
-		items.push(...this.getWorkspaceSymbolCompletions());
+		// Workspace symbols (methods, objects) - only if typing an identifier
+		// Requires minimum 2 characters to avoid flooding with hundreds of items
+		const identifierMatch = textBeforeCursor.match(/([A-Za-z_][A-Za-z0-9_]*)$/);
+		if (identifierMatch && identifierMatch[1].length >= 2) {
+			const prefix = identifierMatch[1].toLowerCase();
+			items.push(...this.getWorkspaceSymbolCompletions(prefix));
+		}
 
 		return items;
-	}
-
-	/**
-	 * Get user-defined method completions
-	 */
-	private getMethodCompletions(): CompletionItem[] {
-		const methods = this.symbolIndex.getAllMethods();
-		return methods.map(method => ({
-			label: `.${method.name}`,
-			kind: CompletionItemKind.Method,
-			detail: `Method (${method.parameters.join(', ')})`,
-			documentation: method.documentation,
-			insertText: method.name,
-			filterText: method.name
-		}));
 	}
 
 	/**
@@ -256,26 +263,38 @@ export class CompletionProvider {
 
 	/**
 	 * Get workspace symbol completions (user-defined methods and objects)
+	 * @param prefix Optional prefix to filter symbols (case-insensitive)
 	 */
-	private getWorkspaceSymbolCompletions(): CompletionItem[] {
+	private getWorkspaceSymbolCompletions(prefix?: string): CompletionItem[] {
 		const items: CompletionItem[] = [];
+		const lowerPrefix = prefix?.toLowerCase();
 
-		// Add methods
+		// Add methods - filter by prefix if provided
 		const methods = this.symbolIndex.getAllMethods();
 		for (const method of methods) {
+			// Skip if prefix doesn't match
+			if (lowerPrefix && !method.name.toLowerCase().startsWith(lowerPrefix)) {
+				continue;
+			}
+
 			items.push({
 				label: `.${method.name}`,
 				kind: CompletionItemKind.Method,
 				detail: `Method (${method.parameters.join(', ')})`,
 				documentation: method.documentation,
-				filterText: `workspace:${method.name}`,
+				filterText: method.name,
 				sortText: `0${method.name}` // Sort workspace methods first
 			});
 		}
 
-		// Add objects
+		// Add objects - filter by prefix if provided
 		const objects = this.symbolIndex.getAllObjects();
 		for (const obj of objects) {
+			// Skip if prefix doesn't match
+			if (lowerPrefix && !obj.name.toLowerCase().startsWith(lowerPrefix)) {
+				continue;
+			}
+
 			items.push({
 				label: obj.name,
 				kind: CompletionItemKind.Class,
@@ -330,6 +349,112 @@ export class CompletionProvider {
 			filterText: method.name,
 			sortText: `0${method.name}`
 		}));
+	}
+
+	/**
+	 * Get variable completions from the entire document.
+	 * Extracts all variables (! and !!) and offers them as completions.
+	 */
+	private getDocumentVariableCompletions(document: TextDocument): CompletionItem[] {
+		const variables = this.extractVariablesFromDocument(document);
+		const seen = new Set<string>();
+		const items: CompletionItem[] = [];
+
+		for (const variable of variables) {
+			const lowerName = variable.name.toLowerCase();
+			if (seen.has(lowerName)) continue;
+			seen.add(lowerName);
+
+			items.push({
+				label: variable.name,
+				kind: variable.isGlobal ? CompletionItemKind.Variable : CompletionItemKind.Variable,
+				detail: variable.isGlobal ? 'Global variable' : 'Local variable',
+				documentation: `Defined at line ${variable.line + 1}`,
+				sortText: `0${variable.name}`, // Sort variables first
+				filterText: variable.name
+			});
+		}
+
+		return items;
+	}
+
+	/**
+	 * Extract all variables from the document.
+	 * Matches patterns like !varName and !!globalVar in assignments.
+	 */
+	private extractVariablesFromDocument(document: TextDocument): DocumentVariable[] {
+		const text = document.getText();
+		const lines = text.split(/\r?\n/);
+		const variables: DocumentVariable[] = [];
+		const seen = new Set<string>();
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+
+			// Skip comment lines
+			if (line.trim().startsWith('--')) continue;
+
+			// Match variable assignments: !var = ... or !!var = ...
+			// Also match: !var.property = (member assignments)
+			// Pattern: variable name at start or after whitespace, followed by = or .
+			const assignmentRegex = /(?:^|[\s(,])(!{1,2}[A-Za-z][A-Za-z0-9_]*)\s*(?:=|\.)/g;
+			let match: RegExpExecArray | null;
+
+			while ((match = assignmentRegex.exec(line)) !== null) {
+				const varName = match[1];
+				const lowerName = varName.toLowerCase();
+
+				// Skip !this which is a special keyword
+				if (lowerName === '!this') continue;
+
+				if (!seen.has(lowerName)) {
+					seen.add(lowerName);
+					variables.push({
+						name: varName,
+						isGlobal: varName.startsWith('!!'),
+						line: i
+					});
+				}
+			}
+
+			// Also match variables in 'do !var values' loops
+			const doLoopMatch = line.match(/\bdo\s+(!{1,2}[A-Za-z][A-Za-z0-9_]*)\s+(?:values|index)/i);
+			if (doLoopMatch) {
+				const varName = doLoopMatch[1];
+				const lowerName = varName.toLowerCase();
+				if (!seen.has(lowerName) && lowerName !== '!this') {
+					seen.add(lowerName);
+					variables.push({
+						name: varName,
+						isGlobal: varName.startsWith('!!'),
+						line: i
+					});
+				}
+			}
+
+			// Match method parameters: define method .name(!param is TYPE)
+			const methodParamRegex = /define\s+method\s+\.[A-Za-z0-9_]+\s*\(([^)]*)\)/i;
+			const methodMatch = line.match(methodParamRegex);
+			if (methodMatch) {
+				const params = methodMatch[1];
+				const paramRegex = /(!{1,2}[A-Za-z][A-Za-z0-9_]*)/g;
+				let paramMatch: RegExpExecArray | null;
+				while ((paramMatch = paramRegex.exec(params)) !== null) {
+					const varName = paramMatch[1];
+					const lowerName = varName.toLowerCase();
+					if (!seen.has(lowerName)) {
+						seen.add(lowerName);
+						variables.push({
+							name: varName,
+							isGlobal: varName.startsWith('!!'),
+							line: i
+						});
+					}
+				}
+			}
+		}
+
+		return variables;
 	}
 
 	/**
