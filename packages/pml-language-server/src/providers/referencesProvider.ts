@@ -24,8 +24,15 @@ export class ReferencesProvider {
 
 		const word = document.getText(wordRange);
 
-		// Extract method name (remove leading dot if present)
-		const symbolName = word.startsWith('.') ? word.substring(1) : word;
+		// Extract method name: handle patterns like !obj.method, !this.method, .method
+		// Take only the part after the last dot
+		let symbolName = word;
+		if (word.includes('.')) {
+			const lastDotIndex = word.lastIndexOf('.');
+			symbolName = word.substring(lastDotIndex + 1);
+		}
+		// Remove leading ! or $ if still present
+		symbolName = symbolName.replace(/^[!$]+/, '');
 
 		const references: Location[] = [];
 

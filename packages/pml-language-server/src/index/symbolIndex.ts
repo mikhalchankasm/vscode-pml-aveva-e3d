@@ -155,6 +155,12 @@ export class SymbolIndex {
 		// Remove file entry
 		this.fileSymbols.delete(uri);
 		this.documentTexts.delete(uri);
+
+		// Clean up LRU tracking
+		const lruIndex = this.documentAccessOrder.indexOf(uri);
+		if (lruIndex !== -1) {
+			this.documentAccessOrder.splice(lruIndex, 1);
+		}
 	}
 
 	/**

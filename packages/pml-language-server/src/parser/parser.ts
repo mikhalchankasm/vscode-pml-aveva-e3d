@@ -1679,7 +1679,8 @@ export class Parser {
 
 		return {
 			start: { line: start.line - 1, character: start.column - 1 },
-			end: { line: end.line - 1, character: end.column + end.length }
+			// end.column is 1-based, so convert to 0-based: (column - 1) + length
+			end: { line: end.line - 1, character: end.column - 1 + end.length }
 		};
 	}
 

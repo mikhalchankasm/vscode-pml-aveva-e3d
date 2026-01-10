@@ -17,29 +17,33 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
         const text = document.getText();
         let formattedText = text;
 
-        // 0. Исправление базовых отступов
+        // Detect original EOL style (CRLF or LF)
+        const hasCRLF = text.includes('\r\n');
+        const eol = hasCRLF ? '\r\n' : '\n';
+
+        // 0. Fix basic indentation
         if (fixIndentation) {
-            formattedText = this.fixIndentation(formattedText, indentSize);
+            formattedText = this.fixIndentation(formattedText, indentSize, eol);
         }
 
-        // 1. Удаление множественных пустых строк
+        // 1. Remove multiple empty lines
         if (removeMultipleEmptyLines) {
-            formattedText = this.removeMultipleEmptyLines(formattedText);
+            formattedText = this.removeMultipleEmptyLines(formattedText, eol);
         }
 
-        // 2. Форматирование блоков method
+        // 2. Format method blocks
         if (formatMethodBlocks) {
-            formattedText = this.formatMethodBlocks(formattedText);
+            formattedText = this.formatMethodBlocks(formattedText, eol);
         }
 
-        // 3. Форматирование блоков form/frame
+        // 3. Format form/frame blocks
         if (formatFormBlocks) {
-            formattedText = this.formatFormBlocks(formattedText);
+            formattedText = this.formatFormBlocks(formattedText, eol);
         }
 
-        // 4. Выравнивание присваиваний (= в одну линию)
+        // 4. Align assignments (= in same column)
         if (alignAssignments) {
-            formattedText = this.alignAssignments(formattedText);
+            formattedText = this.alignAssignments(formattedText, eol);
         }
 
         // Возвращаем замену всего документа
@@ -52,9 +56,9 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     }
 
     /**
-     * Исправляет базовые отступы в коде
+     * Fix basic indentation in code
      */
-    private fixIndentation(text: string, indentSize: number): string {
+    private fixIndentation(text: string, indentSize: number, eol: string = '\n'): string {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let currentIndent = 0;
@@ -139,27 +143,27 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
                 continue;
             }
             
-            // Обычная строка
+            // Regular line
             result.push(' '.repeat(currentIndent * indentSize) + trimmed);
         }
-        
-        return result.join('\n');
+
+        return result.join(eol);
     }
 
     /**
-     * Удаляет множественные пустые строки (оставляет максимум одну)
+     * Remove multiple empty lines (keep max one)
      */
-    private removeMultipleEmptyLines(text: string): string {
-        return text.replace(/(\r?\n){3,}/g, '\n\n');
+    private removeMultipleEmptyLines(text: string, eol: string = '\n'): string {
+        // Replace 3+ consecutive line breaks with 2
+        return text.replace(/(\r?\n){3,}/g, eol + eol);
     }
 
     /**
-     * Форматирует блоки define method ... endmethod
-     * Логика из Python кода:
-     * - Удаляет лишние строки перед endmethod
-     * - Добавляет пустую строку после define method если её нет
+     * Format define method ... endmethod blocks
+     * - Remove extra lines before endmethod
+     * - Add empty line after define method if none
      */
-    private formatMethodBlocks(text: string): string {
+    private formatMethodBlocks(text: string, eol: string = '\n'): string {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let inMethod = false;
@@ -197,15 +201,14 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             result.push(line);
         }
 
-        return result.join('\n');
+        return result.join(eol);
     }
 
     /**
-     * Форматирует блоки setup form ... exit и frame ... exit
-     * Логика из Python кода:
-     * - Добавляет пустую строку перед exit если её нет
+     * Format setup form ... exit and frame ... exit blocks
+     * - Add empty line before exit if none
      */
-    private formatFormBlocks(text: string): string {
+    private formatFormBlocks(text: string, eol: string = '\n'): string {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         let inFormBlock = false;
@@ -235,14 +238,14 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             result.push(line);
         }
 
-        return result.join('\n');
+        return result.join(eol);
     }
 
     /**
-     * Выравнивание присваиваний (= в одну линию)
-     * Находит группы строк подряд с = и выравнивает их
+     * Align assignments (= in same column)
+     * Find groups of consecutive lines with = and align them
      */
-    private alignAssignments(text: string): string {
+    private alignAssignments(text: string, eol: string = '\n'): string {
         const lines = text.split(/\r?\n/);
         const result: string[] = [];
         
@@ -321,15 +324,15 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
             }
         }
         
-        // Обработать последнюю группу если есть
+        // Process last group if exists
         if (assignmentGroup.length >= 2) {
             result.push(...this.processAssignmentGroup(assignmentGroup));
         } else if (assignmentGroup.length > 0) {
-            // Если группа меньше 2 - добавить строки как есть
+            // If group is less than 2 - add lines as is
             result.push(...assignmentGroup.map(g => g.line));
         }
-        
-        return result.join('\n');
+
+        return result.join(eol);
     }
     
     /**

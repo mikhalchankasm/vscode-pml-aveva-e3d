@@ -26,8 +26,59 @@ export class ArrayIndexChecker {
 
 			case 'MethodDefinition': {
 				const method = stmt as any;
-				for (const bodyStmt of method.body) {
-					this.checkStatement(bodyStmt);
+				if (method.body) {
+					for (const bodyStmt of method.body) {
+						this.checkStatement(bodyStmt);
+					}
+				}
+				break;
+			}
+
+			case 'FunctionDefinition': {
+				const func = stmt as any;
+				if (func.body) {
+					for (const bodyStmt of func.body) {
+						this.checkStatement(bodyStmt);
+					}
+				}
+				break;
+			}
+
+			case 'ObjectDefinition': {
+				const obj = stmt as any;
+				// Check methods inside object
+				if (obj.members) {
+					for (const member of obj.members) {
+						this.checkStatement(member);
+					}
+				}
+				break;
+			}
+
+			case 'FormDefinition': {
+				const form = stmt as any;
+				// Check form body statements
+				if (form.body) {
+					for (const bodyStmt of form.body) {
+						this.checkStatement(bodyStmt);
+					}
+				}
+				break;
+			}
+
+			case 'HandleStatement': {
+				const handle = stmt as any;
+				// Check handler body
+				if (handle.body) {
+					for (const bodyStmt of handle.body) {
+						this.checkStatement(bodyStmt);
+					}
+				}
+				// Check elsehandle block
+				if (handle.elseHandler) {
+					for (const elseStmt of handle.elseHandler) {
+						this.checkStatement(elseStmt);
+					}
 				}
 				break;
 			}

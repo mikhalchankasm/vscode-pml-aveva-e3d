@@ -60,17 +60,27 @@ export class HoverProvider {
 
 		const word = document.getText(wordRange);
 
-		// Check if it's a method call (.methodName)
+		// Extract method name from patterns like .method, var.method, !obj.method
+		let methodName: string | null = null;
 		if (word.startsWith('.')) {
-			const methodName = word.substring(1);
-			return this.getMethodHover(methodName);
+			methodName = word.substring(1);
+		} else if (word.includes('.')) {
+			const lastDotIndex = word.lastIndexOf('.');
+			methodName = word.substring(lastDotIndex + 1);
 		}
 
-		// Check if word contains a dot (e.g., "var.methodName" or "this.methodName")
-		if (word.includes('.')) {
-			const lastDotIndex = word.lastIndexOf('.');
-			const methodName = word.substring(lastDotIndex + 1);
-			return this.getMethodHover(methodName);
+		if (methodName) {
+			// First check built-in methods (they should have priority for common names)
+			const builtInHover = this.getBuiltInMethodHover(methodName);
+			if (builtInHover) {
+				return { ...builtInHover, range: wordRange };
+			}
+
+			// Then check user-defined methods
+			const userMethodHover = this.getMethodHover(methodName);
+			if (userMethodHover) {
+				return userMethodHover;
+			}
 		}
 
 		// Check if it's a global function
@@ -85,31 +95,26 @@ export class HoverProvider {
 			};
 		}
 
-		// Check if it's a built-in method (context-sensitive)
-		// Try to get the object before the dot
-		const textBeforeCursor = document.getText({
-			start: { line: position.line, character: 0 },
-			end: position
-		});
+		return null;
+	}
 
-		const methodMatch = textBeforeCursor.match(/(\w+)\.\s*$/);
-		if (methodMatch) {
-			const methodName = methodMatch[1];
-			// Try each type to find the method
-			for (const [, methods] of this.builtInDocs.entries()) {
-				const doc = methods.get(methodName.toLowerCase());
-				if (doc) {
-					return {
-						contents: {
-							kind: MarkupKind.Markdown,
-							value: doc
-						},
-						range: wordRange
-					};
-				}
+	/**
+	 * Get hover for built-in method (STRING, REAL, ARRAY, DBREF methods)
+	 */
+	private getBuiltInMethodHover(methodName: string): Hover | null {
+		const lowerName = methodName.toLowerCase();
+		// Search in all type documentation
+		for (const [, methods] of this.builtInDocs.entries()) {
+			const doc = methods.get(lowerName);
+			if (doc) {
+				return {
+					contents: {
+						kind: MarkupKind.Markdown,
+						value: doc
+					}
+				};
 			}
 		}
-
 		return null;
 	}
 
