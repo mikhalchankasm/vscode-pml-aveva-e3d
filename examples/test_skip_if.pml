@@ -11,7 +11,7 @@ define method .testSkipIf()
     
     !sequence = !lBores.size()
     
-    do !i from !sequence - 1 to 1 by -1
+    do !i from !sequence to 1 by -1
         skip if(!lBores[!i].eq(''))
         !this.arriveBore = !lBores[!i].bore()
         break

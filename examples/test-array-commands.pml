@@ -26,9 +26,7 @@ some value 3
 
 -- Test 3: Make Array commands
 -- Select plain values below and use: PML - Array -> Make Array (add /)
-value1
-value2
-value3
+$P some text
 
 -- Test 4: ReIndex with path arrays
 !list[1] =  'path/to/file1'
@@ -37,4 +35,8 @@ value3
 !list[4] =  'path/to/file4'
 !list[5] = 'path/to/file5'
 
+text1
+text2
+text3
+text4
 

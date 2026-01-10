@@ -53,3 +53,6 @@ coverage/
 # Temporary files
 *.tmp
 *.bak
+
+# Hidden examples (local testing only)
+hide_examples/

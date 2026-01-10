@@ -615,8 +615,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.10.3
-**Released:** 2025-02-02
+**Version:** 0.11.0
+**Released:** 2026-01-06
 
 **Statistics:**
 - Extension size: **2.1 MB** (bundled with esbuild)
@@ -628,12 +628,18 @@ Development plans and progress tracking.
 - Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.10.6):**
-- ✅ **Full Method Body Parsing** - Parser now parses statements inside methods/functions (was skipping)
-- ✅ **Semantic Analysis Inside Methods** - ArrayIndexChecker and other analyzers now work inside method bodies
-- ✅ **References from Disk Fallback** - Files not in LRU cache are read from disk (no more missing references)
+**Recent Changes (v0.11.0):**
+- ✅ **Rename Symbol (F2)** - Rename methods, variables, objects with workspace-wide updates
+- ✅ **Semantic Highlighting** - Variables, methods, parameters, keywords highlighted distinctly
+- ✅ **Workspace Indexing Progress** - Progress bar during startup indexing
+- ✅ **Context-Aware Parser Errors** - Errors include helpful suggestions
+- ✅ **Dead Settings Cleanup** - Removed non-functional typeInference/inlayHints settings
+
+**Previous Changes (v0.10.6):**
+- ✅ **Full Method Body Parsing** - Parser now parses statements inside methods/functions
+- ✅ **Semantic Analysis Inside Methods** - ArrayIndexChecker works inside method bodies
+- ✅ **References from Disk Fallback** - Files not in LRU cache are read from disk
 - ✅ **File Watcher Support** - Index updates when files change outside editor
-- ✅ **Tests Fixed** - All 70 tests passing (fixed 7 parser/arrayIndexChecker failures)
 
 **Previous Changes (v0.10.3-v0.10.5):**
 - ✅ **Workspace-Wide References** (v0.10.3) - Find All References (Shift+F12) searches entire workspace
@@ -694,5 +700,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2025-01-28*
+*Last updated: 2026-01-10*
 *Roadmap may change based on feedback and priorities*

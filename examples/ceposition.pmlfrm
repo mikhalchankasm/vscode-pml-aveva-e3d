@@ -1,0 +1,340 @@
+﻿--
+-- Methods defined:
+--
+--  Method call                      Return              Description
+--  ===========                      ======              ===========
+--  .init()                                             -                   [Data Type] [Description]
+--  .changeWrt(!gadget is gadget, !action is string)    -                   Description:
+--  .trackce()                                          -                   Description:
+--  .enhancenozzles()                                   -                   End of method definition for .trackce()
+--  .move(!gadget is gadget, !action is string)         -                   Description:
+--  .sign()                                             -                   Description:
+--  .by(!gadget is gadget, !action is string)           -                   Description:
+--  .step(!gadget is gadget, !action is string)         -                   Description:
+--  .backpos()                                          -                   Description:
+--  .quit()                                             -                   Description:
+--
+------------------------------------------------------------------------
+
+setup form !!ceposition dialog resize
+    TRACK |DESICE| call |!this.trackce()|
+    !this.iconTitle = 'Position CE'
+    !this.formTitle = 'CE POS'
+    !this.callback  = '!this.init()'
+    !this.Quitcall  = '!this.quit()'
+    path down
+    vdist 0.2
+    text .txtE    at x0.5 tooltip 'Позиция East ' anchor l+t+r || call '!this.move(' width 20 is string
+    text .txtN    at x0.5 tooltip 'Позиция North' anchor l+t+r || call '!this.move(' width 20 is string
+    text .txtU    at x0.5 tooltip 'Позиция Up   ' anchor l+t+r || call '!this.move(' width 20 is string
+    combo .txtBy  || at x0.5         width 6  tooltip 'Смещение'
+
+    button .bnE   at xmax.txtE+0.5 ymin.txtE-0.1 tooltip 'Сместить объект в направлении EAST' |E|  anchor t+r call '!this.by('
+    path down
+    button .bnN  tooltip 'Сместить объект в направлении NORTH' |N| anchor t+r  call '!this.by('
+    button .bnU  tooltip 'Сместить объект в направлении UP' |U|    anchor t+r  call '!this.by('
+    button .bnSing at xmax.txtBy+0.5 ymin.txtBy  tooltip 'плюс/минус' |+| call '!this.sign()'
+    button .bnUndo at xmax.bnSing+0.5 ymin.bnSing  tooltip 'Возврат на начальное положение'   call '!this.backpos()' pixmap wid 16 hei 16
+    combo .wrt  |Точка отсчета| at x0 ymax +0.5  width 8
+    member .tag    is string
+    member .oldPos is position
+    member .ce     is dbref
+    member .link is dbref
+
+exit
+
+------------------------------------------------------------------------
+--
+-- Method:      init
+--
+-- Description:
+--
+-- Method Type: Function/Procedure
+-- Arguments:
+--   [#] [R/RW] [Data Type] [Description]
+-- Return:
+--   [Data Type] [Description]
+--
+------------------------------------------------------------------------
+define method .init()
+
+    !this.bnUndo.addPixmap(!!pml.getPathName('undo.png'))
+    !this.tag          = '+'
+    !by                = '5 10 25 50 100 500 1000'
+    !this.txtBy.dtext  = !by.split()
+    !wrt               = 'World SITE ZONE FRMW CE ПО_ВЫБОРУ'
+    !this.wrt.dtext    = !wrt.split()
+    !this.wrt.callback = |!this.changeWrt(|
+    !this.trackce()
+
+endmethod
+-- End of method definition for .init()
+
+---------------------------------------------------------------------
+--
+-- Method:      changeWrt
+-- Description:
+--
+---------------------------------------------------------------------
+define method .changeWrt(!gadget is gadget, !action is string)
+
+    if ( !this.wrt.DisplayText() eq 'ПО_ВЫБОРУ' ) then
+        !this.link = !!ce
+
+    else
+        !this.link = object dbref()
+    endif
+
+    !this.trackce()
+
+endmethod
+-- End of method definition for .changeWrt()
+
+---------------------------------------------------------------------
+--
+-- Method:      trackce
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .trackce()
+
+    !haspos = !!ce.Attribute('POSITION')
+    handle any
+        return
+    endhandle
+
+    !this.enhancenozzles()
+    !wrt = !this.wrt.DisplayText()
+    if ( !this.link.Unset().Not() ) then
+        !cepos = !!ce.Position.Wrt(!this.link)
+    else
+        !cepos = !!ce.Position.Wrt($!wrt)
+    endif
+    handle any
+        $P $!!error.text
+        !this.SetActive(f)
+        return
+    endhandle
+    if ( !!ce neq !this.ce ) then
+        !this.oldPos = !!ce.position
+    endif
+    !this.ce = !!ce
+
+    !this.SetActive(t)
+    !this.txtE.Active = t
+    !this.txtE.Val    = !cepos.East.Value().String('d1')
+    !this.txtN.Active = t
+    !this.txtN.Val    = !cepos.North.Value().String('d1')
+    !this.txtU.Active = t
+    !this.txtU.Val    = !cepos.Up.Value().String('d1')
+
+endmethod
+-- End of method definition for .trackce()
+
+define method .enhancenozzles()
+
+    !number = 158
+    !!clearAid ('TEXT', !number )
+    !ownlst  = !!ce.ownlst.Evaluate(object Block(|!!ce.ownlst[!evalIndex].type|))
+    !ownlst.append(!!ce.type)
+    !pipeset = !ownlst.FindFirst('PIPE').set()
+    !equiset = !ownlst.FindFirst('EQUI').set()
+
+    if ( !pipeset ) then
+        var !nozzles eval ( href ) for all bran with type of href eq 'NOZZ' for pipe
+        var !nozzles append eval ( tref ) for all bran with type of tref eq 'NOZZ' for pipe
+
+    elseif ( !equiset ) then
+        var !nozzles collect all nozz for equi
+        var !nozzles append collect all equi for ce
+    endif
+
+    if ( !pipeset.Not() and !equiset.Not() ) then
+        !positionText = !!ce.position
+        handle any
+            return
+        endhandle
+        !!drawAidText(!!ce.flnm, !positionText, !number)
+    endif
+
+    do !nozz values !nozzles
+        !item = !nozz.dbref()
+        !text = !item.namn
+        if ( !item.type eq 'NOZZ' ) then
+            !text = !text & ' (' & !item.para[1] & ')'
+            if ( !item.cref.badref() ) then
+                !text = !text & ' *'
+            else
+                if ( !item.cend eq 'HEAD' ) then
+                    !text = !text & ' +'
+                else
+                    !text = !text & ' -'
+                endif
+            endif
+        endif
+        !positionText = !nozz.dbref().position
+        !!drawAidText(!text, !positionText, !number)
+    enddo
+
+    -- !numbermark = 159
+    -- !wrt = !this.wrt.DisplayText()
+
+    -- if ( !this.link.Unset().Not() ) then
+    -- !pos = pos of $!wrt
+    -- else
+    -- !pos = pos of $!wrt
+    -- endif
+
+    -- !pos = pos of $!wrt
+    -- handle any
+    -- return
+    -- endhandle
+    -- !!clearAid ('TEXT', !numbermark )
+    -- !!drawAidText(!this.wrt.DisplayText() , !pos, !numbermark)
+
+endmethod
+
+---------------------------------------------------------------------
+--
+-- Method:      move
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .move(!gadget is gadget, !action is string)
+
+    !e    = !this.txtE.Val.Replace('+', ' + ').Replace('-', ' - ').Replace('/', ' / ').Replace('*', ' * ')
+    !n    = !this.txtN.Val.Replace('+', ' + ').Replace('-', ' - ').Replace('/', ' / ').Replace('*', ' * ')
+    !u    = !this.txtU.Val.Replace('+', ' + ').Replace('-', ' - ').Replace('/', ' / ').Replace('*', ' * ')
+    !newE = $!e
+    handle any
+        return
+    endhandle
+
+    !newN = $!n
+    handle any
+        return
+    endhandle
+
+    for (let i = 0; i < 5; i++) {
+  console.log('Hello world!');
+}
+!newU = $!u
+    handle any
+        return
+    endhandle
+
+    markdb ''
+
+    if ( !this.wrt.DisplayText() eq 'ПО_ВЫБОРУ' ) then
+        !wrt = !this.link.string()
+    else
+        !wrt = !this.wrt.DisplayText()
+    endif
+    POS E ( $!e ) N ( $!n ) U ( $!U ) wrt $!wrt
+    handle any
+        return
+    endhandle
+
+    !this.txtE.Val = !newE.String()
+    !this.txtN.Val = !newN.String()
+    !this.txtU.Val = !newU.String()
+    !gadget.SetFocus()
+
+endmethod
+-- End of method definition for .move()
+
+---------------------------------------------------------------------
+--
+-- Method:      sign
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .sign()
+
+    if ( !this.bnSing.Tag eq '+' ) then
+        !this.bnSing.Tag = '-'
+        !this.tag        = '-'
+    elseif ( !this.bnSing.Tag eq '-' ) then
+        !this.bnSing.Tag = '+'
+        !this.tag        = '+'
+    endif
+
+endmethod
+-- End of method definition for .sign()
+
+---------------------------------------------------------------------
+--
+-- Method:      by
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .by(!gadget is gadget, !action is string)
+
+    markdb ''
+    !direction = !gadget.tag
+    !value     = !this.tag & !this.txtBy.DisplayText()
+    !wrt       = !this.wrt.DisplayText()
+    by $!direction $!value wrt $!wrt
+    !this.trackce()
+
+endmethod
+-- End of method definition for .by()
+
+---------------------------------------------------------------------
+--
+-- Method:      step
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .step(!gadget is gadget, !action is string)
+
+    !value = !this.txtBy.DisplayText().Real()
+    handle any
+        !this.txtBy.Val = 1
+        return
+    endhandle
+
+    !dtext = !this.txtBy.dtext
+    !dtext.Append(!this.txtBy.DisplayText())
+    !dtext = !dtext.Evaluate(object Block(|!dtext[!evalIndex].real()|))
+    !dtext.SortUnique()
+    !dtext            = !dtext.Evaluate(object Block(|!dtext[!evalIndex].string()|))
+    !this.txtBy.dtext = !dtext
+    !this.txtBy.SetDisplayText(!value.string())
+
+endmethod
+-- End of method definition for .step()
+
+---------------------------------------------------------------------
+--
+-- Method:      backpos
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .backpos()
+
+    !!ce.position = !this.oldPos
+    !this.trackce()
+
+endmethod
+-- End of method definition for .backpos()
+
+---------------------------------------------------------------------
+--
+-- Method:      quit
+-- Description:
+--
+---------------------------------------------------------------------
+
+define method .quit()
+
+    aid clear all
+
+endmethod
+-- End of method definition for .quit()

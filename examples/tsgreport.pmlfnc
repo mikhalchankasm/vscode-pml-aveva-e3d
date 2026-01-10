@@ -1,10 +1,10 @@
 ﻿define function !!tsgreport()
 
-!inlist[1 ]  = /250000-Т1
-!inlist[2 ]  = /250000-Т2
-!inlist[3 ]  = /250000-Т3
-!inlist[4 ]  = /250000-Т4
-!inlist[5 ]  = /250000-Т5
+!inlist[1 ] = /250000-Т1
+!inlist[2 ] = /250000-Т2
+!inlist[3 ] = /250000-Т3
+!inlist[4 ] = /250000-Т4
+!inlist[5 ] = /250000-Т5
 
 !marka = 'ТСГ'
 
@@ -43,9 +43,9 @@ do !index index !sites
     !result    = object array()
     !result[1] = !headline
     $!site
-    !branmem = !!collectallfor('PANE', |not matchwild(name of zone, '*TEMP*') and NOT UNSET ( :Обозначение )| , $!site )
-    !branmem.appendarray(!!collectallfor('GENSEC', |not matchwild(name of zone, '*TEMP*') and cutlen gt 1mm and NOT UNSET ( :Обозначение )| , $!site ) )
-    !branmem.appendarray(!!collectallfor('FRMW EQUI', |not matchwild(name of zone, '*TEMP*') and NOT UNSET ( :Обозначение ) | , $!site ) )
+    !branmem =           !!collectallfor('PANE'     , |not matchwild(name of zone, '*TEMP*') and                   NOT UNSET ( :Обозначение ) | , $!site   )
+    !branmem.appendarray(!!collectallfor('GENSEC'   , |not matchwild(name of zone, '*TEMP*') and cutlen gt 1mm and NOT UNSET ( :Обозначение ) | , $!site ) )
+    !branmem.appendarray(!!collectallfor('FRMW EQUI', |not matchwild(name of zone, '*TEMP*') and                   NOT UNSET ( :Обозначение ) | , $!site ) )
 
     if ( !branmem.empty()  ) then
 
