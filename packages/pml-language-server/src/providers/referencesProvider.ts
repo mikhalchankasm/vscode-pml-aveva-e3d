@@ -155,12 +155,12 @@ export class ReferencesProvider {
 
 				const endOffset = startOffset + symbolName.length;
 
-				// Calculate line and character position manually
-				const lines = text.substring(0, startOffset).split('\n');
+				// Calculate line and character position manually (handle CRLF)
+				const lines = text.substring(0, startOffset).split(/\r?\n/);
 				const line = lines.length - 1;
 				const character = lines[lines.length - 1].length;
 
-				const endLines = text.substring(0, endOffset).split('\n');
+				const endLines = text.substring(0, endOffset).split(/\r?\n/);
 				const endLine = endLines.length - 1;
 				const endCharacter = endLines[endLines.length - 1].length;
 

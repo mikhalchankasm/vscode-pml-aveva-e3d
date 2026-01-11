@@ -407,20 +407,23 @@ export class RenameProvider {
 	 * Convert offset range to LSP Range
 	 */
 	private offsetToRange(text: string, startOffset: number, endOffset: number): Range {
-		const lines = text.split('\n');
+		// Handle CRLF properly
+		const lines = text.split(/\r?\n/);
 		let currentOffset = 0;
-		let startLine = 0, startChar = 0;
-		let endLine = 0, endChar = 0;
+		let startLine = -1, startChar = 0;
+		let endLine = -1, endChar = 0;
 
 		for (let i = 0; i < lines.length; i++) {
-			const lineLength = lines[i].length + 1; // +1 for newline
+			// Account for line ending (CRLF or LF)
+			const lineEndLength = (text[currentOffset + lines[i].length] === '\r') ? 2 : 1;
+			const lineLength = lines[i].length + lineEndLength;
 
-			if (currentOffset + lineLength > startOffset && startLine === 0 && startChar === 0) {
+			if (startLine === -1 && currentOffset + lines[i].length >= startOffset) {
 				startLine = i;
 				startChar = startOffset - currentOffset;
 			}
 
-			if (currentOffset + lineLength > endOffset) {
+			if (endLine === -1 && currentOffset + lines[i].length >= endOffset) {
 				endLine = i;
 				endChar = endOffset - currentOffset;
 				break;
@@ -428,6 +431,10 @@ export class RenameProvider {
 
 			currentOffset += lineLength;
 		}
+
+		// Handle edge case where offset is at very end
+		if (startLine === -1) startLine = lines.length - 1;
+		if (endLine === -1) endLine = lines.length - 1;
 
 		return {
 			start: { line: startLine, character: startChar },
