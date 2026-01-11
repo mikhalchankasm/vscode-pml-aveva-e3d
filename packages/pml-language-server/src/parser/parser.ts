@@ -318,7 +318,7 @@ export class Parser {
 
 	/**
 	 * Parse form definition
-	 * setup form !!name [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE] [DOCK direction]
+	 * setup form !!name [DIALOG|MAIN|DOCUMENT|BLOCKINGDIALOG] [RESIZABLE|RESIZE] [DOCK direction]
 	 *   ...
 	 * exit
 	 */
@@ -332,9 +332,49 @@ export class Parser {
 		const nameToken = this.consume(TokenType.GLOBAL_VAR, "Expected form name (e.g., !!MyForm)");
 		const formName = nameToken.value;
 
-		// Skip ALL tokens until we find EXIT or DEFINE
-		// This is a temporary workaround to avoid parser hangs
-		// TODO: Implement proper form parsing
+		// Parse optional form modifiers
+		let formType: 'DIALOG' | 'MAIN' | 'DOCUMENT' | 'BLOCKINGDIALOG' | undefined;
+		let resizable = false;
+		let dock: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM' | undefined;
+
+		// Parse modifiers until we hit a newline or form body content
+		while (!this.isAtEnd() && !this.isFormBodyStart()) {
+			if (this.match(TokenType.DIALOG)) {
+				formType = 'DIALOG';
+			} else if (this.match(TokenType.MAIN)) {
+				formType = 'MAIN';
+			} else if (this.match(TokenType.DOCUMENT)) {
+				formType = 'DOCUMENT';
+			} else if (this.match(TokenType.BLOCKINGDIALOG)) {
+				formType = 'BLOCKINGDIALOG';
+			} else if (this.match(TokenType.RESIZABLE) || this.match(TokenType.RESIZE)) {
+				resizable = true;
+			} else if (this.match(TokenType.DOCK)) {
+				// Expect direction after DOCK
+				if (this.match(TokenType.LEFT)) dock = 'LEFT';
+				else if (this.match(TokenType.RIGHT)) dock = 'RIGHT';
+				else if (this.match(TokenType.TOP)) dock = 'TOP';
+				else if (this.match(TokenType.BOTTOM)) dock = 'BOTTOM';
+			} else if (this.check(TokenType.IDENTIFIER)) {
+				// Handle lowercase modifiers like 'dialog', 'resize'
+				const token = this.peek();
+				const lowerValue = token.value.toLowerCase();
+				if (lowerValue === 'dialog') { formType = 'DIALOG'; this.advance(); }
+				else if (lowerValue === 'main') { formType = 'MAIN'; this.advance(); }
+				else if (lowerValue === 'document') { formType = 'DOCUMENT'; this.advance(); }
+				else if (lowerValue === 'resize' || lowerValue === 'resizable') { resizable = true; this.advance(); }
+				else break;
+			} else {
+				break;
+			}
+		}
+
+		// Parse form body
+		const body: Statement[] = [];
+		const frames: FrameDefinition[] = [];
+		const callbacks: Record<string, string> = {};
+		const members: MemberDeclaration[] = [];
+
 		while (!this.isAtEnd()) {
 			const token = this.peek();
 
@@ -349,6 +389,49 @@ export class Parser {
 				break;
 			}
 
+			// Parse member declarations
+			if (token.type === TokenType.MEMBER) {
+				const member = this.parseMemberDeclaration();
+				members.push(member);
+				body.push(member as unknown as Statement);
+				continue;
+			}
+
+			// Parse frame definitions
+			if (token.type === TokenType.FRAME) {
+				frames.push(this.parseFrameDefinition());
+				continue;
+			}
+
+			// Parse gadget declarations (button, text, combo, option, toggle)
+			if (token.type === TokenType.BUTTON || token.type === TokenType.TEXT ||
+			    token.type === TokenType.OPTION || token.type === TokenType.TOGGLE) {
+				try {
+					const gadget = this.parseGadget();
+					body.push(gadget as unknown as Statement);
+				} catch {
+					this.advance(); // Skip on error
+				}
+				continue;
+			}
+
+			// Parse variable assignments and other statements
+			if (token.type === TokenType.LOCAL_VAR || token.type === TokenType.GLOBAL_VAR) {
+				try {
+					const stmt = this.parseStatement();
+					body.push(stmt);
+
+					// Check for callback patterns like !this.callback = '...'
+					if (stmt.type === 'ExpressionStatement' || stmt.type === 'VariableDeclaration') {
+						// Could extract callbacks here if needed
+					}
+				} catch {
+					this.advance(); // Skip on error
+				}
+				continue;
+			}
+
+			// Skip other tokens (TRACK, path, vdist, etc. - not strictly parsed yet)
 			this.advance();
 		}
 
@@ -359,14 +442,34 @@ export class Parser {
 		return {
 			type: 'FormDefinition',
 			name: formName,
-			formType: undefined,
-			resizable: false,
-			dock: undefined,
-			body: [],
-			frames: [],
-			callbacks: {},
+			formType,
+			resizable,
+			dock,
+			body,
+			frames,
+			callbacks,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
+	}
+
+	/**
+	 * Check if current token starts form body content
+	 */
+	private isFormBodyStart(): boolean {
+		const token = this.peek();
+		return token.type === TokenType.LOCAL_VAR ||
+		       token.type === TokenType.GLOBAL_VAR ||
+		       token.type === TokenType.MEMBER ||
+		       token.type === TokenType.FRAME ||
+		       token.type === TokenType.BUTTON ||
+		       token.type === TokenType.TEXT ||
+		       token.type === TokenType.OPTION ||
+		       token.type === TokenType.TOGGLE ||
+		       token.type === TokenType.EXIT ||
+		       token.type === TokenType.DEFINE ||
+		       // Also check for common form commands
+		       (token.type === TokenType.IDENTIFIER &&
+		        ['path', 'vdist', 'hdist', 'track', 'combo'].includes(token.value.toLowerCase()));
 	}
 
 	/**
@@ -1466,13 +1569,33 @@ export class Parser {
 			};
 		}
 
-		// Object constructor: object TYPE()
+		// Object constructor: object TYPE() or object CustomType()
 		if (this.match(TokenType.OBJECT)) {
 			const objectToken = this.previous();
-			// Next should be type constructor (STRING, ARRAY, etc.) or custom type
-			const typeToken = this.peek();
 
-			// Return 'object' as identifier - it will be parsed as call expression
+			// Next should be type constructor (STRING, ARRAY, etc.) or custom type identifier
+			if (this.match(TokenType.STRING_TYPE, TokenType.REAL_TYPE, TokenType.INTEGER_TYPE,
+				TokenType.BOOLEAN_TYPE, TokenType.ARRAY_TYPE, TokenType.DBREF_TYPE, TokenType.ANY_TYPE)) {
+				// Built-in type: object STRING(), object ARRAY(), etc.
+				const typeToken = this.previous();
+				return {
+					type: 'Identifier',
+					name: typeToken.value,
+					objectConstructor: true,  // Mark this as an object constructor
+					range: this.createRange(this.getTokenIndex(objectToken), this.getTokenIndex(typeToken))
+				} as Identifier;
+			} else if (this.match(TokenType.IDENTIFIER)) {
+				// Custom type: object MyCustomType()
+				const typeToken = this.previous();
+				return {
+					type: 'Identifier',
+					name: typeToken.value,
+					objectConstructor: true,
+					range: this.createRange(this.getTokenIndex(objectToken), this.getTokenIndex(typeToken))
+				} as Identifier;
+			}
+
+			// Just 'object' keyword alone (edge case)
 			return {
 				type: 'Identifier',
 				name: 'object',

@@ -197,6 +197,7 @@ export interface Identifier extends ASTNode {
 	name: string;
 	scope?: 'local' | 'global' | 'method';
 	inferredType?: PMLType;
+	objectConstructor?: boolean;  // True if this is part of "object TYPE()" syntax
 }
 
 /**
