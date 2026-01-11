@@ -43,7 +43,8 @@ export class RenameProvider {
 		const methods = this.symbolIndex.findMethod(symbolName);
 		const objects = this.symbolIndex.findObject(symbolName);
 		const forms = this.symbolIndex.findForm(symbolName);
-		const isVariable = word.startsWith('!');
+		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
+		const isVariable = word.startsWith('!') && !word.includes('.');
 
 		// If not a known symbol and not a variable, can't rename
 		if (methods.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
@@ -83,7 +84,8 @@ export class RenameProvider {
 		const methods = this.symbolIndex.findMethod(symbolName);
 		const objects = this.symbolIndex.findObject(symbolName);
 		const forms = this.symbolIndex.findForm(symbolName);
-		const isVariable = word.startsWith('!');
+		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
+		const isVariable = word.startsWith('!') && !word.includes('.');
 
 		if (methods.length > 0) {
 			// Renaming a method
@@ -306,10 +308,13 @@ export class RenameProvider {
 
 	/**
 	 * Extract symbol name from word (remove prefixes like . or !)
+	 * Handles patterns like !obj.method, !!global.method, .method
 	 */
 	private extractSymbolName(word: string): string | null {
-		if (word.startsWith('.')) {
-			return word.substring(1);
+		// Handle method call patterns: !obj.method, !!global.method
+		if (word.includes('.')) {
+			const lastDotIndex = word.lastIndexOf('.');
+			return word.substring(lastDotIndex + 1);
 		}
 		if (word.startsWith('!!')) {
 			return word.substring(2);

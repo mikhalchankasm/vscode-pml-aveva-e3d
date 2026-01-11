@@ -108,7 +108,7 @@ export class ReferencesProvider {
 		// Also match object instantiations: OBJECT ObjectName()
 		const patterns = [
 			new RegExp(`\\.${symbolName}\\s*\\(`, 'gi'),  // Direct call: .methodName()
-			new RegExp(`\\w+\\.${symbolName}\\s*\\(`, 'gi'),  // Variable call: !var.methodName()
+			new RegExp(`[!$]?[!]?\\w+\\.${symbolName}\\s*\\(`, 'gi'),  // Variable call: !var.methodName(), !!global.methodName()
 			new RegExp(`\\bOBJECT\\s+${symbolName}\\s*\\(`, 'gi')  // Object instantiation: OBJECT MyObject()
 		];
 

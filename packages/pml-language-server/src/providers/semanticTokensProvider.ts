@@ -106,7 +106,8 @@ export class SemanticTokensProvider {
 
 		const builder = new SemanticTokensBuilder();
 		const text = document.getText();
-		const lines = text.split('\n');
+		// Handle both CRLF and LF line endings
+		const lines = text.split(/\r?\n/);
 
 		for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
 			const line = lines[lineIndex];
@@ -129,11 +130,28 @@ export class SemanticTokensProvider {
 				continue;
 			}
 
-			// Comments ($ to end of line)
-			if (line[pos] === '$') {
+			// Line comments (-- to end of line)
+			if (line[pos] === '-' && line[pos + 1] === '-') {
 				const length = line.length - pos;
 				builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
 				break; // Rest of line is comment
+			}
+
+			// Block comment ($* ... *$) - handle on same line
+			if (line[pos] === '$' && line[pos + 1] === '*') {
+				const endPos = line.indexOf('*$', pos + 2);
+				if (endPos !== -1) {
+					// Block comment ends on same line
+					const length = endPos - pos + 2;
+					builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
+					pos = endPos + 2;
+					continue;
+				} else {
+					// Block comment continues to end of line (multi-line not fully supported)
+					const length = line.length - pos;
+					builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
+					break;
+				}
 			}
 
 			// String literals (|...|)

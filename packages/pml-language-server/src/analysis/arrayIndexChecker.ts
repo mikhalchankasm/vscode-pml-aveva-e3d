@@ -74,9 +74,9 @@ export class ArrayIndexChecker {
 						this.checkStatement(bodyStmt);
 					}
 				}
-				// Check elsehandle block
-				if (handle.elseHandler) {
-					for (const elseStmt of handle.elseHandler) {
+				// Check elsehandle block (field is 'alternate' in AST)
+				if (handle.alternate) {
+					for (const elseStmt of handle.alternate) {
 						this.checkStatement(elseStmt);
 					}
 				}
