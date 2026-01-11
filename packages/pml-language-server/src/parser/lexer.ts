@@ -423,13 +423,15 @@ export class Lexer {
 	}
 
 	private createToken(type: TokenType, value: string, length: number, line: number = this.line, column: number = this.column, offset: number = this.position): Token {
+		const index = this.tokens.length;  // Index will be assigned when pushed
 		return {
 			type,
 			value,
 			line,
 			column,
 			offset,
-			length
+			length,
+			index
 		};
 	}
 }

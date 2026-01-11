@@ -13,7 +13,7 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 
 export class RenameProvider {
@@ -60,7 +60,7 @@ export class RenameProvider {
 	/**
 	 * Perform rename - return all text edits needed
 	 */
-	public provide(params: RenameParams): WorkspaceEdit | null {
+	public async provide(params: RenameParams): Promise<WorkspaceEdit | null> {
 		const document = this.documents.get(params.textDocument.uri);
 		if (!document) return null;
 
@@ -89,16 +89,16 @@ export class RenameProvider {
 
 		if (methods.length > 0) {
 			// Renaming a method
-			this.collectMethodRenames(symbolName, newName, changes);
+			await this.collectMethodRenames(symbolName, newName, changes);
 		} else if (objects.length > 0) {
 			// Renaming an object
-			this.collectObjectRenames(symbolName, newName, changes);
+			await this.collectObjectRenames(symbolName, newName, changes);
 		} else if (forms.length > 0) {
 			// Renaming a form
-			this.collectFormRenames(symbolName, newName, changes);
+			await this.collectFormRenames(symbolName, newName, changes);
 		} else if (isVariable) {
-			// Renaming a variable - local scope only (current document)
-			this.collectVariableRenames(document, word, newName, changes);
+			// Renaming a variable
+			await this.collectVariableRenames(document, word, newName, changes);
 		} else {
 			return null;
 		}
@@ -109,24 +109,29 @@ export class RenameProvider {
 	/**
 	 * Collect all edits needed to rename a method
 	 */
-	private collectMethodRenames(
+	private async collectMethodRenames(
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
-	): void {
+	): Promise<void> {
 		// Extract new name without leading dot if present
 		const newMethodName = newName.startsWith('.') ? newName.substring(1) : newName;
 
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
-		for (const fileUri of allFileUris) {
-			const text = this.getFileText(fileUri);
-			if (!text) continue;
+		// Process files in parallel batches
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			await Promise.all(batch.map(async (fileUri) => {
+				const text = await this.getFileText(fileUri);
+				if (!text) return;
 
-			const edits = this.findAndReplaceMethod(text, oldName, newMethodName);
-			if (edits.length > 0) {
-				changes[fileUri] = edits;
-			}
+				const edits = this.findAndReplaceMethod(text, oldName, newMethodName);
+				if (edits.length > 0) {
+					changes[fileUri] = edits;
+				}
+			}));
 		}
 	}
 
@@ -155,21 +160,26 @@ export class RenameProvider {
 	/**
 	 * Collect all edits needed to rename an object
 	 */
-	private collectObjectRenames(
+	private async collectObjectRenames(
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
-	): void {
+	): Promise<void> {
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
-		for (const fileUri of allFileUris) {
-			const text = this.getFileText(fileUri);
-			if (!text) continue;
+		// Process files in parallel batches
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			await Promise.all(batch.map(async (fileUri) => {
+				const text = await this.getFileText(fileUri);
+				if (!text) return;
 
-			const edits = this.findAndReplaceObject(text, oldName, newName);
-			if (edits.length > 0) {
-				changes[fileUri] = edits;
-			}
+				const edits = this.findAndReplaceObject(text, oldName, newName);
+				if (edits.length > 0) {
+					changes[fileUri] = edits;
+				}
+			}));
 		}
 	}
 
@@ -207,21 +217,26 @@ export class RenameProvider {
 	/**
 	 * Collect all edits needed to rename a form
 	 */
-	private collectFormRenames(
+	private async collectFormRenames(
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
-	): void {
+	): Promise<void> {
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
-		for (const fileUri of allFileUris) {
-			const text = this.getFileText(fileUri);
-			if (!text) continue;
+		// Process files in parallel batches
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			await Promise.all(batch.map(async (fileUri) => {
+				const text = await this.getFileText(fileUri);
+				if (!text) return;
 
-			const edits = this.findAndReplaceForm(text, oldName, newName);
-			if (edits.length > 0) {
-				changes[fileUri] = edits;
-			}
+				const edits = this.findAndReplaceForm(text, oldName, newName);
+				if (edits.length > 0) {
+					changes[fileUri] = edits;
+				}
+			}));
 		}
 	}
 
@@ -251,17 +266,16 @@ export class RenameProvider {
 	}
 
 	/**
-	 * Collect all edits needed to rename a variable (local scope only)
+	 * Collect all edits needed to rename a variable
+	 * Local variables (!var) are scoped to current document
+	 * Global variables (!!var) are searched across entire workspace
 	 */
-	private collectVariableRenames(
+	private async collectVariableRenames(
 		document: TextDocument,
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
-	): void {
-		const text = document.getText();
-		const edits: TextEdit[] = [];
-
+	): Promise<void> {
 		// Variables: !localVar or !!globalVar
 		// Need to match exact variable name
 		const isGlobal = oldName.startsWith('!!');
@@ -270,6 +284,42 @@ export class RenameProvider {
 
 		// Pattern to match variable (avoid partial matches)
 		const pattern = new RegExp(`${this.escapeRegex(prefix)}${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
+
+		if (isGlobal) {
+			// Global variables: search across entire workspace
+			const allFileUris = this.symbolIndex.getAllFileUris();
+
+			// Process files in parallel batches
+			const batchSize = 10;
+			for (let i = 0; i < allFileUris.length; i += batchSize) {
+				const batch = allFileUris.slice(i, i + batchSize);
+				await Promise.all(batch.map(async (fileUri) => {
+					const text = await this.getFileText(fileUri);
+					if (!text) return;
+
+					const edits = this.findVariableOccurrences(text, pattern, newName);
+					if (edits.length > 0) {
+						changes[fileUri] = edits;
+					}
+				}));
+			}
+		} else {
+			// Local variables: current document only
+			const text = document.getText();
+			const edits = this.findVariableOccurrences(text, pattern, newName);
+			if (edits.length > 0) {
+				changes[document.uri] = edits;
+			}
+		}
+	}
+
+	/**
+	 * Find all occurrences of a variable pattern in text
+	 */
+	private findVariableOccurrences(text: string, pattern: RegExp, newName: string): TextEdit[] {
+		const edits: TextEdit[] = [];
+		// Reset lastIndex for global regex
+		pattern.lastIndex = 0;
 
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
@@ -280,15 +330,13 @@ export class RenameProvider {
 			edits.push(TextEdit.replace(range, newName));
 		}
 
-		if (edits.length > 0) {
-			changes[document.uri] = edits;
-		}
+		return edits;
 	}
 
 	/**
-	 * Get file text from cache, open document, or disk
+	 * Get file text from cache, open document, or disk (async)
 	 */
-	private getFileText(fileUri: string): string | undefined {
+	private async getFileText(fileUri: string): Promise<string | undefined> {
 		// Try cached text first
 		const cached = this.symbolIndex.getDocumentText(fileUri);
 		if (cached) return cached;
@@ -297,10 +345,10 @@ export class RenameProvider {
 		const openDoc = this.documents.get(fileUri);
 		if (openDoc) return openDoc.getText();
 
-		// Read from disk
+		// Read from disk asynchronously
 		try {
 			const filePath = URI.parse(fileUri).fsPath;
-			return fs.readFileSync(filePath, 'utf-8');
+			return await fs.readFile(filePath, 'utf-8');
 		} catch {
 			return undefined;
 		}

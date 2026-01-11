@@ -5,7 +5,7 @@
 import { Location, ReferenceParams, TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import * as fs from 'fs';
+import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 
 export class ReferencesProvider {
@@ -14,7 +14,7 @@ export class ReferencesProvider {
 		private documents: TextDocuments<TextDocument>
 	) {}
 
-	public provide(params: ReferenceParams): Location[] | null {
+	public async provide(params: ReferenceParams): Promise<Location[] | null> {
 		const document = this.documents.get(params.textDocument.uri);
 		if (!document) return null;
 
@@ -56,7 +56,7 @@ export class ReferencesProvider {
 
 		// Scan all workspace files for references (not just current document)
 		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
-			const workspaceRefs = this.findReferencesInWorkspace(symbolName);
+			const workspaceRefs = await this.findReferencesInWorkspace(symbolName);
 			references.push(...workspaceRefs);
 		}
 
@@ -66,32 +66,19 @@ export class ReferencesProvider {
 	/**
 	 * Find all references to a symbol across the entire workspace
 	 */
-	private findReferencesInWorkspace(symbolName: string): Location[] {
+	private async findReferencesInWorkspace(symbolName: string): Promise<Location[]> {
 		const references: Location[] = [];
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
-		for (const fileUri of allFileUris) {
-			// Try to get cached document text first
-			const cachedText = this.symbolIndex.getDocumentText(fileUri);
-
-			// If text is cached, search it
-			if (cachedText) {
-				const fileRefs = this.findReferencesInText(cachedText, fileUri, symbolName);
+		// Process files in parallel batches for better performance
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			const batchResults = await Promise.all(
+				batch.map(fileUri => this.findReferencesInFile(fileUri, symbolName))
+			);
+			for (const fileRefs of batchResults) {
 				references.push(...fileRefs);
-			} else {
-				// Fallback: try to get open document
-				const openDoc = this.documents.get(fileUri);
-				if (openDoc) {
-					const fileRefs = this.findReferencesInText(openDoc.getText(), fileUri, symbolName);
-					references.push(...fileRefs);
-				} else {
-					// Last resort: read file from disk
-					const fileText = this.readFileFromDisk(fileUri);
-					if (fileText) {
-						const fileRefs = this.findReferencesInText(fileText, fileUri, symbolName);
-						references.push(...fileRefs);
-					}
-				}
 			}
 		}
 
@@ -99,26 +86,73 @@ export class ReferencesProvider {
 	}
 
 	/**
+	 * Find references in a single file
+	 */
+	private async findReferencesInFile(fileUri: string, symbolName: string): Promise<Location[]> {
+		// Try to get cached document text first
+		const cachedText = this.symbolIndex.getDocumentText(fileUri);
+		if (cachedText) {
+			return this.findReferencesInText(cachedText, fileUri, symbolName);
+		}
+
+		// Fallback: try to get open document
+		const openDoc = this.documents.get(fileUri);
+		if (openDoc) {
+			return this.findReferencesInText(openDoc.getText(), fileUri, symbolName);
+		}
+
+		// Last resort: read file from disk asynchronously
+		const fileText = await this.readFileFromDisk(fileUri);
+		if (fileText) {
+			return this.findReferencesInText(fileText, fileUri, symbolName);
+		}
+
+		return [];
+	}
+
+	/**
 	 * Find all references to a symbol in text
 	 */
 	private findReferencesInText(text: string, fileUri: string, symbolName: string): Location[] {
 		const references: Location[] = [];
+		const escapedName = this.escapeRegex(symbolName);
 
-		// Pattern to match method calls: .methodName( or variable.methodName(
+		// Pattern to match method calls: .methodName( or expression.methodName(
+		// Handles complex patterns like:
+		// - .methodName()
+		// - !var.methodName()
+		// - !!global.methodName()
+		// - !a.b[1].methodName()
+		// - $/attr.methodName()
 		// Also match object instantiations: OBJECT ObjectName()
 		const patterns = [
-			new RegExp(`\\.${symbolName}\\s*\\(`, 'gi'),  // Direct call: .methodName()
-			new RegExp(`[!$]?[!]?\\w+\\.${symbolName}\\s*\\(`, 'gi'),  // Variable call: !var.methodName(), !!global.methodName()
-			new RegExp(`\\bOBJECT\\s+${symbolName}\\s*\\(`, 'gi')  // Object instantiation: OBJECT MyObject()
+			// Direct method call: .methodName(
+			new RegExp(`\\.${escapedName}\\s*\\(`, 'gi'),
+			// Method call on any expression ending with .methodName(
+			// Match any preceding expression that ends with our method
+			new RegExp(`(?:[!$][!]?\\w+(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*)\\.${escapedName}\\s*\\(`, 'gi'),
+			// Object instantiation: OBJECT ObjectName()
+			new RegExp(`\\bOBJECT\\s+${escapedName}\\s*\\(`, 'gi'),
+			// Method definition: define method .methodName or member .methodName
+			new RegExp(`(?:define\\s+method|member)\\s+\\.${escapedName}(?=\\s|\\(|$)`, 'gi')
 		];
+
+		const foundOffsets = new Set<number>();  // Deduplicate overlapping matches
 
 		for (const pattern of patterns) {
 			let match;
 			while ((match = pattern.exec(text)) !== null) {
-				// Find the exact position of the symbol name (not the dot or parenthesis)
+				// Find the exact position of the symbol name (case-insensitive search)
 				const matchText = match[0];
-				const methodNameIndex = matchText.lastIndexOf(symbolName);
+				const lowerMatch = matchText.toLowerCase();
+				const lowerSymbol = symbolName.toLowerCase();
+				const methodNameIndex = lowerMatch.lastIndexOf(lowerSymbol);
 				const startOffset = match.index + methodNameIndex;
+
+				// Skip if we've already found this location
+				if (foundOffsets.has(startOffset)) continue;
+				foundOffsets.add(startOffset);
+
 				const endOffset = startOffset + symbolName.length;
 
 				// Calculate line and character position manually
@@ -141,6 +175,13 @@ export class ReferencesProvider {
 		}
 
 		return references;
+	}
+
+	/**
+	 * Escape regex special characters
+	 */
+	private escapeRegex(str: string): string {
+		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
 	/**
@@ -174,12 +215,12 @@ export class ReferencesProvider {
 	}
 
 	/**
-	 * Read file content from disk as fallback when not cached
+	 * Read file content from disk asynchronously
 	 */
-	private readFileFromDisk(fileUri: string): string | undefined {
+	private async readFileFromDisk(fileUri: string): Promise<string | undefined> {
 		try {
 			const filePath = URI.parse(fileUri).fsPath;
-			return fs.readFileSync(filePath, 'utf-8');
+			return await fs.readFile(filePath, 'utf-8');
 		} catch {
 			// File doesn't exist or can't be read
 			return undefined;

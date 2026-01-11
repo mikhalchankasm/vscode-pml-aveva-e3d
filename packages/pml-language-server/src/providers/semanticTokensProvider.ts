@@ -109,9 +109,12 @@ export class SemanticTokensProvider {
 		// Handle both CRLF and LF line endings
 		const lines = text.split(/\r?\n/);
 
+		// Track multi-line comment state
+		let inBlockComment = false;
+
 		for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
 			const line = lines[lineIndex];
-			this.tokenizeLine(line, lineIndex, builder);
+			inBlockComment = this.tokenizeLine(line, lineIndex, builder, inBlockComment);
 		}
 
 		return builder.build();
@@ -119,9 +122,33 @@ export class SemanticTokensProvider {
 
 	/**
 	 * Tokenize a single line
+	 * Returns whether we're still inside a block comment at the end of the line
 	 */
-	private tokenizeLine(line: string, lineIndex: number, builder: SemanticTokensBuilder): void {
+	private tokenizeLine(
+		line: string,
+		lineIndex: number,
+		builder: SemanticTokensBuilder,
+		inBlockComment: boolean
+	): boolean {
 		let pos = 0;
+
+		// If we're continuing a block comment from a previous line
+		if (inBlockComment) {
+			const endPos = line.indexOf('*$');
+			if (endPos !== -1) {
+				// Block comment ends on this line
+				const length = endPos + 2;
+				builder.push(lineIndex, 0, length, TOKEN.COMMENT, 0);
+				pos = endPos + 2;
+				inBlockComment = false;
+			} else {
+				// Entire line is part of the block comment
+				if (line.length > 0) {
+					builder.push(lineIndex, 0, line.length, TOKEN.COMMENT, 0);
+				}
+				return true; // Still in block comment
+			}
+		}
 
 		while (pos < line.length) {
 			// Skip whitespace
@@ -137,7 +164,7 @@ export class SemanticTokensProvider {
 				break; // Rest of line is comment
 			}
 
-			// Block comment ($* ... *$) - handle on same line
+			// Block comment ($* ... *$)
 			if (line[pos] === '$' && line[pos + 1] === '*') {
 				const endPos = line.indexOf('*$', pos + 2);
 				if (endPos !== -1) {
@@ -147,10 +174,10 @@ export class SemanticTokensProvider {
 					pos = endPos + 2;
 					continue;
 				} else {
-					// Block comment continues to end of line (multi-line not fully supported)
+					// Block comment continues to next line
 					const length = line.length - pos;
 					builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
-					break;
+					return true; // Now in block comment
 				}
 			}
 
@@ -270,6 +297,8 @@ export class SemanticTokensProvider {
 			// Skip other characters
 			pos++;
 		}
+
+		return inBlockComment;
 	}
 
 	/**

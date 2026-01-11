@@ -1670,7 +1670,8 @@ export class Parser {
 	}
 
 	private getTokenIndex(token: Token): number {
-		return this.tokens.indexOf(token);
+		// O(1) lookup using pre-computed index instead of O(n) indexOf
+		return token.index;
 	}
 
 	private createRange(startIdx: number, endIdx: number): Range {

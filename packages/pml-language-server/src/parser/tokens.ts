@@ -143,6 +143,7 @@ export interface Token {
 	column: number;
 	offset: number;
 	length: number;
+	index: number;  // Position in token array for O(1) lookup
 }
 
 export const KEYWORDS: Record<string, TokenType> = {
