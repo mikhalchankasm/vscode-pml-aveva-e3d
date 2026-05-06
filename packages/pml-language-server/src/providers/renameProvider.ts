@@ -15,6 +15,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
+import { computeLineOffsets, offsetToRange } from '../utils/offsetUtils';
 
 export class RenameProvider {
 	constructor(
@@ -141,17 +142,56 @@ export class RenameProvider {
 	private findAndReplaceMethod(text: string, oldName: string, newName: string): TextEdit[] {
 		const edits: TextEdit[] = [];
 
-		// Pattern to match method definitions and calls: .methodName
+		// Quick pre-filter: skip if symbol is absent (optimization)
+		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
+		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return edits;
+		}
+
+		// Lazy line offsets: only compute on first match
+		let lineOffsets: number[] | null = null;
+
+		const escapedOldName = this.escapeRegex(oldName);
+
+		// Shared expression prefix pattern for !var, !!global, $/attr, $!/attr, $/attr/sub
+		// with optional bracketed indexes and dotted segments
+		const exprPrefix = '[!$][!]?(?:\\w+(?:/\\w+)*|(?:/\\w+)+)(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*(?:\\.[\\w]+(?:\\[[^\\]]*\\])*)*';
+
+		// Patterns to match method definitions and calls: .methodName
 		// Must be case-insensitive since PML is case-insensitive
-		const pattern = new RegExp(`\\.${this.escapeRegex(oldName)}(?=\\s*\\(|\\s*$|\\s+)`, 'gi');
+		// Also match callback syntax: |.methodName| and |!obj.prop[1].methodName|
+		const patterns = [
+			// Standard method call/definition: .methodName( or .methodName followed by whitespace/end
+			new RegExp(`\\.${escapedOldName}(?=\\s*\\(|\\s+|$)`, 'gi'),
+			// Callback syntax: |.methodName| or |expression.methodName|
+			new RegExp(`\\|\\.${escapedOldName}\\|`, 'gi'),
+			new RegExp(`\\|(?:${exprPrefix})\\.${escapedOldName}\\|`, 'gi')
+		];
+		const foundOffsets = new Set<number>();
 
-		let match;
-		while ((match = pattern.exec(text)) !== null) {
-			const startOffset = match.index + 1; // Skip the dot
-			const endOffset = startOffset + oldName.length;
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(text)) !== null) {
+				// Find the position of the method name within the match
+				const matchText = match[0];
+				const lowerMatch = matchText.toLowerCase();
+				const lowerOldName = oldName.toLowerCase();
+				const methodNameIndex = lowerMatch.lastIndexOf(lowerOldName);
+				const startOffset = match.index + methodNameIndex;
+				if (foundOffsets.has(startOffset)) continue;
+				foundOffsets.add(startOffset);
 
-			const range = this.offsetToRange(text, startOffset, endOffset);
-			edits.push(TextEdit.replace(range, newName));
+				// Lazy computation of line offsets on first actual match
+				if (!lineOffsets) {
+					lineOffsets = computeLineOffsets(text);
+				}
+
+				const endOffset = startOffset + oldName.length;
+
+				const range = offsetToRange(lineOffsets, startOffset, endOffset);
+				edits.push(TextEdit.replace(range, newName));
+			}
 		}
 
 		return edits;
@@ -189,6 +229,16 @@ export class RenameProvider {
 	private findAndReplaceObject(text: string, oldName: string, newName: string): TextEdit[] {
 		const edits: TextEdit[] = [];
 
+		// Quick pre-filter: skip if symbol is absent (optimization)
+		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
+		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return edits;
+		}
+
+		// Lazy line offsets: only compute on first match
+		let lineOffsets: number[] | null = null;
+
 		// Patterns for object references:
 		// 1. define object ObjectName
 		// 2. OBJECT ObjectName()
@@ -202,11 +252,16 @@ export class RenameProvider {
 		for (const pattern of patterns) {
 			let match;
 			while ((match = pattern.exec(text)) !== null) {
+				// Lazy computation of line offsets on first actual match
+				if (!lineOffsets) {
+					lineOffsets = computeLineOffsets(text);
+				}
+
 				const prefix = match[1];
 				const startOffset = match.index + prefix.length;
 				const endOffset = startOffset + oldName.length;
 
-				const range = this.offsetToRange(text, startOffset, endOffset);
+				const range = offsetToRange(lineOffsets, startOffset, endOffset);
 				edits.push(TextEdit.replace(range, newName));
 			}
 		}
@@ -246,16 +301,31 @@ export class RenameProvider {
 	private findAndReplaceForm(text: string, oldName: string, newName: string): TextEdit[] {
 		const edits: TextEdit[] = [];
 
+		// Quick pre-filter: skip if symbol is absent (optimization)
+		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
+		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return edits;
+		}
+
+		// Lazy line offsets: only compute on first match
+		let lineOffsets: number[] | null = null;
+
 		// Forms are global variables (!!FormName)
 		// Pattern: !!formName (case-insensitive)
 		const pattern = new RegExp(`!!${this.escapeRegex(oldName)}(?=\\s|\\.|\\(|$)`, 'gi');
 
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
+			// Lazy computation of line offsets on first actual match
+			if (!lineOffsets) {
+				lineOffsets = computeLineOffsets(text);
+			}
+
 			const startOffset = match.index;
 			const endOffset = startOffset + match[0].length;
 
-			const range = this.offsetToRange(text, startOffset, endOffset);
+			const range = offsetToRange(lineOffsets, startOffset, endOffset);
 
 			// Ensure new name has !! prefix
 			const fullNewName = newName.startsWith('!!') ? newName : '!!' + newName;
@@ -280,10 +350,13 @@ export class RenameProvider {
 		// Need to match exact variable name
 		const isGlobal = oldName.startsWith('!!');
 		const varName = isGlobal ? oldName.substring(2) : oldName.substring(1);
-		const prefix = isGlobal ? '!!' : '!';
 
 		// Pattern to match variable (avoid partial matches)
-		const pattern = new RegExp(`${this.escapeRegex(prefix)}${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
+		// For local variables (!var), use negative lookbehind to avoid matching !!var
+		// For global variables (!!var), match exactly two exclamation marks
+		const pattern = isGlobal
+			? new RegExp(`!!${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi')
+			: new RegExp(`(?<![!])!${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
 
 		if (isGlobal) {
 			// Global variables: search across entire workspace
@@ -321,12 +394,20 @@ export class RenameProvider {
 		// Reset lastIndex for global regex
 		pattern.lastIndex = 0;
 
+		// Lazy line offsets: only compute on first match
+		let lineOffsets: number[] | null = null;
+
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
+			// Lazy computation of line offsets on first actual match
+			if (!lineOffsets) {
+				lineOffsets = computeLineOffsets(text);
+			}
+
 			const startOffset = match.index;
 			const endOffset = startOffset + match[0].length;
 
-			const range = this.offsetToRange(text, startOffset, endOffset);
+			const range = offsetToRange(lineOffsets, startOffset, endOffset);
 			edits.push(TextEdit.replace(range, newName));
 		}
 
@@ -404,45 +485,6 @@ export class RenameProvider {
 	}
 
 	/**
-	 * Convert offset range to LSP Range
-	 */
-	private offsetToRange(text: string, startOffset: number, endOffset: number): Range {
-		// Handle CRLF properly
-		const lines = text.split(/\r?\n/);
-		let currentOffset = 0;
-		let startLine = -1, startChar = 0;
-		let endLine = -1, endChar = 0;
-
-		for (let i = 0; i < lines.length; i++) {
-			// Account for line ending (CRLF or LF)
-			const lineEndLength = (text[currentOffset + lines[i].length] === '\r') ? 2 : 1;
-			const lineLength = lines[i].length + lineEndLength;
-
-			if (startLine === -1 && currentOffset + lines[i].length >= startOffset) {
-				startLine = i;
-				startChar = startOffset - currentOffset;
-			}
-
-			if (endLine === -1 && currentOffset + lines[i].length >= endOffset) {
-				endLine = i;
-				endChar = endOffset - currentOffset;
-				break;
-			}
-
-			currentOffset += lineLength;
-		}
-
-		// Handle edge case where offset is at very end
-		if (startLine === -1) startLine = lines.length - 1;
-		if (endLine === -1) endLine = lines.length - 1;
-
-		return {
-			start: { line: startLine, character: startChar },
-			end: { line: endLine, character: endChar }
-		};
-	}
-
-	/**
 	 * Get word range at position
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }): Range | null {
@@ -469,7 +511,8 @@ export class RenameProvider {
 	}
 
 	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_.]/.test(char) || char === '!';
+		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
+		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
 	}
 
 	private escapeRegex(str: string): string {

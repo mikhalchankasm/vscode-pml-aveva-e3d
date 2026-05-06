@@ -111,8 +111,9 @@ export interface FormDefinition extends ASTNode {
 	formType?: 'DIALOG' | 'MAIN' | 'DOCUMENT' | 'BLOCKINGDIALOG'; // Form window type
 	resizable?: boolean; // RESIZABLE modifier
 	dock?: 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM'; // DOCK direction
-	body: Statement[]; // Form body (assignments, members, gadgets, frames)
+	body: Statement[]; // Form body (assignments, members, gadgets)
 	frames: FrameDefinition[];
+	members: MemberDeclaration[]; // Form member declarations
 	callbacks: Record<string, string>; // callback property -> callback method
 }
 
@@ -135,7 +136,7 @@ export interface FrameDefinition extends ASTNode {
 export interface GadgetDeclaration extends ASTNode {
 	type: 'GadgetDeclaration';
 	name: string; // without leading dot
-	gadgetType: 'button' | 'text' | 'option' | 'toggle' | 'frame' | string; // Gadget type
+	gadgetType: 'button' | 'text' | 'combo' | 'option' | 'toggle' | 'frame' | string; // Gadget type
 	label?: string; // Label text
 	modifier?: 'OK' | 'CANCEL' | 'APPLY' | 'RESET'; // Button modifier
 	position?: number; // at x<number>

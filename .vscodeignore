@@ -5,6 +5,12 @@
 .yarnrc
 vsc-extension-quickstart.md
 .editorconfig
+.agents/**
+.claude/**
+.codex/**
+.husky/**
+AGENTS.md
+-
 esbuild.js
 tsconfig.json
 **/tsconfig.json

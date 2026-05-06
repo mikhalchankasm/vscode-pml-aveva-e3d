@@ -136,13 +136,17 @@ export class SemanticTokensProvider {
 		if (inBlockComment) {
 			const endPos = line.indexOf('*$');
 			if (endPos !== -1) {
-				// Block comment ends on this line
+				// Block comment ends on this line - highlight up to and including *$
 				const length = endPos + 2;
-				builder.push(lineIndex, 0, length, TOKEN.COMMENT, 0);
+				if (length > 0) {
+					builder.push(lineIndex, 0, length, TOKEN.COMMENT, 0);
+				}
 				pos = endPos + 2;
 				inBlockComment = false;
+				// Continue processing rest of line after comment ends
 			} else {
 				// Entire line is part of the block comment
+				// Only push token if line has content (empty lines don't need semantic tokens)
 				if (line.length > 0) {
 					builder.push(lineIndex, 0, line.length, TOKEN.COMMENT, 0);
 				}

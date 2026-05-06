@@ -58,6 +58,8 @@ export enum TokenType {
 	BUTTON = 'BUTTON',
 	OPTION = 'OPTION',
 	TOGGLE = 'TOGGLE',
+	COMBO = 'COMBO',
+	TRACK = 'TRACK',
 	CALL = 'CALL',
 	DIALOG = 'DIALOG',
 	MAIN = 'MAIN',
@@ -190,6 +192,8 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'button': TokenType.BUTTON,
 	'option': TokenType.OPTION,
 	'toggle': TokenType.TOGGLE,
+	'combo': TokenType.COMBO,
+	'track': TokenType.TRACK,
 	'call': TokenType.CALL,
 	'dialog': TokenType.DIALOG,
 	'main': TokenType.MAIN,
@@ -218,14 +222,14 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'compose': TokenType.COMPOSE,
 	'space': TokenType.SPACE,
 
-	// Types
-	'STRING': TokenType.STRING_TYPE,
-	'REAL': TokenType.REAL_TYPE,
-	'INTEGER': TokenType.INTEGER_TYPE,
-	'BOOLEAN': TokenType.BOOLEAN_TYPE,
-	'ARRAY': TokenType.ARRAY_TYPE,
-	'DBREF': TokenType.DBREF_TYPE,
-	'ANY': TokenType.ANY_TYPE,
+	// Types (both cases supported since PML is case-insensitive)
+	'string': TokenType.STRING_TYPE,
+	'real': TokenType.REAL_TYPE,
+	'integer': TokenType.INTEGER_TYPE,
+	'boolean': TokenType.BOOLEAN_TYPE,
+	'array': TokenType.ARRAY_TYPE,
+	'dbref': TokenType.DBREF_TYPE,
+	'any': TokenType.ANY_TYPE,
 
 	// Operators
 	'mod': TokenType.MOD,

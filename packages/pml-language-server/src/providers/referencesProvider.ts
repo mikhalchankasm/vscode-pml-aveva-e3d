@@ -7,6 +7,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
+import { computeLineOffsets, offsetToPosition } from '../utils/offsetUtils';
 
 export class ReferencesProvider {
 	constructor(
@@ -116,6 +117,17 @@ export class ReferencesProvider {
 	private findReferencesInText(text: string, fileUri: string, symbolName: string): Location[] {
 		const references: Location[] = [];
 		const escapedName = this.escapeRegex(symbolName);
+		const symbolLower = symbolName.toLowerCase();
+
+		// Quick pre-filter: skip regex scans when symbol is absent (optimization)
+		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
+		const preFilterPattern = new RegExp(escapedName, 'i');
+		if (!preFilterPattern.test(text)) {
+			return references;
+		}
+
+		// Lazy line offsets: only compute after first match found
+		let lineOffsets: number[] | null = null;
 
 		// Pattern to match method calls: .methodName( or expression.methodName(
 		// Handles complex patterns like:
@@ -124,17 +136,29 @@ export class ReferencesProvider {
 		// - !!global.methodName()
 		// - !a.b[1].methodName()
 		// - $/attr.methodName()
+		// - $!/attr.methodName()
+		// - $/attr/sub.methodName() (nested attribute paths)
+		// - |.methodName| (callback syntax)
+		// - |!this.methodName| (callback with object reference)
+		// - |!obj.prop[1].methodName| (callback with indexed properties)
 		// Also match object instantiations: OBJECT ObjectName()
+
+		// Shared expression prefix pattern for !var, !!global, $/attr, $!/attr, $/attr/sub
+		// with optional bracketed indexes and dotted segments
+		const exprPrefix = '[!$][!]?(?:\\w+(?:/\\w+)*|(?:/\\w+)+)(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*(?:\\.[\\w]+(?:\\[[^\\]]*\\])*)*';
+
 		const patterns = [
 			// Direct method call: .methodName(
 			new RegExp(`\\.${escapedName}\\s*\\(`, 'gi'),
 			// Method call on any expression ending with .methodName(
-			// Match any preceding expression that ends with our method
-			new RegExp(`(?:[!$][!]?\\w+(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*)\\.${escapedName}\\s*\\(`, 'gi'),
+			new RegExp(`(?:${exprPrefix})\\.${escapedName}\\s*\\(`, 'gi'),
 			// Object instantiation: OBJECT ObjectName()
 			new RegExp(`\\bOBJECT\\s+${escapedName}\\s*\\(`, 'gi'),
 			// Method definition: define method .methodName or member .methodName
-			new RegExp(`(?:define\\s+method|member)\\s+\\.${escapedName}(?=\\s|\\(|$)`, 'gi')
+			new RegExp(`(?:define\\s+method|member)\\s+\\.${escapedName}(?=\\s|\\(|$)`, 'gi'),
+			// Callback syntax: |.methodName| or |expression.methodName|
+			new RegExp(`\\|\\.${escapedName}\\|`, 'gi'),
+			new RegExp(`\\|(?:${exprPrefix})\\.${escapedName}\\|`, 'gi')
 		];
 
 		const foundOffsets = new Set<number>();  // Deduplicate overlapping matches
@@ -145,30 +169,29 @@ export class ReferencesProvider {
 				// Find the exact position of the symbol name (case-insensitive search)
 				const matchText = match[0];
 				const lowerMatch = matchText.toLowerCase();
-				const lowerSymbol = symbolName.toLowerCase();
-				const methodNameIndex = lowerMatch.lastIndexOf(lowerSymbol);
+				const methodNameIndex = lowerMatch.lastIndexOf(symbolLower);
 				const startOffset = match.index + methodNameIndex;
 
 				// Skip if we've already found this location
 				if (foundOffsets.has(startOffset)) continue;
 				foundOffsets.add(startOffset);
 
+				// Lazy computation of line offsets on first actual match
+				if (!lineOffsets) {
+					lineOffsets = computeLineOffsets(text);
+				}
+
 				const endOffset = startOffset + symbolName.length;
 
-				// Calculate line and character position manually (handle CRLF)
-				const lines = text.substring(0, startOffset).split(/\r?\n/);
-				const line = lines.length - 1;
-				const character = lines[lines.length - 1].length;
-
-				const endLines = text.substring(0, endOffset).split(/\r?\n/);
-				const endLine = endLines.length - 1;
-				const endCharacter = endLines[endLines.length - 1].length;
+				// O(log n) position lookup using pre-computed line offsets
+				const startPos = offsetToPosition(lineOffsets, startOffset);
+				const endPos = offsetToPosition(lineOffsets, endOffset);
 
 				references.push(Location.create(
 					fileUri,
 					{
-						start: { line, character },
-						end: { line: endLine, character: endCharacter }
+						start: startPos,
+						end: endPos
 					}
 				));
 			}
@@ -211,7 +234,8 @@ export class ReferencesProvider {
 	}
 
 	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_.]/.test(char) || char === '!';
+		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
+		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
 	}
 
 	/**

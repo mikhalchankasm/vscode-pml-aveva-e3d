@@ -441,6 +441,27 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.1 - 2026-05-06 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Form Parser Hardening** ✅ COMPLETED
+  - Parse `combo` gadgets and `track` callbacks
+  - Keep gadget modifiers scoped to the declaration line
+  - Support `width`/`wid`, `height`/`hei`, `tooltip`, `call`/`callback`, `pixmap`, and `at x<num>`
+
+- [x] **Rename and References Improvements** ✅ COMPLETED
+  - Find callback method references inside pipe strings
+  - Rename callback method references without duplicate edits
+  - Support nested attribute-path method references
+  - Share CRLF-safe offset conversion helpers
+
+- [x] **Packaging Cleanup** ✅ COMPLETED
+  - Exclude local agent/config folders from VSIX
+  - Remove stray root file `-`
+
+---
+
 ### v0.11.0 - 2026-01-06 ✅ COMPLETED
 
 ### New Features Implemented
@@ -615,20 +636,25 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.0
-**Released:** 2026-01-06
+**Version:** 0.11.1
+**Released:** 2026-05-06
 
 **Statistics:**
 - Extension size: **2.1 MB** (bundled with esbuild)
-- Files in VSIX: 62 files
+- Files in VSIX: 42 files
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 30+ (with array manipulation tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **68 tests passing, 2 skipped** (20 parser + 18 typo detector + 30 arrayIndexChecker)
+- Tests: **78 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.0):**
+**Recent Changes (v0.11.1):**
+- ✅ **Form Parser Hardening** - Combo gadgets, track callbacks, and line-scoped modifiers
+- ✅ **Rename/References Improvements** - Callback strings and nested attribute paths
+- ✅ **Packaging Cleanup** - Local agent/config files excluded from VSIX
+
+**Previous Changes (v0.11.0):**
 - ✅ **Rename Symbol (F2)** - Rename methods, variables, objects with workspace-wide updates
 - ✅ **Semantic Highlighting** - Variables, methods, parameters, keywords highlighted distinctly
 - ✅ **Workspace Indexing Progress** - Progress bar during startup indexing

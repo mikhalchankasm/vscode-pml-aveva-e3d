@@ -2,6 +2,31 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.1] - 2026-05-06
+
+### Fixed - Form Parser & Refactoring Stability
+
+- **Form gadget parsing** - Added robust parsing for `combo` gadgets and `track` callbacks.
+  - Supports `width`/`wid`, `height`/`hei`, `tooltip`, `call`/`callback`, `pixmap`, and `at x<num>` modifiers.
+  - Keeps modifiers scoped to the current gadget line to avoid consuming the next form element.
+  - Preserves legacy inline width precedence for existing `text` and `option` declarations.
+
+- **Rename and references** - Improved method reference discovery in callback strings and complex expressions.
+  - Handles callbacks such as `|!this.refresh()|`, `|$/attr/sub.refresh|`, `$attr/sub`, and indexed expressions.
+  - Deduplicates rename edits to avoid overlapping LSP `TextEdit` ranges.
+  - Shares CRLF-safe offset conversion between references and rename providers.
+
+- **Semantic tokens capability** - Removed unsupported `delta` capability field for compatibility with current LSP typings.
+
+### Packaging
+
+- Cleaned VSIX contents so local agent/config files are not published.
+- Removed stray root file `-` from the repository package surface.
+
+### Tests
+
+- Added regression coverage for form modifiers, track callbacks, type keywords, empty forms, callback references, and rename behavior.
+
 ## [0.11.0] - 2026-01-06
 
 ### Added - New Features

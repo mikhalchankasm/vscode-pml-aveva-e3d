@@ -1,4 +1,44 @@
-# Release Notes - v0.11.0
+# Release Notes - v0.11.1
+
+**Release Date:** 2026-05-06
+
+## What's New in v0.11.1
+
+### Parser and Form Support
+
+- Added parser support for `combo` gadgets and `track` callbacks in `.pmlfrm` files.
+- Added line-scoped parsing for gadget modifiers: `width`, `wid`, `height`, `hei`, `tooltip`, `call`, `callback`, `pixmap`, and `at x<num>`.
+- Preserved existing inline width precedence for legacy `text` and `option` declarations.
+- Added member type keyword handling for lowercase and uppercase PML type tokens.
+
+### Rename and References
+
+- Improved Find References and Rename support for callback strings such as `|!this.refresh()|`.
+- Added support for nested attribute paths such as `$/attr/sub.refresh`, `$attr/sub.refresh`, and `!a/b.refresh`.
+- Added duplicate edit protection for rename operations.
+- Shared CRLF-safe offset helpers between references and rename providers.
+
+### Packaging
+
+- Cleaned VSIX packaging so local agent/config files are excluded.
+- Removed the stray root file `-` from the package surface.
+
+### Validation
+
+- Language server tests: 78 passed, 2 skipped.
+- TypeScript compile, bundled compile, lint, diff check, and VSIX packaging passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.1](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.1)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.0
 
 **Release Date:** 2026-01-06
 
@@ -41,9 +81,9 @@
 - ❌ `pml.inlayHints.enabled` (never implemented)
 - ❌ `pml.inlayHints.parameterNames` (never implemented)
 
-## 📦 Installation
+## Installation
 
-**GitHub Release:** [v0.11.0](https://github.com/anthropics/vscode-pml-extension/releases/tag/v0.11.0)
+**GitHub Release:** [v0.11.0](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.0)
 
 **Checksum (MD5):** _see GitHub release_
 

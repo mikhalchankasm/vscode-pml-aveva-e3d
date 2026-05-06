@@ -22,8 +22,18 @@ import {
 } from '../ast/nodes';
 import { Range } from 'vscode-languageserver-textdocument';
 
+interface GadgetModifiers {
+	position?: number;
+	width?: number | string;
+	height?: number | string;
+	tooltip?: string;
+	call?: string;
+	pixmap?: string;
+}
+
 export class Parser {
 	private tokens: Token[] = [];
+	private sourceText: string = '';
 	private current: number = 0;
 	private errors: ParseError[] = [];
 	private parsingContext: ErrorContext['context'] = undefined;
@@ -34,6 +44,7 @@ export class Parser {
 	public parse(source: string): ParseResult {
 		// Tokenize
 		const lexer = new Lexer(source);
+		this.sourceText = source;
 		this.tokens = lexer.tokenize();
 		this.current = 0;
 		this.errors = [];
@@ -405,10 +416,21 @@ export class Parser {
 
 			// Parse gadget declarations (button, text, combo, option, toggle)
 			if (token.type === TokenType.BUTTON || token.type === TokenType.TEXT ||
-			    token.type === TokenType.OPTION || token.type === TokenType.TOGGLE) {
+			    token.type === TokenType.COMBO || token.type === TokenType.OPTION ||
+			    token.type === TokenType.TOGGLE) {
 				try {
 					const gadget = this.parseGadget();
 					body.push(gadget as unknown as Statement);
+				} catch {
+					this.advance(); // Skip on error
+				}
+				continue;
+			}
+
+			// Parse TRACK statements (form event handlers)
+			if (token.type === TokenType.TRACK) {
+				try {
+					this.parseTrackStatement(callbacks);
 				} catch {
 					this.advance(); // Skip on error
 				}
@@ -419,10 +441,12 @@ export class Parser {
 			if (token.type === TokenType.LOCAL_VAR || token.type === TokenType.GLOBAL_VAR) {
 				try {
 					const stmt = this.parseStatement();
-					body.push(stmt);
+					if (stmt) {
+						body.push(stmt);
+					}
 
 					// Check for callback patterns like !this.callback = '...'
-					if (stmt.type === 'ExpressionStatement' || stmt.type === 'VariableDeclaration') {
+					if (stmt && (stmt.type === 'ExpressionStatement' || stmt.type === 'VariableDeclaration')) {
 						// Could extract callbacks here if needed
 					}
 				} catch {
@@ -447,6 +471,7 @@ export class Parser {
 			dock,
 			body,
 			frames,
+			members,
 			callbacks,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
@@ -463,13 +488,15 @@ export class Parser {
 		       token.type === TokenType.FRAME ||
 		       token.type === TokenType.BUTTON ||
 		       token.type === TokenType.TEXT ||
+		       token.type === TokenType.COMBO ||
+		       token.type === TokenType.TRACK ||
 		       token.type === TokenType.OPTION ||
 		       token.type === TokenType.TOGGLE ||
 		       token.type === TokenType.EXIT ||
 		       token.type === TokenType.DEFINE ||
 		       // Also check for common form commands
 		       (token.type === TokenType.IDENTIFIER &&
-		        ['path', 'vdist', 'hdist', 'track', 'combo'].includes(token.value.toLowerCase()));
+		        ['path', 'vdist', 'hdist'].includes(token.value.toLowerCase()));
 	}
 
 	/**
@@ -487,9 +514,10 @@ export class Parser {
 
 			if (this.check(TokenType.EXIT) || this.check(TokenType.FRAME)) break;
 
-			// Parse gadget
+			// Parse gadget (button, text, combo, option, toggle)
 			if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
-			    this.check(TokenType.OPTION) || this.check(TokenType.TOGGLE)) {
+			    this.check(TokenType.COMBO) || this.check(TokenType.OPTION) ||
+			    this.check(TokenType.TOGGLE)) {
 				gadgets.push(this.parseGadget());
 			} else {
 				this.advance();
@@ -531,6 +559,7 @@ export class Parser {
 	 * Parse gadget declaration
 	 * button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]
 	 * text .name |width| [at x<num>]
+	 * combo .name |Label| [at x<num>] [width <num>]
 	 * option .name |width| |Label| [at x<num>]
 	 * toggle .name |Label| [at x<num>]
 	 */
@@ -545,6 +574,9 @@ export class Parser {
 		} else if (this.check(TokenType.TEXT)) {
 			gadgetType = 'text';
 			this.advance();
+		} else if (this.check(TokenType.COMBO)) {
+			gadgetType = 'combo';
+			this.advance();
 		} else if (this.check(TokenType.OPTION)) {
 			gadgetType = 'option';
 			this.advance();
@@ -552,7 +584,7 @@ export class Parser {
 			gadgetType = 'toggle';
 			this.advance();
 		} else {
-			throw this.error(this.peek(), "Expected gadget type (button, text, option, toggle)");
+			throw this.error(this.peek(), "Expected gadget type (button, text, combo, option, toggle)");
 		}
 
 		// Gadget name (.name)
@@ -562,7 +594,7 @@ export class Parser {
 		let label: string | undefined;
 		let width: number | string | undefined;
 		let modifier: 'OK' | 'CANCEL' | 'APPLY' | 'RESET' | undefined;
-		let position: number | undefined;
+		const properties: Record<string, any> = {};
 
 		// Parse gadget-specific properties
 		if (gadgetType === 'button' || gadgetType === 'toggle') {
@@ -595,6 +627,11 @@ export class Parser {
 			} else if (this.check(TokenType.NUMBER)) {
 				width = parseFloat(this.advance().value);
 			}
+		} else if (gadgetType === 'combo') {
+			// combo .name |Label| [at x<num>] [width <num>]
+			if (this.check(TokenType.STRING)) {
+				label = this.advance().value;
+			}
 		} else if (gadgetType === 'option') {
 			// option .name |width| |Label| [at x<num>]
 			if (this.check(TokenType.STRING)) {
@@ -608,18 +645,20 @@ export class Parser {
 			}
 		}
 
-		// Position: at x<num>
-		if (this.check(TokenType.AT)) {
-			this.advance();
-			// Expect identifier like "x20" or separate tokens
-			const posToken = this.peek();
-			if (posToken.type === TokenType.IDENTIFIER && posToken.value.startsWith('x')) {
-				const posStr = posToken.value.substring(1);
-				position = parseInt(posStr, 10);
-				this.advance();
-			} else if (this.check(TokenType.NUMBER)) {
-				position = parseFloat(this.advance().value);
-			}
+		const modifiers = this.parseGadgetModifiers(startToken.line);
+		const position = modifiers.position;
+		width = width ?? modifiers.width;
+		if (modifiers.height !== undefined) {
+			properties.height = modifiers.height;
+		}
+		if (modifiers.tooltip !== undefined) {
+			properties.tooltip = modifiers.tooltip;
+		}
+		if (modifiers.call !== undefined) {
+			properties.call = modifiers.call;
+		}
+		if (modifiers.pixmap !== undefined) {
+			properties.pixmap = modifiers.pixmap;
 		}
 
 		return {
@@ -630,9 +669,204 @@ export class Parser {
 			modifier,
 			position,
 			width,
-			properties: {},
+			properties,
 			range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
 		};
+	}
+
+	/**
+	 * Parse TRACK statement in form definition
+	 * TRACK |EventType| call |CallbackMethod|
+	 */
+	private parseTrackStatement(callbacks: Record<string, string>): void {
+		const startToken = this.consume(TokenType.TRACK, "Expected 'track'");
+
+		// Event type (string like |DESICE|)
+		let eventType = '';
+		if (this.check(TokenType.STRING)) {
+			eventType = this.advance().value;
+		} else if (this.check(TokenType.IDENTIFIER)) {
+			eventType = this.advance().value;
+		}
+
+		// Optional 'call' keyword
+		if (this.check(TokenType.CALL)) {
+			this.advance();
+		}
+
+		// Callback method (string like |!this.trackce()|)
+		let callback = '';
+		if (this.check(TokenType.STRING)) {
+			callback = this.advance().value;
+		}
+
+		// Store callback if both event and callback are found
+		if (eventType && callback) {
+			callbacks[eventType] = callback;
+		}
+
+		// Skip remaining tokens on this line (at, tooltip, etc.)
+		this.skipGadgetModifiers(startToken.line);
+	}
+
+	/**
+	 * Parse common gadget modifiers on the declaration line.
+	 */
+	private parseGadgetModifiers(line: number): GadgetModifiers {
+		const modifiers: GadgetModifiers = {};
+
+		while (this.isOnLine(line) && !this.isFormBodyStart()) {
+			const token = this.peek();
+
+			if (token.type === TokenType.AT) {
+				const position = this.parseGadgetPosition(line);
+				if (position !== undefined) {
+					modifiers.position = position;
+				}
+				continue;
+			}
+
+			const keyword = this.getModifierKeyword(token);
+			if (!keyword) {
+				this.advance();
+				continue;
+			}
+
+			this.advance();
+
+			if (keyword === 'width') {
+				modifiers.width = this.parseModifierScalarValue(line);
+			} else if (keyword === 'height') {
+				modifiers.height = this.parseModifierScalarValue(line);
+			} else if (keyword === 'tooltip') {
+				modifiers.tooltip = this.parseModifierTextValue(line);
+			} else if (keyword === 'call' || keyword === 'callback') {
+				modifiers.call = this.parseModifierTextValue(line);
+			} else if (keyword === 'pixmap') {
+				modifiers.pixmap = this.parseModifierTextValue(line);
+			}
+		}
+
+		return modifiers;
+	}
+
+	private parseGadgetPosition(line: number): number | undefined {
+		this.consume(TokenType.AT, "Expected 'at'");
+
+		if (!this.isOnLine(line)) {
+			return undefined;
+		}
+
+		const posToken = this.peek();
+		if (posToken.type === TokenType.IDENTIFIER && posToken.value.toLowerCase().startsWith('x')) {
+			this.advance();
+			return parseInt(posToken.value.substring(1), 10);
+		}
+
+		if (posToken.type === TokenType.NUMBER) {
+			this.advance();
+			return parseFloat(posToken.value);
+		}
+
+		return undefined;
+	}
+
+	private parseModifierScalarValue(line: number): string | number | undefined {
+		if (!this.isOnLine(line)) {
+			return undefined;
+		}
+
+		const token = this.peek();
+		if (token.type === TokenType.NUMBER) {
+			this.advance();
+			return parseFloat(token.value);
+		}
+
+		if (token.type === TokenType.STRING ||
+		    token.type === TokenType.IDENTIFIER ||
+		    token.type === TokenType.METHOD ||
+		    token.type === TokenType.LOCAL_VAR ||
+		    token.type === TokenType.GLOBAL_VAR ||
+		    token.type === TokenType.SUBSTITUTE_VAR) {
+			this.advance();
+			return token.value;
+		}
+
+		return undefined;
+	}
+
+	private parseModifierTextValue(line: number): string | undefined {
+		if (!this.isOnLine(line)) {
+			return undefined;
+		}
+
+		if (this.check(TokenType.STRING)) {
+			return this.advance().value;
+		}
+
+		const startOffset = this.peek().offset;
+		let endOffset = startOffset;
+		while (this.isOnLine(line) && !this.isFormDeclarationStart()) {
+			const token = this.peek();
+			if (token.type === TokenType.AT || this.getModifierKeyword(token)) {
+				break;
+			}
+
+			endOffset = token.offset + token.length;
+			this.advance();
+		}
+
+		if (endOffset <= startOffset) {
+			return undefined;
+		}
+
+		return this.sourceText.slice(startOffset, endOffset).trim();
+	}
+
+	private getModifierKeyword(token: Token): string | undefined {
+		if (token.type === TokenType.WID) {
+			return 'width';
+		}
+		if (token.type === TokenType.HEI) {
+			return 'height';
+		}
+		if (token.type === TokenType.CALL) {
+			return 'call';
+		}
+		if (token.type !== TokenType.IDENTIFIER) {
+			return undefined;
+		}
+
+		const keyword = token.value.toLowerCase();
+		if (['width', 'height', 'tooltip', 'call', 'callback', 'pixmap'].includes(keyword)) {
+			return keyword;
+		}
+
+		return undefined;
+	}
+
+	private skipGadgetModifiers(line: number): void {
+		while (this.isOnLine(line) && !this.isFormBodyStart()) {
+			this.advance();
+		}
+	}
+
+	private isFormDeclarationStart(): boolean {
+		const token = this.peek();
+		return token.type === TokenType.MEMBER ||
+		       token.type === TokenType.FRAME ||
+		       token.type === TokenType.BUTTON ||
+		       token.type === TokenType.TEXT ||
+		       token.type === TokenType.COMBO ||
+		       token.type === TokenType.TRACK ||
+		       token.type === TokenType.OPTION ||
+		       token.type === TokenType.TOGGLE ||
+		       token.type === TokenType.EXIT ||
+		       token.type === TokenType.DEFINE;
+	}
+
+	private isOnLine(line: number): boolean {
+		return !this.isAtEnd() && this.peek().line === line;
 	}
 
 	/**
@@ -684,6 +918,28 @@ export class Parser {
 	 */
 	private parseType(): PMLType {
 		const typeToken = this.peek();
+
+		if (this.match(TokenType.STRING_TYPE)) {
+			return createStringType();
+		}
+		if (this.match(TokenType.REAL_TYPE)) {
+			return createRealType();
+		}
+		if (this.match(TokenType.BOOLEAN_TYPE)) {
+			return { kind: 'BOOLEAN' };
+		}
+		if (this.match(TokenType.INTEGER_TYPE)) {
+			return createIntegerType();
+		}
+		if (this.match(TokenType.ARRAY_TYPE)) {
+			return createArrayType(createAnyType());
+		}
+		if (this.match(TokenType.DBREF_TYPE)) {
+			return { kind: 'DBREF' };
+		}
+		if (this.match(TokenType.ANY_TYPE)) {
+			return createAnyType();
+		}
 
 		if (this.check(TokenType.IDENTIFIER)) {
 			const typeName = this.advance().value.toUpperCase();

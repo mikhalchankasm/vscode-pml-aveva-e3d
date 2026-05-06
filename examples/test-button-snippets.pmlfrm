@@ -22,14 +22,13 @@ setup form !!testButtonSnippets
     -- buttonpix       -> Button with pixmap
     -- buttonat        -> Button at specific position
 
-
 exit
 
 ------------------------------------------------------------------------
 --
 -- Method:      testButtonSnippets
 --
--- Description: 
+-- Description:
 --
 -- Method Type: Function/Procedure
 -- Arguments:
@@ -39,10 +38,21 @@ exit
 --
 ------------------------------------------------------------------------
 define method .testButtonSnippets()
+
     -- Constructor
 
-    
+    !k = object ARRAY()
+
+    do !i index !items
+        !item = !items[!i]
+        -- loop body
+        !!FMSYS.setProgress(100 / !items.size() * !i)
+
+    enddo
+    !!FMSYS.setProgress(0)
 
 endmethod
 
-
+!paths[1] = '/pipe-a'
+!paths[2] = '/pipe-b'
+!paths[3] = '/pipe-c'

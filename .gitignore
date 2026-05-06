@@ -21,6 +21,9 @@ pml-aveva-e3d-*.vsix
 
 # IDE local settings
 .claude/settings.local.json
+.claude/skills/
+.agents/
+.codex/
 .vscode-test/
 *.local.json
 *.local.*

@@ -5,7 +5,15 @@
 
 import { describe, it, expect } from 'vitest';
 import { Parser } from '../parser';
-import { MethodDefinition, VariableDeclaration, IfStatement, DoStatement } from '../../ast/nodes';
+import {
+	MethodDefinition,
+	VariableDeclaration,
+	IfStatement,
+	DoStatement,
+	FormDefinition,
+	GadgetDeclaration,
+	MemberDeclaration
+} from '../../ast/nodes';
 
 describe('PML Parser', () => {
 	describe('Method Definitions', () => {
@@ -115,6 +123,158 @@ endmethod
 
 			const varDecl = result.ast.body[0] as VariableDeclaration;
 			expect(varDecl.initializer?.type).toBe('Literal');
+		});
+	});
+
+	describe('Form Definitions', () => {
+		it('should parse combo gadgets and track callbacks in forms', () => {
+			const source = `
+setup form !!TestForm dialog
+	member .title is string
+	combo .mode |Mode| at x5 width 18 tooltip |Pick a mode|
+	track |DESICE| call |!this.onTrack()|
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.type).toBe('FormDefinition');
+			expect(form.name).toBe('!!TestForm');
+			expect(form.formType).toBe('DIALOG');
+			expect(form.members).toHaveLength(1);
+			expect((form.members[0] as MemberDeclaration).memberType.kind).toBe('STRING');
+			expect(form.callbacks.DESICE).toBe('!this.onTrack()');
+
+			const combo = form.body.find(
+				(statement): statement is GadgetDeclaration =>
+					statement.type === 'GadgetDeclaration' && statement.gadgetType === 'combo'
+			);
+			expect(combo).toBeDefined();
+			expect(combo?.name).toBe('mode');
+			expect(combo?.label).toBe('Mode');
+			expect(combo?.position).toBe(5);
+			expect(combo?.width).toBe(18);
+			expect(combo?.properties.tooltip).toBe('Pick a mode');
+		});
+
+		it('should parse uppercase type keyword tokens in member declarations', () => {
+			const source = `
+setup form !!TestForm
+	member .count is INTEGER
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.members[0].memberType.kind).toBe('INTEGER');
+		});
+
+		it('should keep gadget modifiers scoped to the declaration line', () => {
+			const source = `
+setup form !!TestForm
+	combo .mode |Mode| at x5
+	tooltip |Form tooltip|
+	button .apply |Apply| pixmap /apply.png callback !this.apply()
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(gadgets).toHaveLength(2);
+			expect(gadgets[0].name).toBe('mode');
+			expect(gadgets[0].properties.tooltip).toBeUndefined();
+			expect(gadgets[1].name).toBe('apply');
+			expect(gadgets[1].properties.pixmap).toBe('/apply.png');
+			expect(gadgets[1].properties.call).toBe('!this.apply()');
+		});
+
+		it('should preserve inline width precedence and parse same-line modifiers in any order', () => {
+			const source = `
+setup form !!TestForm
+	text .name 18 width 20
+	combo .mode |Mode| wid 12 hei 4 at x5 tooltip |Pick a mode|
+	combo .empty at x8 width 18
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(gadgets[0].name).toBe('name');
+			expect(gadgets[0].width).toBe(18);
+			expect(gadgets[1].name).toBe('mode');
+			expect(gadgets[1].width).toBe(12);
+			expect(gadgets[1].position).toBe(5);
+			expect(gadgets[1].properties.height).toBe(4);
+			expect(gadgets[1].properties.tooltip).toBe('Pick a mode');
+			expect(gadgets[2].name).toBe('empty');
+			expect(gadgets[2].label).toBeUndefined();
+			expect(gadgets[2].position).toBe(8);
+			expect(gadgets[2].width).toBe(18);
+		});
+
+		it('should parse multiple track callbacks with and without call keyword', () => {
+			const source = `
+setup form !!TestForm
+	track |SEL| call |!this.select()| at x10
+	track |EVT| |!this.event()|
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.callbacks).toEqual({
+				SEL: '!this.select()',
+				EVT: '!this.event()'
+			});
+		});
+
+		it('should parse empty forms and custom member types', () => {
+			const emptyResult = new Parser().parse('setup form !!Empty exit');
+			expect(emptyResult.errors).toHaveLength(0);
+
+			const emptyForm = emptyResult.ast.body[0] as FormDefinition;
+			expect(emptyForm.body).toHaveLength(0);
+			expect(emptyForm.members).toHaveLength(0);
+			expect(emptyForm.callbacks).toEqual({});
+
+			const customTypeResult = new Parser().parse(`
+setup form !!Typed
+	member .ref is MyCustomType
+exit
+			`.trim());
+			expect(customTypeResult.errors).toHaveLength(0);
+
+			const typedForm = customTypeResult.ast.body[0] as FormDefinition;
+			expect(typedForm.members[0].memberType.kind).toBe('ANY');
 		});
 	});
 

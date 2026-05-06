@@ -105,8 +105,7 @@ connection.onInitialize((params: InitializeParams) => {
 			// Semantic Tokens (enhanced syntax highlighting)
 			semanticTokensProvider: {
 				legend: semanticTokensLegend,
-				full: true,
-				delta: false
+				full: true
 			},
 			// Future providers (Phase 2+)
 			// inlayHintProvider: {...},
