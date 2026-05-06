@@ -2,6 +2,23 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.2] - 2026-05-06
+
+### Fixed - PML Variable Substitution
+
+- Accepted variable substitution expressions such as `$!site`, `$!!global`, `$/attribute`, and `$identifier` as valid parser expressions.
+- Kept malformed substitution tokens such as `$!` reported as parser errors.
+- Added TextMate, semantic token, and editor word-pattern support so substitution variables are highlighted and selected as PML variables.
+
+### Verified - Function Blocks
+
+- Added regression coverage for `.pmlfnc`-style `define function !!name(...)` / `endfunction` blocks with typed parameters and nested statements.
+- Confirmed existing folding and indentation rules already include `define function` and `endfunction`.
+
+### Tests
+
+- Added parser regression tests for substitution expressions, substitution assignment values, incomplete substitution errors, and typed function definitions.
+
 ## [0.11.1] - 2026-05-06
 
 ### Fixed - Form Parser & Refactoring Stability

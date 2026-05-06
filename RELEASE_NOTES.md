@@ -1,4 +1,41 @@
-# Release Notes - v0.11.1
+# Release Notes - v0.11.2
+
+**Release Date:** 2026-05-06
+
+## What's New in v0.11.2
+
+### PML Variable Substitution
+
+- `$!site` and related substitution forms are now valid parser expressions instead of diagnostic errors.
+- Supported forms include `$!local`, `$!!global`, `$/attribute`, and `$identifier`.
+- Incomplete substitutions such as `$!` still produce a parser error.
+- Substitution variables now receive TextMate and semantic variable highlighting.
+- Editor word selection now treats `$!site` as a single PML word.
+
+### Function Block Validation
+
+- Added regression coverage for `.pmlfnc` function files using:
+  - `define function !!proreport(!inlist is any, !folder is string)`
+  - `endfunction`
+- Verified typed parameters, nested `do` blocks, and substitution expressions inside function bodies parse cleanly.
+- Existing folding and indentation rules already cover `define function` and `endfunction`.
+
+### Validation
+
+- Language server tests: 82 passed, 2 skipped.
+- TypeScript compile, bundled compile, lint, diff check, JSON validation, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.2](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.2)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.1
 
 **Release Date:** 2026-05-06
 

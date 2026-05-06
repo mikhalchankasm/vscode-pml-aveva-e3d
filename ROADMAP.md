@@ -441,6 +441,27 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.2 - 2026-05-06 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Variable Substitution Parsing** ✅ COMPLETED
+  - Accept `$!local`, `$!!global`, `$/attribute`, and `$identifier` as valid expressions
+  - Support substitution expressions as standalone commands and assignment values
+  - Keep incomplete substitution tokens reported as parser errors
+
+- [x] **Substitution Highlighting** ✅ COMPLETED
+  - Add TextMate scopes for substitution variables
+  - Add semantic tokens for substitution variables
+  - Treat `$!site` as one editor word for selection/navigation
+
+- [x] **Function Block Regression Coverage** ✅ COMPLETED
+  - Validate `define function !!name(...)` / `endfunction` blocks with typed parameters
+  - Cover nested statements and substitution expressions inside function bodies
+  - Confirm existing folding and indentation rules include function blocks
+
+---
+
 ### v0.11.1 - 2026-05-06 ✅ COMPLETED
 
 ### Patch Improvements
@@ -636,7 +657,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.1
+**Version:** 0.11.2
 **Released:** 2026-05-06
 
 **Statistics:**
@@ -646,10 +667,15 @@ Development plans and progress tracking.
 - Commands: 30+ (with array manipulation tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **78 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
+- Tests: **82 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.1):**
+**Recent Changes (v0.11.2):**
+- ✅ **Variable Substitution Parsing** - `$!site` and related forms parse without false diagnostics
+- ✅ **Substitution Highlighting** - TextMate, semantic tokens, and word selection support `$...` variables
+- ✅ **Function Block Regression Coverage** - `define function !!name(...)` / `endfunction` with typed parameters
+
+**Previous Changes (v0.11.1):**
 - ✅ **Form Parser Hardening** - Combo gadgets, track callbacks, and line-scoped modifiers
 - ✅ **Rename/References Improvements** - Callback strings and nested attribute paths
 - ✅ **Packaging Cleanup** - Local agent/config files excluded from VSIX

@@ -96,6 +96,22 @@
     "variables": {
       "patterns": [
         {
+          "name": "variable.other.substitution.global.pml",
+          "match": "\\$!!\\w+"
+        },
+        {
+          "name": "variable.other.substitution.local.pml",
+          "match": "\\$!\\w+"
+        },
+        {
+          "name": "variable.other.substitution.attribute.pml",
+          "match": "\\$/\\w+"
+        },
+        {
+          "name": "variable.other.substitution.pml",
+          "match": "\\$\\w+"
+        },
+        {
           "name": "variable.language.global.pml",
           "match": "!!\\w+"
         },

@@ -1802,6 +1802,21 @@ export class Parser {
 			};
 		}
 
+		// Variable substitution ($!var, $!!global, $/attribute, $identifier)
+		if (this.check(TokenType.SUBSTITUTE_VAR)) {
+			const token = this.peek();
+			if (!/^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|\/[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)$/.test(token.value)) {
+				throw this.error(token, "Expected variable substitution (e.g., $!var)");
+			}
+
+			this.advance();
+			return {
+				type: 'Identifier',
+				name: token.value,
+				range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
+			};
+		}
+
 		// Variable
 		if (this.match(TokenType.LOCAL_VAR, TokenType.GLOBAL_VAR)) {
 			const token = this.previous();

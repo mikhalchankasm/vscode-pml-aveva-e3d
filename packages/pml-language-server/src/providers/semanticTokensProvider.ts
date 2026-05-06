@@ -207,6 +207,17 @@ export class SemanticTokensProvider {
 				}
 			}
 
+			// Variable substitutions ($!varName, $!!globalName, $/attribute, $identifier)
+			if (line[pos] === '$') {
+				const match = line.substring(pos).match(/^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|\/[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)/);
+				if (match) {
+					const tokenType = match[0].startsWith('$!!') ? TOKEN.NAMESPACE : TOKEN.VARIABLE;
+					builder.push(lineIndex, pos, match[0].length, tokenType, 0);
+					pos += match[0].length;
+					continue;
+				}
+			}
+
 			// Global variables (!!varName)
 			if (line[pos] === '!' && line[pos + 1] === '!') {
 				const match = line.substring(pos).match(/^!![A-Za-z_][A-Za-z0-9_]*/);

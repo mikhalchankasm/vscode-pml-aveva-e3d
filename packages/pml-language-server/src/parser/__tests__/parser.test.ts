@@ -7,12 +7,15 @@ import { describe, it, expect } from 'vitest';
 import { Parser } from '../parser';
 import {
 	MethodDefinition,
+	FunctionDefinition,
 	VariableDeclaration,
 	IfStatement,
 	DoStatement,
 	FormDefinition,
 	GadgetDeclaration,
-	MemberDeclaration
+	MemberDeclaration,
+	ExpressionStatement,
+	Identifier
 } from '../../ast/nodes';
 
 describe('PML Parser', () => {
@@ -123,6 +126,36 @@ endmethod
 
 			const varDecl = result.ast.body[0] as VariableDeclaration;
 			expect(varDecl.initializer?.type).toBe('Literal');
+		});
+	});
+
+	describe('Function Definitions', () => {
+		it('should parse global function definitions with typed parameters', () => {
+			const source = `
+define function !!proreport(!inlist is any, !folder is string)
+	$!site
+	do !item values !inlist
+		!target = $!site
+	enddo
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const func = result.ast.body[0] as FunctionDefinition;
+			expect(func.type).toBe('FunctionDefinition');
+			expect(func.name).toBe('proreport');
+			expect(func.parameters).toHaveLength(2);
+			expect(func.parameters[0].name).toBe('inlist');
+			expect(func.parameters[0].paramType?.kind).toBe('ANY');
+			expect(func.parameters[1].name).toBe('folder');
+			expect(func.parameters[1].paramType?.kind).toBe('STRING');
+			expect(func.body).toHaveLength(2);
+			expect(func.body[1].type).toBe('DoStatement');
 		});
 	});
 
@@ -279,6 +312,46 @@ exit
 	});
 
 	describe('Expressions', () => {
+		it('should parse variable substitution as an expression', () => {
+			const source = '$!site';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const statement = result.ast.body[0] as ExpressionStatement;
+			const identifier = statement.expression as Identifier;
+			expect(statement.type).toBe('ExpressionStatement');
+			expect(identifier.type).toBe('Identifier');
+			expect(identifier.name).toBe('$!site');
+		});
+
+		it('should parse variable substitution as an assignment value', () => {
+			const source = '!target = $!site';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const varDecl = result.ast.body[0] as VariableDeclaration;
+			const initializer = varDecl.initializer as Identifier;
+			expect(varDecl.type).toBe('VariableDeclaration');
+			expect(initializer.type).toBe('Identifier');
+			expect(initializer.name).toBe('$!site');
+		});
+
+		it('should report incomplete variable substitution', () => {
+			const source = '$!';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors.length).toBeGreaterThan(0);
+		});
+
 		it('should parse binary expression', () => {
 			const source = '!result = !a + !b';
 
