@@ -103,6 +103,7 @@ export enum TokenType {
 	STAR = 'STAR',
 	SLASH = 'SLASH',
 	POWER = 'POWER',          // **
+	CONCAT = 'CONCAT',        // & (PML string concatenation)
 	MOD = 'MOD',
 	DIV = 'DIV',
 	EQ = 'EQ',
@@ -275,7 +276,7 @@ export function getKeywordType(word: string): TokenType | undefined {
 export function isOperator(type: TokenType): boolean {
 	return [
 		TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH,
-		TokenType.POWER, TokenType.MOD, TokenType.DIV,
+		TokenType.POWER, TokenType.CONCAT, TokenType.MOD, TokenType.DIV,
 		TokenType.EQ, TokenType.NE, TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE,
 		TokenType.AND, TokenType.OR, TokenType.NOT,
 		TokenType.ASSIGN
@@ -303,6 +304,6 @@ export function isLogicalOperator(type: TokenType): boolean {
  */
 export function isArithmeticOperator(type: TokenType): boolean {
 	return [
-		TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.POWER, TokenType.MOD, TokenType.DIV
+		TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH, TokenType.POWER, TokenType.CONCAT, TokenType.MOD, TokenType.DIV
 	].includes(type);
 }

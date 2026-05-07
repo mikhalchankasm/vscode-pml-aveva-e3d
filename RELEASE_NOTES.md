@@ -1,4 +1,43 @@
-# Release Notes - v0.11.2
+# Release Notes - v0.11.3
+
+**Release Date:** 2026-05-07
+
+## What's New in v0.11.3
+
+### Parser Compatibility
+
+- Fixed real-world validation issues found in `proreport.pmlfnc` and `exportifczones.pmlfnc`.
+- Added support for PML concatenation with `&`.
+- Added support for database path literals such as `/240000-АС14_Фр1`.
+- Added support for database attribute expressions such as `:Шифр_комплекта_РД of $!site`.
+- Added support for numeric literals with units such as `1mm`.
+- Added support for empty global function calls such as `!!autoColourgnp()`.
+- Added line-command handling for AVEVA commands including `GETWORK`, `trace`, `unlock`, `EXPORT`, `AUTOCOLOUR`, `REPRESENTATION`, `tolerance`, and `SYSCOM`.
+- Fixed bare `return` so it does not consume the next physical line.
+
+### Comments and Highlighting
+
+- `$*` is now correctly scoped as a single-line comment in semantic highlighting.
+- `$( ... $)` is now supported as a multi-line PML comment in parser and highlighting layers.
+- `$P ...` output lines are highlighted as output commands, making debug output easier to scan.
+
+### Validation
+
+- Language server tests: 89 passed, 2 skipped.
+- TypeScript compile, bundled compile, lint, diff check, JSON validation, VSIX packaging, and local VS Code/Cursor install passed.
+- Manual parser validation: `proreport.pmlfnc` and `exportifczones.pmlfnc` both parse with `errors 0`.
+
+## Installation
+
+**GitHub Release:** [v0.11.3](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.3)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.2
 
 **Release Date:** 2026-05-06
 

@@ -65,9 +65,13 @@ export class Lexer {
 			return;
 		}
 
-		// Comments: -- or $*
+		// Comments: --, $*, or $( ... $)
 		if (char === '-' && this.peek() === '-') {
 			this.scanLineComment();
+			return;
+		}
+		if (char === '$' && this.peek() === '(') {
+			this.scanBlockComment();
 			return;
 		}
 		if (char === '$' && this.peek() === '*') {
@@ -174,6 +178,9 @@ export class Lexer {
 					this.addToken(TokenType.STAR, '*', startLine, startColumn, startPos, 1);
 				}
 				break;
+			case '&':
+				this.addToken(TokenType.CONCAT, '&', startLine, startColumn, startPos, 1);
+				break;
 			case '=':
 				this.addToken(TokenType.ASSIGN, '=', startLine, startColumn, startPos, 1);
 				break;
@@ -191,6 +198,33 @@ export class Lexer {
 			this.advance();
 		}
 		// Skip comments (don't add to tokens)
+	}
+
+	/**
+	 * Scan block comment: $( ... $)
+	 */
+	private scanBlockComment(): void {
+		this.advance(); // consume opening (
+
+		while (!this.isAtEnd()) {
+			if (this.peek() === '$' && this.peekNext() === ')') {
+				this.advance(); // consume $
+				this.advance(); // consume )
+				return;
+			}
+
+			const char = this.advance();
+			if (char === '\r') {
+				if (this.peek() === '\n') {
+					this.advance();
+				}
+				this.line++;
+				this.column = 1;
+			} else if (char === '\n') {
+				this.line++;
+				this.column = 1;
+			}
+		}
 	}
 
 	/**

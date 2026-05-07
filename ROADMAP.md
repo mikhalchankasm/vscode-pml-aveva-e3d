@@ -441,6 +441,23 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.3 - 2026-05-07 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Real PML Parser Coverage** ✅ COMPLETED
+  - Validate `proreport.pmlfnc` and `exportifczones.pmlfnc` with zero parser errors
+  - Support concatenation with `&`, database paths, database attributes, and numeric units
+  - Support empty global function calls and AVEVA line commands
+  - Keep `return` without a value line-scoped
+
+- [x] **Comment and Output Highlighting** ✅ COMPLETED
+  - Keep `$*` as a single-line comment
+  - Support `$( ... $)` multi-line comments
+  - Highlight `$P ...` output lines as output commands
+
+---
+
 ### v0.11.2 - 2026-05-06 ✅ COMPLETED
 
 ### Patch Improvements
@@ -657,8 +674,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.2
-**Released:** 2026-05-06
+**Version:** 0.11.3
+**Released:** 2026-05-07
 
 **Statistics:**
 - Extension size: **2.1 MB** (bundled with esbuild)
@@ -667,10 +684,15 @@ Development plans and progress tracking.
 - Commands: 30+ (with array manipulation tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **82 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
+- Tests: **89 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.2):**
+**Recent Changes (v0.11.3):**
+- ✅ **Real PML Parser Coverage** - `proreport.pmlfnc` and `exportifczones.pmlfnc` parse with zero errors
+- ✅ **Comment Handling** - `$*` single-line and `$( ... $)` multi-line comments
+- ✅ **Output Highlighting** - `$P ...` lines highlighted for debug-output scans
+
+**Previous Changes (v0.11.2):**
 - ✅ **Variable Substitution Parsing** - `$!site` and related forms parse without false diagnostics
 - ✅ **Substitution Highlighting** - TextMate, semantic tokens, and word selection support `$...` variables
 - ✅ **Function Block Regression Coverage** - `define function !!name(...)` / `endfunction` with typed parameters

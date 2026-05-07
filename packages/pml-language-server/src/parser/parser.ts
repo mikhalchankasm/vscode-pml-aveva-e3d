@@ -31,6 +31,19 @@ interface GadgetModifiers {
 	pixmap?: string;
 }
 
+const LINE_COMMANDS = new Set([
+	'autocolour',
+	'export',
+	'getwork',
+	'quit',
+	'representation',
+	'syscom',
+	'tolerance',
+	'trace',
+	'unclaim',
+	'unlock'
+]);
+
 export class Parser {
 	private tokens: Token[] = [];
 	private sourceText: string = '';
@@ -1016,12 +1029,25 @@ export class Parser {
 			return this.parseSkipStatement();
 		}
 
+		// $P line command: everything after $P on the same line is text output.
+		if (this.check(TokenType.SUBSTITUTE_VAR) && this.peek().value.toLowerCase() === '$p') {
+			return this.parseLineCommandStatement();
+		}
+
+		if (this.isLineCommandStart()) {
+			return this.parseLineCommandStatement();
+		}
+
 		// var statement - consume 'var' and parse the following statement
 		if (this.check(TokenType.VAR)) {
-			this.advance(); // consume 'var'
+			const varToken = this.advance(); // consume 'var'
 			// After 'var', expect variable declaration/assignment
 			if (this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) {
-				return this.parseVariableDeclarationOrAssignment();
+				const stmt = this.parseVariableDeclarationOrAssignment();
+				if (stmt.type === 'ExpressionStatement' && this.peek().line === varToken.line) {
+					this.consumeRemainingLine(varToken.line);
+				}
+				return stmt;
 			}
 			// If not a variable, treat as expression statement
 			return this.parseExpressionStatement();
@@ -1306,9 +1332,9 @@ export class Parser {
 	private parseReturnStatement(): ReturnStatement {
 		const token = this.consume(TokenType.RETURN, "Expected 'return'");
 
-		// Check if there's a return value
+		// Check if there's a return value on the same physical line.
 		let argument: Expression | undefined;
-		if (!this.isStatementEnd()) {
+		if (!this.isAtEnd() && this.peek().line === token.line) {
 			argument = this.parseExpression();
 		}
 
@@ -1353,6 +1379,10 @@ export class Parser {
 			};
 		}
 
+		if (this.check(TokenType.LPAREN)) {
+			return this.parseCallFromExpression(left);
+		}
+
 		// Check for assignment
 		if (this.check(TokenType.ASSIGN)) {
 			this.advance(); // consume =
@@ -1391,6 +1421,54 @@ export class Parser {
 				range: left.range
 			};
 		}
+	}
+
+	private parseLineCommandStatement(): ExpressionStatement {
+		const startToken = this.advance();
+		let endToken = startToken;
+
+		while (!this.isAtEnd() && this.peek().line === startToken.line) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'ExpressionStatement',
+			expression: {
+				type: 'Identifier',
+				name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length).trim(),
+				range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+			},
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	private consumeRemainingLine(line: number): void {
+		while (!this.isAtEnd() && this.peek().line === line) {
+			this.advance();
+		}
+	}
+
+	private parseCallFromExpression(callee: Identifier | MemberExpression): ExpressionStatement {
+		const startPos = callee.range.start;
+		this.advance(); // consume (
+		const args = this.parseArguments();
+		const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
+
+		const expression: CallExpression = {
+			type: 'CallExpression',
+			callee,
+			arguments: args,
+			range: {
+				start: startPos,
+				end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
+			}
+		};
+
+		return {
+			type: 'ExpressionStatement',
+			expression,
+			range: expression.range
+		};
 	}
 
 	/**
@@ -1556,7 +1634,7 @@ export class Parser {
 	private parseAddition(): Expression {
 		let left = this.parseMultiplication();
 
-		while (this.match(TokenType.PLUS, TokenType.MINUS)) {
+		while (this.match(TokenType.PLUS, TokenType.MINUS, TokenType.CONCAT)) {
 			const operator = this.previous().value;
 			const right = this.parseMultiplication();
 			left = {
@@ -1781,6 +1859,17 @@ export class Parser {
 		// Number literal
 		if (this.match(TokenType.NUMBER)) {
 			const token = this.previous();
+			if (this.check(TokenType.IDENTIFIER) && this.peek().offset === token.offset + token.length) {
+				const unitToken = this.advance();
+				return {
+					type: 'Literal',
+					value: token.value + unitToken.value,
+					literalType: 'number',
+					pmlType: createRealType(),
+					range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(unitToken))
+				};
+			}
+
 			return {
 				type: 'Literal',
 				value: parseFloat(token.value),
@@ -1885,6 +1974,15 @@ export class Parser {
 			};
 		}
 
+		if (this.check(TokenType.SLASH)) {
+			return this.parsePathExpression();
+		}
+
+		// PML database attribute expression (:attribute)
+		if (this.check(TokenType.COLON)) {
+			return this.parseAttributeExpression();
+		}
+
 		// Identifier
 		if (this.match(TokenType.IDENTIFIER)) {
 			const token = this.previous();
@@ -1903,6 +2001,95 @@ export class Parser {
 		}
 
 		throw this.error(this.peek(), "Expected expression");
+	}
+
+	private parseAttributeExpression(): Identifier {
+		const startToken = this.advance();
+		let endToken = startToken;
+
+		while (!this.isAtEnd() && this.peek().line === startToken.line && !this.isAttributeExpressionBoundary(this.peek())) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'Identifier',
+			name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length),
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	private parsePathExpression(): Identifier {
+		const startToken = this.advance();
+		let endToken = startToken;
+
+		while (!this.isAtEnd() && this.peek().line === startToken.line && !this.isPathExpressionBoundary(this.peek())) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'Identifier',
+			name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length),
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	private isPathExpressionBoundary(token: Token): boolean {
+		return token.type === TokenType.ASSIGN ||
+		       token.type === TokenType.COMMA ||
+		       token.type === TokenType.RPAREN ||
+		       token.type === TokenType.RBRACKET ||
+		       token.type === TokenType.ENDDO ||
+		       token.type === TokenType.ENDIF ||
+		       token.type === TokenType.ENDHANDLE ||
+		       token.type === TokenType.ENDFUNCTION ||
+		       token.type === TokenType.ENDMETHOD ||
+		       token.type === TokenType.PLUS ||
+		       token.type === TokenType.CONCAT ||
+		       token.type === TokenType.STAR ||
+		       token.type === TokenType.POWER ||
+		       token.type === TokenType.EQ ||
+		       token.type === TokenType.NE ||
+		       token.type === TokenType.GT ||
+		       token.type === TokenType.LT ||
+		       token.type === TokenType.GE ||
+		       token.type === TokenType.LE ||
+		       token.type === TokenType.AND ||
+		       token.type === TokenType.OR;
+	}
+
+	private isAttributeExpressionBoundary(token: Token): boolean {
+		return token.type === TokenType.OF ||
+		       token.type === TokenType.ASSIGN ||
+		       token.type === TokenType.COMMA ||
+		       token.type === TokenType.RPAREN ||
+		       token.type === TokenType.RBRACKET ||
+		       token.type === TokenType.ENDDO ||
+		       token.type === TokenType.ENDIF ||
+		       token.type === TokenType.ENDHANDLE ||
+		       token.type === TokenType.ENDFUNCTION ||
+		       token.type === TokenType.ENDMETHOD ||
+		       token.type === TokenType.PLUS ||
+		       token.type === TokenType.MINUS ||
+		       token.type === TokenType.CONCAT ||
+		       token.type === TokenType.STAR ||
+		       token.type === TokenType.SLASH ||
+		       token.type === TokenType.POWER ||
+		       token.type === TokenType.EQ ||
+		       token.type === TokenType.NE ||
+		       token.type === TokenType.GT ||
+		       token.type === TokenType.LT ||
+		       token.type === TokenType.GE ||
+		       token.type === TokenType.LE ||
+		       token.type === TokenType.AND ||
+		       token.type === TokenType.OR;
+	}
+
+	private isLineCommandStart(): boolean {
+		if (!this.check(TokenType.IDENTIFIER)) {
+			return false;
+		}
+
+		return LINE_COMMANDS.has(this.peek().value.toLowerCase());
 	}
 
 	/**

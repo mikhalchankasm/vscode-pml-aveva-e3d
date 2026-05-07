@@ -2,6 +2,29 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.3] - 2026-05-07
+
+### Fixed - Real PML Parser Coverage
+
+- Added parser support for PML string concatenation with `&`.
+- Accepted database path literals such as `/240000-АС14_Фр1`.
+- Accepted database attribute expressions such as `:Шифр_комплекта_РД of $!site`.
+- Accepted numeric literals with units such as `1mm`.
+- Treated common AVEVA command lines (`GETWORK`, `trace`, `unlock`, `EXPORT`, `AUTOCOLOUR`, `REPRESENTATION`, `tolerance`, `SYSCOM`) as line commands.
+- Accepted empty global function calls such as `!!autoColourgnp()`.
+- Fixed bare `return` so it no longer consumes the next physical line as a return value.
+- Ignored declaration tails such as `var !items collect all ...` instead of parsing the tail as a separate expression.
+
+### Fixed - Comments and Highlighting
+
+- Kept `$*` scoped to a single line in semantic highlighting.
+- Added multi-line comment support for `$( ... $)` in the lexer, TextMate grammar, and semantic tokens.
+- Highlighted `$P ...` output lines as a distinct output command for easier debug-output scans.
+
+### Tests
+
+- Added regression coverage for `proreport.pmlfnc`, `exportifczones.pmlfnc` patterns, bare `return`, block comments, `$*` comment scoping, and `$P` output highlighting.
+
 ## [0.11.2] - 2026-05-06
 
 ### Fixed - PML Variable Substitution

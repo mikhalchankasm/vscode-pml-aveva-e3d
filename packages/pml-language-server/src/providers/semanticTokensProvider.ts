@@ -134,9 +134,9 @@ export class SemanticTokensProvider {
 
 		// If we're continuing a block comment from a previous line
 		if (inBlockComment) {
-			const endPos = line.indexOf('*$');
+			const endPos = line.indexOf('$)');
 			if (endPos !== -1) {
-				// Block comment ends on this line - highlight up to and including *$
+				// Block comment ends on this line - highlight up to and including $)
 				const length = endPos + 2;
 				if (length > 0) {
 					builder.push(lineIndex, 0, length, TOKEN.COMMENT, 0);
@@ -168,21 +168,34 @@ export class SemanticTokensProvider {
 				break; // Rest of line is comment
 			}
 
-			// Block comment ($* ... *$)
-			if (line[pos] === '$' && line[pos + 1] === '*') {
-				const endPos = line.indexOf('*$', pos + 2);
+			// Block comments ($( ... $))
+			if (line[pos] === '$' && line[pos + 1] === '(') {
+				const endPos = line.indexOf('$)', pos + 2);
 				if (endPos !== -1) {
-					// Block comment ends on same line
 					const length = endPos - pos + 2;
 					builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
 					pos = endPos + 2;
 					continue;
-				} else {
-					// Block comment continues to next line
-					const length = line.length - pos;
-					builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
-					return true; // Now in block comment
 				}
+
+				const length = line.length - pos;
+				builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
+				return true;
+			}
+
+			// Line comments ($* to end of line)
+			if (line[pos] === '$' && line[pos + 1] === '*') {
+				const length = line.length - pos;
+				builder.push(lineIndex, pos, length, TOKEN.COMMENT, 0);
+				break; // Rest of line is comment
+			}
+
+			// Output command ($P ...)
+			if (line[pos] === '$' && line[pos + 1]?.toLowerCase() === 'p' &&
+				(line[pos + 2] === undefined || !/[A-Za-z0-9_]/.test(line[pos + 2]))) {
+				const length = line.length - pos;
+				builder.push(lineIndex, pos, length, TOKEN.KEYWORD, 0);
+				break;
 			}
 
 			// String literals (|...|)

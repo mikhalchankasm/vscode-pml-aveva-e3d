@@ -157,6 +157,101 @@ endfunction
 			expect(func.body).toHaveLength(2);
 			expect(func.body[1].type).toBe('DoStatement');
 		});
+
+		it('should parse PML attributes, concatenation, and print commands inside functions', () => {
+			const source = `
+define function !!proreport(!inlist is any, !folder is string)
+	!csvFolder = !folder & '\\'
+	do !j index !sites
+		!site = !sites[!j]
+		$!site
+		!t[1] = :Шифр_комплекта_РД of $!site
+		var !alltubi collect all tubi for bran
+		!filename = object file(!csvFolder & !!generatefilename(namn of $!site) & '.csv')
+		$P выгружено: $!j из $!size $!!CE.NAME
+	enddo
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const func = result.ast.body[0] as FunctionDefinition;
+			expect(func.type).toBe('FunctionDefinition');
+			expect(func.body.some(statement => statement.type === 'DoStatement')).toBe(true);
+		});
+
+		it('should parse DB paths, line commands, and empty global function calls in export functions', () => {
+			const source = `
+define function !!exportifczones()
+	GETWORK
+	trace off
+	!zones = array()
+	!zones[1] = /240000-АС14_Фр1
+	do !i index !zones
+		!zone = !zones[!i]
+		$!zone
+		unlock all
+		EXPORT AUTOCOLOUR REMOVE $!i
+		!exporter.setTolerance(1mm)
+		!!autoColourgnp()
+	enddo
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const func = result.ast.body[0] as FunctionDefinition;
+			expect(func.type).toBe('FunctionDefinition');
+			expect(func.body.some(statement => statement.type === 'DoStatement')).toBe(true);
+		});
+
+		it('should parse bare return without consuming the next statement', () => {
+			const source = `
+define function !!earlyExit()
+	return
+	!after = 1
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const func = result.ast.body[0] as FunctionDefinition;
+			expect(func.body).toHaveLength(2);
+			expect(func.body[0].type).toBe('ReturnStatement');
+			expect(func.body[1].type).toBe('VariableDeclaration');
+		});
+
+		it('should ignore PML block comments between dollar parens', () => {
+			const source = `
+define function !!commented()
+$(
+	this is not valid pml /
+	return )
+$)
+	!after = 1
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const func = result.ast.body[0] as FunctionDefinition;
+			expect(func.body).toHaveLength(1);
+			expect(func.body[0].type).toBe('VariableDeclaration');
+		});
 	});
 
 	describe('Form Definitions', () => {

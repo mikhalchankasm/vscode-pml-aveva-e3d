@@ -4,6 +4,7 @@
   "scopeName": "source.pml",
   "patterns": [
     { "include": "#comments" },
+    { "include": "#output" },
     { "include": "#strings" },
     { "include": "#keywords" },
     { "include": "#storage-types" },
@@ -17,12 +18,25 @@
     "comments": {
       "patterns": [
         {
+          "name": "comment.block.dollar-paren.pml",
+          "begin": "\\$\\(",
+          "end": "\\$\\)"
+        },
+        {
           "name": "comment.line.double-dash.pml",
           "match": "--.*$"
         },
         {
           "name": "comment.line.dollar-asterisk.pml",
           "match": "\\$\\*.*$"
+        }
+      ]
+    },
+    "output": {
+      "patterns": [
+        {
+          "name": "support.function.output.pml",
+          "match": "\\$[Pp]\\b.*$"
         }
       ]
     },
@@ -81,7 +95,7 @@
       "patterns": [
         {
           "name": "keyword.operator.arithmetic.pml",
-          "match": "\\+|\\-|\\*|\\/|\\*\\*|mod|div"
+          "match": "\\+|\\-|\\*|\\/|\\*\\*|&|mod|div"
         },
         {
           "name": "keyword.operator.comparison.pml",
