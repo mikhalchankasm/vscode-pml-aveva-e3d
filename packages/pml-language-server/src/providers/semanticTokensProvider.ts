@@ -300,10 +300,11 @@ export class SemanticTokensProvider {
 			if (identMatch) {
 				const word = identMatch[0];
 				const lowerWord = word.toLowerCase();
+				const isFirstTokenOnLine = line.substring(0, pos).trim().length === 0;
 
 				if (TYPE_KEYWORDS.has(lowerWord)) {
 					builder.push(lineIndex, pos, word.length, TOKEN.TYPE, 0);
-				} else if (CONTROL_KEYWORDS.has(lowerWord) || isPdmsCommandStarter(lowerWord)) {
+				} else if (CONTROL_KEYWORDS.has(lowerWord) || (isFirstTokenOnLine && isPdmsCommandStarter(lowerWord))) {
 					builder.push(lineIndex, pos, word.length, TOKEN.KEYWORD, 0);
 				} else if (OPERATOR_KEYWORDS.has(lowerWord)) {
 					builder.push(lineIndex, pos, word.length, TOKEN.KEYWORD, 0);

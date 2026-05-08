@@ -1,4 +1,11 @@
 import * as vscode from 'vscode';
+import {
+    commentPrintText,
+    isPMLPrintLine,
+    scanCommentedPMLPrintLines,
+    scanPMLPrintLines,
+    uncommentPrintText
+} from './printCommandUtils';
 
 interface PMLPrintLine {
     line: number;
@@ -7,14 +14,25 @@ interface PMLPrintLine {
     text: string;
 }
 
-const PRINT_LINE_PATTERN = /^\s*\$[Pp](?=$|\s).*/;
-const PRINT_COMMAND_PATTERN = /\$[Pp](?=$|\s)/;
-const COMMENTED_PRINT_LINE_PATTERN = /^(\s*)\$\*\s*(\$[Pp](?=$|\s).*)$/;
+interface PMLPrintCacheEntry {
+    version: number;
+    prints: PMLPrintLine[];
+    commentedPrints: PMLPrintLine[];
+}
+
+interface PMLPrintCommandTarget {
+    line?: number;
+    text?: string;
+}
+
+const REFRESH_DELAY_MS = 125;
 
 export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
     private readonly disposables: vscode.Disposable[] = [];
     private readonly decorationType: vscode.TextEditorDecorationType;
     private readonly statusBarItem: vscode.StatusBarItem;
+    private readonly cache = new Map<string, PMLPrintCacheEntry>();
+    private refreshTimer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         this.decorationType = vscode.window.createTextEditorDecorationType({
@@ -40,15 +58,18 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             vscode.commands.registerCommand('pml.prints.commentAll', () => this.commentAllPrints()),
             vscode.commands.registerCommand('pml.prints.uncommentAll', () => this.uncommentAllPrints()),
             vscode.commands.registerCommand('pml.prints.deleteAll', () => this.deleteAllPrints()),
-            vscode.commands.registerCommand('pml.prints.commentLine', (line?: number) => this.commentPrintLine(line)),
-            vscode.commands.registerCommand('pml.prints.deleteLine', (line?: number) => this.deletePrintLine(line)),
-            vscode.window.onDidChangeActiveTextEditor(() => this.refresh()),
+            vscode.commands.registerCommand('pml.prints.commentLine', (target?: number | PMLPrintCommandTarget) => this.commentPrintLine(target)),
+            vscode.commands.registerCommand('pml.prints.deleteLine', (target?: number | PMLPrintCommandTarget) => this.deletePrintLine(target)),
+            vscode.window.onDidChangeActiveTextEditor(() => this.scheduleRefresh()),
             vscode.workspace.onDidChangeTextDocument(event => {
                 if (event.document.languageId === 'pml') {
-                    this.refresh();
+                    this.invalidateDocument(event.document);
+                    if (this.isVisibleDocument(event.document)) {
+                        this.scheduleRefresh();
+                    }
                 }
             }),
-            vscode.window.onDidChangeVisibleTextEditors(() => this.refresh())
+            vscode.window.onDidChangeVisibleTextEditors(() => this.scheduleRefresh())
         );
 
         context.subscriptions.push(this);
@@ -56,6 +77,9 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
     }
 
     public dispose(): void {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer);
+        }
         this.disposables.forEach(disposable => disposable.dispose());
     }
 
@@ -63,7 +87,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
         document: vscode.TextDocument,
         position: vscode.Position
     ): vscode.Hover | undefined {
-        const prints = findPMLPrintLines(document);
+        const prints = this.getPrints(document);
         const index = prints.findIndex(print => print.line === position.line);
         if (index === -1) {
             return undefined;
@@ -71,6 +95,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
 
         const print = prints[index];
         const markdown = new vscode.MarkdownString(undefined, true);
+        // Only static command links are trusted; print text is rendered as a code block.
         markdown.isTrusted = true;
         markdown.appendMarkdown(`**$P print ${index + 1}/${prints.length}**\n\n`);
         markdown.appendCodeblock(print.text.trim(), 'pml');
@@ -78,8 +103,8 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
         markdown.appendMarkdown([
             commandLink('Prev', 'pml.prints.previous'),
             commandLink('Next', 'pml.prints.next'),
-            commandLink('Comment', 'pml.prints.commentLine', [print.line]),
-            commandLink('Delete', 'pml.prints.deleteLine', [print.line]),
+            commandLink('Comment', 'pml.prints.commentLine', [{ line: print.line, text: print.text }]),
+            commandLink('Delete', 'pml.prints.deleteLine', [{ line: print.line, text: print.text }]),
             commandLink('Actions', 'pml.prints.clear')
         ].join(' | '));
 
@@ -87,8 +112,17 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
     }
 
     private refresh(): void {
+        this.refreshTimer = undefined;
         this.updateDecorations();
         this.updateStatusBar();
+    }
+
+    private scheduleRefresh(): void {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer);
+        }
+
+        this.refreshTimer = setTimeout(() => this.refresh(), REFRESH_DELAY_MS);
     }
 
     private updateDecorations(): void {
@@ -98,7 +132,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
                 continue;
             }
 
-            const decorations = findPMLPrintLines(editor.document).map(print => ({
+            const decorations = this.getPrints(editor.document).map(print => ({
                 range: print.range,
                 hoverMessage: new vscode.MarkdownString(`PML print output: \`${print.text.trim()}\``)
             }));
@@ -113,9 +147,41 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const count = findPMLPrintLines(editor.document).length;
+        const count = this.getPrints(editor.document).length;
         this.statusBarItem.text = `$(output) $P ${count}`;
         this.statusBarItem.show();
+    }
+
+    private getPrints(document: vscode.TextDocument): PMLPrintLine[] {
+        return this.getCacheEntry(document).prints;
+    }
+
+    private getCommentedPrints(document: vscode.TextDocument): PMLPrintLine[] {
+        return this.getCacheEntry(document).commentedPrints;
+    }
+
+    private getCacheEntry(document: vscode.TextDocument): PMLPrintCacheEntry {
+        const key = document.uri.toString();
+        const cached = this.cache.get(key);
+        if (cached && cached.version === document.version) {
+            return cached;
+        }
+
+        const entry = {
+            version: document.version,
+            prints: findPMLPrintLines(document),
+            commentedPrints: findCommentedPMLPrintLines(document)
+        };
+        this.cache.set(key, entry);
+        return entry;
+    }
+
+    private invalidateDocument(document: vscode.TextDocument): void {
+        this.cache.delete(document.uri.toString());
+    }
+
+    private isVisibleDocument(document: vscode.TextDocument): boolean {
+        return vscode.window.visibleTextEditors.some(editor => editor.document.uri.toString() === document.uri.toString());
     }
 
     private async navigatePrint(direction: 'next' | 'previous'): Promise<void> {
@@ -124,7 +190,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const prints = findPMLPrintLines(editor.document);
+        const prints = this.getPrints(editor.document);
         if (prints.length === 0) {
             vscode.window.showInformationMessage('No $P print commands found');
             return;
@@ -145,8 +211,8 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const count = findPMLPrintLines(editor.document).length;
-        const commentedCount = findCommentedPMLPrintLines(editor.document).length;
+        const count = this.getPrints(editor.document).length;
+        const commentedCount = this.getCommentedPrints(editor.document).length;
         if (count === 0 && commentedCount === 0) {
             vscode.window.showInformationMessage('No $P print commands found');
             return;
@@ -191,7 +257,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const prints = findPMLPrintLines(editor.document);
+        const prints = this.getPrints(editor.document);
         if (prints.length === 0) {
             vscode.window.showInformationMessage('No $P print commands found');
             return;
@@ -215,7 +281,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const prints = findCommentedPMLPrintLines(editor.document);
+        const prints = this.getCommentedPrints(editor.document);
         if (prints.length === 0) {
             vscode.window.showInformationMessage('No commented $P print commands found');
             return;
@@ -239,7 +305,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             return;
         }
 
-        const prints = findPMLPrintLines(editor.document);
+        const prints = this.getPrints(editor.document);
         if (prints.length === 0) {
             vscode.window.showInformationMessage('No $P print commands found');
             return;
@@ -265,13 +331,13 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
         }
     }
 
-    private async commentPrintLine(line?: number): Promise<void> {
+    private async commentPrintLine(target?: number | PMLPrintCommandTarget): Promise<void> {
         const editor = getActivePMLEditor();
         if (!editor) {
             return;
         }
 
-        const targetLine = getTargetLine(editor, line);
+        const targetLine = getTargetLine(editor, target, this.getPrints(editor.document));
         if (targetLine === undefined) {
             return;
         }
@@ -286,13 +352,13 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
         await vscode.workspace.applyEdit(edit);
     }
 
-    private async deletePrintLine(line?: number): Promise<void> {
+    private async deletePrintLine(target?: number | PMLPrintCommandTarget): Promise<void> {
         const editor = getActivePMLEditor();
         if (!editor) {
             return;
         }
 
-        const targetLine = getTargetLine(editor, line);
+        const targetLine = getTargetLine(editor, target, this.getPrints(editor.document));
         if (targetLine === undefined) {
             return;
         }
@@ -316,13 +382,43 @@ function getActivePMLEditor(): vscode.TextEditor | undefined {
     return editor;
 }
 
-function getTargetLine(editor: vscode.TextEditor, line?: number): number | undefined {
-    const targetLine = typeof line === 'number' ? line : editor.selection.active.line;
-    if (targetLine < 0 || targetLine >= editor.document.lineCount) {
-        vscode.window.showInformationMessage('Print command is no longer available');
-        return undefined;
+function getTargetLine(
+    editor: vscode.TextEditor,
+    target?: number | PMLPrintCommandTarget,
+    prints: PMLPrintLine[] = []
+): number | undefined {
+    if (target === undefined) {
+        return editor.selection.active.line;
     }
-    return targetLine;
+
+    if (typeof target === 'number') {
+        if (!isLineInRange(editor, target)) {
+            vscode.window.showInformationMessage('Print command is no longer available');
+            return undefined;
+        }
+        return target;
+    }
+
+    if (target.line !== undefined && isLineInRange(editor, target.line)) {
+        const currentText = editor.document.lineAt(target.line).text;
+        if (!target.text || currentText === target.text) {
+            return target.line;
+        }
+    }
+
+    if (target.text) {
+        const matchingPrint = prints.find(print => print.text === target.text);
+        if (matchingPrint) {
+            return matchingPrint.line;
+        }
+    }
+
+    vscode.window.showInformationMessage('Print command is no longer available');
+    return undefined;
+}
+
+function isLineInRange(editor: vscode.TextEditor, line: number): boolean {
+    return line >= 0 && line < editor.document.lineCount;
 }
 
 function commandLink(label: string, command: string, args: unknown[] = []): string {
@@ -331,80 +427,33 @@ function commandLink(label: string, command: string, args: unknown[] = []): stri
 }
 
 function findPMLPrintLines(document: vscode.TextDocument): PMLPrintLine[] {
-    const prints: PMLPrintLine[] = [];
-    let inBlockComment = false;
-
-    for (let lineNumber = 0; lineNumber < document.lineCount; lineNumber++) {
-        const line = document.lineAt(lineNumber);
-        if (inBlockComment) {
-            if (line.text.includes('$)')) {
-                inBlockComment = false;
-            }
-            continue;
-        }
-
-        const blockCommentStart = line.text.indexOf('$(');
-        const commandIndex = line.text.search(PRINT_COMMAND_PATTERN);
-        if (blockCommentStart !== -1 && line.text.indexOf('$)', blockCommentStart + 2) === -1) {
-            inBlockComment = true;
-        }
-
-        if (!isPMLPrintLine(line.text)) {
-            continue;
-        }
-
-        if (blockCommentStart !== -1 && blockCommentStart < commandIndex) {
-            continue;
-        }
-
-        const start = new vscode.Position(lineNumber, commandIndex);
-        const end = new vscode.Position(lineNumber, commandIndex + 2);
-        prints.push({
-            line: lineNumber,
-            range: line.range,
+    return scanPMLPrintLines(getDocumentLines(document)).map(print => {
+        const start = new vscode.Position(print.line, print.commandIndex);
+        const end = new vscode.Position(print.line, print.commandIndex + 2);
+        return {
+            line: print.line,
+            range: document.lineAt(print.line).range,
             commandRange: new vscode.Range(start, end),
-            text: line.text
-        });
-    }
-
-    return prints;
-}
-
-function isPMLPrintLine(text: string): boolean {
-    return PRINT_LINE_PATTERN.test(text);
-}
-
-function isCommentedPMLPrintLine(text: string): boolean {
-    return COMMENTED_PRINT_LINE_PATTERN.test(text);
-}
-
-function commentPrintText(text: string): string {
-    const indent = text.match(/^\s*/)?.[0] ?? '';
-    return `${indent}$* ${text.slice(indent.length)}`;
-}
-
-function uncommentPrintText(text: string): string {
-    return text.replace(COMMENTED_PRINT_LINE_PATTERN, '$1$2');
+            text: print.text
+        };
+    });
 }
 
 function findCommentedPMLPrintLines(document: vscode.TextDocument): PMLPrintLine[] {
-    const prints: PMLPrintLine[] = [];
+    return scanCommentedPMLPrintLines(getDocumentLines(document)).map(print => ({
+        line: print.line,
+        range: document.lineAt(print.line).range,
+        commandRange: document.lineAt(print.line).range,
+        text: print.text
+    }));
+}
 
-    for (let lineNumber = 0; lineNumber < document.lineCount; lineNumber++) {
-        const line = document.lineAt(lineNumber);
-        if (!isCommentedPMLPrintLine(line.text)) {
-            continue;
-        }
-
-        prints.push({
-            line: lineNumber,
-            range: line.range,
-            commandRange: line.range,
-            text: line.text
-        });
+function getDocumentLines(document: vscode.TextDocument): string[] {
+    const lines: string[] = [];
+    for (let line = 0; line < document.lineCount; line++) {
+        lines.push(document.lineAt(line).text);
     }
-
-    return prints;
+    return lines;
 }
 
 function getFullLineRange(document: vscode.TextDocument, line: number): vscode.Range {

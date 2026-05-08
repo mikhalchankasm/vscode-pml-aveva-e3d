@@ -2,6 +2,26 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.5] - 2026-05-08
+
+### Fixed - Post-Review Parser Hardening
+
+- Limited PDMS command starter semantic highlighting to the first non-whitespace token on a line.
+- Prevented whitelisted command words such as `add`, `move`, `new`, and `pos` from swallowing ordinary call, member, indexed, assignment, or `of` expressions.
+- Tightened `$P` parser handling so `$P!arg` is no longer treated as a print line command without whitespace or end-of-line after `$P`.
+
+### Improved - `$P` Print Tools
+
+- Debounced print decoration refreshes and cached print scans per document version to avoid full-document rescans on every keystroke.
+- Re-resolved hover command targets by original line text before comment/delete operations to reduce stale line-index risk.
+- Extracted `$P` print-line scanning and comment/uncomment helpers into pure utilities with regression tests.
+- Declared per-line print commands in `package.json` so they are visible to VS Code command/keybinding surfaces.
+
+### Improved - Packaging and Documentation
+
+- Tightened `.vscodeignore` so VSIX packaging ships only runtime bundles and required user-facing assets/examples.
+- Documented `$P` print tools and the PDMS command starter whitelist in `README.md`.
+
 ## [0.11.4] - 2026-05-08
 
 ### Added - PDMS Command Compatibility

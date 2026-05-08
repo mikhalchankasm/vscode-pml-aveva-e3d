@@ -441,6 +441,26 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.5 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Post-Review Parser Hardening** ✅ COMPLETED
+  - Limit PDMS command highlighting to line-start command starters
+  - Keep `add(...)`, `move = ...`, indexed/member access, and `of` expressions parseable
+  - Align `$P` parser handling with print-tool whitespace rules
+
+- [x] **`$P` Print Tool Optimization** ✅ COMPLETED
+  - Debounce refreshes and cache scans by document version
+  - Re-resolve hover command targets before line-level comment/delete actions
+  - Add pure utility tests for print scanning and comment/uncomment round-trips
+
+- [x] **Packaging and Documentation Cleanup** ✅ COMPLETED
+  - Tighten VSIX packaging rules
+  - Document `$P` print tools and the PDMS command starter whitelist in README
+
+---
+
 ### v0.11.4 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -692,20 +712,25 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.4
+**Version:** 0.11.5
 **Released:** 2026-05-08
 
 **Statistics:**
-- Extension size: **2.1 MB** (bundled with esbuild)
-- Files in VSIX: 43 files
+- Extension size: **2.0 MB** (bundled with esbuild)
+- Files in VSIX: 15 files
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **90 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
+- Tests: **95 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.4):**
+**Recent Changes (v0.11.5):**
+- ✅ **Post-Review Parser Hardening** - PDMS starter matching no longer collides with normal calls/expressions
+- ✅ **`$P` Print Tool Optimization** - Debounced/cached scans and safer hover command targets
+- ✅ **Packaging Cleanup** - VSIX ships fewer dev-only files
+
+**Previous Changes (v0.11.4):**
 - ✅ **PDMS Command Whitelist** - Curated command starters shared by parser and semantic highlighting
 - ✅ **`$P` Print Tools** - Full-line print highlighting, status count, hover actions, next/previous navigation
 - ✅ **Print Cleanup Commands** - Comment all, uncomment all, and delete all `$P` print lines

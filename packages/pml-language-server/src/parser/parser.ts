@@ -1018,7 +1018,7 @@ export class Parser {
 		}
 
 		// $P line command: everything after $P on the same line is text output.
-		if (this.check(TokenType.SUBSTITUTE_VAR) && this.peek().value.toLowerCase() === '$p') {
+		if (this.isPrintLineCommandStart()) {
 			return this.parseLineCommandStatement();
 		}
 
@@ -2077,7 +2077,35 @@ export class Parser {
 			return false;
 		}
 
-		return isPdmsCommandStarter(this.peek().value);
+		const startToken = this.peek();
+		if (!isPdmsCommandStarter(startToken.value)) {
+			return false;
+		}
+
+		const nextToken = this.peekNext();
+		if (nextToken.line !== startToken.line) {
+			return true;
+		}
+
+		return ![
+			TokenType.LPAREN,
+			TokenType.DOT,
+			TokenType.LBRACKET,
+			TokenType.ASSIGN,
+			TokenType.OF
+		].includes(nextToken.type);
+	}
+
+	private isPrintLineCommandStart(): boolean {
+		if (!this.check(TokenType.SUBSTITUTE_VAR)) {
+			return false;
+		}
+
+		const token = this.peek();
+		const nextChar = this.sourceText[token.offset + token.length];
+		return token.value.toLowerCase() === '$p' &&
+		       token.length === 2 &&
+		       (nextChar === undefined || /\s/.test(nextChar));
 	}
 
 	/**
@@ -2137,6 +2165,10 @@ export class Parser {
 
 	private peek(): Token {
 		return this.tokens[this.current];
+	}
+
+	private peekNext(): Token {
+		return this.tokens[Math.min(this.current + 1, this.tokens.length - 1)];
 	}
 
 	private previous(): Token {

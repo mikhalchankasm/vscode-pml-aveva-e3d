@@ -1,4 +1,43 @@
-# Release Notes - v0.11.4
+# Release Notes - v0.11.5
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.11.5
+
+### Post-Review Parser Hardening
+
+- PDMS command starter highlighting now applies only to the first non-whitespace token on a line.
+- Whitelisted words such as `add`, `move`, `new`, and `pos` no longer swallow ordinary call, member, indexed, assignment, or `of` expressions.
+- `$P` print line parsing now requires whitespace or end-of-line after `$P`, aligning parser behavior with the print tools.
+
+### `$P` Print Tool Improvements
+
+- Debounced print decoration refreshes and cached scans per document version.
+- Re-resolved hover command targets by original line text before comment/delete actions.
+- Added pure utility coverage for print scanning, block-comment scoping, and comment/uncomment round-trips.
+- Declared current-line print commands for VS Code command/keybinding discovery.
+
+### Packaging and Documentation
+
+- Cleaned VSIX packaging rules so only runtime bundles and required user-facing files are included.
+- Documented `$P` print tools and the PDMS command starter whitelist in the README.
+
+### Validation
+
+- Language server tests: 95 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.5](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.5)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.4
 
 **Release Date:** 2026-05-08
 

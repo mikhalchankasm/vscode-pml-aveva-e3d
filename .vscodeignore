@@ -27,11 +27,19 @@ packages/**/src/**
 # Documentation and examples (reduce VSIX size)
 docs/**
 examples/**
+!examples/gadgets/
 !examples/gadgets/**
+assets/screenshots/**
 hide_examples/**
 scripts/**
 test.pml
 test-*.js
+ARCHITECTURE_ANALYSIS.md
+RELEASE_NOTES.md
+ROADMAP.md
+TROUBLESHOOTING.md
+V1.0_PLAN.md
+VERSIONING.md
 README_DEV.md
 RELEASE_NOTES_*.md
 .github/**
@@ -41,17 +49,23 @@ objects/**
 
 # Old VSIX files
 *.vsix
+*.vsix.sha256
 
 # Node modules - COMPLETELY EXCLUDED (bundled into single files)
 node_modules/**
 packages/pml-language-server/node_modules/**
-packages/pml-language-server/out/**/*.js
-packages/pml-language-server/out/**/*.d.ts
-packages/pml-language-server/out/**/*.map
+package-lock.json
+**/package-lock.json
+**/vitest.config.*
+packages/pml-language-server/out/**
 packages/pml-language-server/**/*.ts
 packages/pml-language-server/src/**
+packages/pml-language-server/README.md
+packages/pml-language-server/package.json
+out/**/*.js
+out/**/*.d.ts
+out/**/*.map
 
 # Include ONLY these bundled files
 !out/extension.js
 !packages/pml-language-server/out/server.js
-!packages/pml-language-server/package.json

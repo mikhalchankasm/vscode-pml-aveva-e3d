@@ -15,7 +15,8 @@ import {
 	GadgetDeclaration,
 	MemberDeclaration,
 	ExpressionStatement,
-	Identifier
+	Identifier,
+	CallExpression
 } from '../../ast/nodes';
 
 describe('PML Parser', () => {
@@ -215,6 +216,24 @@ endfunction
 			const func = result.ast.body[0] as FunctionDefinition;
 			expect(func.type).toBe('FunctionDefinition');
 			expect(func.body.some(statement => statement.type === 'DoStatement')).toBe(true);
+		});
+
+		it('should keep whitelisted command starters parseable as calls', () => {
+			const source = 'add(1, 2)';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
+
+			const statement = result.ast.body[0] as ExpressionStatement;
+			const call = statement.expression as CallExpression;
+			const callee = call.callee as Identifier;
+
+			expect(call.type).toBe('CallExpression');
+			expect(callee.name).toBe('add');
+			expect(call.arguments).toHaveLength(2);
 		});
 
 		it('should parse bare return without consuming the next statement', () => {

@@ -117,4 +117,24 @@ describe('SemanticTokensProvider', () => {
 			type: 'keyword'
 		});
 	});
+
+	it('should only highlight PDMS command starters at line start', () => {
+		const uri = 'file:///pdms-command-position.pml';
+		const source = '!result = add(1, 2)';
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+
+		const provider = new SemanticTokensProvider(documents as any);
+		const result = provider.provideFull({ textDocument: { uri } });
+		const tokens = decodeTokens(result.data);
+
+		expect(tokens.some(token =>
+			token.line === 0 &&
+			token.start === source.indexOf('add') &&
+			token.length === 3 &&
+			token.type === 'keyword'
+		)).toBe(false);
+	});
 });

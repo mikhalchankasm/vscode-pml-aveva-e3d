@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.11.3-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.11.5-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -25,13 +25,15 @@
 - 🔢 **Array Tools** — Smart array indexing, reindexing, and manipulation commands
 - 📝 **Form Gadget Snippets** — Code snippets for Button, Frame, and other form gadgets
 - 📚 **Context Menus** — Quick access to sorting, array manipulation, and form tools
+- 🖨️ **`$P` Print Tools** — Highlight print/debug lines, show a status count, navigate next/previous, comment, uncomment, or delete print lines
+- 🧭 **PDMS Command Compatibility** — Curated PDMS command starter whitelist for command-style PML lines
 
 ### 🚀 Quick Start
 
 #### Installation
 
 **Option 1: From GitHub Releases** (Recommended)
-1. Download `pml-aveva-e3d-0.11.3.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Download `pml-aveva-e3d-0.11.5.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. In VSCode: `Extensions` → `...` → `Install from VSIX`
 3. Reload VSCode
 
@@ -51,6 +53,23 @@ npm run pack  # Creates pml-aveva-e3d-X.X.X.vsix
 
 ### 📁 Supported File Types
 `.pml` `.pmlobj` `.pmlfnc` `.pmlfrm` `.pmlmac` `.pmlcmd`
+
+### 🖨️ `$P` Print Tools
+
+Lines that start with `$P` or `$p` are treated as PML print/debug output lines:
+
+- full-line highlighting and overview ruler marker;
+- active-file counter in the status bar;
+- hover actions: `Prev`, `Next`, `Comment`, `Delete`, `Actions`;
+- command palette actions: next/previous print, comment all, uncomment all, delete all.
+
+### 🧭 PDMS Command Starter Whitelist
+
+The parser accepts curated PDMS command-style lines via:
+
+`packages/pml-language-server/src/data/pdmsCommands.ts`
+
+Add only the first command word, in lowercase, for example `move`, `add`, or `q`.
 
 ### 📚 Documentation
 
@@ -109,13 +128,15 @@ MIT License - see [LICENSE](LICENSE)
 - 📋 **Подсказки параметров** — Помощь при вызове методов
 - 🎯 **Информация при наведении** — Быстрая документация
 - 🗂️ **Индексация проекта** — Быстрый поиск символов по всему проекту
+- 🖨️ **Инструменты `$P`** — Подсветка print/debug строк, счетчик, переход next/previous, comment/uncomment/delete
+- 🧭 **Совместимость с PDMS-командами** — Редактируемый whitelist стартовых слов PDMS-команд
 
 ### 🚀 Быстрый старт
 
 #### Установка
 
 **Вариант 1: Из GitHub Releases** (Рекомендуется)
-1. Скачайте `pml-aveva-e3d-0.11.3.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Скачайте `pml-aveva-e3d-0.11.5.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. В VSCode: `Расширения` → `...` → `Установить из VSIX`
 3. Перезагрузите VSCode
 
@@ -135,6 +156,18 @@ npm run pack  # Создаёт pml-aveva-e3d-X.X.X.vsix
 
 ### 📁 Поддерживаемые типы файлов
 `.pml` `.pmlobj` `.pmlfnc` `.pmlfrm` `.pmlmac` `.pmlcmd`
+
+### 🖨️ Инструменты `$P`
+
+Строки, которые начинаются с `$P` или `$p`, подсвечиваются как print/debug output. В редакторе доступен счетчик в status bar, hover-действия и команды для перехода к следующей/предыдущей print-строке, а также comment/uncomment/delete.
+
+### 🧭 Whitelist PDMS-команд
+
+Whitelist стартовых слов команд лежит здесь:
+
+`packages/pml-language-server/src/data/pdmsCommands.ts`
+
+Добавляйте только первое слово команды в lowercase, например `move`, `add`, `q`.
 
 ### 📚 Документация
 
