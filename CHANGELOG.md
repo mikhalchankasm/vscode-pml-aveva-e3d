@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.2] - 2026-05-08
+
+### Fixed
+
+- Parsed additional form gadget declarations used in real `.pmlfrm` files: `container`, `menu popup`, `para`, and `paragraph`.
+- Recovered cleanly from draft member-access lines that end after a dot, such as `!k.`, without cascading parser errors.
+- Accepted angle-bracket substitution expressions such as `$!<this.name>`.
+- Kept same-line gadget modifiers such as `button .name ... toggle ...` from being mistaken for new gadget declarations.
+
+### Improved
+
+- Extended `.pmlfrm` smoke coverage to hidden real-world fixtures under `hide_examples/`.
+- Reduced real fixture parser noise: `traExampleButtons.pmlfrm` and `equibasic.pmlfrm` now parse with zero errors.
+
 ## [0.12.1] - 2026-05-08
 
 ### Fixed

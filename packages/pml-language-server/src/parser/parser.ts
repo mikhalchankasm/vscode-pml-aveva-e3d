@@ -415,10 +415,8 @@ export class Parser {
 				continue;
 			}
 
-			// Parse gadget declarations (button, text, combo, option, toggle)
-			if (token.type === TokenType.BUTTON || token.type === TokenType.TEXT ||
-			    token.type === TokenType.COMBO || token.type === TokenType.OPTION ||
-			    token.type === TokenType.TOGGLE) {
+			// Parse gadget declarations (button, text, combo, option, toggle, container, menu)
+			if (this.isGadgetDeclarationStart(token.type)) {
 				try {
 					const gadget = this.parseGadget();
 					body.push(gadget as unknown as Statement);
@@ -553,6 +551,10 @@ export class Parser {
 		       token.type === TokenType.BUTTON ||
 		       token.type === TokenType.TEXT ||
 		       token.type === TokenType.COMBO ||
+		       token.type === TokenType.CONTAINER ||
+		       token.type === TokenType.MENU ||
+		       token.type === TokenType.PARA ||
+		       token.type === TokenType.PARAGRAPH ||
 		       token.type === TokenType.TRACK ||
 		       token.type === TokenType.OPTION ||
 		       token.type === TokenType.TOGGLE ||
@@ -583,10 +585,8 @@ export class Parser {
 				continue;
 			}
 
-			// Parse gadget (button, text, combo, option, toggle)
-			if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
-			    this.check(TokenType.COMBO) || this.check(TokenType.OPTION) ||
-			    this.check(TokenType.TOGGLE)) {
+			// Parse gadget (button, text, combo, option, toggle, container, menu)
+			if (this.isGadgetDeclarationStart(this.peek().type)) {
 				gadgets.push(this.parseGadget());
 			} else {
 				this.advance();
@@ -629,6 +629,8 @@ export class Parser {
 	 * button .name |Label| [OK|CANCEL|APPLY|RESET] [at x<num>]
 	 * text .name |width| [at x<num>]
 	 * combo .name |Label| [at x<num>] [width <num>]
+	 * container .name [nobox] [controlType] [|Label|] [at x<num>] [wid <num>] [hei <num>]
+	 * menu .name [popup]
 	 * option .name |width| |Label| [at x<num>]
 	 * toggle .name |Label| [at x<num>]
 	 */
@@ -646,6 +648,18 @@ export class Parser {
 		} else if (this.check(TokenType.COMBO)) {
 			gadgetType = 'combo';
 			this.advance();
+		} else if (this.check(TokenType.CONTAINER)) {
+			gadgetType = 'container';
+			this.advance();
+		} else if (this.check(TokenType.MENU)) {
+			gadgetType = 'menu';
+			this.advance();
+		} else if (this.check(TokenType.PARA)) {
+			gadgetType = 'para';
+			this.advance();
+		} else if (this.check(TokenType.PARAGRAPH)) {
+			gadgetType = 'paragraph';
+			this.advance();
 		} else if (this.check(TokenType.OPTION)) {
 			gadgetType = 'option';
 			this.advance();
@@ -653,7 +667,7 @@ export class Parser {
 			gadgetType = 'toggle';
 			this.advance();
 		} else {
-			throw this.error(this.peek(), "Expected gadget type (button, text, combo, option, toggle)");
+			throw this.error(this.peek(), "Expected gadget type (button, text, combo, option, toggle, container, menu, para)");
 		}
 
 		// Gadget name (.name)
@@ -701,6 +715,26 @@ export class Parser {
 			if (this.check(TokenType.STRING)) {
 				label = this.advance().value;
 			}
+		} else if (gadgetType === 'container') {
+			// container .name [nobox] [controlType] [|Label|] [...]
+			if (this.check(TokenType.NOBOX)) {
+				properties.nobox = true;
+				this.advance();
+			}
+
+			if (this.check(TokenType.IDENTIFIER)) {
+				properties.controlType = this.advance().value;
+			}
+
+			if (this.check(TokenType.STRING)) {
+				label = this.advance().value;
+			}
+		} else if (gadgetType === 'menu') {
+			// menu .name [popup]
+			if (this.check(TokenType.POPUP)) {
+				properties.popup = true;
+				this.advance();
+			}
 		} else if (gadgetType === 'option') {
 			// option .name |width| |Label| [at x<num>]
 			if (this.check(TokenType.STRING)) {
@@ -741,6 +775,18 @@ export class Parser {
 			properties,
 			range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
 		};
+	}
+
+	private isGadgetDeclarationStart(type: TokenType): boolean {
+		return type === TokenType.BUTTON ||
+		       type === TokenType.TEXT ||
+		       type === TokenType.COMBO ||
+		       type === TokenType.CONTAINER ||
+		       type === TokenType.MENU ||
+		       type === TokenType.PARA ||
+		       type === TokenType.PARAGRAPH ||
+		       type === TokenType.OPTION ||
+		       type === TokenType.TOGGLE;
 	}
 
 	/**
@@ -784,7 +830,7 @@ export class Parser {
 	private parseGadgetModifiers(line: number): GadgetModifiers {
 		const modifiers: GadgetModifiers = {};
 
-		while (this.isOnLine(line) && !this.isFormBodyStart()) {
+		while (this.isOnLine(line)) {
 			const token = this.peek();
 
 			if (token.type === TokenType.AT) {
@@ -875,7 +921,7 @@ export class Parser {
 
 		const startOffset = this.peek().offset;
 		let endOffset = startOffset;
-		while (this.isOnLine(line) && !this.isFormDeclarationStart()) {
+		while (this.isOnLine(line)) {
 			const token = this.peek();
 			if (token.type === TokenType.AT || this.getModifierKeyword(token)) {
 				break;
@@ -915,7 +961,7 @@ export class Parser {
 	}
 
 	private skipGadgetModifiers(line: number): void {
-		while (this.isOnLine(line) && !this.isFormBodyStart()) {
+		while (this.isOnLine(line)) {
 			this.advance();
 		}
 	}
@@ -927,6 +973,10 @@ export class Parser {
 		       token.type === TokenType.BUTTON ||
 		       token.type === TokenType.TEXT ||
 		       token.type === TokenType.COMBO ||
+		       token.type === TokenType.CONTAINER ||
+		       token.type === TokenType.MENU ||
+		       token.type === TokenType.PARA ||
+		       token.type === TokenType.PARAGRAPH ||
 		       token.type === TokenType.TRACK ||
 		       token.type === TokenType.OPTION ||
 		       token.type === TokenType.TOGGLE ||
@@ -1436,6 +1486,31 @@ export class Parser {
 			};
 		}
 
+		// Handle property chains at statement start: !this.value = ..., !object.method().
+		while (true) {
+			if (this.match(TokenType.METHOD)) {
+				const methodToken = this.previous();
+				left = this.createPropertyAccess(left, methodToken, methodToken.value.substring(1));
+				continue;
+			}
+
+			if (this.match(TokenType.DOT)) {
+				const dotToken = this.previous();
+				if (!this.check(TokenType.IDENTIFIER)) {
+					if (this.isRecoverableMissingProperty(dotToken)) {
+						break;
+					}
+					throw this.error(this.peek(), "Expected property name after '.'");
+				}
+
+				const propertyToken = this.advance();
+				left = this.createPropertyAccess(left, propertyToken, propertyToken.value);
+				continue;
+			}
+
+			break;
+		}
+
 		if (this.check(TokenType.LPAREN)) {
 			return this.parseCallFromExpression(left);
 		}
@@ -1799,7 +1874,11 @@ export class Parser {
 			}
 
 			if (this.match(TokenType.DOT)) {
+				const dotToken = this.previous();
 				if (!this.check(TokenType.IDENTIFIER)) {
+					if (this.isRecoverableMissingProperty(dotToken)) {
+						break;
+					}
 					throw this.error(this.peek(), "Expected property name after '.'");
 				}
 
@@ -1876,6 +1955,7 @@ export class Parser {
 					}
 				};
 			} else if (this.match(TokenType.DOT)) {
+				const dotToken = this.previous();
 				// Plain dot followed by identifier (for property access)
 				// This handles cases where DOT is separate from the identifier
 				let propertyName: string;
@@ -1885,6 +1965,9 @@ export class Parser {
 					propertyToken = this.advance();
 					propertyName = propertyToken.value;
 				} else {
+					if (this.isRecoverableMissingProperty(dotToken)) {
+						break;
+					}
 					throw this.error(this.peek(), "Expected property name after '.'");
 				}
 
@@ -1923,6 +2006,13 @@ export class Parser {
 		}
 
 		return expr;
+	}
+
+	private isRecoverableMissingProperty(dotToken: Token): boolean {
+		const nextToken = this.peek();
+		return nextToken.type === TokenType.EOF ||
+		       nextToken.type === TokenType.NEWLINE ||
+		       nextToken.line !== dotToken.line;
 	}
 
 	/**
@@ -2005,7 +2095,7 @@ export class Parser {
 		// Variable substitution ($!var, $!!global, $/attribute, $identifier)
 		if (this.check(TokenType.SUBSTITUTE_VAR)) {
 			const token = this.peek();
-			if (!/^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|\/[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)$/.test(token.value)) {
+			if (!/^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|!<[^>\r\n]+>|\/[A-Za-z_][A-Za-z0-9_]*|[A-Za-z_][A-Za-z0-9_]*)$/.test(token.value)) {
 				throw this.error(token, "Expected variable substitution (e.g., $!var)");
 			}
 

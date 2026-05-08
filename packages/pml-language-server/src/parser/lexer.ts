@@ -374,9 +374,19 @@ export class Lexer {
 				value += this.advance();
 			}
 
-			// Variable name
-			while (this.isAlphaNumeric(this.peek())) {
+			if (this.peek() === '<') {
 				value += this.advance();
+				while (!this.isAtEnd() && this.peek() !== '>' && this.peek() !== '\n' && this.peek() !== '\r') {
+					value += this.advance();
+				}
+				if (this.peek() === '>') {
+					value += this.advance();
+				}
+			} else {
+				// Variable name
+				while (this.isAlphaNumeric(this.peek())) {
+					value += this.advance();
+				}
 			}
 		} else if (next === '/') {
 			// $/ATTRIBUTE

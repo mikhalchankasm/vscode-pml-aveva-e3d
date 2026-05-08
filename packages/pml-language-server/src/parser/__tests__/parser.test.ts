@@ -430,6 +430,35 @@ exit
 			expect(result.ast.body.some(statement => statement.type === 'FormDefinition')).toBe(true);
 		});
 
+		it('should parse container, menu, para, and paragraph gadgets in forms', () => {
+			const source = `
+setup form !!AdvancedForm dialog
+	frame .gridFrame |Grid|
+		container .gridFramePipe nobox PMLNETCONTROL |TablePipe| at xmin.gridFrame + 0.25 wid 78 hei 13
+	exit
+	menu .menuPopup popup
+	para .lock anchor right + top text |Lock|
+	paragraph .offsetTag text |Offset|
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(form.frames[0].gadgets[0].gadgetType).toBe('container');
+			expect(form.frames[0].gadgets[0].properties.nobox).toBe(true);
+			expect(form.frames[0].gadgets[0].properties.controlType).toBe('PMLNETCONTROL');
+			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'para', 'paragraph']);
+			expect(gadgets[0].properties.popup).toBe(true);
+		});
+
 		it('should parse using namespace as a command-style statement', () => {
 			const source = `
 define method .firstShown()
@@ -535,6 +564,15 @@ exit
 			expect(initializer.name).toBe('$!site');
 		});
 
+		it('should parse angle-bracket variable substitution', () => {
+			const source = '!target = $!<this.name>';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should report incomplete variable substitution', () => {
 			const source = '$!';
 
@@ -594,6 +632,19 @@ endmethod
 
 			expect(result.errors).toHaveLength(0);
 			expect(result.ast.body).toHaveLength(1);
+		});
+
+		it('should recover from draft member access that ends after a dot', () => {
+			const source = `
+!draft.
+!after = 1
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(2);
 		});
 
 		it('should parse array access', () => {
