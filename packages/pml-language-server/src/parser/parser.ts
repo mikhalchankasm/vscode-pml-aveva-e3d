@@ -1330,6 +1330,10 @@ export class Parser {
 					this.advance();
 					by = this.parseExpression();
 				}
+			} else if (this.check(TokenType.TO)) {
+				this.advance();
+				variant = 'from-to';
+				to = this.parseExpression();
 			}
 		} else if (this.check(TokenType.WHILE)) {
 			this.advance();
@@ -1498,15 +1502,11 @@ export class Parser {
 
 			if (this.match(TokenType.DOT)) {
 				const dotToken = this.previous();
-				if (!this.check(TokenType.IDENTIFIER)) {
-					if (this.isRecoverableMissingProperty(dotToken)) {
-						break;
-					}
-					throw this.error(this.peek(), "Expected property name after '.'");
+				const propertyAccess = this.parsePropertyAfterDot(left, dotToken);
+				if (!propertyAccess) {
+					break;
 				}
-
-				const propertyToken = this.advance();
-				left = this.createPropertyAccess(left, propertyToken, propertyToken.value);
+				left = propertyAccess;
 				continue;
 			}
 
@@ -1588,7 +1588,7 @@ export class Parser {
 		const args = this.parseArguments();
 		const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
 
-		const expression: CallExpression = {
+		let expression: Expression = {
 			type: 'CallExpression',
 			callee,
 			arguments: args,
@@ -1597,6 +1597,53 @@ export class Parser {
 				end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
 			}
 		};
+
+		while (true) {
+			if (this.match(TokenType.METHOD)) {
+				const methodToken = this.previous();
+				expression = this.createPropertyAccess(expression, methodToken, methodToken.value.substring(1));
+				continue;
+			}
+
+			if (this.match(TokenType.DOT)) {
+				const dotToken = this.previous();
+				const propertyAccess = this.parsePropertyAfterDot(expression, dotToken);
+				if (!propertyAccess) {
+					break;
+				}
+				expression = propertyAccess;
+				continue;
+			}
+
+			if (this.match(TokenType.LBRACKET)) {
+				const indexExpr = this.parseExpression();
+				const endBracket = this.consume(TokenType.RBRACKET, "Expected ']' after array index");
+				expression = {
+					type: 'MemberExpression',
+					object: expression,
+					property: indexExpr,
+					computed: true,
+					range: {
+						start: expression.range.start,
+						end: { line: endBracket.line - 1, character: endBracket.column - 1 + endBracket.length }
+					}
+				};
+				continue;
+			}
+
+			break;
+		}
+
+		if (this.match(TokenType.ASSIGN)) {
+			const right = this.parseExpression();
+			expression = {
+				type: 'AssignmentExpression',
+				left: expression as Identifier | MemberExpression,
+				right,
+				operator: '=',
+				range: this.createRangeFromNodes(expression, right)
+			};
+		}
 
 		return {
 			type: 'ExpressionStatement',
@@ -1726,9 +1773,9 @@ export class Parser {
 	private parseComparison(): Expression {
 		let left = this.parseOf();
 
-		while (this.match(TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE)) {
+		while (this.match(TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE, TokenType.INSET)) {
 			const operator = this.previous().value;
-			const right = this.parseOf();
+			const right = operator.toLowerCase() === 'inset' ? this.parseInsetList() : this.parseOf();
 			left = {
 				type: 'BinaryExpression',
 				operator,
@@ -1739,6 +1786,32 @@ export class Parser {
 		}
 
 		return left;
+	}
+
+	private parseInsetList(): Expression {
+		if (!this.check(TokenType.LPAREN)) {
+			return this.parseOf();
+		}
+
+		const startToken = this.advance();
+		let depth = 1;
+		let endToken = startToken;
+
+		while (!this.isAtEnd() && depth > 0) {
+			const token = this.advance();
+			endToken = token;
+			if (token.type === TokenType.LPAREN) {
+				depth++;
+			} else if (token.type === TokenType.RPAREN) {
+				depth--;
+			}
+		}
+
+		return {
+			type: 'Identifier',
+			name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length),
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
 	}
 
 	/**
@@ -1877,15 +1950,11 @@ export class Parser {
 
 			if (this.match(TokenType.DOT)) {
 				const dotToken = this.previous();
-				if (!this.check(TokenType.IDENTIFIER)) {
-					if (this.isRecoverableMissingProperty(dotToken)) {
-						break;
-					}
-					throw this.error(this.peek(), "Expected property name after '.'");
+				const propertyAccess = this.parsePropertyAfterDot(expr, dotToken);
+				if (!propertyAccess) {
+					break;
 				}
-
-				const propertyToken = this.advance();
-				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
+				expr = propertyAccess;
 				continue;
 			}
 
@@ -1928,6 +1997,42 @@ export class Parser {
 		};
 	}
 
+	private parsePropertyAfterDot(object: Expression, dotToken: Token): MemberExpression | undefined {
+		if (this.check(TokenType.IDENTIFIER)) {
+			const propertyToken = this.advance();
+			return this.createPropertyAccess(object, propertyToken, propertyToken.value);
+		}
+
+		if (this.match(TokenType.COLON)) {
+			const colonToken = this.previous();
+			const attributeToken = this.consume(TokenType.IDENTIFIER, "Expected attribute name after '.:'");
+			return this.createNamedPropertyAccess(object, colonToken, attributeToken, `:${attributeToken.value}`);
+		}
+
+		if (this.isRecoverableMissingProperty(dotToken)) {
+			return undefined;
+		}
+
+		throw this.error(this.peek(), "Expected property name after '.'");
+	}
+
+	private createNamedPropertyAccess(object: Expression, startToken: Token, endToken: Token, propertyName: string): MemberExpression {
+		return {
+			type: 'MemberExpression',
+			object,
+			property: {
+				type: 'Identifier',
+				name: propertyName,
+				range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+			},
+			computed: false,
+			range: {
+				start: object.range.start,
+				end: { line: endToken.line - 1, character: endToken.column - 1 + endToken.length }
+			}
+		};
+	}
+
 	/**
 	 * Parse member expression (!var.method, !arr[index])
 	 */
@@ -1958,35 +2063,11 @@ export class Parser {
 				};
 			} else if (this.match(TokenType.DOT)) {
 				const dotToken = this.previous();
-				// Plain dot followed by identifier (for property access)
-				// This handles cases where DOT is separate from the identifier
-				let propertyName: string;
-				let propertyToken: Token;
-
-				if (this.check(TokenType.IDENTIFIER)) {
-					propertyToken = this.advance();
-					propertyName = propertyToken.value;
-				} else {
-					if (this.isRecoverableMissingProperty(dotToken)) {
-						break;
-					}
-					throw this.error(this.peek(), "Expected property name after '.'");
+				const propertyAccess = this.parsePropertyAfterDot(expr, dotToken);
+				if (!propertyAccess) {
+					break;
 				}
-
-				expr = {
-					type: 'MemberExpression',
-					object: expr,
-					property: {
-						type: 'Identifier',
-						name: propertyName,
-						range: this.createRange(this.getTokenIndex(propertyToken), this.getTokenIndex(propertyToken))
-					},
-					computed: false,
-					range: {
-						start: startPos,
-						end: { line: propertyToken.line - 1, character: propertyToken.column - 1 + propertyToken.length }
-					}
-				};
+				expr = propertyAccess;
 			} else if (this.match(TokenType.LBRACKET)) {
 				// Array access: [index]
 				const lbracketPos = this.current - 1;
@@ -2334,10 +2415,41 @@ export class Parser {
 		}
 
 		do {
-			args.push(this.parseExpression());
+			const argument = this.parseExpression();
+			args.push(this.consumeAdjacentArgumentFragments(argument));
 		} while (this.match(TokenType.COMMA));
 
 		return args;
+	}
+
+	private consumeAdjacentArgumentFragments(argument: Expression): Expression {
+		if (argument.type !== 'Literal' || argument.literalType !== 'string') {
+			return argument;
+		}
+
+		let endToken: Token | undefined;
+		while (!this.isAtEnd() &&
+		       this.peek().line === argument.range.end.line + 1 &&
+		       this.peek().type !== TokenType.COMMA &&
+		       this.peek().type !== TokenType.RPAREN) {
+			if (![TokenType.STRING, TokenType.SUBSTITUTE_VAR, TokenType.IDENTIFIER, TokenType.COLON].includes(this.peek().type)) {
+				break;
+			}
+			endToken = this.advance();
+		}
+
+		if (!endToken) {
+			return argument;
+		}
+
+		return {
+			type: 'Identifier',
+			name: 'argument_fragment',
+			range: {
+				start: argument.range.start,
+				end: { line: endToken.line - 1, character: endToken.column - 1 + endToken.length }
+			}
+		};
 	}
 
 	/**

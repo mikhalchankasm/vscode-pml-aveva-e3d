@@ -24,6 +24,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'syscom', category: 'system', brief: 'Runs a system command from the PML command stream.' },
 	{ name: 'tolerance', category: 'model', brief: 'Sets tolerance values used by later modelling commands.' },
 	{ name: 'trace', category: 'system', brief: 'Enables or disables trace output.' },
+	{ name: 'claim', category: 'system', brief: 'Claims database elements for modification.' },
 	{ name: 'unclaim', category: 'system', brief: 'Releases claimed database elements.' },
 	{ name: 'unlock', category: 'system', brief: 'Unlocks locked database elements or command state.' },
 	{ name: 'using', category: 'system', brief: 'Declares a namespace or external API scope for subsequent PML/.NET calls.' },

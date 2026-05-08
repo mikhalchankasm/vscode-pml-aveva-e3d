@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.5] - 2026-05-09
+
+### Fixed
+
+- Parsed PML attribute member access after calls and variables, such as `!pipeRef.:IsoDrNo` and `!j.DbRef().:IsoDrNo = ||`.
+- Parsed `inset (...)` comparisons used in form export logic.
+- Kept pipe-string substitution fragments such as `|matchwild(:IsoDrNo, |$!fileName|)|` inside call arguments.
+- Accepted `do !plot to $!isoCount` loop syntax.
+
+### Improved
+
+- Added `claim` to the PDMS command starter metadata.
+- Reduced the `examples/test2form.pmlfrm` parser smoke baseline from 85 to 49 errors.
+- Added parser regression coverage for the new real-form syntax cases.
+
 ## [0.12.4] - 2026-05-09
 
 ### Added

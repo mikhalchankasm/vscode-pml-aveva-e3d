@@ -647,6 +647,52 @@ endmethod
 			expect(result.ast.body).toHaveLength(2);
 		});
 
+		it('should parse PML attribute member access and inset comparisons', () => {
+			const source = `
+define method .check()
+	!locList.Append(!pipeRef.:IsoDrNo)
+	if (!!ce.own.type inset ( |CABLE|, |RPATH|)) then
+		CABLE
+	endif
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should keep pipe-string substitution fragments inside call arguments', () => {
+			const source = `
+define method .collect()
+	!coll = !!collectallfor(|pipe|, |matchwild(:IsoDrNo, |$!fileName|)|, world)
+	!collDr = !!collectallfor(|pipe|, |:IsoDrNo eq |$!dr||, world)
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse do-to loops and claim command lines used by form exports', () => {
+			const source = `
+define method .export()
+	claim all from !claimList
+	do !plot to $!isoCount
+		var !plotFile isodraw plotfile $!plot filename
+	enddo
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse array access', () => {
 			const source = '!item = !array[1]';
 

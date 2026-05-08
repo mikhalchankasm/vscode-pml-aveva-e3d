@@ -118,6 +118,7 @@ export enum TokenType {
 	LT = 'LT',
 	GE = 'GE',
 	LE = 'LE',
+	INSET = 'INSET',
 	AND = 'AND',
 	OR = 'OR',
 	NOT = 'NOT',
@@ -256,6 +257,7 @@ export const KEYWORDS: Record<string, TokenType> = {
 	'geq': TokenType.GE,
 	'le': TokenType.LE,
 	'leq': TokenType.LE,
+	'inset': TokenType.INSET,
 	'and': TokenType.AND,
 	'or': TokenType.OR,
 	'not': TokenType.NOT,
@@ -289,7 +291,7 @@ export function isOperator(type: TokenType): boolean {
 	return [
 		TokenType.PLUS, TokenType.MINUS, TokenType.STAR, TokenType.SLASH,
 		TokenType.POWER, TokenType.CONCAT, TokenType.MOD, TokenType.DIV,
-		TokenType.EQ, TokenType.NE, TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE,
+		TokenType.EQ, TokenType.NE, TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE, TokenType.INSET,
 		TokenType.AND, TokenType.OR, TokenType.NOT,
 		TokenType.ASSIGN
 	].includes(type);
@@ -300,7 +302,7 @@ export function isOperator(type: TokenType): boolean {
  */
 export function isComparisonOperator(type: TokenType): boolean {
 	return [
-		TokenType.EQ, TokenType.NE, TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE
+		TokenType.EQ, TokenType.NE, TokenType.GT, TokenType.LT, TokenType.GE, TokenType.LE, TokenType.INSET
 	].includes(type);
 }
 
