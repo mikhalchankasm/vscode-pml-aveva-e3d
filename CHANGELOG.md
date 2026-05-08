@@ -2,6 +2,17 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.6] - 2026-05-08
+
+### Improved - VSIX Asset Size
+
+- Resized `icons/pml-icon.png` from 1024x1024 to 256x256, reducing the icon from 1.84 MB to about 95 KB.
+- Reduced the packaged VSIX from about 2.02 MB to about 301 KB while preserving required runtime bundles and user-facing assets.
+
+### Cleanup
+
+- Removed obsolete commented-out legacy provider registration blocks from `src/extension.ts`.
+
 ## [0.11.5] - 2026-05-08
 
 ### Fixed - Post-Review Parser Hardening

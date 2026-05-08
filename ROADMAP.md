@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.6 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **VSIX Asset Size Reduction** ✅ COMPLETED
+  - Resize `icons/pml-icon.png` from 1024x1024 to 256x256
+  - Reduce icon asset size from 1.84 MB to about 95 KB
+  - Reduce packaged VSIX size from about 2.02 MB to about 301 KB
+
+- [x] **Extension Entry Cleanup** ✅ COMPLETED
+  - Remove obsolete commented-out legacy provider registration blocks from `src/extension.ts`
+  - Keep active extension activation code focused on currently registered providers and tools
+
+---
+
 ### v0.11.5 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -712,11 +727,11 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.5
+**Version:** 0.11.6
 **Released:** 2026-05-08
 
 **Statistics:**
-- Extension size: **2.0 MB** (bundled with esbuild)
+- Extension size: **0.3 MB** (bundled with esbuild)
 - Files in VSIX: 15 files
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
@@ -725,7 +740,11 @@ Development plans and progress tracking.
 - Tests: **95 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.5):**
+**Recent Changes (v0.11.6):**
+- ✅ **VSIX Asset Size Reduction** - Icon optimized and packaged VSIX reduced to about 301 KB
+- ✅ **Extension Entry Cleanup** - Obsolete commented-out legacy provider blocks removed
+
+**Previous Changes (v0.11.5):**
 - ✅ **Post-Review Parser Hardening** - PDMS starter matching no longer collides with normal calls/expressions
 - ✅ **`$P` Print Tool Optimization** - Debounced/cached scans and safer hover command targets
 - ✅ **Packaging Cleanup** - VSIX ships fewer dev-only files

@@ -1,14 +1,5 @@
 import * as vscode from 'vscode';
 import { PMLFormatter } from './formatter';
-// Legacy providers - replaced by Language Server Protocol (LSP)
-// import { PMLDiagnostics } from './diagnostics';
-// import { PMLCompletionProvider } from './completion';
-// import { PMLHoverProvider } from './hover';
-// import { PMLDocumentSymbolProvider } from './symbols';
-// import { PMLDefinitionProvider } from './definition';
-// import { PMLReferenceProvider } from './references';
-// import { PMLRenameProvider } from './rename';
-// import { PMLSignatureHelpProvider } from './signature';
 import { PMLToolsProvider } from './tools';
 import { PMLMethodCommands } from './methodCommands';
 import { PMLCodeActionProvider } from './codeActions';
@@ -63,37 +54,6 @@ export function activate(context: vscode.ExtensionContext) {
     const formatter = vscode.languages.registerDocumentFormattingEditProvider('pml', new PMLFormatter());
     context.subscriptions.push(formatter);
 
-    // Register completion provider
-    // TEMPORARILY DISABLED: LSP provides this now
-    // const completionProvider = vscode.languages.registerCompletionItemProvider(
-    //     'pml',
-    //     new PMLCompletionProvider(),
-    //     '.', '!', '|'  // Trigger characters
-    // );
-    // context.subscriptions.push(completionProvider);
-
-    // Register hover provider
-    // TEMPORARILY DISABLED: LSP provides this now
-    // const hoverProvider = vscode.languages.registerHoverProvider('pml', new PMLHoverProvider());
-    // context.subscriptions.push(hoverProvider);
-
-    // Register document symbol provider (Outline)
-    // TEMPORARILY DISABLED: LSP provides this now
-    // const symbolProvider = vscode.languages.registerDocumentSymbolProvider('pml', new PMLDocumentSymbolProvider());
-    // context.subscriptions.push(symbolProvider);
-
-    // Definition / References / Rename / Signature Help
-    // TEMPORARILY DISABLED: LSP provides these now (or will soon)
-    // context.subscriptions.push(vscode.languages.registerDefinitionProvider('pml', new PMLDefinitionProvider()));
-    // context.subscriptions.push(vscode.languages.registerReferenceProvider('pml', new PMLReferenceProvider()));
-    // context.subscriptions.push(vscode.languages.registerRenameProvider('pml', new PMLRenameProvider()));
-    // context.subscriptions.push(vscode.languages.registerSignatureHelpProvider('pml', new PMLSignatureHelpProvider(), '(', ','));
-
-    // Register diagnostics
-    // TEMPORARILY DISABLED: LSP provides diagnostics now
-    // const diagnostics = new PMLDiagnostics();
-    // context.subscriptions.push(diagnostics);
-
     // Register PML Tools commands
     const toolsProvider = new PMLToolsProvider();
     context.subscriptions.push(toolsProvider);
@@ -119,33 +79,6 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(codeActionProvider);
-
-    // Diagnostics event handlers
-    // TEMPORARILY DISABLED: LSP handles diagnostics automatically now
-    // if (vscode.window.activeTextEditor) {
-    //     diagnostics.updateDiagnostics(vscode.window.activeTextEditor.document);
-    // }
-    // context.subscriptions.push(
-    //     vscode.window.onDidChangeActiveTextEditor(editor => {
-    //         if (editor) {
-    //             diagnostics.updateDiagnostics(editor.document);
-    //         }
-    //     })
-    // );
-    // context.subscriptions.push(
-    //     vscode.workspace.onDidChangeTextDocument(event => {
-    //         if (event.document.languageId === 'pml') {
-    //             diagnostics.updateDiagnostics(event.document);
-    //         }
-    //     })
-    // );
-    // context.subscriptions.push(
-    //     vscode.workspace.onDidSaveTextDocument(document => {
-    //         if (document.languageId === 'pml') {
-    //             diagnostics.updateDiagnostics(document);
-    //         }
-    //     })
-    // );
 
     // Register format command
     const formatCommand = vscode.commands.registerCommand('pml.formatDocument', async () => {

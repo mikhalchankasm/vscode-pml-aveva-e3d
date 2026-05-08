@@ -1,4 +1,35 @@
-# Release Notes - v0.11.5
+# Release Notes - v0.11.6
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.11.6
+
+### VSIX Asset Size
+
+- Resized `icons/pml-icon.png` from 1024x1024 to 256x256.
+- Reduced the icon from 1.84 MB to about 95 KB.
+- Reduced the packaged VSIX from about 2.02 MB to about 301 KB while preserving runtime bundles and required user-facing assets.
+
+### Cleanup
+
+- Removed obsolete commented-out legacy provider registration blocks from `src/extension.ts`.
+
+### Validation
+
+- Language server tests: 95 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.6](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.6)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.5
 
 **Release Date:** 2026-05-08
 
