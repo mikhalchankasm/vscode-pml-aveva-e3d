@@ -4,6 +4,7 @@
 
 import { Hover, HoverParams, MarkupKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { getPdmsCommand } from '../data/pdmsCommands';
 import { SymbolIndex } from '../index/symbolIndex';
 
 export class HoverProvider {
@@ -60,6 +61,11 @@ export class HoverProvider {
 
 		const word = document.getText(wordRange);
 
+		const pdmsCommandHover = this.getPdmsCommandHover(word, document, wordRange);
+		if (pdmsCommandHover) {
+			return pdmsCommandHover;
+		}
+
 		// Extract method name from patterns like .method, var.method, !obj.method
 		let methodName: string | null = null;
 		if (word.startsWith('.')) {
@@ -96,6 +102,44 @@ export class HoverProvider {
 		}
 
 		return null;
+	}
+
+	private getPdmsCommandHover(
+		word: string,
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): Hover | null {
+		const command = getPdmsCommand(word);
+		if (!command || !this.isFirstTokenOnLine(document, wordRange.start.line, wordRange.start.character)) {
+			return null;
+		}
+
+		const content = [
+			`### PDMS Command: ${command.name.toUpperCase()}`,
+			'',
+			`**Category:** ${command.category}`,
+			'',
+			command.brief,
+			'',
+			'Recognized as a line command only when it is the first non-whitespace token on the line.'
+		].join('\n');
+
+		return {
+			contents: {
+				kind: MarkupKind.Markdown,
+				value: content
+			},
+			range: wordRange
+		};
+	}
+
+	private isFirstTokenOnLine(document: TextDocument, line: number, character: number): boolean {
+		const lineText = document.getText({
+			start: { line, character: 0 },
+			end: { line, character }
+		});
+
+		return lineText.trim().length === 0;
 	}
 
 	/**

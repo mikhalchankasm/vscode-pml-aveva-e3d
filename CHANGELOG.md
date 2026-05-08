@@ -2,6 +2,25 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.7] - 2026-05-08
+
+### Added - PDMS Command Metadata
+
+- Converted the PDMS command starter whitelist into categorized command metadata with short descriptions.
+- Added hover help for whitelisted PDMS command starters when they are the first non-whitespace token on a line.
+- Added regression tests for PDMS command metadata and line-start-only PDMS hover behavior.
+
+### Added - Form Diagnostics Control
+
+- Added `pml.diagnostics.formErrors` so `.pmlfrm` parser diagnostics can be enabled as warnings or errors while form DSL support matures.
+- Made `.pmlfrm` detection case-insensitive in language-server and form tool paths.
+
+### Improved - Maintenance
+
+- Expanded GitHub Actions CI to run TypeScript compile, root lint, language-server lint, language-server tests, and bundled compile.
+- Removed unused legacy client provider source files that are no longer imported by the extension entrypoint.
+- Replaced version-specific VSIX install examples in `README.md` with a version-neutral filename pattern.
+
 ## [0.11.6] - 2026-05-08
 
 ### Improved - VSIX Asset Size

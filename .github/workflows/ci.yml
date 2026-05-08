@@ -13,8 +13,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: npm ci || npm install
-      - run: cd packages/pml-language-server && npm ci || npm install
+          node-version: 20.18.1
+      - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - run: cd packages/pml-language-server && npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - run: npm run compile:tsc
       - run: npm run lint
+      - run: npx eslint packages/pml-language-server/src --ext ts
+      - run: npm --prefix packages/pml-language-server run test -- --run
       - run: npm run compile

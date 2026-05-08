@@ -1,0 +1,21 @@
+import { describe, expect, it } from 'vitest';
+import { getPdmsCommand, isPdmsCommandStarter, PDMS_COMMANDS, PDMS_COMMAND_STARTERS } from '../pdmsCommands';
+
+describe('PDMS command data', () => {
+	it('keeps command starters lowercase and unique', () => {
+		const uniqueNames = new Set(PDMS_COMMAND_STARTERS);
+
+		expect(uniqueNames.size).toBe(PDMS_COMMAND_STARTERS.length);
+		expect(PDMS_COMMAND_STARTERS.every(name => name === name.toLowerCase())).toBe(true);
+	});
+
+	it('exposes categorized command metadata for hover and parser use', () => {
+		const move = getPdmsCommand('MOVE');
+
+		expect(move).toBeDefined();
+		expect(move?.category).toBe('model');
+		expect(move?.brief.length).toBeGreaterThan(0);
+		expect(isPdmsCommandStarter('move')).toBe(true);
+		expect(PDMS_COMMANDS.every(command => command.category && command.brief)).toBe(true);
+	});
+});

@@ -236,6 +236,7 @@ interface PMLSettings {
 		unusedVariables: 'warning' | 'off';
 		arrayIndexZero: 'error' | 'warning' | 'off';
 		typoDetection: 'warning' | 'off';
+		formErrors: 'error' | 'warning' | 'off';
 	};
 }
 
@@ -249,7 +250,8 @@ const defaultSettings: PMLSettings = {
 		typeChecking: 'error',
 		unusedVariables: 'warning',
 		arrayIndexZero: 'error',
-		typoDetection: 'off'  // Default off; when enabled, uses Levenshtein distance on parse errors
+		typoDetection: 'off',  // Default off; when enabled, uses Levenshtein distance on parse errors
+		formErrors: 'off'
 	}
 };
 
@@ -354,13 +356,19 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		// SymbolIndex stores the necessary information from AST
 		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
 
-		// Convert parse errors to diagnostics (skip for forms - they have special syntax)
-		const isFormFile = textDocument.uri.endsWith('.pmlfrm');
+		// Convert parse errors to diagnostics. Form files use a broader DSL, so
+		// diagnostics stay opt-in until the form parser is first-class.
+		const isFormFile = textDocument.uri.toLowerCase().endsWith('.pmlfrm');
+		const formErrors = settings.diagnostics.formErrors ?? defaultSettings.diagnostics.formErrors;
+		const shouldReportParseErrors = !isFormFile || formErrors !== 'off';
 
-		if (!isFormFile) {
+		if (shouldReportParseErrors) {
+			const parseErrorSeverity = isFormFile && formErrors === 'warning'
+				? DiagnosticSeverity.Warning
+				: DiagnosticSeverity.Error;
 			for (const error of parseResult.errors) {
 				diagnostics.push({
-					severity: DiagnosticSeverity.Error,
+					severity: parseErrorSeverity,
 					range: {
 						start: { line: error.token.line - 1, character: error.token.column - 1 },
 						end: { line: error.token.line - 1, character: error.token.column + error.token.length }

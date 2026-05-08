@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.11.6",
+  "version": "0.11.7",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -470,6 +470,21 @@
             "Error on zero-based array indices"
           ],
           "description": "Array index checking (PML arrays are 1-based)"
+        },
+        "pml.diagnostics.formErrors": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "warning",
+            "error"
+          ],
+          "enumDescriptions": [
+            "Suppress parser diagnostics for .pmlfrm files while form DSL support is incomplete",
+            "Show .pmlfrm parser diagnostics as warnings",
+            "Show .pmlfrm parser diagnostics as errors"
+          ],
+          "description": "Parser diagnostics for .pmlfrm files"
         },
         "pml.indexing.exclude": {
           "type": "array",

@@ -441,6 +441,26 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.7 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **PDMS Command Metadata Foundation** ✅ COMPLETED
+  - Convert command starters into categorized metadata with short descriptions
+  - Add line-start-only hover help for whitelisted PDMS command starters
+  - Add regression tests for command metadata and hover behavior
+
+- [x] **Form Diagnostics Control** ✅ COMPLETED
+  - Add `pml.diagnostics.formErrors` for opt-in `.pmlfrm` parser diagnostics
+  - Make `.pmlfrm` detection case-insensitive in language-server and form tool paths
+
+- [x] **Maintenance Cleanup** ✅ COMPLETED
+  - Remove unused legacy client provider source files
+  - Expand GitHub Actions CI coverage
+  - Keep README VSIX install examples version-neutral
+
+---
+
 ### v0.11.6 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -727,7 +747,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.6
+**Version:** 0.11.7
 **Released:** 2026-05-08
 
 **Statistics:**
@@ -735,12 +755,17 @@ Development plans and progress tracking.
 - Files in VSIX: 15 files
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
-- Diagnostics: 3 types (configurable severity levels)
+- Diagnostics: 4 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **95 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities)
+- Tests: **98 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.6):**
+**Recent Changes (v0.11.7):**
+- ✅ **PDMS Command Metadata** - Command starters now carry category/hover descriptions
+- ✅ **Form Diagnostics Control** - `.pmlfrm` parser diagnostics can be enabled as warnings/errors
+- ✅ **Maintenance Cleanup** - Legacy provider sources removed and CI expanded
+
+**Previous Changes (v0.11.6):**
 - ✅ **VSIX Asset Size Reduction** - Icon optimized and packaged VSIX reduced to about 301 KB
 - ✅ **Extension Entry Cleanup** - Obsolete commented-out legacy provider blocks removed
 

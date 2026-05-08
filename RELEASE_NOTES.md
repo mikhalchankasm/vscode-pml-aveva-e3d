@@ -1,4 +1,42 @@
-# Release Notes - v0.11.6
+# Release Notes - v0.11.7
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.11.7
+
+### PDMS Command Metadata and Hover
+
+- Converted the PDMS command starter whitelist into categorized command metadata with short descriptions.
+- Added hover help for whitelisted PDMS command starters when they are the first non-whitespace token on a line.
+- Added regression tests for command metadata and hover behavior.
+
+### Form Diagnostics Control
+
+- Added `pml.diagnostics.formErrors` to let users opt into `.pmlfrm` parser diagnostics as warnings or errors.
+- Made `.pmlfrm` file detection case-insensitive in language-server and form tool paths.
+
+### Maintenance
+
+- Expanded GitHub Actions CI to run TypeScript compile, root lint, language-server lint, language-server tests, and bundled compile.
+- Removed unused legacy client provider source files that are no longer imported by the extension entrypoint.
+- Replaced version-specific VSIX install examples in `README.md` with a version-neutral filename pattern.
+
+### Validation
+
+- Language server tests: 98 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.7](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.7)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.6
 
 **Release Date:** 2026-05-08
 

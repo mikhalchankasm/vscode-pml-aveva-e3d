@@ -42,7 +42,7 @@ export class CompletionProvider {
 			// For other files, show current document methods + built-ins
 			const currentMethods = this.getCurrentDocumentMethodCompletions(document);
 
-			const isFormFile = document.uri.endsWith('.pmlfrm');
+			const isFormFile = document.uri.toLowerCase().endsWith('.pmlfrm');
 			if (isFormFile) {
 				// Forms: only show methods defined in this form
 				return currentMethods;

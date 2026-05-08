@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.11.6-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.11.7-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -33,7 +33,7 @@
 #### Installation
 
 **Option 1: From GitHub Releases** (Recommended)
-1. Download `pml-aveva-e3d-0.11.6.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Download the latest `pml-aveva-e3d-*.vsix` from [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. In VSCode: `Extensions` → `...` → `Install from VSIX`
 3. Reload VSCode
 
@@ -69,7 +69,7 @@ The parser accepts curated PDMS command-style lines via:
 
 `packages/pml-language-server/src/data/pdmsCommands.ts`
 
-Add only the first command word, in lowercase, for example `move`, `add`, or `q`.
+Entries include the first command word, category, and short hover text. Add only the first command word in lowercase, for example `move`, `add`, or `q`.
 
 ### 📚 Documentation
 
@@ -136,7 +136,7 @@ MIT License - see [LICENSE](LICENSE)
 #### Установка
 
 **Вариант 1: Из GitHub Releases** (Рекомендуется)
-1. Скачайте `pml-aveva-e3d-0.11.6.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+1. Скачайте последний `pml-aveva-e3d-*.vsix` из [Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 2. В VSCode: `Расширения` → `...` → `Установить из VSIX`
 3. Перезагрузите VSCode
 
@@ -167,7 +167,7 @@ Whitelist стартовых слов команд лежит здесь:
 
 `packages/pml-language-server/src/data/pdmsCommands.ts`
 
-Добавляйте только первое слово команды в lowercase, например `move`, `add`, `q`.
+Записи содержат первое слово команды, категорию и короткий hover-текст. Добавляйте только первое слово команды в lowercase, например `move`, `add`, `q`.
 
 ### 📚 Документация
 

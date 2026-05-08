@@ -906,7 +906,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const document = editor.document;
 
         // Check if this is a form file
-        if (!document.fileName.endsWith('.pmlfrm')) {
+        if (!document.fileName.toLowerCase().endsWith('.pmlfrm')) {
             vscode.window.showWarningMessage('This command is designed for .pmlfrm files');
         }
 
@@ -939,7 +939,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const document = editor.document;
 
         // Check if this is a form file
-        if (!document.fileName.endsWith('.pmlfrm')) {
+        if (!document.fileName.toLowerCase().endsWith('.pmlfrm')) {
             vscode.window.showWarningMessage('This command is designed for .pmlfrm files');
         }
 
