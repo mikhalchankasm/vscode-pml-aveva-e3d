@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.1] - 2026-05-08
+
+### Fixed
+
+- Removed an accidental JavaScript snippet from `examples/ceposition.pmlfrm`, making it a zero-error form parser smoke fixture.
+- Tightened form callback extraction so unrelated member names such as `recall` and `callRegistry` are not captured as callbacks.
+
+### Improved
+
+- Added `.pmlfrm` fixture smoke tests that parse `examples/*.pmlfrm` and enforce non-regression baselines.
+- Updated `VERSIONING.md` so the documented `0.12.0` milestone matches the shipped form parser foundation.
+
 ## [0.12.0] - 2026-05-08
 
 ### Added - First-Class `.pmlfrm` Parser Foundation

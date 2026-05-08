@@ -488,7 +488,7 @@ export class Parser {
 		}
 
 		const propertyPath = this.expressionPath(expression.left);
-		if (!propertyPath || !/call/i.test(propertyPath)) {
+		if (!propertyPath || !this.isFormCallbackPath(propertyPath)) {
 			return;
 		}
 
@@ -512,6 +512,24 @@ export class Parser {
 		}
 
 		return undefined;
+	}
+
+	private isFormCallbackPath(propertyPath: string): boolean {
+		const propertyName = propertyPath.split('.').pop()?.toLowerCase();
+		if (!propertyName) {
+			return false;
+		}
+
+		return [
+			'callback',
+			'initcall',
+			'firstshowncall',
+			'okcall',
+			'cancelcall',
+			'quitcall',
+			'killcall',
+			'killingcall'
+		].includes(propertyName);
 	}
 
 	private callbackText(expression: Expression): string | undefined {

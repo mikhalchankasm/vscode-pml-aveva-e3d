@@ -217,10 +217,7 @@ define method .move(!gadget is gadget, !action is string)
         return
     endhandle
 
-    for (let i = 0; i < 5; i++) {
-  console.log('Hello world!');
-}
-!newU = $!u
+    !newU = $!u
     handle any
         return
     endhandle

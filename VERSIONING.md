@@ -24,8 +24,8 @@ During the 0.x.x phase, the versioning strategy is:
 #### MINOR Version Bumps (0.x.0)
 - **0.9.0** → Added parser improvements, new commands
 - **0.10.0** → Added Frame Gadgets support (9 snippets + tutorial + menu)
-- **0.11.0** → Will add Text/TextField Gadgets (future)
-- **0.12.0** → Will add Option/OptionList Gadgets (future)
+- **0.11.0** → Added rename, semantic highlighting, workspace indexing progress, and parser diagnostics improvements
+- **0.12.0** → Added the first-class `.pmlfrm` parser foundation
 
 #### PATCH Version Bumps (0.x.y)
 - **0.9.9** → **0.9.10** - Fix typos in snippets

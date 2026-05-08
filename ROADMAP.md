@@ -441,6 +441,24 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.1 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Form Fixture Cleanup** ✅ COMPLETED
+  - Remove accidental JavaScript from `examples/ceposition.pmlfrm`
+  - Keep `ceposition.pmlfrm` as a zero-error parser smoke fixture
+
+- [x] **Callback Extraction Tightening** ✅ COMPLETED
+  - Avoid capturing unrelated members like `recall` and `callRegistry`
+  - Keep known AVEVA callback fields and `.callback` assignments supported
+
+- [x] **Fixture Smoke Tests** ✅ COMPLETED
+  - Parse `examples/*.pmlfrm` in CI tests
+  - Enforce non-regression baselines while allowing future parser improvements
+
+---
+
 ### v0.12.0 - 2026-05-08 ✅ COMPLETED
 
 ### First-Class `.pmlfrm` Foundation
@@ -783,7 +801,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.0
+**Version:** 0.12.1
 **Released:** 2026-05-08
 
 **Statistics:**
@@ -793,10 +811,15 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 4 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, callback assignments, and import workflows
-- Tests: **103 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
+- Tests: **110 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.12.0):**
+**Recent Changes (v0.12.1):**
+- ✅ **Form Fixture Cleanup** - `ceposition.pmlfrm` is now a zero-error parser smoke fixture
+- ✅ **Callback Extraction Tightening** - unrelated `*call*` member names are no longer captured as callbacks
+- ✅ **Fixture Smoke Tests** - `examples/*.pmlfrm` parser baselines are covered by tests
+
+**Previous Changes (v0.12.0):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, and import wrappers parse more accurately
 - ✅ **Form Callback Extraction** - `!this.*call` and `!this.*.callback` bindings are captured in form metadata
 - ✅ **Import Workflow Compatibility** - `import`, `using namespace`, and numeric `handle` headers are accepted

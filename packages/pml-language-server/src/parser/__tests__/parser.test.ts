@@ -484,6 +484,23 @@ exit
 			expect(form.callbacks['this.Quitcall']).toBe('!this.quit()');
 			expect(form.callbacks['this.wrt.callback']).toBe('!this.changeWrt(');
 		});
+
+		it('should not extract unrelated form assignments that merely contain call', () => {
+			const source = `
+setup form !!CallbackForm
+	!this.recall = '!this.notCallback()'
+	!this.callRegistry = '!this.notCallbackEither()'
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.callbacks).toEqual({});
+		});
 	});
 
 	describe('Expressions', () => {

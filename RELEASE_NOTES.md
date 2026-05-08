@@ -1,4 +1,35 @@
-# Release Notes - v0.12.0
+# Release Notes - v0.12.1
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.12.1
+
+### Fixes
+
+- Removed an accidental JavaScript snippet from `examples/ceposition.pmlfrm`, making it a zero-error form parser smoke fixture.
+- Tightened form callback extraction so unrelated member names such as `recall` and `callRegistry` are not captured as callbacks.
+
+### Regression Coverage
+
+- Added `.pmlfrm` fixture smoke tests that parse `examples/*.pmlfrm` and enforce non-regression baselines.
+- Updated `VERSIONING.md` so the documented `0.12.0` milestone matches the shipped form parser foundation.
+
+### Validation
+
+- Language server tests: 110 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.12.1](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.1)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.12.0
 
 **Release Date:** 2026-05-08
 
