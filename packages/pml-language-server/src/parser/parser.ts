@@ -21,6 +21,7 @@ import {
 	createIntegerType, createAnyType, createDBRefType
 } from '../ast/nodes';
 import { Range } from 'vscode-languageserver-textdocument';
+import { isPdmsCommandStarter } from '../data/pdmsCommands';
 
 interface GadgetModifiers {
 	position?: number;
@@ -30,19 +31,6 @@ interface GadgetModifiers {
 	call?: string;
 	pixmap?: string;
 }
-
-const LINE_COMMANDS = new Set([
-	'autocolour',
-	'export',
-	'getwork',
-	'quit',
-	'representation',
-	'syscom',
-	'tolerance',
-	'trace',
-	'unclaim',
-	'unlock'
-]);
 
 export class Parser {
 	private tokens: Token[] = [];
@@ -2085,11 +2073,11 @@ export class Parser {
 	}
 
 	private isLineCommandStart(): boolean {
-		if (!this.check(TokenType.IDENTIFIER)) {
+		if (this.isAtEnd()) {
 			return false;
 		}
 
-		return LINE_COMMANDS.has(this.peek().value.toLowerCase());
+		return isPdmsCommandStarter(this.peek().value);
 	}
 
 	/**

@@ -97,4 +97,24 @@ describe('SemanticTokensProvider', () => {
 			type: 'keyword'
 		});
 	});
+
+	it('should highlight PDMS command starters as keywords', () => {
+		const uri = 'file:///pdms-command.pml';
+		const source = 'MOVE N45E DIST 1500';
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+
+		const provider = new SemanticTokensProvider(documents as any);
+		const result = provider.provideFull({ textDocument: { uri } });
+		const tokens = decodeTokens(result.data);
+
+		expect(tokens).toContainEqual({
+			line: 0,
+			start: 0,
+			length: 4,
+			type: 'keyword'
+		});
+	});
 });

@@ -2,6 +2,29 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.4] - 2026-05-08
+
+### Added - PDMS Command Compatibility
+
+- Added a repository-maintained PDMS command starter whitelist in `packages/pml-language-server/src/data/pdmsCommands.ts`.
+- Reused the whitelist in parser line-command handling so curated PDMS command lines are accepted without strict PML expression parsing.
+- Highlighted PDMS command starters as keywords in semantic tokens.
+- Seeded the whitelist with commands already observed in project files plus common examples such as `ADD`, `MOVE`, `Q`, and `BY`.
+
+### Added - `$P` Print Tools
+
+- Added full-line editor decorations for `$P ...` print/debug output lines.
+- Added a status bar `$P` counter for the active file.
+- Added hover-only print actions so print navigation and cleanup controls no longer add always-visible inline text.
+- Added commands for next/previous print navigation, comment all prints, uncomment all commented prints, delete all prints, and per-line comment/delete from hover links.
+- Ignored `$P` lines inside `$( ... $)` block comments for print decorations/actions.
+
+### Tests
+
+- Added parser regression coverage for whitelisted PDMS command starters.
+- Added semantic token regression coverage for PDMS command starter highlighting.
+- Validated language server tests, TypeScript builds, lint, bundled compile, VSIX packaging, and local VS Code/Cursor installation.
+
 ## [0.11.3] - 2026-05-07
 
 ### Fixed - Real PML Parser Coverage

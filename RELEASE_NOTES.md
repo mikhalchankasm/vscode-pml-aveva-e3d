@@ -1,4 +1,41 @@
-# Release Notes - v0.11.3
+# Release Notes - v0.11.4
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.11.4
+
+### PDMS Command Starter Whitelist
+
+- Added a curated PDMS command starter whitelist in `packages/pml-language-server/src/data/pdmsCommands.ts`.
+- Moved parser line-command recognition from an inline parser set into the shared whitelist.
+- Added initial entries from already observed project commands and common PDMS command examples, including `ADD`, `MOVE`, `Q`, and `BY`.
+- Highlighted whitelisted PDMS command starters as keywords in semantic tokens.
+
+### `$P` Print Tools
+
+- Added full-line visual highlighting for `$P ...` print/debug output commands.
+- Added a status bar counter showing how many active `$P` print lines are in the current file.
+- Added hover-only actions for `$P` lines: `Prev`, `Next`, `Comment`, `Delete`, and `Actions`.
+- Added PML Prints commands for next/previous navigation, comment all, uncomment all, delete all, and quick print actions.
+- Avoided always-visible CodeLens text after it proved too visually noisy in files with many print statements.
+- Ignored `$P` lines inside `$( ... $)` block comments for print decorations and actions.
+
+### Validation
+
+- Language server tests: 90 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.4](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.4)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.3
 
 **Release Date:** 2026-05-07
 

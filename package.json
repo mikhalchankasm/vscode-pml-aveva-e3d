@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.11.3",
+  "version": "0.11.4",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -198,6 +198,42 @@
         "icon": "$(comment-unresolved)"
       },
       {
+        "command": "pml.prints.next",
+        "title": "Next $P Print",
+        "category": "PML Prints",
+        "icon": "$(arrow-down)"
+      },
+      {
+        "command": "pml.prints.previous",
+        "title": "Previous $P Print",
+        "category": "PML Prints",
+        "icon": "$(arrow-up)"
+      },
+      {
+        "command": "pml.prints.clear",
+        "title": "$P Print Actions",
+        "category": "PML Prints",
+        "icon": "$(output)"
+      },
+      {
+        "command": "pml.prints.commentAll",
+        "title": "Comment All $P Prints",
+        "category": "PML Prints",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "pml.prints.uncommentAll",
+        "title": "Uncomment All $P Prints",
+        "category": "PML Prints",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "pml.prints.deleteAll",
+        "title": "Delete All $P Prints",
+        "category": "PML Prints",
+        "icon": "$(trash)"
+      },
+      {
         "command": "pml.alignPML",
         "title": "Align PML",
         "category": "PML Tools"
@@ -383,7 +419,11 @@
         "pml.diagnostics.typeChecking": {
           "type": "string",
           "default": "error",
-          "enum": ["off", "warning", "error"],
+          "enum": [
+            "off",
+            "warning",
+            "error"
+          ],
           "enumDescriptions": [
             "Disable type checking",
             "Show type errors as warnings",
@@ -394,7 +434,10 @@
         "pml.diagnostics.unusedVariables": {
           "type": "string",
           "default": "off",
-          "enum": ["off", "warning"],
+          "enum": [
+            "off",
+            "warning"
+          ],
           "enumDescriptions": [
             "Don't check for unused variables",
             "Warn about unused variables"
@@ -404,7 +447,11 @@
         "pml.diagnostics.arrayIndexZero": {
           "type": "string",
           "default": "error",
-          "enum": ["off", "warning", "error"],
+          "enum": [
+            "off",
+            "warning",
+            "error"
+          ],
           "enumDescriptions": [
             "Don't check array indices",
             "Warn about zero-based array indices",
@@ -518,6 +565,30 @@
         {
           "command": "pml.removeComments",
           "group": "6_comments@2"
+        },
+        {
+          "command": "pml.prints.clear",
+          "group": "7_prints@1"
+        },
+        {
+          "command": "pml.prints.next",
+          "group": "7_prints@2"
+        },
+        {
+          "command": "pml.prints.previous",
+          "group": "7_prints@3"
+        },
+        {
+          "command": "pml.prints.commentAll",
+          "group": "7_prints@4"
+        },
+        {
+          "command": "pml.prints.uncommentAll",
+          "group": "7_prints@5"
+        },
+        {
+          "command": "pml.prints.deleteAll",
+          "group": "7_prints@6"
         },
         {
           "submenu": "pml.forms",
@@ -640,6 +711,30 @@
         {
           "command": "pml.removeComments",
           "group": "6_comments@2"
+        },
+        {
+          "command": "pml.prints.clear",
+          "group": "7_prints@1"
+        },
+        {
+          "command": "pml.prints.next",
+          "group": "7_prints@2"
+        },
+        {
+          "command": "pml.prints.previous",
+          "group": "7_prints@3"
+        },
+        {
+          "command": "pml.prints.commentAll",
+          "group": "7_prints@4"
+        },
+        {
+          "command": "pml.prints.uncommentAll",
+          "group": "7_prints@5"
+        },
+        {
+          "command": "pml.prints.deleteAll",
+          "group": "7_prints@6"
         },
         {
           "submenu": "pml.forms",

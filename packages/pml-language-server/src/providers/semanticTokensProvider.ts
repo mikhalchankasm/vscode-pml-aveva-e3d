@@ -21,6 +21,7 @@ import {
 	TextDocuments
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { isPdmsCommandStarter } from '../data/pdmsCommands';
 
 // Define token types - order matters for encoding
 export const tokenTypes = [
@@ -302,7 +303,7 @@ export class SemanticTokensProvider {
 
 				if (TYPE_KEYWORDS.has(lowerWord)) {
 					builder.push(lineIndex, pos, word.length, TOKEN.TYPE, 0);
-				} else if (CONTROL_KEYWORDS.has(lowerWord)) {
+				} else if (CONTROL_KEYWORDS.has(lowerWord) || isPdmsCommandStarter(lowerWord)) {
 					builder.push(lineIndex, pos, word.length, TOKEN.KEYWORD, 0);
 				} else if (OPERATOR_KEYWORDS.has(lowerWord)) {
 					builder.push(lineIndex, pos, word.length, TOKEN.KEYWORD, 0);

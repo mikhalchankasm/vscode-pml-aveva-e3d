@@ -14,6 +14,7 @@ import { PMLMethodCommands } from './methodCommands';
 import { PMLCodeActionProvider } from './codeActions';
 import { activateLanguageServer, deactivateLanguageServer, ClientState } from './languageClient';
 import { sortMethodsAscending, sortMethodsDescending } from './commands/sortMethods';
+import { PMLPrintTools } from './printCommands';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('✅ PML extension activated');
@@ -96,6 +97,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Register PML Tools commands
     const toolsProvider = new PMLToolsProvider();
     context.subscriptions.push(toolsProvider);
+
+    // Register $P print helpers
+    new PMLPrintTools(context);
 
     // Register method commands
     PMLMethodCommands.registerCommands(context);

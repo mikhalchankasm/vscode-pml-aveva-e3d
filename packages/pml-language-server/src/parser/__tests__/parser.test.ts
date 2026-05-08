@@ -189,6 +189,10 @@ endfunction
 define function !!exportifczones()
 	GETWORK
 	trace off
+	ADD CE
+	MOVE N45E DIST 1500
+	Q REPRES
+	BY ID@ IDP@
 	!zones = array()
 	!zones[1] = /240000-АС14_Фр1
 	do !i index !zones

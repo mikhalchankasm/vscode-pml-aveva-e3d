@@ -441,6 +441,24 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.4 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **PDMS Command Starter Whitelist** ✅ COMPLETED
+  - Store curated command starters in `packages/pml-language-server/src/data/pdmsCommands.ts`
+  - Use the whitelist for parser line-command handling
+  - Highlight whitelisted command starters as semantic keywords
+  - Seed entries from observed project commands and common PDMS command examples
+
+- [x] **`$P` Print Tools** ✅ COMPLETED
+  - Highlight active `$P ...` lines with full-line decorations
+  - Add status bar count for active print lines
+  - Provide hover-only print actions to avoid persistent visual clutter
+  - Add next/previous navigation, comment all, uncomment all, and delete all commands
+
+---
+
 ### v0.11.3 - 2026-05-07 ✅ COMPLETED
 
 ### Patch Improvements
@@ -674,20 +692,25 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.3
-**Released:** 2026-05-07
+**Version:** 0.11.4
+**Released:** 2026-05-08
 
 **Statistics:**
 - Extension size: **2.1 MB** (bundled with esbuild)
-- Files in VSIX: 42 files
+- Files in VSIX: 43 files
 - LSP features: 13+ providers (with workspace-wide references)
-- Commands: 30+ (with array manipulation tools)
+- Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 3 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **89 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
+- Tests: **90 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.3):**
+**Recent Changes (v0.11.4):**
+- ✅ **PDMS Command Whitelist** - Curated command starters shared by parser and semantic highlighting
+- ✅ **`$P` Print Tools** - Full-line print highlighting, status count, hover actions, next/previous navigation
+- ✅ **Print Cleanup Commands** - Comment all, uncomment all, and delete all `$P` print lines
+
+**Previous Changes (v0.11.3):**
 - ✅ **Real PML Parser Coverage** - `proreport.pmlfnc` and `exportifczones.pmlfnc` parse with zero errors
 - ✅ **Comment Handling** - `$*` single-line and `$( ... $)` multi-line comments
 - ✅ **Output Highlighting** - `$P ...` lines highlighted for debug-output scans
