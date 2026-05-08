@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.11.8] - 2026-05-08
+
+### Fixed
+
+- Suppressed PDMS command hover inside PML comments, including `--`, `$*`, and `$( ... $)` block comments.
+- Stopped form-only tools after warning when the active file is not a `.pmlfrm` file.
+
+### Improved
+
+- Added VSIX packaging to GitHub Actions CI so packaging and `.vscodeignore` are checked before release.
+- Documented the `pml.diagnostics.formErrors` setting in the README.
+
 ## [0.11.7] - 2026-05-08
 
 ### Added - PDMS Command Metadata

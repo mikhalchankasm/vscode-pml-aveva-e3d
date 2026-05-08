@@ -1,4 +1,35 @@
-# Release Notes - v0.11.7
+# Release Notes - v0.11.8
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.11.8
+
+### Fixes
+
+- Suppressed PDMS command hover inside PML comments, including `--`, `$*`, and `$( ... $)` block comments.
+- Stopped form-only tools after warning when the active file is not a `.pmlfrm` file.
+
+### Maintenance
+
+- Added VSIX packaging to GitHub Actions CI so packaging and `.vscodeignore` are checked before release.
+- Documented the `pml.diagnostics.formErrors` setting in the README.
+
+### Validation
+
+- Language server tests: 99 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.11.8](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.11.8)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.7
 
 **Release Date:** 2026-05-08
 

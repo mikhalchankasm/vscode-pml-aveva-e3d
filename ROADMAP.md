@@ -441,6 +441,23 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.11.8 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **PDMS Hover Comment Awareness** ✅ COMPLETED
+  - Suppress PDMS command hover inside `--`, `$*`, and `$( ... $)` comments
+  - Add regression coverage for commented command starters
+
+- [x] **Form Tool Guards** ✅ COMPLETED
+  - Stop form-only commands after warning when the active document is not `.pmlfrm`
+
+- [x] **CI and Docs Maintenance** ✅ COMPLETED
+  - Add VSIX packaging to GitHub Actions CI
+  - Document `pml.diagnostics.formErrors` in README
+
+---
+
 ### v0.11.7 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -747,7 +764,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.7
+**Version:** 0.11.8
 **Released:** 2026-05-08
 
 **Statistics:**
@@ -757,10 +774,15 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 4 types (configurable severity levels)
 - Form support: Advanced parsing with Frame Gadgets
-- Tests: **98 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
+- Tests: **99 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.7):**
+**Recent Changes (v0.11.8):**
+- ✅ **PDMS Hover Comment Awareness** - Command hover no longer appears inside PML comments
+- ✅ **Form Tool Guards** - Form-only commands stop after warning on non-form files
+- ✅ **CI and Docs Maintenance** - CI now packages VSIX, README documents form diagnostics
+
+**Previous Changes (v0.11.7):**
 - ✅ **PDMS Command Metadata** - Command starters now carry category/hover descriptions
 - ✅ **Form Diagnostics Control** - `.pmlfrm` parser diagnostics can be enabled as warnings/errors
 - ✅ **Maintenance Cleanup** - Legacy provider sources removed and CI expanded

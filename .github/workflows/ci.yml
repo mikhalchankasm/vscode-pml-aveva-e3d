@@ -21,3 +21,4 @@ jobs:
       - run: npx eslint packages/pml-language-server/src --ext ts
       - run: npm --prefix packages/pml-language-server run test -- --run
       - run: npm run compile
+      - run: npm run pack

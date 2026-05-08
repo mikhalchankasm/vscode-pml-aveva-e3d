@@ -110,7 +110,11 @@ export class HoverProvider {
 		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
 	): Hover | null {
 		const command = getPdmsCommand(word);
-		if (!command || !this.isFirstTokenOnLine(document, wordRange.start.line, wordRange.start.character)) {
+		if (
+			!command ||
+			!this.isFirstTokenOnLine(document, wordRange.start.line, wordRange.start.character) ||
+			this.isPositionInComment(document, wordRange.start.line, wordRange.start.character)
+		) {
 			return null;
 		}
 
@@ -140,6 +144,67 @@ export class HoverProvider {
 		});
 
 		return lineText.trim().length === 0;
+	}
+
+	private isPositionInComment(document: TextDocument, targetLine: number, targetCharacter: number): boolean {
+		const lines = document.getText().split(/\r?\n/);
+		let inBlockComment = false;
+
+		for (let lineIndex = 0; lineIndex <= targetLine; lineIndex++) {
+			const line = lines[lineIndex] ?? '';
+			let pos = 0;
+
+			while (pos < line.length) {
+				if (inBlockComment) {
+					const endPos = line.indexOf('$)', pos);
+					if (lineIndex === targetLine && (endPos === -1 || targetCharacter < endPos + 2)) {
+						return true;
+					}
+					if (endPos === -1) {
+						break;
+					}
+					pos = endPos + 2;
+					inBlockComment = false;
+					continue;
+				}
+
+				const dashCommentPos = line.indexOf('--', pos);
+				const dollarCommentPos = line.indexOf('$*', pos);
+				const blockStartPos = line.indexOf('$(', pos);
+				const commentPos = this.minNonNegative(dashCommentPos, dollarCommentPos, blockStartPos);
+
+				if (commentPos === -1) {
+					break;
+				}
+
+				if (commentPos === dashCommentPos || commentPos === dollarCommentPos) {
+					if (lineIndex === targetLine && targetCharacter >= commentPos) {
+						return true;
+					}
+					break;
+				}
+
+				const blockEndPos = line.indexOf('$)', commentPos + 2);
+				if (lineIndex === targetLine && targetCharacter >= commentPos &&
+					(blockEndPos === -1 || targetCharacter < blockEndPos + 2)) {
+					return true;
+				}
+
+				if (blockEndPos === -1) {
+					inBlockComment = true;
+					break;
+				}
+
+				pos = blockEndPos + 2;
+			}
+		}
+
+		return false;
+	}
+
+	private minNonNegative(...values: number[]): number {
+		const candidates = values.filter(value => value >= 0);
+		return candidates.length === 0 ? -1 : Math.min(...candidates);
 	}
 
 	/**

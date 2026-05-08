@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.11.7-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.11.8-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -70,6 +70,13 @@ The parser accepts curated PDMS command-style lines via:
 `packages/pml-language-server/src/data/pdmsCommands.ts`
 
 Entries include the first command word, category, and short hover text. Add only the first command word in lowercase, for example `move`, `add`, or `q`.
+
+### ⚙️ Diagnostics Settings
+
+- `pml.diagnostics.formErrors`: controls parser diagnostics for `.pmlfrm` files while form DSL support is still limited.
+  - `off` (default): suppress form parser diagnostics.
+  - `warning`: show form parser diagnostics as warnings.
+  - `error`: show form parser diagnostics as errors.
 
 ### 📚 Documentation
 
@@ -168,6 +175,13 @@ Whitelist стартовых слов команд лежит здесь:
 `packages/pml-language-server/src/data/pdmsCommands.ts`
 
 Записи содержат первое слово команды, категорию и короткий hover-текст. Добавляйте только первое слово команды в lowercase, например `move`, `add`, `q`.
+
+### ⚙️ Настройки диагностики
+
+- `pml.diagnostics.formErrors`: управляет parser diagnostics для `.pmlfrm`, пока поддержка form DSL остается ограниченной.
+  - `off` (по умолчанию): не показывать parser diagnostics для форм.
+  - `warning`: показывать parser diagnostics для форм как предупреждения.
+  - `error`: показывать parser diagnostics для форм как ошибки.
 
 ### 📚 Документация
 
