@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.0] - 2026-05-08
+
+### Added - First-Class `.pmlfrm` Parser Foundation
+
+- Added parser support for PML call chains where member access continues after a method call, such as `!this.link.Unset().Not()`.
+- Parsed form-level member assignments like `!this.callback = '!this.init()'` as assignment expressions.
+- Extracted callback bindings from form assignments such as `!this.callback`, `!this.Quitcall`, and `!this.wrt.callback`.
+- Added support for nested `frame ... exit` blocks inside form definitions.
+- Accepted numeric handle headers such as `handle (1000,0)` used around form imports.
+- Added `import` and `using` to the command starter metadata for form/import workflows.
+
+### Tests
+
+- Added parser regression coverage for chained calls, form callback assignment extraction, nested frames, numeric handle headers, and `using namespace` command-style statements.
+
 ## [0.11.8] - 2026-05-08
 
 ### Fixed

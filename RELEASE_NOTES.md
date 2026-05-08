@@ -1,4 +1,34 @@
-# Release Notes - v0.11.8
+# Release Notes - v0.12.0
+
+**Release Date:** 2026-05-08
+
+## What's New in v0.12.0
+
+### First-Class `.pmlfrm` Parser Foundation
+
+- Added parser support for PML call chains where member access continues after a method call, such as `!this.link.Unset().Not()`.
+- Parsed form-level member assignments like `!this.callback = '!this.init()'` as assignment expressions.
+- Extracted callback bindings from form assignments such as `!this.callback`, `!this.Quitcall`, and `!this.wrt.callback`.
+- Added support for nested `frame ... exit` blocks inside form definitions.
+- Accepted numeric handle headers such as `handle (1000,0)` used around form imports.
+- Added `import` and `using` to the command starter metadata for form/import workflows.
+
+### Validation
+
+- Language server tests: 103 passed, 2 skipped.
+- TypeScript compile, bundled compile, root lint, language-server lint, diff check, VSIX packaging, and local VS Code/Cursor install passed.
+
+## Installation
+
+**GitHub Release:** [v0.12.0](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.0)
+
+**Checksum:** see GitHub release assets.
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
+---
+
+# Previous Release - v0.11.8
 
 **Release Date:** 2026-05-08
 

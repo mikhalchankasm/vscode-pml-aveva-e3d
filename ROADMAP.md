@@ -441,6 +441,25 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.0 - 2026-05-08 ✅ COMPLETED
+
+### First-Class `.pmlfrm` Foundation
+
+- [x] **Real Form Parser Compatibility** ✅ COMPLETED
+  - Support member access after method calls, including `!this.link.Unset().Not()`
+  - Parse form-level member assignments as assignment expressions
+  - Extract callback bindings from `!this.*call` and `!this.*.callback` assignments
+
+- [x] **Form DSL Structure Support** ✅ COMPLETED
+  - Support nested `frame ... exit` blocks
+  - Accept numeric `handle (1000,0)` headers used around imports
+  - Add `import` and `using` command starters for form/import workflows
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add tests for chained calls, callback assignment extraction, nested frames, numeric handle headers, and `using namespace`
+
+---
+
 ### v0.11.8 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -764,7 +783,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.11.8
+**Version:** 0.12.0
 **Released:** 2026-05-08
 
 **Statistics:**
@@ -773,11 +792,16 @@ Development plans and progress tracking.
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 4 types (configurable severity levels)
-- Form support: Advanced parsing with Frame Gadgets
-- Tests: **99 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
+- Form support: First-class foundation for frame nesting, callback assignments, and import workflows
+- Tests: **103 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.11.8):**
+**Recent Changes (v0.12.0):**
+- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, and import wrappers parse more accurately
+- ✅ **Form Callback Extraction** - `!this.*call` and `!this.*.callback` bindings are captured in form metadata
+- ✅ **Import Workflow Compatibility** - `import`, `using namespace`, and numeric `handle` headers are accepted
+
+**Previous Changes (v0.11.8):**
 - ✅ **PDMS Hover Comment Awareness** - Command hover no longer appears inside PML comments
 - ✅ **Form Tool Guards** - Form-only commands stop after warning on non-form files
 - ✅ **CI and Docs Maintenance** - CI now packages VSIX, README documents form diagnostics

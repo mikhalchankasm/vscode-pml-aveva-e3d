@@ -441,14 +441,9 @@ export class Parser {
 			// Parse variable assignments and other statements
 			if (token.type === TokenType.LOCAL_VAR || token.type === TokenType.GLOBAL_VAR) {
 				try {
-					const stmt = this.parseStatement();
+					const stmt = this.parseFormExpressionStatement(callbacks);
 					if (stmt) {
 						body.push(stmt);
-					}
-
-					// Check for callback patterns like !this.callback = '...'
-					if (stmt && (stmt.type === 'ExpressionStatement' || stmt.type === 'VariableDeclaration')) {
-						// Could extract callbacks here if needed
 					}
 				} catch {
 					this.advance(); // Skip on error
@@ -476,6 +471,56 @@ export class Parser {
 			callbacks,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
+	}
+
+	private parseFormExpressionStatement(callbacks: Record<string, string>): Statement | null {
+		const stmt = this.parseExpressionStatement();
+		if (stmt) {
+			this.extractFormCallbackBinding(stmt, callbacks);
+		}
+		return stmt;
+	}
+
+	private extractFormCallbackBinding(stmt: ExpressionStatement, callbacks: Record<string, string>): void {
+		const expression = stmt.expression;
+		if (expression.type !== 'AssignmentExpression') {
+			return;
+		}
+
+		const propertyPath = this.expressionPath(expression.left);
+		if (!propertyPath || !/call/i.test(propertyPath)) {
+			return;
+		}
+
+		const callback = this.callbackText(expression.right);
+		if (callback) {
+			callbacks[propertyPath] = callback;
+		}
+	}
+
+	private expressionPath(expression: Expression): string | undefined {
+		if (expression.type === 'Identifier') {
+			return expression.name;
+		}
+
+		if (expression.type === 'MemberExpression' && !expression.computed) {
+			const objectPath = this.expressionPath(expression.object);
+			const propertyPath = this.expressionPath(expression.property);
+			if (objectPath && propertyPath) {
+				return `${objectPath}.${propertyPath}`;
+			}
+		}
+
+		return undefined;
+	}
+
+	private callbackText(expression: Expression): string | undefined {
+		if (expression.type === 'Literal' && typeof expression.value === 'string') {
+			const value = expression.value.trim();
+			return value.includes('!this.') || value.startsWith('.') ? value : undefined;
+		}
+
+		return undefined;
 	}
 
 	/**
@@ -510,10 +555,15 @@ export class Parser {
 
 		const gadgets: GadgetDeclaration[] = [];
 
-		while (!this.check(TokenType.EXIT) && !this.check(TokenType.FRAME) && !this.isAtEnd()) {
+		while (!this.check(TokenType.EXIT) && !this.isAtEnd()) {
 			this.skipTrivia();
 
-			if (this.check(TokenType.EXIT) || this.check(TokenType.FRAME)) break;
+			if (this.check(TokenType.EXIT)) break;
+
+			if (this.check(TokenType.FRAME)) {
+				this.parseFrameDefinition();
+				continue;
+			}
 
 			// Parse gadget (button, text, combo, option, toggle)
 			if (this.check(TokenType.BUTTON) || this.check(TokenType.TEXT) ||
@@ -1262,6 +1312,7 @@ export class Parser {
 		// Error type (usually 'any')
 		const errorTypeToken = this.advance();
 		const errorType = errorTypeToken.value;
+		this.consumeRemainingLine(startToken.line);
 
 		// Body
 		const body: Statement[] = [];
@@ -1703,25 +1754,79 @@ export class Parser {
 	 */
 	private parseCall(): Expression {
 		let expr = this.parseMember();
-		const startPos = expr.range.start;
 
-		// Check for function call: ()
-		while (this.match(TokenType.LPAREN)) {
-			const args = this.parseArguments();
-			const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
+		// PML commonly chains method calls and property access:
+		// !this.link.Unset().Not(), !!ce.Position.Wrt(!this.link), !arr[1].Name()
+		while (true) {
+			if (this.match(TokenType.LPAREN)) {
+				const args = this.parseArguments();
+				const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
 
-			expr = {
-				type: 'CallExpression',
-				callee: expr,
-				arguments: args,
-				range: {
-					start: startPos,
-					end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
+				expr = {
+					type: 'CallExpression',
+					callee: expr,
+					arguments: args,
+					range: {
+						start: expr.range.start,
+						end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
+					}
+				};
+				continue;
+			}
+
+			if (this.match(TokenType.METHOD)) {
+				const methodToken = this.previous();
+				expr = this.createPropertyAccess(expr, methodToken, methodToken.value.substring(1));
+				continue;
+			}
+
+			if (this.match(TokenType.DOT)) {
+				if (!this.check(TokenType.IDENTIFIER)) {
+					throw this.error(this.peek(), "Expected property name after '.'");
 				}
-			};
+
+				const propertyToken = this.advance();
+				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
+				continue;
+			}
+
+			if (this.match(TokenType.LBRACKET)) {
+				const indexExpr = this.parseExpression();
+				const rbracket = this.consume(TokenType.RBRACKET, "Expected ']' after array index");
+				expr = {
+					type: 'MemberExpression',
+					object: expr,
+					property: indexExpr,
+					computed: true,
+					range: {
+						start: expr.range.start,
+						end: { line: rbracket.line - 1, character: rbracket.column - 1 + rbracket.length }
+					}
+				};
+				continue;
+			}
+
+			break;
 		}
 
 		return expr;
+	}
+
+	private createPropertyAccess(object: Expression, propertyToken: Token, propertyName: string): MemberExpression {
+		return {
+			type: 'MemberExpression',
+			object,
+			property: {
+				type: 'Identifier',
+				name: propertyName,
+				range: this.createRange(this.getTokenIndex(propertyToken), this.getTokenIndex(propertyToken))
+			},
+			computed: false,
+			range: {
+				start: object.range.start,
+				end: { line: propertyToken.line - 1, character: propertyToken.column - 1 + propertyToken.length }
+			}
+		};
 	}
 
 	/**

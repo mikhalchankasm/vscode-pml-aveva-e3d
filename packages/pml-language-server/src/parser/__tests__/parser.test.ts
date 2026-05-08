@@ -408,6 +408,42 @@ exit
 			});
 		});
 
+		it('should parse nested frames and numeric handle headers used by form imports', () => {
+			const source = `
+import |GridControl|
+handle (1000,0)
+endhandle
+
+setup form !!NestedForm dialog resize
+	frame .tabs tabset at xmin form ymax form
+		frame .inner |Inner| at xmin ymin
+			button .ok |OK| at x0 ymin
+		exit
+	exit
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body.some(statement => statement.type === 'FormDefinition')).toBe(true);
+		});
+
+		it('should parse using namespace as a command-style statement', () => {
+			const source = `
+define method .firstShown()
+	using namespace |Aveva.Pdms.Presentation|
+	!this.grid.BindToDataSource(!nds)
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse empty forms and custom member types', () => {
 			const emptyResult = new Parser().parse('setup form !!Empty exit');
 			expect(emptyResult.errors).toHaveLength(0);
@@ -426,6 +462,27 @@ exit
 
 			const typedForm = customTypeResult.ast.body[0] as FormDefinition;
 			expect(typedForm.members[0].memberType.kind).toBe('ANY');
+		});
+
+		it('should parse form member assignments and extract callback bindings', () => {
+			const source = `
+setup form !!CallbackForm dialog resize
+	!this.iconTitle = 'Position CE'
+	!this.callback = '!this.init()'
+	!this.Quitcall = '!this.quit()'
+	!this.wrt.callback = |!this.changeWrt(|
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.callbacks['this.callback']).toBe('!this.init()');
+			expect(form.callbacks['this.Quitcall']).toBe('!this.quit()');
+			expect(form.callbacks['this.wrt.callback']).toBe('!this.changeWrt(');
 		});
 	});
 
@@ -504,6 +561,22 @@ exit
 
 			const varDecl = result.ast.body[0] as VariableDeclaration;
 			expect(varDecl.initializer?.type).toBe('CallExpression');
+		});
+
+		it('should parse member access after method calls in PML chains', () => {
+			const source = `
+define method .trackce()
+	if ( !this.link.Unset().Not() ) then
+		!cepos = !!ce.Position.Wrt(!this.link)
+	endif
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(1);
 		});
 
 		it('should parse array access', () => {

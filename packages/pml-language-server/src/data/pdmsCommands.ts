@@ -18,6 +18,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'autocolour', category: 'drawing', brief: 'Applies or removes automatic colour representation settings.' },
 	{ name: 'export', category: 'system', brief: 'Exports model data or configured output from the current session.' },
 	{ name: 'getwork', category: 'system', brief: 'Gets the current writable work context.' },
+	{ name: 'import', category: 'system', brief: 'Imports an external PML module, .NET control, or support file.' },
 	{ name: 'quit', category: 'system', brief: 'Leaves the current module or command context.' },
 	{ name: 'representation', category: 'drawing', brief: 'Sets or queries graphical representation options.' },
 	{ name: 'syscom', category: 'system', brief: 'Runs a system command from the PML command stream.' },
@@ -25,6 +26,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'trace', category: 'system', brief: 'Enables or disables trace output.' },
 	{ name: 'unclaim', category: 'system', brief: 'Releases claimed database elements.' },
 	{ name: 'unlock', category: 'system', brief: 'Unlocks locked database elements or command state.' },
+	{ name: 'using', category: 'system', brief: 'Declares a namespace or external API scope for subsequent PML/.NET calls.' },
 
 	// Common examples from PDMS Commands.pdf.
 	{ name: 'add', category: 'model', brief: 'Adds an element, item, or selection to the current context.' },
