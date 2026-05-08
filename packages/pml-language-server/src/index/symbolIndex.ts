@@ -3,7 +3,7 @@
  */
 
 import { Range } from 'vscode-languageserver/node';
-import { Program, MethodDefinition, ObjectDefinition, FormDefinition } from '../ast/nodes';
+import { Program, MethodDefinition, ObjectDefinition, FormDefinition, FrameDefinition, GadgetDeclaration } from '../ast/nodes';
 import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
 
 /**
@@ -50,8 +50,22 @@ export interface ObjectInfo extends SymbolInfo {
  */
 export interface FormInfo extends SymbolInfo {
 	kind: SymbolKind.Form;
-	frames: string[]; // Frame names
+	frames: FrameInfo[]; // Frame hierarchy
+	gadgets: GadgetInfo[]; // Top-level form gadgets
 	callbacks: Record<string, string>; // gadget -> method
+}
+
+export interface FrameInfo {
+	name: string;
+	range: Range;
+	frames: FrameInfo[];
+	gadgets: GadgetInfo[];
+}
+
+export interface GadgetInfo {
+	name: string;
+	gadgetType: string;
+	range: Range;
 }
 
 /**
@@ -347,8 +361,28 @@ export class SymbolIndex {
 			kind: SymbolKind.Form,
 			uri,
 			range: node.range,
-			frames: node.frames.map(f => f.name),
+			frames: node.frames.map(frame => this.extractFrameInfo(frame)),
+			gadgets: node.body
+				.filter((statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration')
+				.map(gadget => this.extractGadgetInfo(gadget)),
 			callbacks: node.callbacks
+		};
+	}
+
+	private extractFrameInfo(node: FrameDefinition): FrameInfo {
+		return {
+			name: node.name,
+			range: node.range,
+			frames: node.frames.map(frame => this.extractFrameInfo(frame)),
+			gadgets: node.gadgets.map(gadget => this.extractGadgetInfo(gadget))
+		};
+	}
+
+	private extractGadgetInfo(node: GadgetDeclaration): GadgetInfo {
+		return {
+			name: node.name,
+			gadgetType: node.gadgetType,
+			range: node.range
 		};
 	}
 

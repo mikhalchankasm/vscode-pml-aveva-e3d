@@ -3,7 +3,7 @@
  */
 
 import { DocumentSymbol, DocumentSymbolParams, SymbolKind as LSPSymbolKind } from 'vscode-languageserver/node';
-import { SymbolIndex } from '../index/symbolIndex';
+import { FrameInfo, GadgetInfo, SymbolIndex } from '../index/symbolIndex';
 
 export class DocumentSymbolProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
@@ -80,13 +80,41 @@ export class DocumentSymbolProvider {
 				kind: LSPSymbolKind.Interface,
 				range: form.range,
 				selectionRange: form.range,
-				children: []
+				children: [
+					...form.frames.map(frame => this.createFrameSymbol(frame)),
+					...form.gadgets.map(gadget => this.createGadgetSymbol(gadget))
+				]
 			};
 
 			symbols.push(formSymbol);
 		}
 
 		return symbols;
+	}
+
+	private createFrameSymbol(frame: FrameInfo): DocumentSymbol {
+		return {
+			name: `.${frame.name}`,
+			detail: 'frame',
+			kind: LSPSymbolKind.Namespace,
+			range: frame.range,
+			selectionRange: frame.range,
+			children: [
+				...frame.frames.map(childFrame => this.createFrameSymbol(childFrame)),
+				...frame.gadgets.map(gadget => this.createGadgetSymbol(gadget))
+			]
+		};
+	}
+
+	private createGadgetSymbol(gadget: GadgetInfo): DocumentSymbol {
+		return {
+			name: `.${gadget.name}`,
+			detail: gadget.gadgetType,
+			kind: LSPSymbolKind.Field,
+			range: gadget.range,
+			selectionRange: gadget.range,
+			children: []
+		};
 	}
 
 	private extractMethodsFromText(uri: string, existing: Set<string>): DocumentSymbol[] {

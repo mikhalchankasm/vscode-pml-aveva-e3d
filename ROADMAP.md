@@ -441,6 +441,20 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.3 - 2026-05-08 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Form Outline Metadata** ✅ COMPLETED
+  - Preserve nested `frame ... exit` hierarchy in the AST.
+  - Index top-level form gadgets and nested frame gadgets.
+  - Show forms, frames, and gadgets as nested Document Symbols in the VS Code Outline.
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add document-symbol test coverage for `form -> frame -> nested frame/gadget` outlines.
+
+---
+
 ### v0.12.2 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -821,7 +835,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.2
+**Version:** 0.12.3
 **Released:** 2026-05-08
 
 **Statistics:**
@@ -830,17 +844,18 @@ Development plans and progress tracking.
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 4 types (configurable severity levels)
-- Form support: First-class foundation for frame nesting, callback assignments, import workflows, and common form gadgets
-- Tests: **116 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures)
+- Form support: First-class foundation for frame nesting, outline symbols, callback assignments, import workflows, and common form gadgets
+- Tests: **117 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
-- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, common form gadgets, import wrappers, and form fixture smoke tests are in place.
+- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.3`: nested form/frame/gadget outline symbols.
 - `v0.12.2`: additional form gadgets, draft-line recovery, hidden fixture smoke baselines.
 - `v0.12.1`: form fixture cleanup, tighter callback extraction, `.pmlfrm` smoke baselines.
 - `v0.12.0`: first-class `.pmlfrm` parser foundation.
@@ -850,7 +865,7 @@ Development plans and progress tracking.
 For full history, see [CHANGELOG.md](CHANGELOG.md).
 
 **Known Limitations:**
-- `.pmlfrm` support is improving but still has known gaps: some attribute expressions, variable substitution inside argument lists, richer outline metadata, and some PML1 collection constructs.
+- `.pmlfrm` support is improving but still has known gaps: some attribute expressions, variable substitution inside argument lists, callback/gadget reference validation, and some PML1 collection constructs.
 - Find References/Rename still rely on text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
 - Type inference is intentionally limited and should be reintroduced only with a clear architecture.
 - Workspace indexer and client-side tooling commands still need broader automated tests.

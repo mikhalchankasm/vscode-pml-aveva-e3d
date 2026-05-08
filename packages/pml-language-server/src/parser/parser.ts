@@ -573,6 +573,7 @@ export class Parser {
 		const nameToken = this.consume(TokenType.METHOD, "Expected frame name (e.g., .myFrame)");
 		const frameName = nameToken.value.substring(1);
 
+		const frames: FrameDefinition[] = [];
 		const gadgets: GadgetDeclaration[] = [];
 
 		while (!this.check(TokenType.EXIT) && !this.isAtEnd()) {
@@ -581,7 +582,7 @@ export class Parser {
 			if (this.check(TokenType.EXIT)) break;
 
 			if (this.check(TokenType.FRAME)) {
-				this.parseFrameDefinition();
+				frames.push(this.parseFrameDefinition());
 				continue;
 			}
 
@@ -598,6 +599,7 @@ export class Parser {
 		return {
 			type: 'FrameDefinition',
 			name: frameName,
+			frames,
 			gadgets,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};

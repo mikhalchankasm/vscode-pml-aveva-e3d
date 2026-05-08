@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.3] - 2026-05-08
+
+### Added
+
+- Added nested `.pmlfrm` outline symbols for forms, frames, and gadgets.
+- Preserved nested `frame ... exit` hierarchy in the parser AST instead of discarding child frames.
+
+### Improved
+
+- Indexed top-level form gadgets and nested frame gadgets for document symbol generation.
+- Added regression coverage for `form -> frame -> nested frame/gadget` document symbols.
+
 ## [0.12.2] - 2026-05-08
 
 ### Fixed

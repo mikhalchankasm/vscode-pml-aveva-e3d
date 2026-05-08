@@ -126,6 +126,7 @@ export interface FormDefinition extends ASTNode {
 export interface FrameDefinition extends ASTNode {
 	type: 'FrameDefinition';
 	name: string; // without leading dot
+	frames: FrameDefinition[];
 	gadgets: GadgetDeclaration[];
 }
 
