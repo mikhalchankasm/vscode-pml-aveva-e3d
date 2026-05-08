@@ -97,8 +97,11 @@ export class Parser {
 			return this.parseDefinition();
 		}
 
-		// setup form
+		// setup form / setup command
 		if (this.check(TokenType.SETUP)) {
+			if (this.isSetupCommandStart()) {
+				return this.parseSetupCommandDefinition();
+			}
 			return this.parseFormDefinition();
 		}
 
@@ -259,6 +262,36 @@ export class Parser {
 			body,
 			documentation,
 			deprecated: documentation?.deprecated || false,
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	private isSetupCommandStart(): boolean {
+		const nextToken = this.peekNext();
+		return nextToken.line === this.peek().line &&
+		       nextToken.type === TokenType.IDENTIFIER &&
+		       nextToken.value.toLowerCase() === 'command';
+	}
+
+	private parseSetupCommandDefinition(): ExpressionStatement {
+		const startToken = this.advance(); // setup
+		let endToken = startToken;
+
+		while (!this.isAtEnd() && !this.check(TokenType.EXIT) && !this.check(TokenType.DEFINE)) {
+			endToken = this.advance();
+		}
+
+		if (this.check(TokenType.EXIT)) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'ExpressionStatement',
+			expression: {
+				type: 'Identifier',
+				name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length).trim(),
+				range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+			},
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
 	}
@@ -1142,6 +1175,10 @@ export class Parser {
 			return this.parseLineCommandStatement();
 		}
 
+		if (this.isTraceLineCommandStart()) {
+			return this.parseLineCommandStatement();
+		}
+
 		if (this.isLineCommandStart()) {
 			return this.parseLineCommandStatement();
 		}
@@ -1319,6 +1356,10 @@ export class Parser {
 				this.advance();
 				variant = 'index';
 				collection = this.parseExpression();
+			} else if (this.check(TokenType.INDICES)) {
+				this.advance();
+				variant = 'index';
+				collection = this.parseExpression();
 			} else if (this.check(TokenType.FROM)) {
 				this.advance();
 				variant = 'from-to';
@@ -1406,23 +1447,27 @@ export class Parser {
 			}
 		}
 
-		// Alternate (elsehandle)
+		// Alternate (elsehandle). PML can chain several elsehandle clauses.
 		let alternate: Statement[] | undefined;
 		if (this.check(TokenType.ELSEHANDLE)) {
-			this.advance();
 			alternate = [];
-			while (!this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
-				try {
-					const stmt = this.parseStatement();
-					if (stmt) {
-						alternate.push(stmt);
-					}
-				} catch (error) {
-					// Error recovery: skip to end of line and continue
-					this.synchronize();
-					// If we hit ENDHANDLE during synchronize, break
-					if (this.check(TokenType.ENDHANDLE)) {
-						break;
+			while (this.check(TokenType.ELSEHANDLE) && !this.isAtEnd()) {
+				const elseHandleToken = this.advance();
+				this.consumeRemainingLine(elseHandleToken.line);
+
+				while (!this.check(TokenType.ELSEHANDLE) && !this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
+					try {
+						const stmt = this.parseStatement();
+						if (stmt) {
+							alternate.push(stmt);
+						}
+					} catch (error) {
+						// Error recovery: skip to end of line and continue
+						this.synchronize();
+						// If we hit ELSEHANDLE/ENDHANDLE during synchronize, continue with the enclosing handle parser
+						if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE)) {
+							break;
+						}
 					}
 				}
 			}
@@ -1494,6 +1539,23 @@ export class Parser {
 
 		// Handle property chains at statement start: !this.value = ..., !object.method().
 		while (true) {
+			if (this.match(TokenType.LBRACKET)) {
+				const indexExpr = this.parseExpression();
+				const rbracket = this.consume(TokenType.RBRACKET, "Expected ']' after array index");
+
+				left = {
+					type: 'MemberExpression',
+					object: left,
+					property: indexExpr,
+					computed: true,
+					range: {
+						start: left.range.start,
+						end: { line: rbracket.line - 1, character: rbracket.column - 1 + rbracket.length }
+					}
+				};
+				continue;
+			}
+
 			if (this.match(TokenType.METHOD)) {
 				const methodToken = this.previous();
 				left = this.createPropertyAccess(left, methodToken, methodToken.value.substring(1));
@@ -1599,6 +1661,21 @@ export class Parser {
 		};
 
 		while (true) {
+			if (this.match(TokenType.LPAREN)) {
+				const args = this.parseArguments();
+				const rparen = this.consume(TokenType.RPAREN, "Expected ')' after arguments");
+				expression = {
+					type: 'CallExpression',
+					callee: expression,
+					arguments: args,
+					range: {
+						start: expression.range.start,
+						end: { line: rparen.line - 1, character: rparen.column - 1 + rparen.length }
+					}
+				};
+				continue;
+			}
+
 			if (this.match(TokenType.METHOD)) {
 				const methodToken = this.previous();
 				expression = this.createPropertyAccess(expression, methodToken, methodToken.value.substring(1));
@@ -2321,6 +2398,12 @@ export class Parser {
 		const startToken = this.advance();
 		let endToken = startToken;
 
+		if (this.check(TokenType.STAR) &&
+		    this.peek().line === startToken.line &&
+		    this.peek().offset === startToken.offset + startToken.length) {
+			endToken = this.advance();
+		}
+
 		while (!this.isAtEnd() && this.peek().line === startToken.line && !this.isPathExpressionBoundary(this.peek())) {
 			endToken = this.advance();
 		}
@@ -2417,6 +2500,20 @@ export class Parser {
 		return token.value.toLowerCase() === '$p' &&
 		       token.length === 2 &&
 		       (nextChar === undefined || /\s/.test(nextChar));
+	}
+
+	private isTraceLineCommandStart(): boolean {
+		if (!this.check(TokenType.SUBSTITUTE_VAR)) {
+			return false;
+		}
+
+		const token = this.peek();
+		if (!/^\$t\d+$/i.test(token.value)) {
+			return false;
+		}
+
+		const nextChar = this.sourceText[token.offset + token.length];
+		return nextChar === '+' || nextChar === '-' || nextChar === undefined || /\s/.test(nextChar);
 	}
 
 	/**

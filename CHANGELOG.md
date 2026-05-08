@@ -2,6 +2,25 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.7] - 2026-05-09
+
+### Fixed
+
+- Parsed `setup command ...` controller files without treating them as `setup form` definitions.
+- Accepted `do !index indices !collection` loops used by AVEVA command controllers.
+- Parsed indexed property assignments such as `!this.viewDirection[1] = 'SW'`.
+- Parsed chained no-argument calls after member access, such as `!graphicalView.owner().clipBox.set()`.
+- Ignored PML line-continuation `$` markers in method signatures and multi-line expressions.
+- Accepted `/*` as a path/wildcard expression argument.
+- Parsed chained `elsehandle` clauses in one `handle` block.
+- Treated `$T8+`/`$T8-` trace control lines as command-style lines.
+
+### Improved
+
+- Expanded the PDMS command starter whitelist with command-style starters observed in the installed AVEVA E3D PMLLIB corpus: `$M`, `call`, `goto`, `kill`, `map`, `ori`, `pml`, `show`, `system`, `unenhance`, and `world`.
+- Validated against `C:\Program Files (x86)\AVEVA\Everything3D2.10\PMLLIB` without copying proprietary AVEVA sources into the repository.
+- Reduced parser errors across 698 installed `.pmlcmd` files from 1200 to 0.
+
 ## [0.12.6] - 2026-05-09
 
 ### Fixed

@@ -695,6 +695,90 @@ endmethod
 			expect(result.errors).toHaveLength(0);
 		});
 
+		it('should parse setup command files', () => {
+			const source = `
+setup command !!myCommand
+
+exit
+
+define method .myCommand()
+	!this.key = 'Example.Command'
+	!this.execute = 'execute'
+endmethod
+
+define method .execute(!args is ARRAY)
+	call !!doSomething(!!ce)
+	goto frstw DESI
+	pml load form !!myForm
+	show !!myForm at xr0.2 yr0.14
+	kill !!myForm
+	$M "%PMLLIB%/limbo/functions/moduleswitch.pmlfnc" $<EXIT$>
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(result.ast.body).toHaveLength(3);
+			expect(result.ast.body[1].type).toBe('MethodDefinition');
+		});
+
+		it('should parse indices loops and indexed property assignments from command controllers', () => {
+			const source = `
+define method .collectApplications()
+	!this.applicationList = !!appCntrl.getApplicationList(true)
+	!this.applicationTitles = ARRAY()
+	do !index indices !this.applicationList
+		!this.applicationTitles[!index] = !!appCntrl.getApplic(!this.applicationList[!index]).title
+	enddo
+	!this.viewDirection[1] = 'SW'
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse AVEVA command controller idioms from shipped PMLLIB files', () => {
+			const source = `
+define method .execute(!args is ARRAY)
+	$T8+
+	system sgl /effect_ao off
+	!!gphViewOpt.edges = false
+	MAP BUILD MDB
+	handle (69,97)
+		!!alert.message('Spatial map build complete')
+	elsehandle any
+		!!alert.warning('Spatial map build failed')
+	elsehandle none
+		!!alert.message('Spatial map build complete')
+	endhandle
+	world
+	!graphicalView.owner().clipBox.set()
+	!!fmSys.loadForm('mdsAlignSupport').alignSupports()
+	!!gphViews.limits(!graphicalView, /* )
+	ORI Z IS TOWARDS $!elementEnd
+	$T8-
+endmethod
+
+define method .continued(!data is ANY, $
+                         !element is DBREF)
+	if ((!!ce.type eq 'WORL') or $
+	    (!!ce.parent.list.findFirst('XGEOM').unset())) then
+		UNENHANCE ALL GRIDPLANE
+	endif
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse define calls and dynamic substitute member access in forms', () => {
 			const source = `
 define method .check()

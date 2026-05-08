@@ -111,6 +111,9 @@ export class Lexer {
 
 		// Substitute variables: $!variable or $/attribute
 		if (char === '$') {
+			if (this.skipLineContinuationDollar()) {
+				return;
+			}
 			this.scanSubstituteVariable(startLine, startColumn, startPos);
 			return;
 		}
@@ -402,6 +405,23 @@ export class Lexer {
 		}
 
 		this.addToken(TokenType.SUBSTITUTE_VAR, value, line, column, offset, this.position - offset);
+	}
+
+	private skipLineContinuationDollar(): boolean {
+		const savedPosition = this.position;
+		const savedColumn = this.column;
+
+		while (this.peek() === ' ' || this.peek() === '\t') {
+			this.advance();
+		}
+
+		if (this.peek() === '\n' || this.peek() === '\r' || this.isAtEnd()) {
+			return true;
+		}
+
+		this.position = savedPosition;
+		this.column = savedColumn;
+		return false;
 	}
 
 	/**

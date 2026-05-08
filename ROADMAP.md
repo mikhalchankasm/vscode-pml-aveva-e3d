@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.7 - 2026-05-09 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Installed AVEVA PMLLIB Command Corpus** ✅ COMPLETED
+  - Use `C:\Program Files (x86)\AVEVA\Everything3D2.10\PMLLIB` as an external validation corpus only.
+  - Parse `setup command ...` controller files separately from `setup form` definitions.
+  - Accept command-controller idioms: `indices` loops, indexed property assignments, chained no-argument calls, `/*` wildcard path arguments, line-continuation `$`, `$T8+`/`$T8-`, and chained `elsehandle` clauses.
+  - Expand the PDMS command starter metadata with observed real command starters.
+
+- [x] **Corpus Baseline Improvement** ✅ COMPLETED
+  - Reduce installed `.pmlcmd` parser errors from 1200 to 0 across 698 files.
+  - Add synthetic regression tests for the real syntax forms without copying AVEVA source files.
+
+---
+
 ### v0.12.6 - 2026-05-09 ✅ COMPLETED
 
 ### Patch Improvements
@@ -883,7 +899,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.6
+**Version:** 0.12.7
 **Released:** 2026-05-09
 
 **Statistics:**
@@ -893,16 +909,17 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **124 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **127 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
-- ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases are covered with regression tests.
+- ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.7`: reduced installed AVEVA `.pmlcmd` parser errors from 1200 to 0 across 698 files.
 - `v0.12.6`: reduced `test2form.pmlfrm` parser baseline to two real fixture issues.
 - `v0.12.5`: reduced `test2form.pmlfrm` parser gaps with attribute member access, `inset`, pipe-string fragments, and `do !x to ...`.
 - `v0.12.4`: opt-in callback/gadget reference diagnostics for cleanly parsed `.pmlfrm` files.
