@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.6] - 2026-05-09
+
+### Fixed
+
+- Treated `exit` and `options` as AVEVA command-style lines inside methods without interfering with form/frame `exit` handling.
+- Parsed `define(...)` as a PML built-in call when it appears inside expressions.
+- Parsed dynamic substitute member access such as `!this.$!<name>.EditableGrid(false)`.
+- Recovered nested pipe text fragments with non-ASCII text inside call arguments.
+
+### Improved
+
+- Reduced the `examples/test2form.pmlfrm` parser smoke baseline from 49 to 2 errors.
+- Left the remaining `test2form.pmlfrm` errors as real fixture issues: a stray `endif` and missing `endmethod` in `.report()`.
+- Added parser regression coverage for the new real-form syntax cases.
+
 ## [0.12.5] - 2026-05-09
 
 ### Fixed

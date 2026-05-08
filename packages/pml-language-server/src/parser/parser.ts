@@ -2003,6 +2003,11 @@ export class Parser {
 			return this.createPropertyAccess(object, propertyToken, propertyToken.value);
 		}
 
+		if (this.check(TokenType.SUBSTITUTE_VAR)) {
+			const propertyToken = this.advance();
+			return this.createPropertyAccess(object, propertyToken, propertyToken.value);
+		}
+
 		if (this.match(TokenType.COLON)) {
 			const colonToken = this.previous();
 			const attributeToken = this.consume(TokenType.IDENTIFIER, "Expected attribute name after '.:'");
@@ -2277,6 +2282,16 @@ export class Parser {
 			};
 		}
 
+		// Some PML built-ins share spelling with parser keywords, for example define(...)
+		if (this.match(TokenType.DEFINE)) {
+			const token = this.previous();
+			return {
+				type: 'Identifier',
+				name: token.value,
+				range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
+			};
+		}
+
 		// Grouping: (expression)
 		if (this.match(TokenType.LPAREN)) {
 			const expr = this.parseExpression();
@@ -2432,9 +2447,6 @@ export class Parser {
 		       this.peek().line === argument.range.end.line + 1 &&
 		       this.peek().type !== TokenType.COMMA &&
 		       this.peek().type !== TokenType.RPAREN) {
-			if (![TokenType.STRING, TokenType.SUBSTITUTE_VAR, TokenType.IDENTIFIER, TokenType.COLON].includes(this.peek().type)) {
-				break;
-			}
 			endToken = this.advance();
 		}
 

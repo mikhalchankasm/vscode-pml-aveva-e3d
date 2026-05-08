@@ -681,9 +681,40 @@ endmethod
 			const source = `
 define method .export()
 	claim all from !claimList
+	options default
 	do !plot to $!isoCount
 		var !plotFile isodraw plotfile $!plot filename
 	enddo
+	exit
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse define calls and dynamic substitute member access in forms', () => {
+			const source = `
+define method .check()
+	if (define(!!isopipelist) and !!isopipelist.shown()) then
+		!!isopipelist.hide()
+	endif
+	!this.$!<name>.EditableGrid(false)
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should recover nested pipe text fragments with non-ascii text in arguments', () => {
+			const source = `
+define method .saveSettings()
+	!add1 = iftrue(!this.togRev.Val, |!!report.bnIso.Tag = |Изометрия+R||, |!!report.bnIso.Tag = |Изометрия||)
 endmethod
 			`.trim();
 

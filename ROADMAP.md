@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.6 - 2026-05-09 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Large Form Cascade Reduction** ✅ COMPLETED
+  - Treat `exit` and `options` as AVEVA command-style lines inside methods.
+  - Parse `define(...)` as a PML built-in call in expressions.
+  - Parse dynamic substitute member access such as `!this.$!<name>.EditableGrid(false)`.
+  - Recover nested pipe text fragments with non-ASCII text inside call arguments.
+
+- [x] **Fixture Baseline Improvement** ✅ COMPLETED
+  - Reduce `examples/test2form.pmlfrm` parser smoke baseline from 49 to 2 errors.
+  - Keep the remaining two diagnostics tied to a real fixture issue: stray `endif` and missing `endmethod` in `.report()`.
+
+---
+
 ### v0.12.5 - 2026-05-09 ✅ COMPLETED
 
 ### Patch Improvements
@@ -867,7 +883,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.5
+**Version:** 0.12.6
 **Released:** 2026-05-09
 
 **Statistics:**
@@ -876,17 +892,18 @@ Development plans and progress tracking.
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
-- Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, import workflows, and common form gadgets
-- Tests: **122 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
+- Tests: **124 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
-- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, import wrappers, and form fixture smoke tests are in place.
+- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.6`: reduced `test2form.pmlfrm` parser baseline to two real fixture issues.
 - `v0.12.5`: reduced `test2form.pmlfrm` parser gaps with attribute member access, `inset`, pipe-string fragments, and `do !x to ...`.
 - `v0.12.4`: opt-in callback/gadget reference diagnostics for cleanly parsed `.pmlfrm` files.
 - `v0.12.3`: nested form/frame/gadget outline symbols.
@@ -899,7 +916,7 @@ Development plans and progress tracking.
 For full history, see [CHANGELOG.md](CHANGELOG.md).
 
 **Known Limitations:**
-- `.pmlfrm` support is improving but still has known gaps: large imported form block-recovery cascades, broader PML.NET form patterns, and some PML1 collection constructs.
+- `.pmlfrm` support is improving but still has known gaps: broader PML.NET form patterns, intentionally broken fixture snippets, and some PML1 collection constructs.
 - Find References/Rename still rely on text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
 - Type inference is intentionally limited and should be reintroduced only with a clear architecture.
 - Workspace indexer and client-side tooling commands still need broader automated tests.

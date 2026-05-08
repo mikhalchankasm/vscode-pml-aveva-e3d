@@ -17,6 +17,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	// Already observed in project PML files.
 	{ name: 'autocolour', category: 'drawing', brief: 'Applies or removes automatic colour representation settings.' },
 	{ name: 'export', category: 'system', brief: 'Exports model data or configured output from the current session.' },
+	{ name: 'exit', category: 'system', brief: 'Leaves the current command mode or AVEVA module context.' },
 	{ name: 'getwork', category: 'system', brief: 'Gets the current writable work context.' },
 	{ name: 'import', category: 'system', brief: 'Imports an external PML module, .NET control, or support file.' },
 	{ name: 'quit', category: 'system', brief: 'Leaves the current module or command context.' },
@@ -47,6 +48,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'mark', category: 'drawing', brief: 'Marks elements or positions in the display.' },
 	{ name: 'move', category: 'model', brief: 'Moves the current element or selection.' },
 	{ name: 'new', category: 'model', brief: 'Creates a new element in the current context.' },
+	{ name: 'options', category: 'system', brief: 'Sets or restores command options for the current module.' },
 	{ name: 'plan', category: 'drawing', brief: 'Selects or configures a plan view.' },
 	{ name: 'plane', category: 'drawing', brief: 'Selects or configures a working plane.' },
 	{ name: 'pos', category: 'navigation', brief: 'Sets, queries, or uses a position.' },

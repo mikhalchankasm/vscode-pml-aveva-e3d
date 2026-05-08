@@ -10,7 +10,7 @@ const FORM_FIXTURES: Array<{ relativePath: string; maxErrors: number }> = [
 	{ relativePath: 'examples/test-button-snippets.pmlfrm', maxErrors: 0 },
 	{ relativePath: 'examples/test.pmlfrm', maxErrors: 0 },
 	{ relativePath: 'examples/test2.pmlfrm', maxErrors: 3 },
-	{ relativePath: 'examples/test2form.pmlfrm', maxErrors: 49 },
+	{ relativePath: 'examples/test2form.pmlfrm', maxErrors: 2 },
 	{ relativePath: 'examples/test_methods.pmlfrm', maxErrors: 0 },
 	{ relativePath: 'hide_examples/Button Gadget/traExampleButtons.pmlfrm', maxErrors: 0 },
 	{ relativePath: 'hide_examples/forms/equibasic.pmlfrm', maxErrors: 0 },
