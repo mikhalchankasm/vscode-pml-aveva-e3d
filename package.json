@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.12.3",
+  "version": "0.12.4",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -485,6 +485,21 @@
             "Show .pmlfrm parser diagnostics as errors"
           ],
           "description": "Parser diagnostics for .pmlfrm files"
+        },
+        "pml.diagnostics.formReferences": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "warning",
+            "error"
+          ],
+          "enumDescriptions": [
+            "Don't validate .pmlfrm callback and gadget references",
+            "Show missing .pmlfrm callback and gadget references as warnings",
+            "Show missing .pmlfrm callback and gadget references as errors"
+          ],
+          "description": "Callback and gadget reference validation for .pmlfrm files"
         },
         "pml.indexing.exclude": {
           "type": "array",

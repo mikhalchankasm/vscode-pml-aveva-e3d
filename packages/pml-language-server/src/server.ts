@@ -35,6 +35,7 @@ import { SignatureHelpProvider } from './providers/signatureHelpProvider';
 import { RenameProvider } from './providers/renameProvider';
 import { SemanticTokensProvider, semanticTokensLegend } from './providers/semanticTokensProvider';
 import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
+import { FormReferenceValidator } from './analysis/formReferenceValidator';
 
 // Create a connection for the server
 const connection = createConnection(ProposedFeatures.all);
@@ -237,6 +238,7 @@ interface PMLSettings {
 		arrayIndexZero: 'error' | 'warning' | 'off';
 		typoDetection: 'warning' | 'off';
 		formErrors: 'error' | 'warning' | 'off';
+		formReferences: 'error' | 'warning' | 'off';
 	};
 }
 
@@ -251,7 +253,8 @@ const defaultSettings: PMLSettings = {
 		unusedVariables: 'warning',
 		arrayIndexZero: 'error',
 		typoDetection: 'off',  // Default off; when enabled, uses Levenshtein distance on parse errors
-		formErrors: 'off'
+		formErrors: 'off',
+		formReferences: 'off'
 	}
 };
 
@@ -405,6 +408,14 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 				}
 				diagnostics.push(diag);
 			}
+		}
+
+		if (isFormFile && settings.diagnostics.formReferences !== 'off' && parseResult.errors.length === 0) {
+			const formReferenceSeverity = settings.diagnostics.formReferences === 'error'
+				? DiagnosticSeverity.Error
+				: DiagnosticSeverity.Warning;
+			const formReferenceValidator = new FormReferenceValidator();
+			diagnostics.push(...formReferenceValidator.check(parseResult.ast, formReferenceSeverity));
 		}
 
 		connection.console.log(`Parsed ${textDocument.uri}: ${parseResult.errors.length} parse errors, ${diagnostics.length} total diagnostics, ${parseResult.ast.body.length} top-level statements`);

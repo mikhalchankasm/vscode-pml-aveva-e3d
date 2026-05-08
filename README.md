@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.3-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.4-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -77,6 +77,11 @@ Entries include the first command word, category, and short hover text. Add only
   - `off` (default): suppress form parser diagnostics.
   - `warning`: show form parser diagnostics as warnings.
   - `error`: show form parser diagnostics as errors.
+- `pml.diagnostics.formReferences`: opt-in callback/gadget reference validation for `.pmlfrm` files.
+  - `off` (default): do not validate references.
+  - `warning`: warn when callbacks target missing methods or `!this.<name>` references an unknown form member/gadget.
+  - `error`: report those findings as errors.
+  - Runs only after the form parses without parser errors to avoid cascade noise.
 
 ### 📚 Documentation
 
@@ -182,6 +187,11 @@ Whitelist стартовых слов команд лежит здесь:
   - `off` (по умолчанию): не показывать parser diagnostics для форм.
   - `warning`: показывать parser diagnostics для форм как предупреждения.
   - `error`: показывать parser diagnostics для форм как ошибки.
+- `pml.diagnostics.formReferences`: опциональная проверка callback/gadget references для `.pmlfrm`.
+  - `off` (по умолчанию): не проверять ссылки.
+  - `warning`: предупреждать, если callback указывает на отсутствующий метод или `!this.<name>` ссылается на неизвестный member/gadget.
+  - `error`: показывать такие замечания как ошибки.
+  - Работает только когда форма парсится без parser errors, чтобы не создавать каскадный шум.
 
 ### 📚 Документация
 

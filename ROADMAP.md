@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.4 - 2026-05-09 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Form Reference Diagnostics** ✅ COMPLETED
+  - Add `pml.diagnostics.formReferences` for opt-in `.pmlfrm` callback and gadget reference validation.
+  - Warn/error when callback assignments or gadget `call` modifiers target missing form methods.
+  - Warn/error when form methods reference unknown `!this.<name>` members or gadgets.
+
+- [x] **Noise Control** ✅ COMPLETED
+  - Keep form reference diagnostics disabled by default.
+  - Run form reference validation only when the form parses without parser errors to avoid cascade noise.
+  - Document the setting in English and Russian README sections.
+
+---
+
 ### v0.12.3 - 2026-05-08 ✅ COMPLETED
 
 ### Patch Improvements
@@ -835,26 +851,27 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.3
-**Released:** 2026-05-08
+**Version:** 0.12.4
+**Released:** 2026-05-09
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
 - Files in VSIX: 15 files
 - LSP features: 13+ providers (with workspace-wide references)
 - Commands: 35+ (with array manipulation and print-output tools)
-- Diagnostics: 4 types (configurable severity levels)
-- Form support: First-class foundation for frame nesting, outline symbols, callback assignments, import workflows, and common form gadgets
-- Tests: **117 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures)
+- Diagnostics: 5 types (configurable severity levels)
+- Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, import workflows, and common form gadgets
+- Tests: **119 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
-- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, import wrappers, and form fixture smoke tests are in place.
+- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.4`: opt-in callback/gadget reference diagnostics for cleanly parsed `.pmlfrm` files.
 - `v0.12.3`: nested form/frame/gadget outline symbols.
 - `v0.12.2`: additional form gadgets, draft-line recovery, hidden fixture smoke baselines.
 - `v0.12.1`: form fixture cleanup, tighter callback extraction, `.pmlfrm` smoke baselines.
@@ -865,7 +882,7 @@ Development plans and progress tracking.
 For full history, see [CHANGELOG.md](CHANGELOG.md).
 
 **Known Limitations:**
-- `.pmlfrm` support is improving but still has known gaps: some attribute expressions, variable substitution inside argument lists, callback/gadget reference validation, and some PML1 collection constructs.
+- `.pmlfrm` support is improving but still has known gaps: some attribute expressions, variable substitution inside argument lists, large imported form parser gaps, and some PML1 collection constructs.
 - Find References/Rename still rely on text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
 - Type inference is intentionally limited and should be reintroduced only with a clear architecture.
 - Workspace indexer and client-side tooling commands still need broader automated tests.

@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.4] - 2026-05-09
+
+### Added
+
+- Added opt-in `.pmlfrm` callback and gadget reference diagnostics via `pml.diagnostics.formReferences`.
+- Report missing callback methods referenced from form callback assignments and gadget `call` modifiers.
+- Report unknown `!this.<name>` references in form methods when the name is not a known method, member, frame, or gadget.
+
+### Improved
+
+- Kept form reference validation disabled by default and gated it behind zero parser errors to avoid cascade noise on partially supported form files.
+- Documented the new form reference diagnostics setting in English and Russian README sections.
+- Added regression coverage for missing callback targets, unknown gadget references, and valid nested gadget/member references.
+
 ## [0.12.3] - 2026-05-08
 
 ### Added
