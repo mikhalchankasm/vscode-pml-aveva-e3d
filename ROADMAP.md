@@ -814,114 +814,25 @@ Development plans and progress tracking.
 - Tests: **110 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Recent Changes (v0.12.1):**
-- ✅ **Form Fixture Cleanup** - `ceposition.pmlfrm` is now a zero-error parser smoke fixture
-- ✅ **Callback Extraction Tightening** - unrelated `*call*` member names are no longer captured as callbacks
-- ✅ **Fixture Smoke Tests** - `examples/*.pmlfrm` parser baselines are covered by tests
+**Current Focus (v0.12.x):**
+- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, import wrappers, and form fixture smoke tests are in place.
+- ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
+- ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
+- ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases are covered with regression tests.
 
-**Previous Changes (v0.12.0):**
-- ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, and import wrappers parse more accurately
-- ✅ **Form Callback Extraction** - `!this.*call` and `!this.*.callback` bindings are captured in form metadata
-- ✅ **Import Workflow Compatibility** - `import`, `using namespace`, and numeric `handle` headers are accepted
+**Recent Release Summary:**
+- `v0.12.1`: form fixture cleanup, tighter callback extraction, `.pmlfrm` smoke baselines.
+- `v0.12.0`: first-class `.pmlfrm` parser foundation.
+- `v0.11.x`: parser compatibility, `$P` print tools, PDMS command metadata, packaging cleanup.
+- `v0.10.x` and earlier: workspace references, frame snippets, bundling, performance, parser/test foundations.
 
-**Previous Changes (v0.11.8):**
-- ✅ **PDMS Hover Comment Awareness** - Command hover no longer appears inside PML comments
-- ✅ **Form Tool Guards** - Form-only commands stop after warning on non-form files
-- ✅ **CI and Docs Maintenance** - CI now packages VSIX, README documents form diagnostics
-
-**Previous Changes (v0.11.7):**
-- ✅ **PDMS Command Metadata** - Command starters now carry category/hover descriptions
-- ✅ **Form Diagnostics Control** - `.pmlfrm` parser diagnostics can be enabled as warnings/errors
-- ✅ **Maintenance Cleanup** - Legacy provider sources removed and CI expanded
-
-**Previous Changes (v0.11.6):**
-- ✅ **VSIX Asset Size Reduction** - Icon optimized and packaged VSIX reduced to about 301 KB
-- ✅ **Extension Entry Cleanup** - Obsolete commented-out legacy provider blocks removed
-
-**Previous Changes (v0.11.5):**
-- ✅ **Post-Review Parser Hardening** - PDMS starter matching no longer collides with normal calls/expressions
-- ✅ **`$P` Print Tool Optimization** - Debounced/cached scans and safer hover command targets
-- ✅ **Packaging Cleanup** - VSIX ships fewer dev-only files
-
-**Previous Changes (v0.11.4):**
-- ✅ **PDMS Command Whitelist** - Curated command starters shared by parser and semantic highlighting
-- ✅ **`$P` Print Tools** - Full-line print highlighting, status count, hover actions, next/previous navigation
-- ✅ **Print Cleanup Commands** - Comment all, uncomment all, and delete all `$P` print lines
-
-**Previous Changes (v0.11.3):**
-- ✅ **Real PML Parser Coverage** - `proreport.pmlfnc` and `exportifczones.pmlfnc` parse with zero errors
-- ✅ **Comment Handling** - `$*` single-line and `$( ... $)` multi-line comments
-- ✅ **Output Highlighting** - `$P ...` lines highlighted for debug-output scans
-
-**Previous Changes (v0.11.2):**
-- ✅ **Variable Substitution Parsing** - `$!site` and related forms parse without false diagnostics
-- ✅ **Substitution Highlighting** - TextMate, semantic tokens, and word selection support `$...` variables
-- ✅ **Function Block Regression Coverage** - `define function !!name(...)` / `endfunction` with typed parameters
-
-**Previous Changes (v0.11.1):**
-- ✅ **Form Parser Hardening** - Combo gadgets, track callbacks, and line-scoped modifiers
-- ✅ **Rename/References Improvements** - Callback strings and nested attribute paths
-- ✅ **Packaging Cleanup** - Local agent/config files excluded from VSIX
-
-**Previous Changes (v0.11.0):**
-- ✅ **Rename Symbol (F2)** - Rename methods, variables, objects with workspace-wide updates
-- ✅ **Semantic Highlighting** - Variables, methods, parameters, keywords highlighted distinctly
-- ✅ **Workspace Indexing Progress** - Progress bar during startup indexing
-- ✅ **Context-Aware Parser Errors** - Errors include helpful suggestions
-- ✅ **Dead Settings Cleanup** - Removed non-functional typeInference/inlayHints settings
-
-**Previous Changes (v0.10.6):**
-- ✅ **Full Method Body Parsing** - Parser now parses statements inside methods/functions
-- ✅ **Semantic Analysis Inside Methods** - ArrayIndexChecker works inside method bodies
-- ✅ **References from Disk Fallback** - Files not in LRU cache are read from disk
-- ✅ **File Watcher Support** - Index updates when files change outside editor
-
-**Previous Changes (v0.10.3-v0.10.5):**
-- ✅ **Workspace-Wide References** (v0.10.3) - Find All References (Shift+F12) searches entire workspace
-- ✅ **UNC Path Support** (v0.10.3) - Network paths `\\server\share` work correctly
-- ✅ **Memory Management** (v0.10.3) - LRU cache with 100 files max prevents memory growth
-- ✅ **Basic Array Command** (v0.10.5) - Convert plain text to array assignments
-
-**Previous Changes (v0.10.0-v0.10.2):**
-- ✅ **Frame Gadgets** (v0.10.0) - 9 snippets + comprehensive tutorial
-- ✅ **CRLF Bug Fix** (v0.10.2) - ReIndex & AddToArray work on Windows
-- ✅ **Context Menu Icons** (v0.10.2) - 20+ visual icons for commands
-- ✅ **Repository Cleanup** (v0.10.1) - VSIX files moved to GitHub Releases only
-- ✅ **Dead Code Removal** (v0.9.8) - Removed obsolete src/diagnostics.ts
-- ✅ **Release Docs Update** (v0.9.8) - UTF-8 encoding, 0.9.x examples, VSIX storage policy
-- ✅ **IntelliSense for Forms** (v0.9.7) - Only show form methods in .pmlfrm files
-
-**Previous Changes (v0.8.8-v0.9.6):**
-- ✅ **UX Improvements** (v0.9.6) - Comment commands without selection, simplified Code Actions
-- ✅ **Menu Reorganization** (v0.9.5) - Quick Action PML renamed, array submenu restored
-- ✅ **Menu Configuration Fix** (v0.9.4) - Corrected context menu and toolbar structure
-- ✅ **Remove Comments Fix** (v0.9.3) - Now removes only prefix, not entire lines
-- ❌ **Column Generator Removed** (v0.9.6) - Replaced by external extensions
-- ✅ **UI/UX Improvements** (v0.9.1) - New commands (Add Comments, Align PML), fixed broken commands
-- ✅ **Form Syntax Support** (v0.9.0) - Parser recognizes setup form, gadgets, members
-- ✅ **Form Tokens** (v0.9.0) - Added 15+ form-related keywords
-- ✅ **AST Extensions** (v0.9.0) - GadgetDeclaration, MemberDeclaration nodes
-- ✅ **Array Index Checker Tests** (v0.8.8) - 30 tests, fixed critical bug
-
-**Previous Milestones (v0.8.0-v0.8.8):**
-- ✅ **Code Bundling** (v0.8.0) - esbuild integration, 7.5x size reduction
-- ✅ **Performance Optimizations** (v0.8.1) - Memory leak fixes, async workspace indexing
-- ✅ **Parser Improvements** (v0.8.2-v0.8.4) - Compose keyword, nested elseif, method token handling
-- ✅ **Typo Detection Restored** (v0.8.6-v0.8.7) - Parse-error-based, 75+ keywords, test suite
-- ✅ **Parser Tests** (v0.8.8) - Fixed all 20 parser tests by removing stale compiled files
-
-**Previous Achievements (v0.7.0-v0.7.3):**
-- ✅ Find All References (Shift+F12)
-- ✅ Method documentation from comments (hover tooltips)
-- ✅ F12 (Go to Definition) for method calls
-- ✅ Comparison operators (neq, geq, leq)
-- ✅ AST-based typo detection (later replaced with parse-error-based)
+For full history, see [CHANGELOG.md](CHANGELOG.md).
 
 **Known Limitations:**
-- Form syntax: graceful degradation (parsed as PML)
-- Find References: works only in current file (workspace search pending)
-- Type inference: removed (needs re-implementation with correct architecture)
-- Test coverage: Parser and typo detector covered (38 passing); array index checker, workspace indexer, and tooling commands need Vitest suites
+- `.pmlfrm` support is improving but still has known gaps: `container`, `menu`, some attribute expressions, variable substitution inside argument lists, and some PML1 collection constructs.
+- Find References/Rename still rely on text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
+- Type inference is intentionally limited and should be reintroduced only with a clear architecture.
+- Workspace indexer and client-side tooling commands still need broader automated tests.
 
 ---
 
@@ -935,5 +846,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2026-01-10*
+*Last updated: 2026-05-08*
 *Roadmap may change based on feedback and priorities*
