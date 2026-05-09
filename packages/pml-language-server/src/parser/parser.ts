@@ -124,6 +124,10 @@ export class Parser {
 			return this.parseFormDefinition();
 		}
 
+		if (this.isLayoutFormStart()) {
+			return this.parseFormDefinition();
+		}
+
 		// Variables, expressions, etc.
 		return this.parseStatement();
 	}
@@ -407,7 +411,7 @@ export class Parser {
 		const previousContext = this.parsingContext;
 		this.parsingContext = 'form';
 
-		const startToken = this.consume(TokenType.SETUP, "Expected 'setup'");
+		const startToken = this.advance();
 		this.consume(TokenType.FORM, "Expected 'form'");
 
 		const nameToken = this.consume(TokenType.GLOBAL_VAR, "Expected form name (e.g., !!MyForm)");
@@ -468,6 +472,11 @@ export class Parser {
 			if (token.type === TokenType.DEFINE) {
 				// Don't consume DEFINE - let the main parser handle it
 				break;
+			}
+
+			if (this.isFormSubBlockStart()) {
+				this.consumeFormBlockBodyUntilExit();
+				continue;
 			}
 
 			// Parse member declarations
@@ -538,6 +547,15 @@ export class Parser {
 			callbacks,
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
+	}
+
+	private isLayoutFormStart(): boolean {
+		const token = this.peek();
+		const nextToken = this.peekNext();
+		return token.type === TokenType.IDENTIFIER &&
+		       token.value.toLowerCase() === 'layout' &&
+		       nextToken.type === TokenType.FORM &&
+		       nextToken.line === token.line;
 	}
 
 	private parseFormExpressionStatement(callbacks: Record<string, string>): Statement | null {
@@ -655,6 +673,11 @@ export class Parser {
 				continue;
 			}
 
+			if (this.isFormSubBlockStart()) {
+				this.consumeFormBlockBodyUntilExit();
+				continue;
+			}
+
 			// Parse gadget (button, text, combo, option, toggle, container, menu)
 			if (this.isGadgetDeclarationStart(this.peek().type)) {
 				gadgets.push(this.parseGadget());
@@ -741,9 +764,8 @@ export class Parser {
 			throw this.error(this.peek(), "Expected gadget type (button, text, combo, option, toggle, container, menu, para)");
 		}
 
-		// Gadget name (.name)
-		const nameToken = this.consume(TokenType.METHOD, "Expected gadget name (e.g., .myButton)");
-		const gadgetName = nameToken.value.substring(1); // Remove leading dot
+		const nameToken = this.consumeGadgetName();
+		const gadgetName = nameToken.type === TokenType.METHOD ? nameToken.value.substring(1) : nameToken.value;
 
 		let label: string | undefined;
 		let width: number | string | undefined;
@@ -835,6 +857,10 @@ export class Parser {
 			properties.pixmap = modifiers.pixmap;
 		}
 
+		if (gadgetType === 'menu') {
+			this.consumeFormBlockBodyUntilExit();
+		}
+
 		return {
 			type: 'GadgetDeclaration',
 			name: gadgetName,
@@ -846,6 +872,14 @@ export class Parser {
 			properties,
 			range: this.createRange(this.getTokenIndex(startToken), this.current - 1)
 		};
+	}
+
+	private consumeGadgetName(): Token {
+		if (this.check(TokenType.METHOD) || this.check(TokenType.IDENTIFIER)) {
+			return this.advance();
+		}
+
+		throw this.error(this.peek(), "Expected gadget name (e.g., .myButton)");
 	}
 
 	private isGadgetDeclarationStart(type: TokenType): boolean {
@@ -1037,6 +1071,38 @@ export class Parser {
 		}
 	}
 
+	private isFormSubBlockStart(): boolean {
+		if (!this.check(TokenType.IDENTIFIER)) {
+			return false;
+		}
+
+		return ['bar', 'rgroup'].includes(this.peek().value.toLowerCase());
+	}
+
+	private consumeFormBlockBodyUntilExit(): void {
+		if (this.isFormSubBlockStart()) {
+			this.consumeRemainingLine(this.peek().line);
+		}
+
+		while (!this.isAtEnd() && !this.check(TokenType.EXIT) && !this.check(TokenType.DEFINE)) {
+			if (this.check(TokenType.FRAME)) {
+				this.parseFrameDefinition();
+				continue;
+			}
+
+			if (this.isGadgetDeclarationStart(this.peek().type)) {
+				this.parseGadget();
+				continue;
+			}
+
+			this.consumeRemainingLine(this.peek().line);
+		}
+
+		if (this.check(TokenType.EXIT)) {
+			this.advance();
+		}
+	}
+
 	private isFormDeclarationStart(): boolean {
 		const token = this.peek();
 		return token.type === TokenType.MEMBER ||
@@ -1133,6 +1199,10 @@ export class Parser {
 		if (this.match(TokenType.FORM)) {
 			return createAnyType();
 		}
+		if (this.isCustomKeywordType()) {
+			this.advance();
+			return createAnyType();
+		}
 
 		if (this.check(TokenType.IDENTIFIER)) {
 			const typeName = this.advance().value.toUpperCase();
@@ -1156,6 +1226,21 @@ export class Parser {
 		}
 
 		throw this.error(typeToken, "Expected type name (STRING, REAL, BOOLEAN, ARRAY, DBREF)");
+	}
+
+	private isCustomKeywordType(): boolean {
+		return [
+			TokenType.BUTTON,
+			TokenType.COMBO,
+			TokenType.CONTAINER,
+			TokenType.FRAME,
+			TokenType.MENU,
+			TokenType.OPTION,
+			TokenType.PARA,
+			TokenType.PARAGRAPH,
+			TokenType.TEXT,
+			TokenType.TOGGLE
+		].includes(this.peek().type);
 	}
 
 	/**
@@ -1667,7 +1752,7 @@ export class Parser {
 		if (this.check(TokenType.ASSIGN)) {
 			this.advance(); // consume =
 
-			const initializer = this.parseExpression();
+			const initializer = this.consumePml1ArgumentPhrase(this.parseExpression());
 
 			// If left is just an Identifier, return VariableDeclaration
 			if (left.type === 'Identifier') {
@@ -1845,7 +1930,7 @@ export class Parser {
 		// Check if this is an assignment
 		if (this.match(TokenType.ASSIGN)) {
 			const assignToken = this.previous();
-			const right = this.parseAssignment(); // Right-associative: a = b = c
+			const right = this.consumePml1ArgumentPhrase(this.parseAssignment()); // Right-associative: a = b = c
 
 			// Validate left side - must be identifier or member expression
 			if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
@@ -2416,6 +2501,14 @@ export class Parser {
 					objectConstructor: true,  // Mark this as an object constructor
 					range: this.createRange(this.getTokenIndex(objectToken), this.getTokenIndex(typeToken))
 				} as Identifier;
+			} else if (this.match(TokenType.FORM)) {
+				const typeToken = this.previous();
+				return {
+					type: 'Identifier',
+					name: typeToken.value,
+					objectConstructor: true,
+					range: this.createRange(this.getTokenIndex(objectToken), this.getTokenIndex(typeToken))
+				} as Identifier;
 			} else if (this.match(TokenType.IDENTIFIER)) {
 				// Custom type: object MyCustomType()
 				const typeToken = this.previous();
@@ -2724,9 +2817,9 @@ export class Parser {
 	}
 
 	private consumePml1ArgumentPhrase(argument: Expression): Expression {
-		if (!this.check(TokenType.IDENTIFIER) ||
-		    this.peek().value.toLowerCase() !== 'wrt' ||
-		    this.peek().line - 1 !== argument.range.end.line) {
+		const isWrtPhrase = this.check(TokenType.IDENTIFIER) && this.peek().value.toLowerCase() === 'wrt';
+		const isDirectionPhrase = this.check(TokenType.IS);
+		if ((!isWrtPhrase && !isDirectionPhrase) || this.peek().line - 1 !== argument.range.end.line) {
 			return argument;
 		}
 

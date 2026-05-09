@@ -2,6 +2,23 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.11] - 2026-05-10
+
+### Fixed
+
+- Parsed `layout form ...` form definitions used by installed AVEVA form files.
+- Kept form parsing open across nested `bar ... exit`, `menu ... exit`, and `rgroup ... exit` sub-blocks.
+- Accepted form gadget names written as bare identifiers, such as `_cancel`, in addition to `.name` syntax.
+- Parsed PML form/object type patterns such as `MENU` parameter types and `object FORM()`.
+- Reused PML1 direction phrase recovery for assignment expressions such as `Z wrt /*` and `Z is U wrt /*`.
+- Treated `id`, `gap`, and `calldrg` as command-style starters.
+
+### Improved
+
+- Added regression coverage for layout forms, menu/bar/rgroup sub-blocks, bare gadget names, form object constructors, direction phrases, and picked-command lines.
+- Reduced installed AVEVA `.pmlfrm` parser errors from 3010 to 1409 across 1206 files.
+- Also reduced installed `.pmlfnc` parser errors from 1735 to 1611 and `.pmlobj` parser errors from 2694 to 2306.
+
 ## [0.12.10] - 2026-05-09
 
 ### Fixed

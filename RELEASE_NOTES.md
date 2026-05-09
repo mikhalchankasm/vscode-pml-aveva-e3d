@@ -2,37 +2,38 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.10
+## Current Release - v0.12.11
 
-**Release Date:** 2026-05-09
+**Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.10](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.10)
+**GitHub Release:** [v0.12.11](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.11)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.9 Claude review.
-- Report `function !!name()` definitions that are missing `define` at the typo location.
-- Mark parsed DBREF literals as `dbref` literals in the AST.
-- Limit multiline `compose` continuation recovery to lines that actually follow a trailing `$`.
-- Extend recovered `if`, `do`, and `handle` ranges to the boundary token when the closing keyword is missing.
-- Added parser mode plumbing from document URI/file extension for future context-aware command parsing.
+- Continued the `.pmlfrm` parser pass against the installed AVEVA PMLLIB corpus.
+- Parsed `layout form ...` definitions.
+- Kept form parsing open across nested `bar`, `menu`, and `rgroup` blocks that terminate with their own `exit`.
+- Accepted bare-identifier gadget names such as `_cancel`.
+- Parsed form/object type patterns such as `MENU` parameter types and `object FORM()`.
+- Accepted PML1 direction phrases in assignment expressions, including `Z wrt /*` and `Z is U wrt /*`.
+- Added `id`, `gap`, and `calldrg` command-style starters.
 
 ### Validation
 
-- Language server tests: 137 passed, 2 skipped.
+- Language server tests: 138 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
-- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1735 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 3010 errors.
-- External AVEVA `.pmlobj` corpus parse: 1334 files, 2694 errors.
+- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1611 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1409 errors.
+- External AVEVA `.pmlobj` corpus parse: 1334 files, 2306 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.10.vsix`
-- SHA256: `05d13a3faa1138b37e8ce79f71733a7d5d34fddfa7b2b11de4f493f9037debbf`
+- VSIX: `pml-aveva-e3d-0.12.11.vsix`
+- SHA256: `f598516df0f5bf6c451d8eaf7d632154e02210529bb30f3d094bf1c28019344d`
 
 ## Active Release Track
 

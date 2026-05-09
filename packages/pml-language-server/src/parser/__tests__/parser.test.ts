@@ -438,6 +438,8 @@ setup form !!AdvancedForm dialog
 		container .gridFramePipe nobox PMLNETCONTROL |TablePipe| at xmin.gridFrame + 0.25 wid 78 hei 13
 	exit
 	menu .menuPopup popup
+		add 'Stored' |!!handler()|
+	exit
 	para .lock anchor right + top text |Lock|
 	paragraph .offsetTag text |Offset|
 exit
@@ -458,6 +460,39 @@ exit
 			expect(form.frames[0].gadgets[0].properties.controlType).toBe('PMLNETCONTROL');
 			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'para', 'paragraph']);
 			expect(gadgets[0].properties.popup).toBe(true);
+		});
+
+		it('should parse layout form files and continue after menu blocks', () => {
+			const source = `
+layout form !!LayoutForm resize
+	bar
+		add 'File' .viewmenu
+	exit
+	menu .viewmenu
+		add 'Stored LogFiles' |!!handler()|
+	exit
+	frame .choiceFrame |Choices|
+		rgroup .mode '' frame vertical at x1 ymin
+			add tag 'Create' select 'Auto' call |!this.mode('CREATE')|
+		exit
+		para _caption at xmax+2 ymin text 'Font' width 4
+		toggle .enabled 'Enabled' at x1 y0.7
+		CALLDRG FFONTS !!abaDrtmplAtt
+	exit
+	container .sheetsGrid nobox pmlNetControl 'NET' at xmin ymax width 60 height 15
+	member .sheetsControl is NETGRIDCONTROL
+exit
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const form = result.ast.body[0] as FormDefinition;
+			expect(form.body.some(statement => statement.type === 'GadgetDeclaration')).toBe(true);
+			expect(form.frames[0].gadgets.map(gadget => gadget.gadgetType)).toContain('toggle');
+			expect(form.members[0].name).toBe('sheetsControl');
 		});
 
 		it('should parse using namespace as a command-style statement', () => {
@@ -830,6 +865,8 @@ setup command !!brokenController
 			expect(parser.parse('!x = $T8').errors).toHaveLength(0);
 			expect(parser.parse('$T8 = 5').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('goto target =').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('id EQUI BRAN PANE SCTN @').errors).toHaveLength(0);
+			expect(parser.parse('gap @').errors).toHaveLength(0);
 		});
 
 		it('should still report broken indexed assignments and chained calls', () => {
@@ -845,11 +882,19 @@ define function !!makeForm(!number is REAL) is FORM
 	!form = '!!makeForm' & !number
 endfunction
 
+define method .dacControl(!menu is MENU, !dummySelect is STRING)
+	!menu.selected(!menu.pickedField)
+endmethod
+
 define function !!exportMember(!item is STRING, $
                                !messages is ARRAY) is BOCERROROBJ
 	!dbs = ARRAY()
 	!dbs.append( /*MDS/CATA )
 	!offset = !ptDir.cross( u wrt /* )
+	!arc = object ARC(!tagPosition, Y is N, 90)
+	!form = object FORM()
+	!planeDir = Z wrt /*
+	!this.plane.orientation = Z is U wrt /*
 endfunction
 			`.trim();
 
