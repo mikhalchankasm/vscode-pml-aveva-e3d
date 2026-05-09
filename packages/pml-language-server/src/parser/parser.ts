@@ -1214,7 +1214,11 @@ export class Parser {
 			if (this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) {
 				const stmt = this.parseVariableDeclarationOrAssignment();
 				if (stmt.type === 'ExpressionStatement' && this.peek().line === varToken.line) {
+					const isComposeStatement = this.check(TokenType.COMPOSE) || this.lineContainsToken(varToken.line, TokenType.COMPOSE);
 					this.consumeRemainingLine(varToken.line);
+					if (isComposeStatement) {
+						this.consumeComposeContinuationLines();
+					}
 				}
 				return stmt;
 			}
@@ -1255,7 +1259,11 @@ export class Parser {
 
 		// Consequent (if body)
 		const consequent: Statement[] = [];
-		while (!this.check(TokenType.ELSE) && !this.check(TokenType.ELSEIF) && !this.check(TokenType.ENDIF) && !this.isAtEnd()) {
+		while (!this.check(TokenType.ELSE) &&
+		       !this.check(TokenType.ELSEIF) &&
+		       !this.check(TokenType.ENDIF) &&
+		       !this.isDefinitionBoundary() &&
+		       !this.isAtEnd()) {
 			try {
 				const stmt = this.parseStatement();
 				if (stmt) {
@@ -1265,7 +1273,10 @@ export class Parser {
 				// Error recovery: skip to end of line and continue
 				this.synchronize();
 				// If we hit ELSE/ELSEIF/ENDIF during synchronize, break
-				if (this.check(TokenType.ELSE) || this.check(TokenType.ELSEIF) || this.check(TokenType.ENDIF)) {
+				if (this.check(TokenType.ELSE) ||
+				    this.check(TokenType.ELSEIF) ||
+				    this.check(TokenType.ENDIF) ||
+				    this.isDefinitionBoundary()) {
 					break;
 				}
 			}
@@ -1285,7 +1296,7 @@ export class Parser {
 			if (this.check(TokenType.ELSE)) {
 				this.advance(); // consume 'else'
 				alternate = [];
-				while (!this.check(TokenType.ENDIF) && !this.isAtEnd()) {
+				while (!this.check(TokenType.ENDIF) && !this.isDefinitionBoundary() && !this.isAtEnd()) {
 					try {
 						const stmt = this.parseStatement();
 						if (stmt) {
@@ -1295,14 +1306,20 @@ export class Parser {
 						// Error recovery: skip to end of line and continue
 						this.synchronize();
 						// If we hit ENDIF during synchronize, break
-						if (this.check(TokenType.ENDIF)) {
+						if (this.check(TokenType.ENDIF) || this.isDefinitionBoundary()) {
 							break;
 						}
 					}
 				}
 			}
 			// Consume endif for this if/else block
-			endToken = this.consume(TokenType.ENDIF, "Expected 'endif'");
+			if (this.check(TokenType.ENDIF)) {
+				endToken = this.advance();
+			} else {
+				endToken = this.previous();
+				const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
+				this.errors.push(new ParseError(`Expected 'endif' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
+			}
 		}
 
 		this.parsingContext = previousContext;
@@ -1408,7 +1425,7 @@ export class Parser {
 
 		// Body
 		const body: Statement[] = [];
-		while (!this.check(TokenType.ENDDO) && !this.isAtEnd()) {
+		while (!this.check(TokenType.ENDDO) && !this.isDefinitionBoundary() && !this.isAtEnd()) {
 			try {
 				const stmt = this.parseStatement();
 				if (stmt) {
@@ -1418,13 +1435,20 @@ export class Parser {
 				// Error recovery: skip to end of line and continue
 				this.synchronize();
 				// If we hit ENDDO during synchronize, break
-				if (this.check(TokenType.ENDDO)) {
+				if (this.check(TokenType.ENDDO) || this.isDefinitionBoundary()) {
 					break;
 				}
 			}
 		}
 
-		const endToken = this.consume(TokenType.ENDDO, "Expected 'enddo'");
+		let endToken: Token;
+		if (this.check(TokenType.ENDDO)) {
+			endToken = this.advance();
+		} else {
+			endToken = this.previous();
+			const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
+			this.errors.push(new ParseError(`Expected 'enddo' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
+		}
 
 		this.parsingContext = previousContext;
 
@@ -1455,7 +1479,10 @@ export class Parser {
 
 		// Body
 		const body: Statement[] = [];
-		while (!this.check(TokenType.ELSEHANDLE) && !this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
+		while (!this.check(TokenType.ELSEHANDLE) &&
+		       !this.check(TokenType.ENDHANDLE) &&
+		       !this.isDefinitionBoundary() &&
+		       !this.isAtEnd()) {
 			try {
 				const stmt = this.parseStatement();
 				if (stmt) {
@@ -1465,7 +1492,7 @@ export class Parser {
 				// Error recovery: skip to end of line and continue
 				this.synchronize();
 				// If we hit ELSEHANDLE/ENDHANDLE during synchronize, break
-				if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE)) {
+				if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE) || this.isDefinitionBoundary()) {
 					break;
 				}
 			}
@@ -1479,7 +1506,10 @@ export class Parser {
 				const elseHandleToken = this.advance();
 				this.consumeRemainingLine(elseHandleToken.line);
 
-				while (!this.check(TokenType.ELSEHANDLE) && !this.check(TokenType.ENDHANDLE) && !this.isAtEnd()) {
+				while (!this.check(TokenType.ELSEHANDLE) &&
+				       !this.check(TokenType.ENDHANDLE) &&
+				       !this.isDefinitionBoundary() &&
+				       !this.isAtEnd()) {
 					try {
 						const stmt = this.parseStatement();
 						if (stmt) {
@@ -1489,7 +1519,7 @@ export class Parser {
 						// Error recovery: skip to end of line and continue
 						this.synchronize();
 						// If we hit ELSEHANDLE/ENDHANDLE during synchronize, continue with the enclosing handle parser
-						if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE)) {
+						if (this.check(TokenType.ELSEHANDLE) || this.check(TokenType.ENDHANDLE) || this.isDefinitionBoundary()) {
 							break;
 						}
 					}
@@ -1497,7 +1527,14 @@ export class Parser {
 			}
 		}
 
-		const endToken = this.consume(TokenType.ENDHANDLE, "Expected 'endhandle'");
+		let endToken: Token;
+		if (this.check(TokenType.ENDHANDLE)) {
+			endToken = this.advance();
+		} else {
+			endToken = this.previous();
+			const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
+			this.errors.push(new ParseError(`Expected 'endhandle' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
+		}
 
 		return {
 			type: 'HandleStatement',
@@ -1665,6 +1702,12 @@ export class Parser {
 	private consumeRemainingLine(line: number): void {
 		while (!this.isAtEnd() && this.peek().line === line) {
 			this.advance();
+		}
+	}
+
+	private consumeComposeContinuationLines(): void {
+		while (!this.isAtEnd() && this.check(TokenType.STRING)) {
+			this.consumeRemainingLine(this.peek().line);
 		}
 	}
 
@@ -2139,6 +2182,13 @@ export class Parser {
 		};
 	}
 
+	private isDefinitionBoundary(): boolean {
+		return this.check(TokenType.DEFINE) ||
+		       this.check(TokenType.ENDMETHOD) ||
+		       this.check(TokenType.ENDFUNCTION) ||
+		       this.check(TokenType.ENDOBJECT);
+	}
+
 	/**
 	 * Parse member expression (!var.method, !arr[index])
 	 */
@@ -2219,7 +2269,12 @@ export class Parser {
 				    this.check(TokenType.SPACE) ||
 				    this.check(TokenType.IDENTIFIER) ||
 				    this.check(TokenType.SUBSTITUTE_VAR) ||
-				    this.check(TokenType.STRING)) {
+				    this.check(TokenType.STRING) ||
+				    this.check(TokenType.NUMBER) ||
+				    this.check(TokenType.PLUS) ||
+				    this.check(TokenType.MINUS) ||
+				    this.check(TokenType.LEFT) ||
+				    this.check(TokenType.RIGHT)) {
 					this.advance();
 				} else {
 					// Stop at any other token (likely end of compose expression)
@@ -2279,6 +2334,10 @@ export class Parser {
 				pmlType: createBooleanType(),
 				range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
 			};
+		}
+
+		if (this.isDbRefLiteralStart()) {
+			return this.parseDbRefLiteral();
 		}
 
 		// Variable substitution ($!var, $!!global, $/attribute, $identifier)
@@ -2401,6 +2460,31 @@ export class Parser {
 		}
 
 		throw this.error(this.peek(), "Expected expression");
+	}
+
+	private isDbRefLiteralStart(): boolean {
+		return this.check(TokenType.ASSIGN) &&
+		       this.peekNext().type === TokenType.NUMBER &&
+		       this.peekNext().line === this.peek().line;
+	}
+
+	private parseDbRefLiteral(): Literal {
+		const startToken = this.advance();
+		let endToken = startToken;
+
+		while (!this.isAtEnd() &&
+		       this.peek().line === startToken.line &&
+		       [TokenType.NUMBER, TokenType.SLASH].includes(this.peek().type)) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'Literal',
+			value: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length),
+			literalType: 'string',
+			pmlType: createDBRefType(),
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
 	}
 
 	private parseAttributeExpression(): Identifier {

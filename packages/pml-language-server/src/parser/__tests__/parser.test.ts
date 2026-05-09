@@ -858,6 +858,32 @@ endfunction
 			expect(result.errors).toHaveLength(0);
 		});
 
+		it('should parse DBREF literals and command-style toolbar/object lines used in object files', () => {
+			const source = `
+define method .toolbars()
+	!this.drwg = =0/0
+	frame .sampleToolbar toolbar 'Sample Toolbar'
+	option .sampleOption 'Sample' at xmin ymin+0.1 call '!!sample()' width 19
+	button .sampleButton 'Run' call '!!run()'
+	text .sampleText 'Ready'
+	RENAME ALL $!!ce.name $!this.name
+	LIMITS FROM E $!l[1] N $!l[2] U $!l[3] to E $!l[4] N $!l[5] U $!l[6]
+	FUNCTION |$!task.function|
+	PMLFunction |$!task.execute|
+	SpPURP $!task.purpose
+	do !x from 1 to !entries
+		var !line compose |$!this.name[$!x]| width $!w1 Left spaces 2 $
+		                  |$!this.desc[$!x]| width $!w2 Left spaces 2
+	enddo
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse array access', () => {
 			const source = '!item = !array[1]';
 

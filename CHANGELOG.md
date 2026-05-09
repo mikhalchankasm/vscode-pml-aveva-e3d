@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.9] - 2026-05-09
+
+### Fixed
+
+- Improved parser recovery at method-definition boundaries for unterminated `if`, `do`, and `handle` blocks, preventing one local syntax issue from cascading into following object methods.
+- Parsed PML DBREF literals such as `=0/0` on the right side of assignments.
+- Consumed multiline `var ... compose ...` statements with `$` continuations and alignment fragments such as `Left spaces 2`.
+- Treated additional object-file PML1 command lines as command-style statements: `at`, `auto`, `button`, `frame`, `function`, `limits`, `option`, `pin`, `pmlfunction`, `position`, `rename`, `savework`, `sppurp`, `text`, and `update`.
+
+### Improved
+
+- Added synthetic regression coverage for object-file toolbar declarations, PML1 command lines, DBREF literals, and multiline compose statements.
+- Reduced installed AVEVA `.pmlobj` parser errors from 11007 to 2694 across 1334 files.
+- The same recovery improvements also reduced installed `.pmlfnc` parser errors from 2852 to 1735 and `.pmlfrm` parser errors from 10980 to 3010.
+
 ## [0.12.8] - 2026-05-09
 
 ### Fixed
