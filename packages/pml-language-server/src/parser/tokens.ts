@@ -155,6 +155,7 @@ export interface Token {
 	offset: number;
 	length: number;
 	index: number;  // Position in token array for O(1) lookup
+	continuesPreviousLine?: boolean;
 }
 
 export const KEYWORDS: Record<string, TokenType> = {

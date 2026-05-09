@@ -11,6 +11,8 @@ export class Lexer {
 	private line: number = 1;
 	private column: number = 1;
 	private tokens: Token[] = [];
+	private pendingLineContinuation: boolean = false;
+	private nextTokenContinuesPreviousLine: boolean = false;
 
 	constructor(source: string) {
 		this.source = source;
@@ -24,6 +26,8 @@ export class Lexer {
 		this.position = 0;
 		this.line = 1;
 		this.column = 1;
+		this.pendingLineContinuation = false;
+		this.nextTokenContinuesPreviousLine = false;
 
 		while (!this.isAtEnd()) {
 			this.scanToken();
@@ -61,6 +65,12 @@ export class Lexer {
 			}
 			this.line++;
 			this.column = 1;
+			if (this.pendingLineContinuation) {
+				this.nextTokenContinuesPreviousLine = true;
+				this.pendingLineContinuation = false;
+			} else {
+				this.nextTokenContinuesPreviousLine = false;
+			}
 			// Skip newline tokens for now (we use them for diagnostics if needed)
 			return;
 		}
@@ -416,6 +426,7 @@ export class Lexer {
 		}
 
 		if (this.peek() === '\n' || this.peek() === '\r' || this.isAtEnd()) {
+			this.pendingLineContinuation = true;
 			return true;
 		}
 
@@ -484,6 +495,7 @@ export class Lexer {
 
 	private addToken(type: TokenType, value: string, line: number, column: number, offset: number, length: number): void {
 		this.tokens.push(this.createToken(type, value, length, line, column, offset));
+		this.nextTokenContinuesPreviousLine = false;
 	}
 
 	private createToken(type: TokenType, value: string, length: number, line: number = this.line, column: number = this.column, offset: number = this.position): Token {
@@ -495,7 +507,8 @@ export class Lexer {
 			column,
 			offset,
 			length,
-			index
+			index,
+			continuesPreviousLine: this.nextTokenContinuesPreviousLine || undefined
 		};
 	}
 }

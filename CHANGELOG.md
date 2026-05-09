@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.10] - 2026-05-09
+
+### Fixed
+
+- Report `function !!name()` definitions that are missing the required `define` keyword at the actual typo location.
+- Mark DBREF literals as `literalType: 'dbref'` in the parser AST instead of treating them as strings.
+- Restrict multiline `compose` continuation consumption to lines that really follow a trailing `$` continuation marker.
+- Extend recovered `if`, `do`, and `handle` AST ranges to the definition boundary token when a closing keyword is missing.
+
+### Improved
+
+- Added parser mode plumbing from document URI/file extension for future context-aware command-style parsing.
+- Added regression tests for missing `define function`, DBREF typing, compose continuation safety, and recovered block ranges.
+- Revalidated the installed AVEVA PMLLIB corpus without changing the `v0.12.9` parser error baseline.
+
 ## [0.12.9] - 2026-05-09
 
 ### Fixed

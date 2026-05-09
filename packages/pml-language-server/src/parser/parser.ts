@@ -23,6 +23,23 @@ import {
 import { Range } from 'vscode-languageserver-textdocument';
 import { isPdmsCommandStarter } from '../data/pdmsCommands';
 
+export type ParserMode = 'default' | 'object' | 'command';
+
+export interface ParserOptions {
+	mode?: ParserMode;
+}
+
+export function parserModeFromUri(uriOrPath: string): ParserMode {
+	const lower = uriOrPath.toLowerCase();
+	if (lower.endsWith('.pmlobj')) {
+		return 'object';
+	}
+	if (lower.endsWith('.pmlcmd')) {
+		return 'command';
+	}
+	return 'default';
+}
+
 interface GadgetModifiers {
 	position?: number;
 	width?: number | string;
@@ -38,17 +55,19 @@ export class Parser {
 	private current: number = 0;
 	private errors: ParseError[] = [];
 	private parsingContext: ErrorContext['context'] = undefined;
+	private mode: ParserMode = 'default';
 
 	/**
 	 * Parse source code into AST
 	 */
-	public parse(source: string): ParseResult {
+	public parse(source: string, options: ParserOptions = {}): ParseResult {
 		// Tokenize
 		const lexer = new Lexer(source);
 		this.sourceText = source;
 		this.tokens = lexer.tokenize();
 		this.current = 0;
 		this.errors = [];
+		this.mode = options.mode ?? 'default';
 
 		// Parse
 		const statements: Statement[] = [];
@@ -1203,6 +1222,10 @@ export class Parser {
 			throw this.error(this.peekNext(), "Expected '+' or '-' after trace control");
 		}
 
+		if (this.isMissingDefineFunctionStart()) {
+			throw this.error(this.peek(), "Expected 'define' before 'function'");
+		}
+
 		if (this.isLineCommandStart()) {
 			return this.parseLineCommandStatement();
 		}
@@ -1214,7 +1237,7 @@ export class Parser {
 			if (this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) {
 				const stmt = this.parseVariableDeclarationOrAssignment();
 				if (stmt.type === 'ExpressionStatement' && this.peek().line === varToken.line) {
-					const isComposeStatement = this.check(TokenType.COMPOSE) || this.lineContainsToken(varToken.line, TokenType.COMPOSE);
+					const isComposeStatement = this.check(TokenType.COMPOSE) || this.restOfLineContainsToken(varToken.line, TokenType.COMPOSE);
 					this.consumeRemainingLine(varToken.line);
 					if (isComposeStatement) {
 						this.consumeComposeContinuationLines();
@@ -1316,7 +1339,7 @@ export class Parser {
 			if (this.check(TokenType.ENDIF)) {
 				endToken = this.advance();
 			} else {
-				endToken = this.previous();
+				endToken = this.isAtEnd() ? this.previous() : this.peek();
 				const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
 				this.errors.push(new ParseError(`Expected 'endif' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
 			}
@@ -1445,7 +1468,7 @@ export class Parser {
 		if (this.check(TokenType.ENDDO)) {
 			endToken = this.advance();
 		} else {
-			endToken = this.previous();
+			endToken = this.isAtEnd() ? this.previous() : this.peek();
 			const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
 			this.errors.push(new ParseError(`Expected 'enddo' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
 		}
@@ -1531,7 +1554,7 @@ export class Parser {
 		if (this.check(TokenType.ENDHANDLE)) {
 			endToken = this.advance();
 		} else {
-			endToken = this.previous();
+			endToken = this.isAtEnd() ? this.previous() : this.peek();
 			const diagnosticToken = this.isAtEnd() ? endToken : this.peek();
 			this.errors.push(new ParseError(`Expected 'endhandle' before '${diagnosticToken.value || 'EOF'}'`, diagnosticToken));
 		}
@@ -1706,7 +1729,7 @@ export class Parser {
 	}
 
 	private consumeComposeContinuationLines(): void {
-		while (!this.isAtEnd() && this.check(TokenType.STRING)) {
+		while (!this.isAtEnd() && this.check(TokenType.STRING) && this.peek().continuesPreviousLine) {
 			this.consumeRemainingLine(this.peek().line);
 		}
 	}
@@ -2481,7 +2504,7 @@ export class Parser {
 		return {
 			type: 'Literal',
 			value: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length),
-			literalType: 'string',
+			literalType: 'dbref',
 			pmlType: createDBRefType(),
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
@@ -2603,7 +2626,7 @@ export class Parser {
 			return true;
 		}
 
-		if (this.lineContainsToken(startToken.line, TokenType.ASSIGN)) {
+		if (this.restOfLineContainsToken(startToken.line, TokenType.ASSIGN)) {
 			return false;
 		}
 
@@ -2614,6 +2637,19 @@ export class Parser {
 			TokenType.ASSIGN,
 			TokenType.OF
 		].includes(nextToken.type);
+	}
+
+	private isMissingDefineFunctionStart(): boolean {
+		if (this.mode === 'command' || !this.check(TokenType.FUNCTION)) {
+			return false;
+		}
+
+		const nameToken = this.peekNext();
+		const openParenToken = this.tokens[Math.min(this.current + 2, this.tokens.length - 1)];
+		return nameToken.line === this.peek().line &&
+		       nameToken.type === TokenType.GLOBAL_VAR &&
+		       openParenToken.line === this.peek().line &&
+		       openParenToken.type === TokenType.LPAREN;
 	}
 
 	private isPrintLineCommandStart(): boolean {
@@ -2654,7 +2690,7 @@ export class Parser {
 		       nextToken.type === TokenType.ASSIGN;
 	}
 
-	private lineContainsToken(line: number, tokenType: TokenType): boolean {
+	private restOfLineContainsToken(line: number, tokenType: TokenType): boolean {
 		let offset = 1;
 		while (this.current + offset < this.tokens.length) {
 			const token = this.tokens[this.current + offset];

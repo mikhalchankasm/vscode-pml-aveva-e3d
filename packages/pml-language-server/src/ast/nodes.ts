@@ -208,7 +208,7 @@ export interface Identifier extends ASTNode {
 export interface Literal extends ASTNode {
 	type: 'Literal';
 	value: string | number | boolean;
-	literalType: 'string' | 'number' | 'boolean';
+	literalType: 'string' | 'number' | 'boolean' | 'dbref';
 	pmlType: PMLType;
 }
 

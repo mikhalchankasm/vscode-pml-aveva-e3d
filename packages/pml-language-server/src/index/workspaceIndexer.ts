@@ -5,7 +5,7 @@
 import { Connection, WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { Parser } from '../parser/parser';
+import { Parser, parserModeFromUri } from '../parser/parser';
 import { SymbolIndex } from './symbolIndex';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -68,7 +68,7 @@ export class WorkspaceIndexer {
 	public indexDocument(document: TextDocument): void {
 		try {
 			const text = document.getText();
-			const parseResult = this.parser.parse(text);
+			const parseResult = this.parser.parse(text, { mode: parserModeFromUri(document.uri) });
 
 			if (parseResult.ast) {
 				// Pass document text for documentation/comment extraction
@@ -249,7 +249,7 @@ export class WorkspaceIndexer {
 			const content = await fs.readFile(filePath, 'utf-8');
 			const uri = URI.file(filePath).toString();
 
-			const parseResult = this.parser.parse(content);
+			const parseResult = this.parser.parse(content, { mode: parserModeFromUri(uri) });
 			if (parseResult.ast) {
 				this.symbolIndex.indexFile(uri, parseResult.ast, 0, content);
 			}

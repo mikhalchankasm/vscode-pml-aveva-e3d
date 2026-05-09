@@ -21,7 +21,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs';
-import { Parser } from './parser/parser';
+import { Parser, parserModeFromUri } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
 import { SymbolIndex } from './index/symbolIndex';
 import { WorkspaceIndexer } from './index/workspaceIndexer';
@@ -212,7 +212,7 @@ connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
 				// Read file from disk and reindex
 				const filePath = URI.parse(fileUri).fsPath;
 				const content = fs.readFileSync(filePath, 'utf-8');
-				const parseResult = parser.parse(content);
+				const parseResult = parser.parse(content, { mode: parserModeFromUri(fileUri) });
 
 				if (parseResult.ast) {
 					symbolIndex.indexFile(fileUri, parseResult.ast, 0, content);
@@ -353,7 +353,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	try {
 		// Parse document to AST
 		const parser = new Parser();
-		const parseResult = parser.parse(text);
+		const parseResult = parser.parse(text, { mode: parserModeFromUri(textDocument.uri) });
 
 		// Index document symbols (pass document text for comment extraction)
 		// SymbolIndex stores the necessary information from AST

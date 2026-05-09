@@ -16,7 +16,8 @@ import {
 	MemberDeclaration,
 	ExpressionStatement,
 	Identifier,
-	CallExpression
+	CallExpression,
+	Literal
 } from '../../ast/nodes';
 
 describe('PML Parser', () => {
@@ -879,9 +880,77 @@ endmethod
 			`.trim();
 
 			const parser = new Parser();
-			const result = parser.parse(source);
+			const result = parser.parse(source, { mode: 'object' });
 
 			expect(result.errors).toHaveLength(0);
+
+			const method = result.ast.body[0] as MethodDefinition;
+			const assignment = method.body[0] as ExpressionStatement;
+			expect(assignment.expression.type).toBe('AssignmentExpression');
+			const initializer = assignment.expression.type === 'AssignmentExpression'
+				? assignment.expression.right as Literal
+				: undefined;
+			expect(initializer).toBeDefined();
+			expect(initializer!.literalType).toBe('dbref');
+			expect(initializer!.pmlType.kind).toBe('DBREF');
+		});
+
+		it('should report function definitions that are missing define', () => {
+			const parser = new Parser();
+
+			const result = parser.parse(`
+function !!myfn()
+	!x = 1
+endfunction
+			`.trim());
+
+			expect(result.errors.some(error => error.message.includes("Expected 'define' before 'function'"))).toBe(true);
+		});
+
+		it('should keep DBREF literals typed separately from strings', () => {
+			const parser = new Parser();
+			const result = parser.parse('!x = =5');
+			const assignment = result.ast.body[0] as VariableDeclaration;
+			const initializer = assignment.initializer as Literal;
+
+			expect(parser.parse('!x = =0/0').errors).toHaveLength(0);
+			expect(result.errors).toHaveLength(0);
+			expect(initializer.literalType).toBe('dbref');
+			expect(initializer.pmlType.kind).toBe('DBREF');
+			expect(parser.parse('!x = =foo/bar').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should only consume compose continuation lines after a trailing dollar continuation', () => {
+			const parser = new Parser();
+			const source = `
+define function !!composeProbe()
+	var !line compose |first|
+	|stray string|
+	return
+endfunction
+			`.trim();
+
+			const result = parser.parse(source);
+			const fn = result.ast.body[0] as FunctionDefinition;
+
+			expect(result.errors).toHaveLength(0);
+			expect(fn.body).toHaveLength(3);
+		});
+
+		it('should extend recovered block ranges to the definition boundary token', () => {
+			const parser = new Parser();
+			const source = `
+define method .broken()
+	if (!ready) then
+endmethod
+			`.trim();
+
+			const result = parser.parse(source);
+			const method = result.ast.body[0] as MethodDefinition;
+			const ifStatement = method.body[0] as IfStatement;
+
+			expect(result.errors.some(error => error.message.includes("Expected 'endif'"))).toBe(true);
+			expect(ifStatement.range.end.line).toBe(2);
 		});
 
 		it('should parse array access', () => {

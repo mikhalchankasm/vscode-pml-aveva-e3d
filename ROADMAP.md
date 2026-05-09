@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.10 - 2026-05-09 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Post-review Parser Safeguards** ✅ COMPLETED
+  - Report missing `define` before `function !!name()` at the actual typo location.
+  - Keep DBREF literals typed as `dbref` in the parser AST.
+  - Restrict multiline `compose` continuation recovery to tokens following a real trailing `$`.
+  - Extend recovered `if`, `do`, and `handle` ranges to definition boundaries.
+
+- [x] **Validation Baseline Preservation** ✅ COMPLETED
+  - Add regression tests for the review findings.
+  - Preserve the installed AVEVA PMLLIB parser error baseline from `v0.12.9`.
+
+---
+
 ### v0.12.9 - 2026-05-09 ✅ COMPLETED
 
 ### Patch Improvements
@@ -934,7 +950,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.9
+**Version:** 0.12.10
 **Released:** 2026-05-09
 
 **Statistics:**
@@ -944,7 +960,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **133 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **137 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -954,6 +970,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.10`: applied post-review parser safeguards for missing `define function`, DBREF AST typing, compose continuation recovery, and recovered block ranges.
 - `v0.12.9`: reduced installed `.pmlobj` parser errors from 11007 to 2694 and improved shared recovery for `.pmlfnc`/`.pmlfrm`.
 - `v0.12.8`: closed Claude review parser safeguards and eliminated `.pmlfnc` regressions vs `v0.12.6`.
 - `v0.12.7`: reduced installed AVEVA `.pmlcmd` parser errors from 1200 to 0 across 698 files.
