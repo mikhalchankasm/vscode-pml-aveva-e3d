@@ -46,4 +46,25 @@ describe('HoverProvider', () => {
 		expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 3, character: 1 } }, document)).toBeNull();
 		expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 5, character: 1 } }, document)).not.toBeNull();
 	});
+
+	it('shows PDMS command hover for dollar-prefixed starters', () => {
+		const document = TextDocument.create(
+			'file:///pdms-hover-dollar.pml',
+			'pml',
+			1,
+			'$m "%PMLLIB%/command.pmlmac"'
+		);
+		const provider = new HoverProvider({} as any);
+
+		const hover = provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 1 } }, document);
+
+		expect(hover?.contents).toMatchObject({
+			kind: 'markdown',
+			value: expect.stringContaining('PDMS Command: $M')
+		});
+		expect(hover?.range).toEqual({
+			start: { line: 0, character: 0 },
+			end: { line: 0, character: 2 }
+		});
+	});
 });

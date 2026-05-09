@@ -441,6 +441,24 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.8 - 2026-05-09 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Claude Review Follow-up** ✅ COMPLETED
+  - Report malformed `setup command` controllers instead of silently consuming input.
+  - Keep `$T<n>` trace control recognition narrow and add assignment guards for command-line whitelist handling.
+  - Add `$M` hover support for dollar-prefixed PDMS command starters.
+  - Add negative regression tests around the new parser heuristics.
+
+- [x] **PMLFNC Corpus Regression Cleanup** ✅ COMPLETED
+  - Parse optional `define function ... ) is TYPE` return types, including `FORM`.
+  - Parse wildcard path arguments such as `/*MDS/CATA`.
+  - Parse PML1 call argument phrases such as `u wrt /*`.
+  - Reduce installed `.pmlfnc` parser errors from 7707 in `v0.12.6` to 2852 with zero regressions.
+
+---
+
 ### v0.12.7 - 2026-05-09 ✅ COMPLETED
 
 ### Patch Improvements
@@ -899,7 +917,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.7
+**Version:** 0.12.8
 **Released:** 2026-05-09
 
 **Statistics:**
@@ -909,7 +927,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **127 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **132 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -919,6 +937,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.8`: closed Claude review parser safeguards and eliminated `.pmlfnc` regressions vs `v0.12.6`.
 - `v0.12.7`: reduced installed AVEVA `.pmlcmd` parser errors from 1200 to 0 across 698 files.
 - `v0.12.6`: reduced `test2form.pmlfrm` parser baseline to two real fixture issues.
 - `v0.12.5`: reduced `test2form.pmlfrm` parser gaps with attribute member access, `inset`, pipe-string fragments, and `do !x to ...`.

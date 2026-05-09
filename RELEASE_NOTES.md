@@ -2,33 +2,35 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.7
+## Current Release - v0.12.8
 
 **Release Date:** 2026-05-09
 
-**GitHub Release:** [v0.12.7](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.7)
+**GitHub Release:** [v0.12.8](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.8)
 
 ### What Changed
 
-- Parsed installed AVEVA `.pmlcmd` command controllers, including `setup command ...` files.
-- Accepted command-controller idioms: `do !index indices !collection`, indexed property assignments, chained no-argument member calls, `$T8+`/`$T8-`, `/*` wildcard path arguments, line-continuation `$`, and chained `elsehandle` clauses.
-- Expanded the PDMS command starter whitelist with additional real command-style starters from the installed AVEVA PMLLIB corpus.
-- Reduced parser errors across 698 installed `.pmlcmd` files from 1200 to 0.
-- Kept AVEVA PMLLIB as an external validation corpus only; no proprietary AVEVA files are copied into the repository.
+- Applied follow-up review fixes after the v0.12.7 command-controller release.
+- Report malformed `setup command` controllers instead of silently swallowing the file.
+- Narrowed `$T<n>` trace handling and guarded command-line whitelist consumption around assignment-looking lines.
+- Added hover support for dollar-prefixed PDMS starters such as `$M`.
+- Parsed `define function ... ) is TYPE`, `FORM` return types, wildcard paths such as `/*MDS/CATA`, and PML1 argument phrases such as `u wrt /*`.
+- Rechecked `v0.12.6 -> v0.12.8` against the installed AVEVA PMLLIB `.pmlfnc` corpus: zero regressions, with total `.pmlfnc` parser errors reduced from 7707 to 2852.
 
 ### Validation
 
-- Language server tests: 127 passed, 2 skipped.
+- Language server tests: 132 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
+- External AVEVA `.pmlfnc` regression check vs v0.12.6: 0 regressions.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.7.vsix`
-- SHA256: `d5df3fad03817b4c80b6fac312242bd914afd8e3263234fd0cd4744ac61703c0`
+- VSIX: `pml-aveva-e3d-0.12.8.vsix`
+- SHA256: `91be926342a1e1c9f1501e387c0251aad1919e14ee55e49b66649257a98d86a7`
 
 ## Active Release Track
 

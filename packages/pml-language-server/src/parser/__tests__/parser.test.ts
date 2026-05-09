@@ -808,6 +808,56 @@ endmethod
 			expect(result.errors).toHaveLength(0);
 		});
 
+		it('should report malformed setup command controllers instead of swallowing the file', () => {
+			const source = `
+setup command !!brokenController
+	garbage tokens here
+	unclosed
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors.length).toBeGreaterThan(0);
+			expect(result.errors.some(error => error.message.includes("Expected 'exit' or 'define'"))).toBe(true);
+		});
+
+		it('should keep trace controls narrow and reject malformed line commands with assignment', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('$T8+').errors).toHaveLength(0);
+			expect(parser.parse('!x = $T8').errors).toHaveLength(0);
+			expect(parser.parse('$T8 = 5').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('goto target =').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should still report broken indexed assignments and chained calls', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('!this.values[ = 1').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!this.owner().clipBox.set(').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should parse function return types and PML1 wildcard path arguments from real library patterns', () => {
+			const source = `
+define function !!makeForm(!number is REAL) is FORM
+	!form = '!!makeForm' & !number
+endfunction
+
+define function !!exportMember(!item is STRING, $
+                               !messages is ARRAY) is BOCERROROBJ
+	!dbs = ARRAY()
+	!dbs.append( /*MDS/CATA )
+	!offset = !ptDir.cross( u wrt /* )
+endfunction
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse array access', () => {
 			const source = '!item = !array[1]';
 

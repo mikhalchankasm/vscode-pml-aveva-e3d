@@ -2,6 +2,23 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.8] - 2026-05-09
+
+### Fixed
+
+- Report malformed `setup command` controllers instead of silently consuming the rest of the file.
+- Keep `$T<n>` trace control recognition narrow to `$T<n>+` and `$T<n>-`, so malformed `$T<n> = ...` assignments remain diagnostic.
+- Avoid swallowing assignment-looking lines through the PDMS command starter whitelist.
+- Show PDMS command hover for dollar-prefixed starters such as `$M`.
+- Parsed optional `define function ... ) is TYPE` return types, including `FORM` and custom return type names.
+- Parsed wildcard path arguments such as `/*MDS/CATA`.
+- Parsed PML1 call argument phrases such as `u wrt /*` used in legacy geometry expressions.
+
+### Improved
+
+- Added negative regression tests for `setup command`, `$T<n>` trace controls, command-line assignment guards, indexed assignment recovery, chained call recovery, and `$M` hover.
+- Rechecked the installed AVEVA PMLLIB corpus against `v0.12.6`; `.pmlfnc` parser regressions are reduced to zero while total `.pmlfnc` parser errors drop from 7707 to 2852.
+
 ## [0.12.7] - 2026-05-09
 
 ### Fixed

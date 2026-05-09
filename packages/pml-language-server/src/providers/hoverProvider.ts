@@ -109,11 +109,27 @@ export class HoverProvider {
 		document: TextDocument,
 		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
 	): Hover | null {
-		const command = getPdmsCommand(word);
+		let command = getPdmsCommand(word);
+		let commandRange = wordRange;
+
+		if (!command && wordRange.start.character > 0) {
+			const prefixRange = {
+				start: { line: wordRange.start.line, character: wordRange.start.character - 1 },
+				end: wordRange.start
+			};
+			if (document.getText(prefixRange) === '$') {
+				command = getPdmsCommand(`$${word}`);
+				commandRange = {
+					start: prefixRange.start,
+					end: wordRange.end
+				};
+			}
+		}
+
 		if (
 			!command ||
-			!this.isFirstTokenOnLine(document, wordRange.start.line, wordRange.start.character) ||
-			this.isPositionInComment(document, wordRange.start.line, wordRange.start.character)
+			!this.isFirstTokenOnLine(document, commandRange.start.line, commandRange.start.character) ||
+			this.isPositionInComment(document, commandRange.start.line, commandRange.start.character)
 		) {
 			return null;
 		}
@@ -133,7 +149,7 @@ export class HoverProvider {
 				kind: MarkupKind.Markdown,
 				value: content
 			},
-			range: wordRange
+			range: commandRange
 		};
 	}
 

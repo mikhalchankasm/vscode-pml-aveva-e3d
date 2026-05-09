@@ -224,6 +224,13 @@ export class Parser {
 		const parameters = this.parseParameters();
 		this.consume(TokenType.RPAREN, "Expected ')' after parameters");
 
+		// Optional return type: is TYPE
+		let returnType: PMLType | undefined = undefined;
+		if (this.check(TokenType.IS)) {
+			this.advance();
+			returnType = this.parseType();
+		}
+
 		// Function body - parse statements until ENDFUNCTION
 		const body: Statement[] = [];
 
@@ -259,6 +266,7 @@ export class Parser {
 			type: 'FunctionDefinition',
 			name: functionName,
 			parameters,
+			returnType,
 			body,
 			documentation,
 			deprecated: documentation?.deprecated || false,
@@ -276,6 +284,7 @@ export class Parser {
 	private parseSetupCommandDefinition(): ExpressionStatement {
 		const startToken = this.advance(); // setup
 		let endToken = startToken;
+		let foundTerminator = false;
 
 		while (!this.isAtEnd() && !this.check(TokenType.EXIT) && !this.check(TokenType.DEFINE)) {
 			endToken = this.advance();
@@ -283,6 +292,14 @@ export class Parser {
 
 		if (this.check(TokenType.EXIT)) {
 			endToken = this.advance();
+			foundTerminator = true;
+		} else if (this.check(TokenType.DEFINE)) {
+			foundTerminator = true;
+			this.errors.push(new ParseError("Expected 'exit' before definitions after 'setup command'", this.peek()));
+		}
+
+		if (!foundTerminator) {
+			this.errors.push(new ParseError("Expected 'exit' or 'define' after 'setup command'", endToken));
 		}
 
 		return {
@@ -1094,6 +1111,9 @@ export class Parser {
 		if (this.match(TokenType.ANY_TYPE)) {
 			return createAnyType();
 		}
+		if (this.match(TokenType.FORM)) {
+			return createAnyType();
+		}
 
 		if (this.check(TokenType.IDENTIFIER)) {
 			const typeName = this.advance().value.toUpperCase();
@@ -1177,6 +1197,10 @@ export class Parser {
 
 		if (this.isTraceLineCommandStart()) {
 			return this.parseLineCommandStatement();
+		}
+
+		if (this.isMalformedTraceAssignmentStart()) {
+			throw this.error(this.peekNext(), "Expected '+' or '-' after trace control");
 		}
 
 		if (this.isLineCommandStart()) {
@@ -2402,6 +2426,12 @@ export class Parser {
 		    this.peek().line === startToken.line &&
 		    this.peek().offset === startToken.offset + startToken.length) {
 			endToken = this.advance();
+			while (!this.isAtEnd() &&
+			       this.peek().line === startToken.line &&
+			       this.peek().offset === endToken.offset + endToken.length &&
+			       !this.isAdjacentPathBoundary(this.peek())) {
+				endToken = this.advance();
+			}
 		}
 
 		while (!this.isAtEnd() && this.peek().line === startToken.line && !this.isPathExpressionBoundary(this.peek())) {
@@ -2437,6 +2467,14 @@ export class Parser {
 		       token.type === TokenType.LE ||
 		       token.type === TokenType.AND ||
 		       token.type === TokenType.OR;
+	}
+
+	private isAdjacentPathBoundary(token: Token): boolean {
+		return token.type === TokenType.COMMA ||
+		       token.type === TokenType.RPAREN ||
+		       token.type === TokenType.RBRACKET ||
+		       token.type === TokenType.ASSIGN ||
+		       token.type === TokenType.EOF;
 	}
 
 	private isAttributeExpressionBoundary(token: Token): boolean {
@@ -2481,6 +2519,10 @@ export class Parser {
 			return true;
 		}
 
+		if (this.lineContainsToken(startToken.line, TokenType.ASSIGN)) {
+			return false;
+		}
+
 		return ![
 			TokenType.LPAREN,
 			TokenType.DOT,
@@ -2513,7 +2555,34 @@ export class Parser {
 		}
 
 		const nextChar = this.sourceText[token.offset + token.length];
-		return nextChar === '+' || nextChar === '-' || nextChar === undefined || /\s/.test(nextChar);
+		return nextChar === '+' || nextChar === '-';
+	}
+
+	private isMalformedTraceAssignmentStart(): boolean {
+		if (!this.check(TokenType.SUBSTITUTE_VAR)) {
+			return false;
+		}
+
+		const token = this.peek();
+		const nextToken = this.peekNext();
+		return /^\$t\d+$/i.test(token.value) &&
+		       nextToken.line === token.line &&
+		       nextToken.type === TokenType.ASSIGN;
+	}
+
+	private lineContainsToken(line: number, tokenType: TokenType): boolean {
+		let offset = 1;
+		while (this.current + offset < this.tokens.length) {
+			const token = this.tokens[this.current + offset];
+			if (token.type === TokenType.EOF || token.line !== line) {
+				return false;
+			}
+			if (token.type === tokenType) {
+				return true;
+			}
+			offset++;
+		}
+		return false;
 	}
 
 	/**
@@ -2528,10 +2597,31 @@ export class Parser {
 
 		do {
 			const argument = this.parseExpression();
-			args.push(this.consumeAdjacentArgumentFragments(argument));
+			args.push(this.consumePml1ArgumentPhrase(this.consumeAdjacentArgumentFragments(argument)));
 		} while (this.match(TokenType.COMMA));
 
 		return args;
+	}
+
+	private consumePml1ArgumentPhrase(argument: Expression): Expression {
+		if (!this.check(TokenType.IDENTIFIER) ||
+		    this.peek().value.toLowerCase() !== 'wrt' ||
+		    this.peek().line - 1 !== argument.range.end.line) {
+			return argument;
+		}
+
+		let endToken = this.peek();
+		while (!this.isAtEnd() &&
+		       this.peek().line - 1 === argument.range.end.line &&
+		       ![TokenType.COMMA, TokenType.RPAREN, TokenType.RBRACKET].includes(this.peek().type)) {
+			endToken = this.advance();
+		}
+
+		argument.range = {
+			start: argument.range.start,
+			end: { line: endToken.line - 1, character: endToken.column - 1 + endToken.length }
+		};
+		return argument;
 	}
 
 	private consumeAdjacentArgumentFragments(argument: Expression): Expression {
