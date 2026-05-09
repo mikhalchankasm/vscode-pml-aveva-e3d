@@ -2,6 +2,23 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.12] - 2026-05-10
+
+### Fixed
+
+- Report malformed or unterminated form sub-blocks instead of silently swallowing them.
+- Keep standalone `menu .name popup` declarations from consuming the following form gadgets.
+- Restrict bare-identifier gadget names to underscore-prefixed AVEVA forms such as `_cancel`.
+- Prevent broad PML1 `is` phrase recovery from consuming regular assignment tails such as `!x is REAL`.
+- Require object constructors such as `object FORM()` to include the constructor call parentheses.
+- Restrict newly added `id`, `gap`, and `calldrg` command starters outside known AVEVA file modes.
+
+### Improved
+
+- Added negative regression tests for the v0.12.11 parser heuristics.
+- Deduplicated form gadget keyword handling through one shared parser token set.
+- Preserved installed AVEVA corpus baselines for `.pmlfnc`, `.pmlobj`, `.pmlcmd`, and `.pmlmac`; `.pmlfrm` now reports 1414 errors because previously silent malformed sub-blocks are diagnostic.
+
 ## [0.12.11] - 2026-05-10
 
 ### Fixed

@@ -467,6 +467,7 @@ exit
 layout form !!LayoutForm resize
 	bar
 		add 'File' .viewmenu
+		!this.okcall = '!this.ok()'
 	exit
 	menu .viewmenu
 		add 'Stored LogFiles' |!!handler()|
@@ -493,6 +494,64 @@ exit
 			expect(form.body.some(statement => statement.type === 'GadgetDeclaration')).toBe(true);
 			expect(form.frames[0].gadgets.map(gadget => gadget.gadgetType)).toContain('toggle');
 			expect(form.members[0].name).toBe('sheetsControl');
+			expect(form.callbacks['this.okcall']).toBe('!this.ok()');
+		});
+
+		it('should report malformed form sub-blocks and missing form exits', () => {
+			const parser = new Parser();
+
+			expect(parser.parse(`
+setup form !!BrokenBar
+	bar
+		garbage tokens here
+	exit
+exit
+			`.trim()).errors.some(error => error.message.includes('Unexpected token in bar block'))).toBe(true);
+
+			expect(parser.parse(`
+setup form !!BrokenMenu
+	menu .viewmenu
+		add 'Stored' |!!handler()|
+			`.trim()).errors.some(error => error.message.includes("Expected 'exit' to close menu block"))).toBe(true);
+
+			expect(parser.parse(`
+layout form !!BrokenLayout resize
+	garbage tokens here
+			`.trim()).errors.some(error => error.message.includes("Expected 'exit' to close form"))).toBe(true);
+		});
+
+		it('should keep standalone menu declarations from consuming following gadgets', () => {
+			const source = `
+setup form !!StandaloneMenu
+	menu .viewmenu popup
+	button .ok 'OK'
+exit
+			`.trim();
+
+			const result = new Parser().parse(source);
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(result.errors).toHaveLength(0);
+			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'button']);
+		});
+
+		it('should only accept underscore bare gadget names', () => {
+			const parser = new Parser();
+
+			expect(parser.parse(`
+setup form !!UnderscoreGadget
+	button _cancel 'Cancel'
+exit
+			`.trim()).errors).toHaveLength(0);
+
+			expect(parser.parse(`
+setup form !!TypoGadget
+	button cancelBtn 'Cancel'
+exit
+			`.trim()).errors.some(error => error.message.includes('Expected gadget name'))).toBe(true);
 		});
 
 		it('should parse using namespace as a command-style statement', () => {
@@ -865,8 +924,10 @@ setup command !!brokenController
 			expect(parser.parse('!x = $T8').errors).toHaveLength(0);
 			expect(parser.parse('$T8 = 5').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('goto target =').errors.length).toBeGreaterThan(0);
-			expect(parser.parse('id EQUI BRAN PANE SCTN @').errors).toHaveLength(0);
-			expect(parser.parse('gap @').errors).toHaveLength(0);
+			expect(parser.parse('id EQUI BRAN PANE SCTN @').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('gap @').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('id EQUI BRAN PANE SCTN @', { mode: 'form' }).errors).toHaveLength(0);
+			expect(parser.parse('gap @', { mode: 'form' }).errors).toHaveLength(0);
 		});
 
 		it('should still report broken indexed assignments and chained calls', () => {
@@ -902,6 +963,15 @@ endfunction
 			const result = parser.parse(source);
 
 			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should reject over-broad PML1 is phrases and bare object constructors', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('!y = !x is REAL').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!y = !x is some bogus stuff').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!f = object FORM').errors.some(error => error.message.includes("Expected '(' after object constructor type"))).toBe(true);
+			expect(parser.parse('!f = object FORM()').errors).toHaveLength(0);
 		});
 
 		it('should parse DBREF literals and command-style toolbar/object lines used in object files', () => {

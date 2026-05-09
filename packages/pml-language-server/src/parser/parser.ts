@@ -23,7 +23,7 @@ import {
 import { Range } from 'vscode-languageserver-textdocument';
 import { isPdmsCommandStarter } from '../data/pdmsCommands';
 
-export type ParserMode = 'default' | 'object' | 'command';
+export type ParserMode = 'default' | 'object' | 'form' | 'function' | 'command';
 
 export interface ParserOptions {
 	mode?: ParserMode;
@@ -34,11 +34,34 @@ export function parserModeFromUri(uriOrPath: string): ParserMode {
 	if (lower.endsWith('.pmlobj')) {
 		return 'object';
 	}
+	if (lower.endsWith('.pmlfrm')) {
+		return 'form';
+	}
+	if (lower.endsWith('.pmlfnc')) {
+		return 'function';
+	}
 	if (lower.endsWith('.pmlcmd')) {
 		return 'command';
 	}
 	return 'default';
 }
+
+const FORM_GADGET_TOKEN_TYPES = new Set<TokenType>([
+	TokenType.BUTTON,
+	TokenType.COMBO,
+	TokenType.CONTAINER,
+	TokenType.FRAME,
+	TokenType.MENU,
+	TokenType.OPTION,
+	TokenType.PARA,
+	TokenType.PARAGRAPH,
+	TokenType.TEXT,
+	TokenType.TOGGLE
+]);
+
+const RESTRICTED_COMMAND_STARTERS = new Set(['calldrg', 'gap', 'id']);
+
+const DIRECTION_PRIMARY_NAMES = new Set(['E', 'N', 'S', 'U', 'W', 'X', 'Y', 'Z']);
 
 interface GadgetModifiers {
 	position?: number;
@@ -459,6 +482,7 @@ export class Parser {
 		const frames: FrameDefinition[] = [];
 		const callbacks: Record<string, string> = {};
 		const members: MemberDeclaration[] = [];
+		let foundExit = false;
 
 		while (!this.isAtEnd()) {
 			const token = this.peek();
@@ -466,6 +490,7 @@ export class Parser {
 			// Stop at EXIT or DEFINE
 			if (token.type === TokenType.EXIT) {
 				this.advance(); // consume EXIT
+				foundExit = true;
 				break;
 			}
 
@@ -475,7 +500,7 @@ export class Parser {
 			}
 
 			if (this.isFormSubBlockStart()) {
-				this.consumeFormBlockBodyUntilExit();
+				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind(), callbacks, members, body);
 				continue;
 			}
 
@@ -532,6 +557,9 @@ export class Parser {
 		}
 
 		const endToken = this.previous();
+		if (!foundExit && this.isAtEnd()) {
+			this.errors.push(new ParseError("Expected 'exit' to close form", this.isAtEnd() ? endToken : this.peek()));
+		}
 
 		this.parsingContext = previousContext;
 
@@ -674,7 +702,7 @@ export class Parser {
 			}
 
 			if (this.isFormSubBlockStart()) {
-				this.consumeFormBlockBodyUntilExit();
+				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind());
 				continue;
 			}
 
@@ -857,8 +885,8 @@ export class Parser {
 			properties.pixmap = modifiers.pixmap;
 		}
 
-		if (gadgetType === 'menu') {
-			this.consumeFormBlockBodyUntilExit();
+		if (gadgetType === 'menu' && this.isMenuBodyStart(startToken.line)) {
+			this.consumeFormBlockBodyUntilExit('menu');
 		}
 
 		return {
@@ -875,7 +903,10 @@ export class Parser {
 	}
 
 	private consumeGadgetName(): Token {
-		if (this.check(TokenType.METHOD) || this.check(TokenType.IDENTIFIER)) {
+		if (this.check(TokenType.METHOD)) {
+			return this.advance();
+		}
+		if (this.check(TokenType.IDENTIFIER) && this.peek().value.startsWith('_')) {
 			return this.advance();
 		}
 
@@ -883,15 +914,7 @@ export class Parser {
 	}
 
 	private isGadgetDeclarationStart(type: TokenType): boolean {
-		return type === TokenType.BUTTON ||
-		       type === TokenType.TEXT ||
-		       type === TokenType.COMBO ||
-		       type === TokenType.CONTAINER ||
-		       type === TokenType.MENU ||
-		       type === TokenType.PARA ||
-		       type === TokenType.PARAGRAPH ||
-		       type === TokenType.OPTION ||
-		       type === TokenType.TOGGLE;
+		return type !== TokenType.FRAME && FORM_GADGET_TOKEN_TYPES.has(type);
 	}
 
 	/**
@@ -1071,6 +1094,14 @@ export class Parser {
 		}
 	}
 
+	private isMenuBodyStart(menuLine: number): boolean {
+		if (this.isAtEnd() || this.peek().line === menuLine) {
+			return false;
+		}
+
+		return this.check(TokenType.IDENTIFIER) && this.peek().value.toLowerCase() === 'add';
+	}
+
 	private isFormSubBlockStart(): boolean {
 		if (!this.check(TokenType.IDENTIFIER)) {
 			return false;
@@ -1079,28 +1110,103 @@ export class Parser {
 		return ['bar', 'rgroup'].includes(this.peek().value.toLowerCase());
 	}
 
-	private consumeFormBlockBodyUntilExit(): void {
+	private formSubBlockKind(): 'bar' | 'rgroup' {
+		return this.peek().value.toLowerCase() === 'rgroup' ? 'rgroup' : 'bar';
+	}
+
+	private consumeFormBlockBodyUntilExit(
+		blockKind: 'bar' | 'menu' | 'rgroup',
+		callbacks?: Record<string, string>,
+		members?: MemberDeclaration[],
+		body?: Statement[]
+	): void {
+		const startToken = this.peek();
 		if (this.isFormSubBlockStart()) {
 			this.consumeRemainingLine(this.peek().line);
 		}
 
+		let reportedUnknown = false;
+
 		while (!this.isAtEnd() && !this.check(TokenType.EXIT) && !this.check(TokenType.DEFINE)) {
+			if (this.isFormSubBlockStart()) {
+				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind(), callbacks, members, body);
+				continue;
+			}
+
 			if (this.check(TokenType.FRAME)) {
 				this.parseFrameDefinition();
 				continue;
 			}
 
 			if (this.isGadgetDeclarationStart(this.peek().type)) {
-				this.parseGadget();
+				const gadget = this.parseGadget();
+				body?.push(gadget as unknown as Statement);
 				continue;
 			}
 
+			if (this.check(TokenType.MEMBER)) {
+				const member = this.parseMemberDeclaration();
+				members?.push(member);
+				body?.push(member as unknown as Statement);
+				continue;
+			}
+
+			if ((this.check(TokenType.LOCAL_VAR) || this.check(TokenType.GLOBAL_VAR)) && callbacks) {
+				const stmt = this.parseFormExpressionStatement(callbacks);
+				if (stmt) {
+					body?.push(stmt);
+				}
+				continue;
+			}
+
+			if (this.check(TokenType.TRACK)) {
+				if (callbacks) {
+					this.parseTrackStatement(callbacks);
+				} else {
+					this.consumeRemainingLine(this.peek().line);
+				}
+				continue;
+			}
+
+			if (this.isAllowedFormSubBlockLineStart()) {
+				this.consumeRemainingLine(this.peek().line);
+				continue;
+			}
+
+			if (!reportedUnknown) {
+				this.errors.push(new ParseError(`Unexpected token in ${blockKind} block`, this.peek()));
+				reportedUnknown = true;
+			}
 			this.consumeRemainingLine(this.peek().line);
 		}
 
 		if (this.check(TokenType.EXIT)) {
 			this.advance();
+			return;
 		}
+
+		if (this.isAtEnd()) {
+			this.errors.push(new ParseError(`Expected 'exit' to close ${blockKind} block`, this.previous() || startToken));
+		}
+	}
+
+	private isAllowedFormSubBlockLineStart(): boolean {
+		if (this.isLineCommandStart() ||
+		    this.check(TokenType.VAR) ||
+		    this.check(TokenType.IF) ||
+		    this.check(TokenType.ELSE) ||
+		    this.check(TokenType.ELSEIF) ||
+		    this.check(TokenType.ENDIF) ||
+		    this.check(TokenType.DO) ||
+		    this.check(TokenType.ENDDO) ||
+		    this.check(TokenType.HANDLE) ||
+		    this.check(TokenType.ELSEHANDLE) ||
+		    this.check(TokenType.ENDHANDLE)) {
+			return true;
+		}
+
+		return this.check(TokenType.IDENTIFIER) &&
+		       ['add', 'callback', 'path', 'prompt', 'title'].includes(this.peek().value.toLowerCase());
 	}
 
 	private isFormDeclarationStart(): boolean {
@@ -1229,18 +1335,7 @@ export class Parser {
 	}
 
 	private isCustomKeywordType(): boolean {
-		return [
-			TokenType.BUTTON,
-			TokenType.COMBO,
-			TokenType.CONTAINER,
-			TokenType.FRAME,
-			TokenType.MENU,
-			TokenType.OPTION,
-			TokenType.PARA,
-			TokenType.PARAGRAPH,
-			TokenType.TEXT,
-			TokenType.TOGGLE
-		].includes(this.peek().type);
+		return FORM_GADGET_TOKEN_TYPES.has(this.peek().type);
 	}
 
 	/**
@@ -1309,6 +1404,10 @@ export class Parser {
 
 		if (this.isMissingDefineFunctionStart()) {
 			throw this.error(this.peek(), "Expected 'define' before 'function'");
+		}
+
+		if (this.isBlockedRestrictedCommandStart()) {
+			throw this.error(this.peek(), `Expected AVEVA command context for '${this.peek().value}'`);
 		}
 
 		if (this.isLineCommandStart()) {
@@ -1753,6 +1852,7 @@ export class Parser {
 			this.advance(); // consume =
 
 			const initializer = this.consumePml1ArgumentPhrase(this.parseExpression());
+			this.rejectUnexpectedTrailingIs(varToken.line);
 
 			// If left is just an Identifier, return VariableDeclaration
 			if (left.type === 'Identifier') {
@@ -2495,6 +2595,7 @@ export class Parser {
 				TokenType.BOOLEAN_TYPE, TokenType.ARRAY_TYPE, TokenType.DBREF_TYPE, TokenType.ANY_TYPE)) {
 				// Built-in type: object STRING(), object ARRAY(), etc.
 				const typeToken = this.previous();
+				this.ensureObjectConstructorCall();
 				return {
 					type: 'Identifier',
 					name: typeToken.value,
@@ -2503,6 +2604,7 @@ export class Parser {
 				} as Identifier;
 			} else if (this.match(TokenType.FORM)) {
 				const typeToken = this.previous();
+				this.ensureObjectConstructorCall();
 				return {
 					type: 'Identifier',
 					name: typeToken.value,
@@ -2512,6 +2614,7 @@ export class Parser {
 			} else if (this.match(TokenType.IDENTIFIER)) {
 				// Custom type: object MyCustomType()
 				const typeToken = this.previous();
+				this.ensureObjectConstructorCall();
 				return {
 					type: 'Identifier',
 					name: typeToken.value,
@@ -2576,6 +2679,12 @@ export class Parser {
 		}
 
 		throw this.error(this.peek(), "Expected expression");
+	}
+
+	private ensureObjectConstructorCall(): void {
+		if (!this.check(TokenType.LPAREN)) {
+			throw this.error(this.peek(), "Expected '(' after object constructor type");
+		}
 	}
 
 	private isDbRefLiteralStart(): boolean {
@@ -2713,6 +2822,9 @@ export class Parser {
 		if (!isPdmsCommandStarter(startToken.value)) {
 			return false;
 		}
+		if (RESTRICTED_COMMAND_STARTERS.has(startToken.value.toLowerCase()) && this.mode === 'default') {
+			return false;
+		}
 
 		const nextToken = this.peekNext();
 		if (nextToken.line !== startToken.line) {
@@ -2721,6 +2833,30 @@ export class Parser {
 
 		if (this.restOfLineContainsToken(startToken.line, TokenType.ASSIGN)) {
 			return false;
+		}
+
+		return ![
+			TokenType.LPAREN,
+			TokenType.DOT,
+			TokenType.LBRACKET,
+			TokenType.ASSIGN,
+			TokenType.OF
+		].includes(nextToken.type);
+	}
+
+	private isBlockedRestrictedCommandStart(): boolean {
+		if (this.isAtEnd() || this.mode !== 'default') {
+			return false;
+		}
+
+		const startToken = this.peek();
+		if (!RESTRICTED_COMMAND_STARTERS.has(startToken.value.toLowerCase())) {
+			return false;
+		}
+
+		const nextToken = this.peekNext();
+		if (nextToken.line !== startToken.line) {
+			return true;
 		}
 
 		return ![
@@ -2798,6 +2934,12 @@ export class Parser {
 		return false;
 	}
 
+	private rejectUnexpectedTrailingIs(line: number): void {
+		if (this.isOnLine(line) && this.check(TokenType.IS)) {
+			throw this.error(this.peek(), "Unexpected 'is' after expression");
+		}
+	}
+
 	/**
 	 * Parse function call arguments
 	 */
@@ -2818,14 +2960,14 @@ export class Parser {
 
 	private consumePml1ArgumentPhrase(argument: Expression): Expression {
 		const isWrtPhrase = this.check(TokenType.IDENTIFIER) && this.peek().value.toLowerCase() === 'wrt';
-		const isDirectionPhrase = this.check(TokenType.IS);
-		if ((!isWrtPhrase && !isDirectionPhrase) || this.peek().line - 1 !== argument.range.end.line) {
+		const isDirectionPhrase = this.check(TokenType.IS) && this.isDirectionPrimary(argument);
+		if ((!isWrtPhrase && !isDirectionPhrase) || !this.isSameSourceLine(this.peek(), argument.range)) {
 			return argument;
 		}
 
 		let endToken = this.peek();
 		while (!this.isAtEnd() &&
-		       this.peek().line - 1 === argument.range.end.line &&
+		       this.isSameSourceLine(this.peek(), argument.range) &&
 		       ![TokenType.COMMA, TokenType.RPAREN, TokenType.RBRACKET].includes(this.peek().type)) {
 			endToken = this.advance();
 		}
@@ -2835,6 +2977,16 @@ export class Parser {
 			end: { line: endToken.line - 1, character: endToken.column - 1 + endToken.length }
 		};
 		return argument;
+	}
+
+	private isDirectionPrimary(argument: Expression): boolean {
+		return argument.type === 'Identifier' &&
+		       argument.scope === undefined &&
+		       DIRECTION_PRIMARY_NAMES.has(argument.name.toUpperCase());
+	}
+
+	private isSameSourceLine(token: Token, range: Range): boolean {
+		return token.line - 1 === range.end.line;
 	}
 
 	private consumeAdjacentArgumentFragments(argument: Expression): Expression {

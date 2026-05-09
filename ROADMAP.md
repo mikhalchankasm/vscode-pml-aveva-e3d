@@ -441,6 +441,23 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.12 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Post-review Form Parser Safeguards** ✅ COMPLETED
+  - Report malformed and unterminated form sub-blocks.
+  - Prevent standalone menu declarations from consuming following gadgets.
+  - Restrict bare-identifier gadget names to underscore-prefixed names.
+  - Tighten PML1 `is` phrase recovery and object constructor parsing.
+  - Restrict `id`, `gap`, and `calldrg` command starters outside known AVEVA parser modes.
+
+- [x] **Negative Regression Coverage** ✅ COMPLETED
+  - Add tests for malformed sub-blocks, standalone menus, gadget-name typos, over-broad `is` phrases, and bare object constructors.
+  - Preserve `.pmlfnc`, `.pmlobj`, `.pmlcmd`, and `.pmlmac` corpus baselines.
+
+---
+
 ### v0.12.11 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -969,7 +986,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.11
+**Version:** 0.12.12
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -979,7 +996,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **138 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **142 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -989,6 +1006,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.12`: applied post-review safeguards for form sub-block recovery, menu consumption, gadget names, PML1 `is` phrases, and object constructors.
 - `v0.12.11`: reduced installed `.pmlfrm` parser errors from 3010 to 1409 with layout form and nested form-block support.
 - `v0.12.10`: applied post-review parser safeguards for missing `define function`, DBREF AST typing, compose continuation recovery, and recovered block ranges.
 - `v0.12.9`: reduced installed `.pmlobj` parser errors from 11007 to 2694 and improved shared recovery for `.pmlfnc`/`.pmlfrm`.
