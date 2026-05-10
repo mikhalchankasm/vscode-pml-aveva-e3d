@@ -71,6 +71,19 @@ jobs:
           fi
       - name: Package VSIX
         run: npm run pack
+      - name: Validate VSIX package
+        shell: bash
+        run: |
+          VSIX="$(ls pml-aveva-e3d-*.vsix | head -n 1)"
+          SIZE="$(stat -c %s "$VSIX")"
+          if [ "$SIZE" -gt 5242880 ]; then
+            echo "VSIX too large: $SIZE bytes"
+            exit 1
+          fi
+          if unzip -Z1 "$VSIX" | grep -q '^extension/manuals/'; then
+            echo "VSIX unexpectedly contains manuals/"
+            exit 1
+          fi
       - name: Compute VSIX checksum
         id: checksum
         shell: bash
@@ -85,14 +98,20 @@ jobs:
         env:
           RELEASE_SHA: ${{ steps.checksum.outputs.sha }}
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           import os
           import re
           from pathlib import Path
 
           body = Path("RELEASE_NOTES.md").read_text(encoding="utf-8")
-          body = re.sub(r"SHA256: `[^`]+`", f"SHA256: `{os.environ['RELEASE_SHA']}`", body)
-          Path("release-body.md").write_text(body, encoding="utf-8")
+          new_body, replacements = re.subn(
+              r"SHA256: `[^`]+`",
+              f"SHA256: `{os.environ['RELEASE_SHA']}`",
+              body,
+          )
+          if replacements == 0:
+              raise SystemExit("SHA256 placeholder not found in RELEASE_NOTES.md")
+          Path("release-body.md").write_text(new_body, encoding="utf-8")
           PY
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4

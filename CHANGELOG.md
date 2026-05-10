@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.18] - 2026-05-10
+
+### Fixed
+
+- Harden the release workflow by using `python3` explicitly when injecting the CI-built VSIX checksum.
+- Fail release publication if the SHA256 placeholder is missing from release notes instead of publishing an unreplaced placeholder.
+
+### Improved
+
+- Add CI and release guardrails that fail if the packaged VSIX exceeds 5 MB.
+- Add CI and release guardrails that fail if local `manuals/` content reappears inside the VSIX.
+- Document that the `SHA256` placeholder in `RELEASE_NOTES.md` is replaced by GitHub Actions during publication.
+
 ## [0.12.17] - 2026-05-10
 
 ### Fixed

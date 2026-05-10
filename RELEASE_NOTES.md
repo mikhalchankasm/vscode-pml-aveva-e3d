@@ -2,18 +2,18 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.17
+## Current Release - v0.12.18
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.17](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.17)
+**GitHub Release:** [v0.12.18](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.18)
 
 ### What Changed
 
-- Fixed the GitHub CI packaging failure on Ubuntu by replacing the Windows-only `pack` script with a cross-platform Node wrapper.
-- Updated GitHub Actions dependency installation to avoid noisy `npm ci` fallback failures when lockfiles are intentionally ignored.
-- Updated the automated release workflow to package through `npm run pack`, compute the VSIX SHA256, and upload a `.vsix.sha256` asset.
-- Verified the previous `v0.12.16` GitHub Release asset checksum and release body after the automation fix.
+- Hardened GitHub release checksum injection by using `python3` explicitly.
+- Made release publication fail if the `SHA256` placeholder is missing from release notes.
+- Added CI and release guardrails for oversized VSIX packages.
+- Added CI and release guardrails that reject accidental `manuals/` content inside the VSIX.
 
 ### Validation
 
@@ -29,7 +29,8 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.17.vsix`
+- VSIX: `pml-aveva-e3d-0.12.18.vsix`
+<!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 
 ## Active Release Track

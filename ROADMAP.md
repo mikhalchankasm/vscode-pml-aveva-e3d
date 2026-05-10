@@ -441,6 +441,20 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.18 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Release Workflow Hardening** ✅ COMPLETED
+  - Use `python3` explicitly in the release checksum injection step.
+  - Fail release publication if the SHA256 placeholder is missing.
+  - Add CI and release checks for VSIX size and accidental `manuals/` packaging.
+
+- [x] **Release Notes Clarity** ✅ COMPLETED
+  - Document that GitHub Actions replaces the source `SHA256` placeholder during publication.
+
+---
+
 ### v0.12.17 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1063,7 +1077,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.17
+**Version:** 0.12.18
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1083,6 +1097,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.18`: hardened automated release checksum injection and added VSIX size/manuals guardrails.
 - `v0.12.17`: fixed GitHub Actions packaging on Ubuntu and moved releases toward tag-triggered automated VSIX/checksum publication.
 - `v0.12.16`: fixed local manuals packaging hygiene and tightened malformed `collect all ...` diagnostics without changing corpus baselines.
 - `v0.12.15`: fixed procedural menu initializer recovery and added DrawList `collect all ... from drawlist` parsing, reducing `.pmlfrm` errors to 1410.

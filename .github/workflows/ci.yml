@@ -35,3 +35,16 @@ jobs:
       - run: npm --prefix packages/pml-language-server run test -- --run
       - run: npm run compile
       - run: npm run pack
+      - name: Validate VSIX package
+        shell: bash
+        run: |
+          VSIX="$(ls pml-aveva-e3d-*.vsix | head -n 1)"
+          SIZE="$(stat -c %s "$VSIX")"
+          if [ "$SIZE" -gt 5242880 ]; then
+            echo "VSIX too large: $SIZE bytes"
+            exit 1
+          fi
+          if unzip -Z1 "$VSIX" | grep -q '^extension/manuals/'; then
+            echo "VSIX unexpectedly contains manuals/"
+            exit 1
+          fi
