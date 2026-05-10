@@ -2,19 +2,19 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.15
+## Current Release - v0.12.16
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.15](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.15)
+**GitHub Release:** [v0.12.16](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.16)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.14 Claude review.
-- Prevent procedural menu initializers such as `!this.menu.add(...)` from being treated as menu-body lines.
-- Restore the installed `admin/forms/admstamp.pmlfrm` parser baseline to zero errors.
-- Parse standalone PML1 `collect all ...` statements, including DrawList sources such as `collect all PIPE from drawlist`.
-- Add regression coverage for procedural menu initializers and DrawList `collect` statements.
+- Applied follow-up fixes from the v0.12.15 Claude review.
+- Exclude local `manuals/` reference content from VSIX packaging and git tracking.
+- Tighten PML1 `collect all ...` parsing so malformed forms now produce diagnostics.
+- Keep DrawList continuation syntax such as `collect all PIPE for !!ce $` / `from drawlist` valid.
+- Add a targeted expression-context diagnostic for `collect`.
 
 ### Validation
 
@@ -30,8 +30,8 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.15.vsix`
-- SHA256: `a7d86b62955a77949920c93be89980622933993d4b8e611ba5d6091240174798`
+- VSIX: `pml-aveva-e3d-0.12.16.vsix`
+- SHA256: `be67f37525b42ba0ee36d5e9a7c34f2acae289cc91de90e7a3b771f2c53a28f2`
 
 ## Active Release Track
 

@@ -31,6 +31,7 @@ examples/**
 !examples/gadgets/**
 assets/screenshots/**
 hide_examples/**
+manuals/**
 scripts/**
 test.pml
 test-*.js

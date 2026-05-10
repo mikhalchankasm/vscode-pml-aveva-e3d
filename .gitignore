@@ -61,4 +61,4 @@ coverage/
 hide_examples/
 
 # Local reference manuals
-manuals/*.pdf
+manuals/

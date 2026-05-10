@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.16 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Packaging Hygiene and Collect Validation** ✅ COMPLETED
+  - Exclude local `manuals/` reference content from both git and VSIX packaging.
+  - Tighten PML1 `collect all ...` parsing so malformed forms produce diagnostics.
+  - Keep DrawList continuation syntax such as `collect all PIPE for !!ce $` / `from drawlist` valid.
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add negative tests for malformed `collect all` statements and expression-context `collect` usage.
+  - Preserve installed AVEVA PMLLIB corpus baselines while restoring compact VSIX packaging.
+
+---
+
 ### v0.12.15 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1033,7 +1048,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.15
+**Version:** 0.12.16
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1053,6 +1068,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.16`: fixed local manuals packaging hygiene and tightened malformed `collect all ...` diagnostics without changing corpus baselines.
 - `v0.12.15`: fixed procedural menu initializer recovery and added DrawList `collect all ... from drawlist` parsing, reducing `.pmlfrm` errors to 1410.
 - `v0.12.14`: hardened menu-body recovery, `list`/`view` menu boundaries, multiline recovery, and error-message prefix handling without changing corpus baselines.
 - `v0.12.13`: reduced post-review false positives for nameless form gadgets, form/method boundaries, `.pmlfnc` command-style lines, menu layout bodies, and duplicated parser messages.

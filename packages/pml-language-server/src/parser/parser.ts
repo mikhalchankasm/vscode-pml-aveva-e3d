@@ -2008,9 +2008,45 @@ export class Parser {
 			throw this.error(this.peek(), "Expected 'all' after 'collect'");
 		}
 
-		let endToken = this.advance();
-		while (!this.isAtEnd() && this.peek().line === startToken.line) {
-			endToken = this.advance();
+		let logicalLine = startToken.line;
+		const isInStatement = (): boolean => {
+			if (this.isAtEnd()) return false;
+			const token = this.peek();
+			return token.line === logicalLine || token.continuesPreviousLine === true;
+		};
+		const advanceInStatement = (): Token => {
+			const token = this.advance();
+			if (token.continuesPreviousLine) {
+				logicalLine = token.line;
+			}
+			return token;
+		};
+
+		let endToken = advanceInStatement();
+		if (!isInStatement() || !this.isCollectElementTypeToken(this.peek())) {
+			throw this.error(this.peek(), "Expected element type after 'collect all'");
+		}
+
+		endToken = advanceInStatement();
+		while (isInStatement()) {
+			const token = this.peek();
+			if (!this.isCollectClauseKeyword(token.type)) {
+				throw this.error(token, "Expected 'for', 'with', or 'from' clause in collect statement");
+			}
+
+			const clauseToken = advanceInStatement();
+			let consumedClauseValue = false;
+			while (isInStatement() && !this.isCollectClauseKeyword(this.peek().type)) {
+				if (this.isInvalidCollectClauseToken(this.peek())) {
+					throw this.error(this.peek(), `Expected expression after '${clauseToken.value.toLowerCase()}'`);
+				}
+				endToken = advanceInStatement();
+				consumedClauseValue = true;
+			}
+
+			if (!consumedClauseValue) {
+				throw this.error(this.peek(), `Expected expression after '${clauseToken.value.toLowerCase()}'`);
+			}
 		}
 
 		return {
@@ -2022,6 +2058,35 @@ export class Parser {
 			},
 			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
 		};
+	}
+
+	private isCollectElementTypeToken(token: Token): boolean {
+		return token.type === TokenType.IDENTIFIER ||
+		       token.type === TokenType.FORM ||
+		       token.type === TokenType.FRAME ||
+		       token.type === TokenType.TEXT ||
+		       token.type === TokenType.BUTTON ||
+		       token.type === TokenType.MENU ||
+		       token.type === TokenType.STRING_TYPE ||
+		       token.type === TokenType.REAL_TYPE ||
+		       token.type === TokenType.INTEGER_TYPE ||
+		       token.type === TokenType.BOOLEAN_TYPE ||
+		       token.type === TokenType.ARRAY_TYPE ||
+		       token.type === TokenType.DBREF_TYPE ||
+		       token.type === TokenType.ANY_TYPE;
+	}
+
+	private isCollectClauseKeyword(type: TokenType): boolean {
+		return type === TokenType.FOR || type === TokenType.WITH || type === TokenType.FROM;
+	}
+
+	private isInvalidCollectClauseToken(token: Token): boolean {
+		return token.type === TokenType.ASSIGN ||
+		       token.type === TokenType.COMMA ||
+		       token.type === TokenType.RPAREN ||
+		       token.type === TokenType.RBRACKET ||
+		       token.type === TokenType.UNKNOWN ||
+		       token.type === TokenType.EOF;
 	}
 
 	private consumeRemainingLine(line: number): void {
@@ -2586,6 +2651,10 @@ export class Parser {
 	 * Parse primary expression (literals, variables, etc.)
 	 */
 	private parsePrimary(): Expression {
+		if (this.check(TokenType.COLLECT)) {
+			throw this.error(this.peek(), "Collect statement is only valid at statement level");
+		}
+
 		// WORKAROUND: Skip 'compose' and 'space' keywords (PML1 syntax)
 		// These are used in "var !x compose space $!var |string|" which we don't fully parse yet
 		if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE)) {

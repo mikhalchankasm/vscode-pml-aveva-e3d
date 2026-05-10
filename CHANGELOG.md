@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.16] - 2026-05-10
+
+### Fixed
+
+- Exclude local `manuals/` reference content from VSIX packaging as well as git tracking.
+- Tighten PML1 `collect all ...` parsing so missing element types, missing clause operands, and unexpected bare trailing tokens now produce diagnostics.
+- Add a targeted diagnostic when `collect` is used inside an expression instead of as a statement.
+
+### Improved
+
+- Added negative regression tests for malformed `collect all`, `collect all = 5`, `collect all PIPE for`, and `collect all PIPE garbage` forms.
+- Kept DrawList continuation syntax such as `collect all PIPE for !!ce $` / `from drawlist` valid.
+- Preserved installed AVEVA PMLLIB parser baselines while restoring compact VSIX packaging.
+
 ## [0.12.15] - 2026-05-10
 
 ### Fixed

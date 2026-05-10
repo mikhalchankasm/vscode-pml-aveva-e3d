@@ -1132,7 +1132,13 @@ endfunction
 			expect(parser.parse('collect all PIPE with bore eq 100').errors).toHaveLength(0);
 			expect(parser.parse('collect all PIPE for !!ce from drawlist').errors).toHaveLength(0);
 			expect(parser.parse('collect all PIPE with bore eq 100 from drawlist').errors).toHaveLength(0);
+			expect(parser.parse('collect all PIPE for !!ce $\n  from drawlist').errors).toHaveLength(0);
 			expect(parser.parse('collect = 5').errors.some(error => error.message.includes("Expected 'all' after 'collect'"))).toBe(true);
+			expect(parser.parse('collect all').errors.some(error => error.message.includes("Expected element type after 'collect all'"))).toBe(true);
+			expect(parser.parse('collect all = 5').errors.some(error => error.message.includes("Expected element type after 'collect all'"))).toBe(true);
+			expect(parser.parse('collect all PIPE for').errors.some(error => error.message.includes("Expected expression after 'for'"))).toBe(true);
+			expect(parser.parse('collect all PIPE garbage').errors.some(error => error.message.includes("Expected 'for', 'with', or 'from' clause"))).toBe(true);
+			expect(parser.parse('!arr = collect all PIPE').errors.some(error => error.message.includes('Collect statement is only valid at statement level'))).toBe(true);
 		});
 
 		it('should only consume compose continuation lines after a trailing dollar continuation', () => {
