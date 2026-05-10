@@ -2,19 +2,18 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.16
+## Current Release - v0.12.17
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.16](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.16)
+**GitHub Release:** [v0.12.17](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.17)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.15 Claude review.
-- Exclude local `manuals/` reference content from VSIX packaging and git tracking.
-- Tighten PML1 `collect all ...` parsing so malformed forms now produce diagnostics.
-- Keep DrawList continuation syntax such as `collect all PIPE for !!ce $` / `from drawlist` valid.
-- Add a targeted expression-context diagnostic for `collect`.
+- Fixed the GitHub CI packaging failure on Ubuntu by replacing the Windows-only `pack` script with a cross-platform Node wrapper.
+- Updated GitHub Actions dependency installation to avoid noisy `npm ci` fallback failures when lockfiles are intentionally ignored.
+- Updated the automated release workflow to package through `npm run pack`, compute the VSIX SHA256, and upload a `.vsix.sha256` asset.
+- Verified the previous `v0.12.16` GitHub Release asset checksum and release body after the automation fix.
 
 ### Validation
 
@@ -30,8 +29,8 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.16.vsix`
-- SHA256: `68163b27016db95b164cc86490d158e473c17617cd001bbfeb61719cd2746f5f`
+- VSIX: `pml-aveva-e3d-0.12.17.vsix`
+- SHA256: `computed by GitHub Actions`
 
 ## Active Release Track
 

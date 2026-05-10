@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.17 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **GitHub Actions Release Flow** ✅ COMPLETED
+  - Replace the Windows-only `npm run pack` implementation with a cross-platform Node wrapper.
+  - Make GitHub CI installation steps choose `npm ci` only when a lockfile exists.
+  - Make the release workflow compute and upload CI-built VSIX SHA256 metadata.
+
+- [x] **Release Process Cleanup** ✅ COMPLETED
+  - Confirm pushes to `main` now pass GitHub CI.
+  - Use tag-triggered GitHub Release publishing as the primary release path.
+
+---
+
 ### v0.12.16 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1048,7 +1063,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.16
+**Version:** 0.12.17
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1068,6 +1083,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.17`: fixed GitHub Actions packaging on Ubuntu and moved releases toward tag-triggered automated VSIX/checksum publication.
 - `v0.12.16`: fixed local manuals packaging hygiene and tightened malformed `collect all ...` diagnostics without changing corpus baselines.
 - `v0.12.15`: fixed procedural menu initializer recovery and added DrawList `collect all ... from drawlist` parsing, reducing `.pmlfrm` errors to 1410.
 - `v0.12.14`: hardened menu-body recovery, `list`/`view` menu boundaries, multiline recovery, and error-message prefix handling without changing corpus baselines.

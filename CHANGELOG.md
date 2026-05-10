@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.17] - 2026-05-10
+
+### Fixed
+
+- Make `npm run pack` cross-platform so GitHub CI on Ubuntu no longer fails on a Windows-only PowerShell command.
+- Keep GitHub Actions dependency installation quiet by choosing `npm ci` only when a lockfile is present.
+- Align automated release publishing with the local package command and upload a generated `.vsix.sha256` checksum file.
+
+### Improved
+
+- Updated the release workflow to compute the CI-built VSIX SHA256 and inject it into GitHub Release notes.
+- Restored green CI for pushes to `main`.
+
 ## [0.12.16] - 2026-05-10
 
 ### Fixed
