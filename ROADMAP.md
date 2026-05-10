@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.20 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **PML1 Command Corpus Reduction** ✅ COMPLETED
+  - Keep the `skip if` same-line rule documented and covered by regression tests.
+  - Add standalone `SETCOMPDATE ...` coverage outside the larger method fixture.
+  - Add PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command starters from installed AVEVA code.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Reduce installed AVEVA corpus parser errors from 5321 to 5195.
+  - Reduce `.pmlfnc` parser errors from 1611 to 1505, `.pmlfrm` from 1404 to 1399, and `.pmlobj` from 2303 to 2288.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.19 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1092,7 +1108,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.19
+**Version:** 0.12.20
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1102,7 +1118,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **148 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **150 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1112,6 +1128,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.20`: added PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command starters, reducing installed AVEVA corpus parser errors from 5321 to 5195.
 - `v0.12.19`: cleared `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm` parser diagnostics by tightening `skip if` line handling and adding `SETCOMPDATE`.
 - `v0.12.18`: hardened automated release checksum injection and added VSIX size/manuals guardrails.
 - `v0.12.17`: fixed GitHub Actions packaging on Ubuntu and moved releases toward tag-triggered automated VSIX/checksum publication.

@@ -944,6 +944,10 @@ define method .execute(!args is ARRAY)
 	!!gphViews.limits(!graphicalView, /* )
 	ORI Z IS TOWARDS $!elementEnd
 	$T8-
+	onerror golabel /reset
+	label /reset
+	golabel /reset
+	use /MDS-Extra-Drawlist-Style for owner of $!refAtta
 endmethod
 
 define method .extractDate(!db is DBREF)
@@ -983,6 +987,29 @@ endmethod
 			const result = parser.parse(source, { mode: 'form' });
 
 			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should preserve same-line skip if as a conditional skip statement', () => {
+			const source = `
+define method .conditionalSkip()
+	do !index from 1 to 10
+		skip if (!index eq 5)
+	enddo
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse SETCOMPDATE as a standalone command starter', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('SETCOMPDATE FOR DB $!dbName TO EXTRACT', { mode: 'form' }).errors).toHaveLength(0);
+			expect(parser.parse('setcompdate FOR DB $!dbName TO EXTRACT', { mode: 'form' }).errors).toHaveLength(0);
+			expect(parser.parse('setcompdate(!value)').errors).toHaveLength(0);
 		});
 
 		it('should parse define calls and dynamic substitute member access in forms', () => {

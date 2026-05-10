@@ -1643,7 +1643,7 @@ export class Parser {
 	private parseSkipStatement(): Statement {
 		const token = this.advance(); // consume 'skip'
 
-		// Check if there's an 'if' condition
+		// PML skip-if is a single-line form; a following line can start a separate if block.
 		if (this.check(TokenType.IF) && this.peek().line === token.line) {
 			this.advance(); // consume 'if'
 			const condition = this.parseExpression();

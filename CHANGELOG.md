@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.20] - 2026-05-10
+
+### Fixed
+
+- Document and regression-test that PML `skip if ...` is a same-line form while a following-line `if` remains a separate statement.
+- Accept PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command-style lines found in installed AVEVA macro/function code.
+
+### Improved
+
+- Added focused regression coverage for same-line `skip if`, standalone `SETCOMPDATE`, and real AVEVA command-controller idioms.
+- Reduced installed AVEVA corpus parser errors from 5321 to 5195 with zero expected behavioral changes for expression-style calls.
+- Reduced `.pmlfnc` parser errors from 1611 to 1505, `.pmlfrm` from 1404 to 1399, and `.pmlobj` from 2303 to 2288.
+
 ## [0.12.19] - 2026-05-10
 
 ### Fixed
