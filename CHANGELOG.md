@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.15] - 2026-05-10
+
+### Fixed
+
+- Prevent procedural menu initializers such as `!this.menu.add(...)` from being treated as menu-body lines and consuming the form's outer `exit`.
+- Restore the installed `admin/forms/admstamp.pmlfrm` parser baseline to zero errors.
+- Parse standalone PML1 `collect all ...` statements, including DrawList sources such as `collect all PIPE from drawlist`.
+
+### Improved
+
+- Added regression tests for procedural menu initializers and DrawList `collect all ... from drawlist` patterns.
+- Reduced installed AVEVA `.pmlfrm` parser errors from 1412 to 1410 while preserving `.pmlcmd`, `.pmlfnc`, `.pmlmac`, and `.pmlobj` baselines.
+
 ## [0.12.14] - 2026-05-10
 
 ### Fixed

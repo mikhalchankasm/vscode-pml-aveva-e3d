@@ -601,6 +601,18 @@ exit
 			expect(result.errors.some(error => error.message.includes('Unexpected token in menu block'))).toBe(false);
 		});
 
+		it('should not treat procedural menu initializers as menu body lines', () => {
+			const result = new Parser().parse(`
+setup form !!ProceduralMenu
+	menu .menuFile
+	!this.menuFile.add('CALLBACK', 'Open', '!this.open()')
+	!this.menuFile.add('CALLBACK', 'Close', '!this.close()')
+exit
+			`.trim());
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should only accept underscore bare gadget names', () => {
 			const parser = new Parser();
 
@@ -1110,6 +1122,17 @@ endfunction
 			expect(initializer.literalType).toBe('dbref');
 			expect(initializer.pmlType.kind).toBe('DBREF');
 			expect(parser.parse('!x = =foo/bar').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should parse PML1 collect statements including DrawList sources', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('collect all PIPE').errors).toHaveLength(0);
+			expect(parser.parse('collect all PIPE for !!ce').errors).toHaveLength(0);
+			expect(parser.parse('collect all PIPE with bore eq 100').errors).toHaveLength(0);
+			expect(parser.parse('collect all PIPE for !!ce from drawlist').errors).toHaveLength(0);
+			expect(parser.parse('collect all PIPE with bore eq 100 from drawlist').errors).toHaveLength(0);
+			expect(parser.parse('collect = 5').errors.some(error => error.message.includes("Expected 'all' after 'collect'"))).toBe(true);
 		});
 
 		it('should only consume compose continuation lines after a trailing dollar continuation', () => {

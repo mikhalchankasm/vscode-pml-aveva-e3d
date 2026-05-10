@@ -2,38 +2,36 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.14
+## Current Release - v0.12.15
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.14](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.14)
+**GitHub Release:** [v0.12.15](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.15)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.13 Claude review.
-- Detect menu bodies structurally instead of relying on the first body-line keyword allowlist.
-- Keep unknown menu-body lines inside the menu block so they are diagnosed consistently.
-- Treat `list` and `view` identifier gadgets after a menu as form-body boundaries.
-- Consume multiline string tokens as one logical line during menu/body recovery.
-- Keep `!this.menu.add(...)` style method-call lines quiet inside form sub-block recovery.
-- Make parser error-prefix suppression case-insensitive.
+- Applied follow-up fixes from the v0.12.14 Claude review.
+- Prevent procedural menu initializers such as `!this.menu.add(...)` from being treated as menu-body lines.
+- Restore the installed `admin/forms/admstamp.pmlfrm` parser baseline to zero errors.
+- Parse standalone PML1 `collect all ...` statements, including DrawList sources such as `collect all PIPE from drawlist`.
+- Add regression coverage for procedural menu initializers and DrawList `collect` statements.
 
 ### Validation
 
-- Language server tests: 145 passed, 2 skipped.
+- Language server tests: 147 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
 - External AVEVA `.pmlfnc` corpus parse: 2869 files, 1611 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1412 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1410 errors.
 - External AVEVA `.pmlobj` corpus parse: 1334 files, 2306 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.14.vsix`
-- SHA256: `42176ab84a42619c47d8e888359b8aea6f7426a9cefb6e6010b512a98182f93a`
+- VSIX: `pml-aveva-e3d-0.12.15.vsix`
+- SHA256: `a7d86b62955a77949920c93be89980622933993d4b8e611ba5d6091240174798`
 
 ## Active Release Track
 

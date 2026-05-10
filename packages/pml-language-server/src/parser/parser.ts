@@ -1161,6 +1161,8 @@ export class Parser {
 		       this.check(TokenType.FRAME) ||
 		       this.check(TokenType.MEMBER) ||
 		       this.check(TokenType.TRACK) ||
+		       this.check(TokenType.LOCAL_VAR) ||
+		       this.check(TokenType.GLOBAL_VAR) ||
 		       this.isIdentifierFormGadgetStart() ||
 		       this.isGadgetDeclarationStart(this.peek().type);
 	}
@@ -1497,6 +1499,10 @@ export class Parser {
 
 		if (this.isBlockedRestrictedCommandStart()) {
 			throw this.error(this.peek(), `Command starter '${this.peek().value}' is only accepted in .pmlcmd, .pmlobj, or .pmlfrm command contexts`);
+		}
+
+		if (this.check(TokenType.COLLECT)) {
+			return this.parseCollectStatement();
 		}
 
 		if (this.isLineCommandStart()) {
@@ -1981,6 +1987,28 @@ export class Parser {
 		const startToken = this.advance();
 		let endToken = startToken;
 
+		while (!this.isAtEnd() && this.peek().line === startToken.line) {
+			endToken = this.advance();
+		}
+
+		return {
+			type: 'ExpressionStatement',
+			expression: {
+				type: 'Identifier',
+				name: this.sourceText.slice(startToken.offset, endToken.offset + endToken.length).trim(),
+				range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+			},
+			range: this.createRange(this.getTokenIndex(startToken), this.getTokenIndex(endToken))
+		};
+	}
+
+	private parseCollectStatement(): ExpressionStatement {
+		const startToken = this.advance();
+		if (!this.check(TokenType.ALL)) {
+			throw this.error(this.peek(), "Expected 'all' after 'collect'");
+		}
+
+		let endToken = this.advance();
 		while (!this.isAtEnd() && this.peek().line === startToken.line) {
 			endToken = this.advance();
 		}

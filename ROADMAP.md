@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.15 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **DrawList Collect and Menu Regression Fix** ✅ COMPLETED
+  - Prevent procedural menu initializer calls from consuming the form's outer `exit`.
+  - Restore `admin/forms/admstamp.pmlfrm` to zero parser errors.
+  - Parse standalone PML1 `collect all ...` statements, including `from drawlist` sources.
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add tests for procedural menu initializers and DrawList `collect all ... from drawlist` patterns.
+  - Reduce installed `.pmlfrm` parser errors from 1412 to 1410 while preserving other corpus baselines.
+
+---
+
 ### v0.12.14 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1018,7 +1033,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.14
+**Version:** 0.12.15
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1028,7 +1043,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **145 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **147 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1038,6 +1053,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.15`: fixed procedural menu initializer recovery and added DrawList `collect all ... from drawlist` parsing, reducing `.pmlfrm` errors to 1410.
 - `v0.12.14`: hardened menu-body recovery, `list`/`view` menu boundaries, multiline recovery, and error-message prefix handling without changing corpus baselines.
 - `v0.12.13`: reduced post-review false positives for nameless form gadgets, form/method boundaries, `.pmlfnc` command-style lines, menu layout bodies, and duplicated parser messages.
 - `v0.12.12`: applied post-review safeguards for form sub-block recovery, menu consumption, gadget names, PML1 `is` phrases, and object constructors.
