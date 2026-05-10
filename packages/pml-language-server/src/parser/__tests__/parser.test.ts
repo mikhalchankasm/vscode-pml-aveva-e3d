@@ -17,7 +17,9 @@ import {
 	ExpressionStatement,
 	Identifier,
 	CallExpression,
-	Literal
+	Literal,
+	BreakStatement,
+	ContinueStatement
 } from '../../ast/nodes';
 
 describe('PML Parser', () => {
@@ -1002,6 +1004,11 @@ endmethod
 			const result = parser.parse(source);
 
 			expect(result.errors).toHaveLength(0);
+			const method = result.ast.body[0] as MethodDefinition;
+			const loop = method.body[0] as DoStatement;
+			const skip = loop.body[0] as ContinueStatement;
+			expect(skip.type).toBe('ContinueStatement');
+			expect(skip.condition).toBeDefined();
 		});
 
 		it('should parse same-line break if as a conditional break statement', () => {
@@ -1017,6 +1024,11 @@ endmethod
 			const result = parser.parse(source);
 
 			expect(result.errors).toHaveLength(0);
+			const method = result.ast.body[0] as MethodDefinition;
+			const loop = method.body[0] as DoStatement;
+			const breakStatement = loop.body[0] as BreakStatement;
+			expect(breakStatement.type).toBe('BreakStatement');
+			expect(breakStatement.condition).toBeDefined();
 		});
 
 		it('should parse SETCOMPDATE as a standalone command starter', () => {
@@ -1383,6 +1395,20 @@ enddo
 
 			expect(result.errors.length).toBeGreaterThan(0);
 			expect(result.errors[0].message).toContain("Expected 'to' or 'by' in do-from-to");
+		});
+
+		it('should reject incomplete do from loop bounds', () => {
+			const parser = new Parser();
+			const sources = [
+				'do !i from\nenddo',
+				'do !i from 1 to\nenddo',
+				'do !i from 1 to 10 by\nenddo'
+			];
+
+			for (const source of sources) {
+				const result = parser.parse(source);
+				expect(result.errors.length).toBeGreaterThan(0);
+			}
 		});
 	});
 

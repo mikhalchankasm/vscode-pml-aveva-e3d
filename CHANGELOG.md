@@ -2,6 +2,15 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.22] - 2026-05-10
+
+### Improved
+
+- Preserve parsed conditions on conditional `break if ...` AST nodes for future hover, reference, rename, and analysis features.
+- Preserve parsed conditions on conditional `skip if ...` AST nodes while keeping the existing `ContinueStatement` representation.
+- Added AST-shape assertions for conditional break/skip parsing and extra negative coverage for incomplete `do from` loop bounds.
+- Revalidated the installed AVEVA corpus baseline at 4026 parser errors.
+
 ## [0.12.21] - 2026-05-10
 
 ### Fixed

@@ -355,6 +355,7 @@ export interface ReturnStatement extends ASTNode {
  */
 export interface BreakStatement extends ASTNode {
 	type: 'BreakStatement';
+	condition?: Expression;
 }
 
 /**
@@ -362,6 +363,7 @@ export interface BreakStatement extends ASTNode {
  */
 export interface ContinueStatement extends ASTNode {
 	type: 'ContinueStatement';
+	condition?: Expression;
 }
 
 /**

@@ -1538,14 +1538,16 @@ export class Parser {
 	 */
 	private parseBreakStatement(): Statement {
 		const token = this.advance();
+		let condition: Expression | undefined;
 
 		if (this.check(TokenType.IF) && this.peek().line === token.line) {
 			this.advance();
-			this.parseExpression();
+			condition = this.parseExpression();
 		}
 
 		return {
 			type: 'BreakStatement',
+			condition,
 			range: this.createRange(this.getTokenIndex(token), this.current - 1)
 		};
 	}
@@ -1661,11 +1663,10 @@ export class Parser {
 			this.advance(); // consume 'if'
 			const condition = this.parseExpression();
 
-			// skip if doesn't require 'then' - treat as conditional continue
-			// For AST purposes, we treat this as a continue statement
-			// (the condition is parsed but not stored in the AST)
+			// skip if doesn't require 'then' - treat as conditional continue.
 			return {
 				type: 'ContinueStatement',
+				condition,
 				range: this.createRange(this.getTokenIndex(token), this.current - 1)
 			};
 		}

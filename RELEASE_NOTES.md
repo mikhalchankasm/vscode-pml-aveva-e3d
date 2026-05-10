@@ -2,22 +2,22 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.21
+## Current Release - v0.12.22
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.21](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.21)
+**GitHub Release:** [v0.12.22](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.22)
 
 ### What Changed
 
-- Added support for same-line PML1 `break if ...` loop exits.
-- Added support for open-ended `do !i from ...` loops, including optional `by` steps without `to`.
-- Kept malformed same-line `do from` syntax diagnostic instead of silently swallowing trailing tokens.
-- Reduced installed AVEVA corpus parser errors from 5195 to 4026.
+- Preserved conditional expressions on `break if ...` AST nodes.
+- Preserved conditional expressions on `skip if ...` AST nodes.
+- Added AST-shape assertions for conditional loop controls.
+- Added extra negative coverage for incomplete `do from` loop bounds.
 
 ### Validation
 
-- Language server tests: 153 passed, 2 skipped.
+- Language server tests: 154 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
@@ -29,7 +29,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.21.vsix`
+- VSIX: `pml-aveva-e3d-0.12.22.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 
