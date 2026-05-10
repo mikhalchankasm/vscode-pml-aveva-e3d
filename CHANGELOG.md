@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.24] - 2026-05-11
+
+### Fixed
+
+- Parse PML database attribute expressions that use `function of ...` despite `function` also being a definition keyword.
+- Parse dynamic global variable names such as `!!$!gadgetValue`, `!!$!<formName>`, and `!!$!fName$n.$!root$nLS`.
+
+### Improved
+
+- Made form reference validator tests resilient to diagnostic ordering changes.
+- Reduced installed AVEVA corpus parser errors from 4026 to 3922.
+- Reduced `.pmlfnc` parser errors from 1199 to 1174, `.pmlfrm` from 1050 to 1034, and `.pmlobj` from 1774 to 1711.
+
 ## [0.12.23] - 2026-05-10
 
 ### Improved

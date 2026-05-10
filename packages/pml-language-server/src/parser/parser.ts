@@ -2871,8 +2871,8 @@ export class Parser {
 			};
 		}
 
-		// Some PML built-ins share spelling with parser keywords, for example define(...)
-		if (this.match(TokenType.DEFINE)) {
+		// Some PML built-ins and database attributes share spelling with parser keywords.
+		if (this.match(TokenType.DEFINE, TokenType.FUNCTION)) {
 			const token = this.previous();
 			return {
 				type: 'Identifier',

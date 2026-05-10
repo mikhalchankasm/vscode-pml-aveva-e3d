@@ -2,34 +2,34 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.23
+## Current Release - v0.12.24
 
-**Release Date:** 2026-05-10
+**Release Date:** 2026-05-11
 
-**GitHub Release:** [v0.12.23](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.23)
+**GitHub Release:** [v0.12.24](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.24)
 
 ### What Changed
 
-- Preserved whether `ContinueStatement` nodes came from `continue` or PML `skip`.
-- Added array-index diagnostics inside conditional `break if ...` and `skip if ...` expressions.
-- Added opt-in form reference diagnostics inside conditional `break if ...` and `skip if ...` expressions.
-- Preserved the installed AVEVA corpus parser baseline.
+- Parsed `function of ...` as a valid PML database attribute expression.
+- Parsed dynamic global variable names such as `!!$!gadgetValue` and `!!$!<formName>`.
+- Made form reference validator tests resilient to diagnostic ordering changes.
+- Reduced installed AVEVA corpus parser errors from 4026 to 3922.
 
 ### Validation
 
-- Language server tests: 156 passed, 2 skipped.
+- Language server tests: 158 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
-- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1199 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1050 errors.
-- External AVEVA `.pmlobj` corpus parse: 1334 files, 1774 errors.
+- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1174 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1034 errors.
+- External AVEVA `.pmlobj` corpus parse: 1334 files, 1711 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.23.vsix`
+- VSIX: `pml-aveva-e3d-0.12.24.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 

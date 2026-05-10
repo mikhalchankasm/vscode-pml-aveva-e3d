@@ -342,6 +342,12 @@ export class Lexer {
 			type = TokenType.GLOBAL_VAR;
 		}
 
+		if (type === TokenType.GLOBAL_VAR && this.peek() === '$') {
+			value += this.scanDynamicGlobalVariableSuffix();
+			this.addToken(type, value, line, column, offset, this.position - offset);
+			return;
+		}
+
 		// Variable name
 		while (this.isAlphaNumeric(this.peek())) {
 			value += this.advance();
@@ -354,6 +360,47 @@ export class Lexer {
 		}
 
 		this.addToken(type, value, line, column, offset, this.position - offset);
+	}
+
+	private scanDynamicGlobalVariableSuffix(): string {
+		let value = '';
+
+		while (!this.isAtEnd() && !this.isDynamicGlobalVariableBoundary(this.peek())) {
+			const char = this.advance();
+			value += char;
+
+			if (char === '<') {
+				while (!this.isAtEnd() && this.peek() !== '>' && this.peek() !== '\n' && this.peek() !== '\r') {
+					value += this.advance();
+				}
+				if (this.peek() === '>') {
+					value += this.advance();
+				}
+			}
+		}
+
+		return value;
+	}
+
+	private isDynamicGlobalVariableBoundary(char: string): boolean {
+		return [
+			'\0',
+			'\n',
+			'\r',
+			' ',
+			'\t',
+			')',
+			'(',
+			',',
+			']',
+			'[',
+			'=',
+			'&',
+			'+',
+			'-',
+			'*',
+			'/'
+		].includes(char);
 	}
 
 	/**

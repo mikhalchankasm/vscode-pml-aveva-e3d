@@ -1056,6 +1056,34 @@ enddo
 			expect(parser.parse('setcompdate(!value)').errors).toHaveLength(0);
 		});
 
+		it('should parse function as a database attribute name in expressions', () => {
+			const source = `
+define method .readFunctionAttribute()
+	!func = function of $!num[$!x]
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse dynamic global variable names', () => {
+			const source = `
+define method .readDynamicGlobal()
+	!value = !!$!gadgetValue
+	!form = !!$!<formName>
+	!style = !!$!fName$n.$!root$nLS
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse define calls and dynamic substitute member access in forms', () => {
 			const source = `
 define method .check()
