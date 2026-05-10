@@ -2,34 +2,34 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.20
+## Current Release - v0.12.21
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.20](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.20)
+**GitHub Release:** [v0.12.21](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.21)
 
 ### What Changed
 
-- Added regression coverage for same-line `skip if` while keeping following-line standalone `if` handling intact.
-- Added focused standalone coverage for `SETCOMPDATE ...` command-style parsing.
-- Added PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command starters from installed AVEVA function/form/object code.
-- Reduced installed AVEVA corpus parser errors from 5321 to 5195.
+- Added support for same-line PML1 `break if ...` loop exits.
+- Added support for open-ended `do !i from ...` loops, including optional `by` steps without `to`.
+- Kept malformed same-line `do from` syntax diagnostic instead of silently swallowing trailing tokens.
+- Reduced installed AVEVA corpus parser errors from 5195 to 4026.
 
 ### Validation
 
-- Language server tests: 150 passed, 2 skipped.
+- Language server tests: 153 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
-- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1505 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1399 errors.
-- External AVEVA `.pmlobj` corpus parse: 1334 files, 2288 errors.
+- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1199 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1050 errors.
+- External AVEVA `.pmlobj` corpus parse: 1334 files, 1774 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.20.vsix`
+- VSIX: `pml-aveva-e3d-0.12.21.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 

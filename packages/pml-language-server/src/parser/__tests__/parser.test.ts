@@ -1004,6 +1004,21 @@ endmethod
 			expect(result.errors).toHaveLength(0);
 		});
 
+		it('should parse same-line break if as a conditional break statement', () => {
+			const source = `
+define method .conditionalBreak()
+	do
+		break if (!done)
+	enddo
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
 		it('should parse SETCOMPDATE as a standalone command starter', () => {
 			const parser = new Parser();
 
@@ -1336,6 +1351,38 @@ enddo
 			expect(doStmt.variant).toBe('from-to');
 			expect(doStmt.from).toBeDefined();
 			expect(doStmt.to).toBeDefined();
+		});
+
+		it('should parse open-ended do from loop', () => {
+			const source = `
+do !i from 1 by 2
+	break if (!i gt 10)
+enddo
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const doStmt = result.ast.body[0] as DoStatement;
+			expect(doStmt.type).toBe('DoStatement');
+			expect(doStmt.variant).toBe('from-to');
+			expect(doStmt.from).toBeDefined();
+			expect(doStmt.to).toBeUndefined();
+			expect(doStmt.by).toBeDefined();
+		});
+
+		it('should reject unexpected tokens after do from expression on the same line', () => {
+			const parser = new Parser();
+			const result = parser.parse(`
+do !i from 1 garbage
+	break
+enddo
+			`.trim());
+
+			expect(result.errors.length).toBeGreaterThan(0);
+			expect(result.errors[0].message).toContain("Expected 'to' or 'by' in do-from-to");
 		});
 	});
 

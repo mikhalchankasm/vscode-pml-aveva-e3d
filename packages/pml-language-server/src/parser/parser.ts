@@ -1459,11 +1459,7 @@ export class Parser {
 
 		// break
 		if (this.check(TokenType.BREAK)) {
-			const token = this.advance();
-			return {
-				type: 'BreakStatement',
-				range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
-			};
+			return this.parseBreakStatement();
 		}
 
 		// continue
@@ -1535,6 +1531,23 @@ export class Parser {
 
 		// Expression statement (method calls, etc.)
 		return this.parseExpressionStatement();
+	}
+
+	/**
+	 * Parse break statement (break or break if condition).
+	 */
+	private parseBreakStatement(): Statement {
+		const token = this.advance();
+
+		if (this.check(TokenType.IF) && this.peek().line === token.line) {
+			this.advance();
+			this.parseExpression();
+		}
+
+		return {
+			type: 'BreakStatement',
+			range: this.createRange(this.getTokenIndex(token), this.current - 1)
+		};
 	}
 
 	/**
@@ -1707,9 +1720,13 @@ export class Parser {
 				this.advance();
 				variant = 'from-to';
 				from = this.parseExpression();
-				this.consume(TokenType.TO, "Expected 'to' in do-from-to");
-				to = this.parseExpression();
-				// Optional: by step
+				if (this.check(TokenType.TO)) {
+					this.advance();
+					to = this.parseExpression();
+				} else if (this.peek().line === varToken.line && !this.check(TokenType.BY)) {
+					throw this.error(this.peek(), "Expected 'to' or 'by' in do-from-to");
+				}
+				// Optional: by step. PML also allows open-ended "do !i from 1 by 2".
 				if (this.check(TokenType.BY)) {
 					this.advance();
 					by = this.parseExpression();

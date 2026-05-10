@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.21] - 2026-05-10
+
+### Fixed
+
+- Parse PML1 same-line `break if ...` loops without treating the trailing `if` as a nested block that requires `then`.
+- Parse open-ended `do !i from ...` loops, including `do !i from 1` and `do !i from 1 by 2`, while still rejecting unexpected same-line trailing tokens.
+
+### Improved
+
+- Added regression coverage for conditional `break if`, open-ended `do from`, and malformed same-line `do from` syntax.
+- Reduced installed AVEVA corpus parser errors from 5195 to 4026.
+- Reduced `.pmlfnc` parser errors from 1505 to 1199, `.pmlfrm` from 1399 to 1050, and `.pmlobj` from 2288 to 1774.
+
 ## [0.12.20] - 2026-05-10
 
 ### Fixed

@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.21 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **PML1 Loop Compatibility** ✅ COMPLETED
+  - Parse same-line `break if ...` as a conditional loop exit.
+  - Parse open-ended `do !i from ...` loops and optional `by` steps without requiring `to`.
+  - Keep malformed same-line `do from` trailing tokens diagnostic.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Reduce installed AVEVA corpus parser errors from 5195 to 4026.
+  - Reduce `.pmlfnc` parser errors from 1505 to 1199, `.pmlfrm` from 1399 to 1050, and `.pmlobj` from 2288 to 1774.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.20 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1108,7 +1124,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.20
+**Version:** 0.12.21
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1118,7 +1134,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **150 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **153 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1128,6 +1144,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.21`: added same-line `break if ...` and open-ended `do !i from ...` parsing, reducing installed AVEVA corpus parser errors from 5195 to 4026.
 - `v0.12.20`: added PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command starters, reducing installed AVEVA corpus parser errors from 5321 to 5195.
 - `v0.12.19`: cleared `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm` parser diagnostics by tightening `skip if` line handling and adding `SETCOMPDATE`.
 - `v0.12.18`: hardened automated release checksum injection and added VSIX size/manuals guardrails.
