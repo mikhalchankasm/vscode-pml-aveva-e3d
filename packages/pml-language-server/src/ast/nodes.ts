@@ -363,6 +363,7 @@ export interface BreakStatement extends ASTNode {
  */
 export interface ContinueStatement extends ASTNode {
 	type: 'ContinueStatement';
+	keyword?: 'continue' | 'skip';
 	condition?: Expression;
 }
 

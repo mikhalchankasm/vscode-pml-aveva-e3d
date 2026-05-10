@@ -19,6 +19,9 @@ endmethod
 define method .apply()
 	!this.apply.active = true
 	!this.unknownGadget.active = true
+	do !i from 1 to 2
+		skip if (!this.missingSkip.active)
+	enddo
 endmethod
 		`.trim();
 
@@ -27,16 +30,18 @@ endmethod
 
 		const diagnostics = new FormReferenceValidator().check(parseResult.ast, DiagnosticSeverity.Warning);
 
-		expect(diagnostics).toHaveLength(3);
+		expect(diagnostics).toHaveLength(4);
 		expect(diagnostics.map(diagnostic => diagnostic.code)).toEqual([
 			'missing-form-callback',
 			'missing-form-callback',
+			'unknown-form-member',
 			'unknown-form-member'
 		]);
 		expect(diagnostics.map(diagnostic => diagnostic.message)).toEqual([
 			"Form callback 'this.quitcall' references missing method '.missingQuit()'",
 			"Gadget '.missingButton' callback references missing method '.missingButtonCallback()'",
-			"Unknown form member or gadget '!this.unknownGadget'"
+			"Unknown form member or gadget '!this.unknownGadget'",
+			"Unknown form member or gadget '!this.missingSkip'"
 		]);
 	});
 

@@ -1467,6 +1467,7 @@ export class Parser {
 			const token = this.advance();
 			return {
 				type: 'ContinueStatement',
+				keyword: 'continue',
 				range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
 			};
 		}
@@ -1666,6 +1667,7 @@ export class Parser {
 			// skip if doesn't require 'then' - treat as conditional continue.
 			return {
 				type: 'ContinueStatement',
+				keyword: 'skip',
 				condition,
 				range: this.createRange(this.getTokenIndex(token), this.current - 1)
 			};
@@ -1674,6 +1676,7 @@ export class Parser {
 		// Plain skip without condition
 		return {
 			type: 'ContinueStatement',
+			keyword: 'skip',
 			range: this.createRange(this.getTokenIndex(token), this.getTokenIndex(token))
 		};
 	}

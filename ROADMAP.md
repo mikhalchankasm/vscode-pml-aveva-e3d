@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.23 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Conditional Loop Diagnostics** ✅ COMPLETED
+  - Preserve `continue` vs `skip` keyword identity on `ContinueStatement`.
+  - Walk conditional `break if ...` and `skip if ...` expressions in array-index diagnostics.
+  - Walk conditional `break if ...` and `skip if ...` expressions in opt-in form reference diagnostics.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Preserve the installed AVEVA corpus parser baseline at 4026 errors.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.22 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1139,7 +1154,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.22
+**Version:** 0.12.23
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1149,7 +1164,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **154 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **156 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1159,6 +1174,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.23`: wired conditional `break if ...` and `skip if ...` expressions into diagnostics and preserved `continue` vs `skip` keyword identity.
 - `v0.12.22`: stored conditional `break if ...` and `skip if ...` expressions in the AST and preserved the installed AVEVA corpus baseline.
 - `v0.12.21`: added same-line `break if ...` and open-ended `do !i from ...` parsing, reducing installed AVEVA corpus parser errors from 5195 to 4026.
 - `v0.12.20`: added PML1 `onerror`, `label`, `golabel`, and `use ... for ...` command starters, reducing installed AVEVA corpus parser errors from 5321 to 5195.

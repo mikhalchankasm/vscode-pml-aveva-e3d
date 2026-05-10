@@ -221,6 +221,12 @@ export class FormReferenceValidator {
 					this.validateExpressionReferences(statement.argument, knownThisMembers, severity, diagnostics);
 				}
 				break;
+			case 'BreakStatement':
+			case 'ContinueStatement':
+				if (statement.condition) {
+					this.validateExpressionReferences(statement.condition, knownThisMembers, severity, diagnostics);
+				}
+				break;
 		}
 	}
 

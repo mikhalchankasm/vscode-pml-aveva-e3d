@@ -121,6 +121,15 @@ export class ArrayIndexChecker {
 				break;
 			}
 
+			case 'BreakStatement':
+			case 'ContinueStatement': {
+				const loopControl = stmt as any;
+				if (loopControl.condition) {
+					this.checkExpression(loopControl.condition);
+				}
+				break;
+			}
+
 			case 'VariableDeclaration': {
 				const varDecl = stmt as any;
 				if (varDecl.initializer) {

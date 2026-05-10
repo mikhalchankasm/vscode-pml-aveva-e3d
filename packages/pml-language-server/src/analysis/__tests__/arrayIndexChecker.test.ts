@@ -192,6 +192,21 @@ enddo
 
 			expect(diagnostics).toHaveLength(1);
 		});
+
+		it('should detect arr[0] in conditional loop controls', () => {
+			const source = `
+do !i from 1 to 10
+	break if (!stopItems[0])
+	skip if (!skipItems[0])
+enddo
+			`.trim();
+
+			const result = parser.parse(source);
+			const diagnostics = checker.check(result.ast);
+
+			expect(result.errors).toHaveLength(0);
+			expect(diagnostics).toHaveLength(2);
+		});
 	});
 
 	describe('Array[0] in expressions', () => {

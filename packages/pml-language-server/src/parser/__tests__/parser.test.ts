@@ -1008,6 +1008,7 @@ endmethod
 			const loop = method.body[0] as DoStatement;
 			const skip = loop.body[0] as ContinueStatement;
 			expect(skip.type).toBe('ContinueStatement');
+			expect(skip.keyword).toBe('skip');
 			expect(skip.condition).toBeDefined();
 		});
 
@@ -1029,6 +1030,22 @@ endmethod
 			const breakStatement = loop.body[0] as BreakStatement;
 			expect(breakStatement.type).toBe('BreakStatement');
 			expect(breakStatement.condition).toBeDefined();
+		});
+
+		it('should preserve the continue keyword on continue statements', () => {
+			const parser = new Parser();
+			const result = parser.parse(`
+do !index from 1 to 10
+	continue
+enddo
+			`.trim());
+
+			expect(result.errors).toHaveLength(0);
+			const loop = result.ast.body[0] as DoStatement;
+			const continueStatement = loop.body[0] as ContinueStatement;
+			expect(continueStatement.type).toBe('ContinueStatement');
+			expect(continueStatement.keyword).toBe('continue');
+			expect(continueStatement.condition).toBeUndefined();
 		});
 
 		it('should parse SETCOMPDATE as a standalone command starter', () => {

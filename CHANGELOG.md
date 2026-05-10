@@ -2,6 +2,15 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.23] - 2026-05-10
+
+### Improved
+
+- Preserve whether a `ContinueStatement` came from the `continue` keyword or the PML `skip` keyword.
+- Run array-index diagnostics inside conditional `break if ...` and `skip if ...` expressions.
+- Run opt-in form reference diagnostics inside conditional `break if ...` and `skip if ...` expressions.
+- Revalidated the installed AVEVA corpus baseline at 4026 parser errors.
+
 ## [0.12.22] - 2026-05-10
 
 ### Improved
