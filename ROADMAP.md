@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.19 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **AVEVA Form Corpus Reduction** ✅ COMPLETED
+  - Keep standalone `if` statements after a plain `skip` from being consumed as `skip if`.
+  - Add the PML1 `SETCOMPDATE ...` command starter used in installed form code.
+  - Clear `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm` parser diagnostics.
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add tests for `SETCOMPDATE FOR DB ... TO EXTRACT` and `skip` followed by a nested `if`.
+  - Reduce installed `.pmlfrm` parser errors from 1410 to 1404 and `.pmlobj` parser errors from 2306 to 2303.
+
+---
+
 ### v0.12.18 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1077,7 +1092,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.18
+**Version:** 0.12.19
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1087,7 +1102,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **147 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **148 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1097,6 +1112,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.19`: cleared `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm` parser diagnostics by tightening `skip if` line handling and adding `SETCOMPDATE`.
 - `v0.12.18`: hardened automated release checksum injection and added VSIX size/manuals guardrails.
 - `v0.12.17`: fixed GitHub Actions packaging on Ubuntu and moved releases toward tag-triggered automated VSIX/checksum publication.
 - `v0.12.16`: fixed local manuals packaging hygiene and tightened malformed `collect all ...` diagnostics without changing corpus baselines.

@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.19] - 2026-05-10
+
+### Fixed
+
+- Parse standalone `if` statements that follow a plain `skip` on the next line instead of treating them as `skip if` continuations.
+- Accept the PML1 `SETCOMPDATE ...` command starter used in installed AVEVA form files.
+- Reduce false parser errors in installed `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm` to zero.
+
+### Improved
+
+- Added regression coverage for `SETCOMPDATE FOR DB ... TO EXTRACT` and `skip` followed by a nested `if`.
+- Reduced installed AVEVA `.pmlfrm` parser errors from 1410 to 1404 and `.pmlobj` parser errors from 2306 to 2303.
+
 ## [0.12.18] - 2026-05-10
 
 ### Fixed

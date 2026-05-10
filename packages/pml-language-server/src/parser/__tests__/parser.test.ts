@@ -946,6 +946,12 @@ define method .execute(!args is ARRAY)
 	$T8-
 endmethod
 
+define method .extractDate(!db is DBREF)
+	if (!db.set()) then
+		SETCOMPDATE FOR DB $!dbName TO EXTRACT
+	endif
+endmethod
+
 define method .continued(!data is ANY, $
                          !element is DBREF)
 	if ((!!ce.type eq 'WORL') or $
@@ -957,6 +963,24 @@ endmethod
 
 			const parser = new Parser();
 			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should keep standalone if statements after a plain skip on the next line', () => {
+			const source = `
+define method .claimList()
+	handle any
+		skip
+		if (!numExtractErrors eq 5 ) then
+			break
+		endif
+	endhandle
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source, { mode: 'form' });
 
 			expect(result.errors).toHaveLength(0);
 		});

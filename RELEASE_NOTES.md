@@ -2,34 +2,34 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.18
+## Current Release - v0.12.19
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.18](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.18)
+**GitHub Release:** [v0.12.19](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.19)
 
 ### What Changed
 
-- Hardened GitHub release checksum injection by using `python3` explicitly.
-- Made release publication fail if the `SHA256` placeholder is missing from release notes.
-- Added CI and release guardrails for oversized VSIX packages.
-- Added CI and release guardrails that reject accidental `manuals/` content inside the VSIX.
+- Fixed plain `skip` handling so a following standalone `if` on the next line remains a normal nested `if` statement.
+- Added the PML1 `SETCOMPDATE ...` command starter used by installed AVEVA forms.
+- Cleared the known parser diagnostics in `admextractcntrol.pmlfrm` and `lstclaim.pmlfrm`.
+- Added regression coverage for the two real AVEVA corpus patterns.
 
 ### Validation
 
-- Language server tests: 147 passed, 2 skipped.
+- Language server tests: 148 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
 - External AVEVA `.pmlfnc` corpus parse: 2869 files, 1611 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1410 errors.
-- External AVEVA `.pmlobj` corpus parse: 1334 files, 2306 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1404 errors.
+- External AVEVA `.pmlobj` corpus parse: 1334 files, 2303 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.18.vsix`
+- VSIX: `pml-aveva-e3d-0.12.19.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 

@@ -44,6 +44,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'rename', category: 'model', brief: 'Renames an element or set of elements from command-style syntax.' },
 	{ name: 'representation', category: 'drawing', brief: 'Sets or queries graphical representation options.' },
 	{ name: 'savework', category: 'system', brief: 'Saves current work from command-style syntax.' },
+	{ name: 'setcompdate', category: 'system', brief: 'Sets database comparison or extract dates from command-style syntax.' },
 	{ name: 'system', category: 'system', brief: 'Runs AVEVA system/display commands from command-style syntax.' },
 	{ name: 'syscom', category: 'system', brief: 'Runs a system command from the PML command stream.' },
 	{ name: 'text', category: 'drawing', brief: 'Declares text UI or drawing command entries from command-style syntax.' },

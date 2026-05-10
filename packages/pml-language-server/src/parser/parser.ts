@@ -1644,7 +1644,7 @@ export class Parser {
 		const token = this.advance(); // consume 'skip'
 
 		// Check if there's an 'if' condition
-		if (this.check(TokenType.IF)) {
+		if (this.check(TokenType.IF) && this.peek().line === token.line) {
 			this.advance(); // consume 'if'
 			const condition = this.parseExpression();
 
