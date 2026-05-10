@@ -14,8 +14,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.18.1
-      - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
-      - run: cd packages/pml-language-server && npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Install root dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+      - name: Install language server dependencies
+        run: |
+          cd packages/pml-language-server
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
       - run: npm run compile:tsc
       - run: npm run lint
       - run: npx eslint packages/pml-language-server/src --ext ts

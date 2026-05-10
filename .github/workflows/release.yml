@@ -25,8 +25,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.18.1
-      - run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
-      - run: cd packages/pml-language-server && npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Install root dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+      - name: Install language server dependencies
+        run: |
+          cd packages/pml-language-server
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
       - run: npm run compile
       - name: Compute release tag
         id: vars
@@ -57,12 +70,37 @@ jobs:
             git push origin "refs/tags/$TAG"
           fi
       - name: Package VSIX
-        run: npx @vscode/vsce package --no-yarn
+        run: npm run pack
+      - name: Compute VSIX checksum
+        id: checksum
+        shell: bash
+        run: |
+          VSIX="$(ls pml-aveva-e3d-*.vsix | head -n 1)"
+          SHA="$(sha256sum "$VSIX" | awk '{print $1}')"
+          echo "$SHA  $VSIX" > "$VSIX.sha256"
+          echo "vsix=$VSIX" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+      - name: Build release notes
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ steps.checksum.outputs.sha }}
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          body = Path("RELEASE_NOTES.md").read_text(encoding="utf-8")
+          body = re.sub(r"SHA256: `[^`]+`", f"SHA256: `{os.environ['RELEASE_SHA']}`", body)
+          Path("release-body.md").write_text(body, encoding="utf-8")
+          PY
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: vsix
-          path: '*.vsix'
+          path: |
+            *.vsix
+            *.vsix.sha256
       - name: Create GitHub Release and upload VSIX
         uses: softprops/action-gh-release@v2
         env:
@@ -72,8 +110,9 @@ jobs:
           name: ${{ steps.vars.outputs.tag }}
           files: |
             *.vsix
+            *.vsix.sha256
           generate_release_notes: true
-          body_path: CHANGELOG.md
+          body_path: release-body.md
           prerelease: ${{ github.event.inputs.prerelease == 'true' }}
       - name: Determine VSCE PAT
         id: vsce
@@ -94,6 +133,5 @@ jobs:
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
         run: npx @vscode/vsce publish --packagePath *.vsix --no-yarn
-
 
 
