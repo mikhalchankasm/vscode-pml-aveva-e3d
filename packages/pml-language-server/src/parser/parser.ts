@@ -63,6 +63,17 @@ const RESTRICTED_COMMAND_STARTERS = new Set(['calldrg', 'gap', 'id']);
 
 const DIRECTION_PRIMARY_NAMES = new Set(['E', 'N', 'S', 'U', 'W', 'X', 'Y', 'Z']);
 
+const NAMELESS_GADGET_MODIFIERS = new Set([
+	'anchor',
+	'at',
+	'call',
+	'callback',
+	'height',
+	'pixmap',
+	'tooltip',
+	'width'
+]);
+
 interface GadgetModifiers {
 	position?: number;
 	width?: number | string;
@@ -514,7 +525,7 @@ export class Parser {
 
 			// Parse frame definitions
 			if (token.type === TokenType.FRAME) {
-				frames.push(this.parseFrameDefinition());
+				frames.push(this.parseFrameDefinition(callbacks, members, body));
 				continue;
 			}
 
@@ -683,7 +694,11 @@ export class Parser {
 	/**
 	 * Parse frame definition
 	 */
-	private parseFrameDefinition(): FrameDefinition {
+	private parseFrameDefinition(
+		callbacks?: Record<string, string>,
+		members?: MemberDeclaration[],
+		body?: Statement[]
+	): FrameDefinition {
 		const startToken = this.consume(TokenType.FRAME, "Expected 'frame'");
 		const nameToken = this.consume(TokenType.METHOD, "Expected frame name (e.g., .myFrame)");
 		const frameName = nameToken.value.substring(1);
@@ -697,12 +712,12 @@ export class Parser {
 			if (this.check(TokenType.EXIT)) break;
 
 			if (this.check(TokenType.FRAME)) {
-				frames.push(this.parseFrameDefinition());
+				frames.push(this.parseFrameDefinition(callbacks, members, body));
 				continue;
 			}
 
 			if (this.isFormSubBlockStart()) {
-				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind());
+				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind(), callbacks, members, body);
 				continue;
 			}
 
@@ -909,8 +924,41 @@ export class Parser {
 		if (this.check(TokenType.IDENTIFIER) && this.peek().value.startsWith('_')) {
 			return this.advance();
 		}
+		if (this.isNamelessGadgetModifierStart(this.peek())) {
+			return this.syntheticGadgetNameToken(this.peek());
+		}
 
 		throw this.error(this.peek(), "Expected gadget name (e.g., .myButton)");
+	}
+
+	private syntheticGadgetNameToken(anchor: Token): Token {
+		return {
+			...anchor,
+			type: TokenType.IDENTIFIER,
+			value: '<anonymous>',
+			length: 0
+		};
+	}
+
+	private isNamelessGadgetModifierStart(token: Token): boolean {
+		if ([
+			TokenType.AT,
+			TokenType.CALL,
+			TokenType.OK,
+			TokenType.CANCEL,
+			TokenType.APPLY,
+			TokenType.RESET,
+			TokenType.RESIZE,
+			TokenType.WID,
+			TokenType.HEI,
+			TokenType.POPUP,
+			TokenType.NOBOX
+		].includes(token.type)) {
+			return true;
+		}
+
+		return token.type === TokenType.IDENTIFIER &&
+		       NAMELESS_GADGET_MODIFIERS.has(token.value.toLowerCase());
 	}
 
 	private isGadgetDeclarationStart(type: TokenType): boolean {
@@ -1098,8 +1146,54 @@ export class Parser {
 		if (this.isAtEnd() || this.peek().line === menuLine) {
 			return false;
 		}
+		if (this.check(TokenType.EXIT) || this.check(TokenType.DEFINE)) {
+			return false;
+		}
+		if (this.isGadgetDeclarationStart(this.peek().type) ||
+		    this.check(TokenType.FRAME) ||
+		    this.check(TokenType.MEMBER) ||
+		    this.check(TokenType.TRACK)) {
+			return false;
+		}
 
-		return this.check(TokenType.IDENTIFIER) && this.peek().value.toLowerCase() === 'add';
+		return this.isAllowedMenuBodyLineStart();
+	}
+
+	private isAllowedMenuBodyLineStart(): boolean {
+		if (this.isLineCommandStart() ||
+		    this.check(TokenType.VAR) ||
+		    this.check(TokenType.IF) ||
+		    this.check(TokenType.ELSE) ||
+		    this.check(TokenType.ELSEIF) ||
+		    this.check(TokenType.ENDIF) ||
+		    this.check(TokenType.DO) ||
+		    this.check(TokenType.ENDDO) ||
+		    this.check(TokenType.HANDLE) ||
+		    this.check(TokenType.ELSEHANDLE) ||
+		    this.check(TokenType.ENDHANDLE)) {
+			return true;
+		}
+
+		if (!this.check(TokenType.IDENTIFIER)) {
+			return false;
+		}
+
+		return [
+			'add',
+			'callback',
+			'halign',
+			'hdist',
+			'horz',
+			'path',
+			'pixmap',
+			'pos',
+			'prompt',
+			'title',
+			'tooltip',
+			'valign',
+			'vdist',
+			'vert'
+		].includes(this.peek().value.toLowerCase());
 	}
 
 	private isFormSubBlockStart(): boolean {
@@ -1206,7 +1300,22 @@ export class Parser {
 		}
 
 		return this.check(TokenType.IDENTIFIER) &&
-		       ['add', 'callback', 'path', 'prompt', 'title'].includes(this.peek().value.toLowerCase());
+		       [
+			'add',
+			'callback',
+			'halign',
+			'hdist',
+			'horz',
+			'path',
+			'pixmap',
+			'pos',
+			'prompt',
+			'title',
+			'tooltip',
+			'valign',
+			'vdist',
+			'vert'
+		       ].includes(this.peek().value.toLowerCase());
 	}
 
 	private isFormDeclarationStart(): boolean {
@@ -1407,7 +1516,7 @@ export class Parser {
 		}
 
 		if (this.isBlockedRestrictedCommandStart()) {
-			throw this.error(this.peek(), `Expected AVEVA command context for '${this.peek().value}'`);
+			throw this.error(this.peek(), `Command starter '${this.peek().value}' is only accepted in .pmlcmd, .pmlobj, or .pmlfrm command contexts`);
 		}
 
 		if (this.isLineCommandStart()) {
@@ -2031,6 +2140,7 @@ export class Parser {
 		if (this.match(TokenType.ASSIGN)) {
 			const assignToken = this.previous();
 			const right = this.consumePml1ArgumentPhrase(this.parseAssignment()); // Right-associative: a = b = c
+			this.rejectUnexpectedTrailingIs(assignToken.line);
 
 			// Validate left side - must be identifier or member expression
 			if (left.type !== 'Identifier' && left.type !== 'MemberExpression') {
@@ -2822,7 +2932,7 @@ export class Parser {
 		if (!isPdmsCommandStarter(startToken.value)) {
 			return false;
 		}
-		if (RESTRICTED_COMMAND_STARTERS.has(startToken.value.toLowerCase()) && this.mode === 'default') {
+		if (RESTRICTED_COMMAND_STARTERS.has(startToken.value.toLowerCase()) && this.blocksRestrictedCommandStarter()) {
 			return false;
 		}
 
@@ -2845,7 +2955,7 @@ export class Parser {
 	}
 
 	private isBlockedRestrictedCommandStart(): boolean {
-		if (this.isAtEnd() || this.mode !== 'default') {
+		if (this.isAtEnd() || !this.blocksRestrictedCommandStarter()) {
 			return false;
 		}
 
@@ -2866,6 +2976,10 @@ export class Parser {
 			TokenType.ASSIGN,
 			TokenType.OF
 		].includes(nextToken.type);
+	}
+
+	private blocksRestrictedCommandStarter(): boolean {
+		return this.mode === 'default';
 	}
 
 	private isMissingDefineFunctionStart(): boolean {

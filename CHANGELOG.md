@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.13] - 2026-05-10
+
+### Fixed
+
+- Accept AVEVA form gadgets whose name is omitted and whose declaration starts directly with a modifier such as `pixmap`.
+- Keep shipped `.pmlfrm` forms that end a `setup form` section at the next `define method` boundary from receiving false missing-`exit` diagnostics.
+- Preserve `.pmlfnc` command-style `ID/id` lines observed in the installed AVEVA PMLLIB corpus instead of over-tightening restricted command starters.
+- Recognize menu bodies that begin with layout directives such as `path`, `vert`, `horz`, `vdist`, or `hdist` without consuming following standalone form gadgets.
+- Apply `is`-phrase validation consistently to chained assignment expressions.
+- Avoid duplicated parser messages such as `Expected Expected 'exit'...`.
+
+### Improved
+
+- Added regression tests for nameless form gadgets, menu layout-directive bodies, form/method boundaries, `.pmlfnc` command-style lines, and chained assignment `is` tails.
+- Reduced installed AVEVA `.pmlfrm` parser errors from 1414 to 1412 while preserving `.pmlcmd`, `.pmlfnc`, `.pmlmac`, and `.pmlobj` baselines.
+
 ## [0.12.12] - 2026-05-10
 
 ### Fixed

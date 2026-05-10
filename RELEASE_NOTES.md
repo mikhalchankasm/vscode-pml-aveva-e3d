@@ -2,38 +2,38 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.12
+## Current Release - v0.12.13
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.12](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.12)
+**GitHub Release:** [v0.12.13](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.13)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.11 Claude review.
-- Report malformed or unterminated form sub-blocks instead of silently swallowing them.
-- Keep standalone `menu .name popup` declarations from consuming following gadgets.
-- Restrict bare-identifier gadget names to underscore-prefixed AVEVA forms such as `_cancel`.
-- Tighten PML1 `is` phrase recovery so ordinary assignment tails remain diagnostic.
-- Require object constructors such as `object FORM()` to include the call parentheses.
-- Restrict `id`, `gap`, and `calldrg` command starters outside known AVEVA parser modes.
+- Applied follow-up fixes from the v0.12.12 Claude review, keeping the parts that improve the installed AVEVA corpus and rejecting over-strict suggestions that create false positives.
+- Accept nameless form gadgets whose declaration starts directly with a modifier such as `pixmap`.
+- Keep shipped `.pmlfrm` forms quiet when `setup form` ends at a following `define method` boundary.
+- Preserve `.pmlfnc` command-style `ID/id` lines observed in the installed AVEVA PMLLIB corpus.
+- Recognize menu bodies that begin with layout directives such as `path`, `vert`, `horz`, `vdist`, or `hdist`.
+- Apply `is`-phrase validation consistently to chained assignments.
+- Avoid duplicated parser messages such as `Expected Expected 'exit'...`.
 
 ### Validation
 
-- Language server tests: 142 passed, 2 skipped.
+- Language server tests: 143 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
 - External AVEVA `.pmlfnc` corpus parse: 2869 files, 1611 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1414 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 1412 errors.
 - External AVEVA `.pmlobj` corpus parse: 1334 files, 2306 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.12.vsix`
-- SHA256: `af32888ae9e1dc5edee4ae2640b3a0664dfc02955800dda1f4dd3ecf308a6d39`
+- VSIX: `pml-aveva-e3d-0.12.13.vsix`
+- SHA256: `ae981dda6f15572b4a20d8984711115a10a17174402171ca3f4ec9f7ef88770f`
 
 ## Active Release Track
 

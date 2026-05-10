@@ -518,12 +518,41 @@ setup form !!BrokenMenu
 layout form !!BrokenLayout resize
 	garbage tokens here
 			`.trim()).errors.some(error => error.message.includes("Expected 'exit' to close form"))).toBe(true);
+
+			expect(parser.parse(`
+setup form !!FormBeforeMethod
+	button .ok 'OK'
+define method .x()
+	return
+endmethod
+			`.trim()).errors.some(error => error.message.includes("Expected 'exit' to close form"))).toBe(false);
 		});
 
 		it('should keep standalone menu declarations from consuming following gadgets', () => {
 			const source = `
 setup form !!StandaloneMenu
 	menu .viewmenu popup
+	button .ok 'OK'
+exit
+			`.trim();
+
+			const result = new Parser().parse(source);
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(result.errors).toHaveLength(0);
+			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'button']);
+		});
+
+		it('should consume menu bodies that start with layout directives', () => {
+			const source = `
+setup form !!MenuPathBody
+	menu .viewmenu popup
+		path down
+		add 'Stored' |!!handler()|
+	exit
 	button .ok 'OK'
 exit
 			`.trim();
@@ -552,6 +581,18 @@ setup form !!TypoGadget
 	button cancelBtn 'Cancel'
 exit
 			`.trim()).errors.some(error => error.message.includes('Expected gadget name'))).toBe(true);
+
+			const namelessResult = parser.parse(`
+setup form !!NamelessGadget
+	button pixmap |close.png| tooltip |Close|
+exit
+			`.trim());
+			const namelessForm = namelessResult.ast.body[0] as FormDefinition;
+			const namelessButton = namelessForm.body[0] as GadgetDeclaration;
+
+			expect(namelessResult.errors).toHaveLength(0);
+			expect(namelessButton.name).toBe('<anonymous>');
+			expect(namelessButton.properties.pixmap).toBe('close.png');
 		});
 
 		it('should parse using namespace as a command-style statement', () => {
@@ -926,6 +967,7 @@ setup command !!brokenController
 			expect(parser.parse('goto target =').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('id EQUI BRAN PANE SCTN @').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('gap @').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('id EQUI BRAN PANE SCTN @', { mode: 'function' }).errors).toHaveLength(0);
 			expect(parser.parse('id EQUI BRAN PANE SCTN @', { mode: 'form' }).errors).toHaveLength(0);
 			expect(parser.parse('gap @', { mode: 'form' }).errors).toHaveLength(0);
 		});
@@ -970,6 +1012,7 @@ endfunction
 
 			expect(parser.parse('!y = !x is REAL').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!y = !x is some bogus stuff').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!a = !b = !c is REAL').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!f = object FORM').errors.some(error => error.message.includes("Expected '(' after object constructor type"))).toBe(true);
 			expect(parser.parse('!f = object FORM()').errors).toHaveLength(0);
 		});
