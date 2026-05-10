@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.14] - 2026-05-10
+
+### Fixed
+
+- Detect menu bodies structurally instead of relying on the first menu-body keyword allowlist.
+- Keep unknown menu-body lines inside the menu block so they produce `Unexpected token in menu block` instead of leaking into form-body parsing.
+- Treat `list` and `view` identifier gadgets after a menu as form-body boundaries rather than menu-body content.
+- Consume multiline string tokens as one logical line when recovering menu/body method-call lines.
+- Keep local/global variable method-call lines such as `!this.menu.add(...)` quiet inside form sub-block recovery.
+- Make parser error-prefix suppression case-insensitive.
+
+### Improved
+
+- Added regression tests for unknown menu-body lines, `list`/`view` gadget boundaries after menus, and exact `Unexpected 'is' after expression` diagnostics.
+- Preserved the installed AVEVA PMLLIB corpus baseline: `.pmlfrm` remains at 1412 errors, with `.pmlcmd`, `.pmlfnc`, `.pmlmac`, and `.pmlobj` unchanged.
+
 ## [0.12.13] - 2026-05-10
 
 ### Fixed

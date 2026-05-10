@@ -567,6 +567,40 @@ exit
 			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'button']);
 		});
 
+		it('should keep unknown menu body lines inside the menu block', () => {
+			const source = `
+setup form !!MenuUnknownBody
+	menu .viewmenu popup
+		unknownmenuitem 1 2 3
+		add 'Stored' |!!handler()|
+	exit
+	button .ok 'OK'
+exit
+			`.trim();
+
+			const result = new Parser().parse(source);
+			const form = result.ast.body[0] as FormDefinition;
+			const gadgets = form.body.filter(
+				(statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration'
+			);
+
+			expect(result.errors.some(error => error.message.includes('Unexpected token in menu block'))).toBe(true);
+			expect(gadgets.map(gadget => gadget.gadgetType)).toEqual(['menu', 'button']);
+		});
+
+		it('should not treat identifier form gadgets after menus as menu body lines', () => {
+			const result = new Parser().parse(`
+setup form !!MenuBeforeList
+	menu .load
+	!this.load.add('CALLBACK', 'All', '!this.all()')
+	list .registry |Registry| at x0 y0.5
+	view .preview at xmax ymin
+exit
+			`.trim());
+
+			expect(result.errors.some(error => error.message.includes('Unexpected token in menu block'))).toBe(false);
+		});
+
 		it('should only accept underscore bare gadget names', () => {
 			const parser = new Parser();
 
@@ -1012,7 +1046,7 @@ endfunction
 
 			expect(parser.parse('!y = !x is REAL').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!y = !x is some bogus stuff').errors.length).toBeGreaterThan(0);
-			expect(parser.parse('!a = !b = !c is REAL').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!a.b = !c is REAL').errors[0].message).toContain("Unexpected 'is' after expression");
 			expect(parser.parse('!f = object FORM').errors.some(error => error.message.includes("Expected '(' after object constructor type"))).toBe(true);
 			expect(parser.parse('!f = object FORM()').errors).toHaveLength(0);
 		});

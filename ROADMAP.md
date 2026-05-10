@@ -441,6 +441,22 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.14 - 2026-05-10 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Menu-body Recovery Hardening** ✅ COMPLETED
+  - Detect menu bodies by structural boundaries instead of first-line keyword allowlists.
+  - Keep unknown menu-body lines inside the menu block and diagnose them consistently.
+  - Treat `list` and `view` identifier gadgets as form-body boundaries after menus.
+  - Consume multiline string tokens as one logical line during recovery.
+
+- [x] **Regression Coverage** ✅ COMPLETED
+  - Add tests for unknown menu-body lines, `list`/`view` gadget boundaries after menus, and exact `Unexpected 'is' after expression` diagnostics.
+  - Preserve the installed AVEVA PMLLIB corpus baseline: `.pmlfrm` stays at 1412 errors and other extensions remain unchanged.
+
+---
+
 ### v0.12.13 - 2026-05-10 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1002,7 +1018,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.13
+**Version:** 0.12.14
 **Released:** 2026-05-10
 
 **Statistics:**
@@ -1012,7 +1028,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **143 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **145 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1022,6 +1038,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.14`: hardened menu-body recovery, `list`/`view` menu boundaries, multiline recovery, and error-message prefix handling without changing corpus baselines.
 - `v0.12.13`: reduced post-review false positives for nameless form gadgets, form/method boundaries, `.pmlfnc` command-style lines, menu layout bodies, and duplicated parser messages.
 - `v0.12.12`: applied post-review safeguards for form sub-block recovery, menu consumption, gadget names, PML1 `is` phrases, and object constructors.
 - `v0.12.11`: reduced installed `.pmlfrm` parser errors from 3010 to 1409 with layout form and nested form-block support.

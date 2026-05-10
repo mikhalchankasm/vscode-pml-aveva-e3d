@@ -932,6 +932,8 @@ export class Parser {
 	}
 
 	private syntheticGadgetNameToken(anchor: Token): Token {
+		// Synthetic names are a parser-only placeholder for nameless AVEVA form gadgets.
+		// Use the declaration token for ranges; this token is not part of this.tokens.
 		return {
 			...anchor,
 			type: TokenType.IDENTIFIER,
@@ -1146,54 +1148,26 @@ export class Parser {
 		if (this.isAtEnd() || this.peek().line === menuLine) {
 			return false;
 		}
-		if (this.check(TokenType.EXIT) || this.check(TokenType.DEFINE)) {
-			return false;
-		}
-		if (this.isGadgetDeclarationStart(this.peek().type) ||
-		    this.check(TokenType.FRAME) ||
-		    this.check(TokenType.MEMBER) ||
-		    this.check(TokenType.TRACK)) {
+		if (this.isNonMenuBodyStart()) {
 			return false;
 		}
 
-		return this.isAllowedMenuBodyLineStart();
+		return true;
 	}
 
-	private isAllowedMenuBodyLineStart(): boolean {
-		if (this.isLineCommandStart() ||
-		    this.check(TokenType.VAR) ||
-		    this.check(TokenType.IF) ||
-		    this.check(TokenType.ELSE) ||
-		    this.check(TokenType.ELSEIF) ||
-		    this.check(TokenType.ENDIF) ||
-		    this.check(TokenType.DO) ||
-		    this.check(TokenType.ENDDO) ||
-		    this.check(TokenType.HANDLE) ||
-		    this.check(TokenType.ELSEHANDLE) ||
-		    this.check(TokenType.ENDHANDLE)) {
-			return true;
-		}
+	private isNonMenuBodyStart(): boolean {
+		return this.check(TokenType.EXIT) ||
+		       this.check(TokenType.DEFINE) ||
+		       this.check(TokenType.FRAME) ||
+		       this.check(TokenType.MEMBER) ||
+		       this.check(TokenType.TRACK) ||
+		       this.isIdentifierFormGadgetStart() ||
+		       this.isGadgetDeclarationStart(this.peek().type);
+	}
 
-		if (!this.check(TokenType.IDENTIFIER)) {
-			return false;
-		}
-
-		return [
-			'add',
-			'callback',
-			'halign',
-			'hdist',
-			'horz',
-			'path',
-			'pixmap',
-			'pos',
-			'prompt',
-			'title',
-			'tooltip',
-			'valign',
-			'vdist',
-			'vert'
-		].includes(this.peek().value.toLowerCase());
+	private isIdentifierFormGadgetStart(): boolean {
+		return this.check(TokenType.IDENTIFIER) &&
+		       ['list', 'view'].includes(this.peek().value.toLowerCase());
 	}
 
 	private isFormSubBlockStart(): boolean {
@@ -1222,6 +1196,10 @@ export class Parser {
 		let reportedUnknown = false;
 
 		while (!this.isAtEnd() && !this.check(TokenType.EXIT) && !this.check(TokenType.DEFINE)) {
+			if (blockKind === 'menu' && this.isIdentifierFormGadgetStart()) {
+				break;
+			}
+
 			if (this.isFormSubBlockStart()) {
 				this.consumeFormBlockBodyUntilExit(this.formSubBlockKind(), callbacks, members, body);
 				continue;
@@ -1286,6 +1264,8 @@ export class Parser {
 
 	private isAllowedFormSubBlockLineStart(): boolean {
 		if (this.isLineCommandStart() ||
+		    this.check(TokenType.LOCAL_VAR) ||
+		    this.check(TokenType.GLOBAL_VAR) ||
 		    this.check(TokenType.VAR) ||
 		    this.check(TokenType.IF) ||
 		    this.check(TokenType.ELSE) ||
@@ -2017,7 +1997,9 @@ export class Parser {
 	}
 
 	private consumeRemainingLine(line: number): void {
-		while (!this.isAtEnd() && this.peek().line === line) {
+		let consumedEndOffset = -1;
+		while (!this.isAtEnd() && (this.peek().line === line || this.peek().offset <= consumedEndOffset)) {
+			consumedEndOffset = Math.max(consumedEndOffset, this.peek().offset + this.peek().length);
 			this.advance();
 		}
 	}

@@ -2,25 +2,25 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.13
+## Current Release - v0.12.14
 
 **Release Date:** 2026-05-10
 
-**GitHub Release:** [v0.12.13](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.13)
+**GitHub Release:** [v0.12.14](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.14)
 
 ### What Changed
 
-- Applied follow-up fixes from the v0.12.12 Claude review, keeping the parts that improve the installed AVEVA corpus and rejecting over-strict suggestions that create false positives.
-- Accept nameless form gadgets whose declaration starts directly with a modifier such as `pixmap`.
-- Keep shipped `.pmlfrm` forms quiet when `setup form` ends at a following `define method` boundary.
-- Preserve `.pmlfnc` command-style `ID/id` lines observed in the installed AVEVA PMLLIB corpus.
-- Recognize menu bodies that begin with layout directives such as `path`, `vert`, `horz`, `vdist`, or `hdist`.
-- Apply `is`-phrase validation consistently to chained assignments.
-- Avoid duplicated parser messages such as `Expected Expected 'exit'...`.
+- Applied follow-up fixes from the v0.12.13 Claude review.
+- Detect menu bodies structurally instead of relying on the first body-line keyword allowlist.
+- Keep unknown menu-body lines inside the menu block so they are diagnosed consistently.
+- Treat `list` and `view` identifier gadgets after a menu as form-body boundaries.
+- Consume multiline string tokens as one logical line during menu/body recovery.
+- Keep `!this.menu.add(...)` style method-call lines quiet inside form sub-block recovery.
+- Make parser error-prefix suppression case-insensitive.
 
 ### Validation
 
-- Language server tests: 143 passed, 2 skipped.
+- Language server tests: 145 passed, 2 skipped.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
@@ -32,8 +32,8 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.13.vsix`
-- SHA256: `ae981dda6f15572b4a20d8984711115a10a17174402171ca3f4ec9f7ef88770f`
+- VSIX: `pml-aveva-e3d-0.12.14.vsix`
+- SHA256: `42176ab84a42619c47d8e888359b8aea6f7426a9cefb6e6010b512a98182f93a`
 
 ## Active Release Track
 

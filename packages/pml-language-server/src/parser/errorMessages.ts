@@ -22,7 +22,7 @@ export function getEnhancedErrorMessage(ctx: ErrorContext): string {
 	const gotValue = got.value || TokenType[got.type] || 'unknown';
 
 	// Base message
-	const expectedText = /^(Expected|Unexpected|Invalid|Command starter)\b/.test(expected) ? expected : `Expected ${expected}`;
+	const expectedText = /^(Expected|Unexpected|Invalid|Command starter)\b/i.test(expected) ? expected : `Expected ${expected}`;
 	let message = `${expectedText}, but found '${gotValue}'`;
 
 	// Add context-specific suggestions
