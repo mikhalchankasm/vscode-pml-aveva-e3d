@@ -2476,6 +2476,10 @@ export class Parser {
 
 	private canConsumeInfixOperator(left: Expression): boolean {
 		const operator = this.peek();
+		if (operator.type === TokenType.CONCAT) {
+			return true;
+		}
+
 		return operator.line - 1 === left.range.end.line || operator.continuesPreviousLine === true;
 	}
 

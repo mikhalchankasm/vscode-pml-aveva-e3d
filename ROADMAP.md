@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.29 - 2026-05-11 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Multi-Line Concatenation Regression Fix** ✅ COMPLETED
+  - Restore leading `&` multi-line string concatenation without requiring `$` line continuation.
+  - Keep the stricter logical-line guard for other infix operators.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Reduce installed AVEVA corpus parser errors from 3429 to 3386.
+  - Reduce `.pmlfnc` parser errors from 1056 to 1045, `.pmlfrm` from 849 to 843, and `.pmlobj` from 1521 to 1495.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.28 - 2026-05-11 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1242,7 +1257,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.28
+**Version:** 0.12.29
 **Released:** 2026-05-11
 
 **Statistics:**
@@ -1262,6 +1277,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.29`: restored AVEVA-style multi-line `&` concatenation and reduced installed AVEVA corpus parser errors from 3429 to 3386.
 - `v0.12.28`: added variable-less `do from/to` loops and logical-line infix boundaries, reducing installed AVEVA corpus parser errors from 3596 to 3429.
 - `v0.12.27`: added optional AVEVA corpus snapshot testing, dynamic member-chain AST assertions, and GitHub Actions Node 24 readiness.
 - `v0.12.26`: added dynamic substitute segments inside member chains, reducing installed AVEVA corpus parser errors from 3922 to 3596.

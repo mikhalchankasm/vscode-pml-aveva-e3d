@@ -22,10 +22,10 @@ const maybeIt = corpusRoot ? it : it.skip;
 const extensions = new Set(['.pmlcmd', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlobj']);
 const errorBudgets: Record<string, number> = {
 	pmlcmd: 0,
-	pmlfnc: 1056,
-	pmlfrm: 849,
+	pmlfnc: 1045,
+	pmlfrm: 843,
 	pmlmac: 3,
-	pmlobj: 1521
+	pmlobj: 1495
 };
 
 function createEmptySummary(): Record<string, CorpusBucket> {

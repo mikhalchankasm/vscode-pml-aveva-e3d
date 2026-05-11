@@ -1559,6 +1559,12 @@ enddo
 !value = 1 $
 	/ 2
 			`.trim()).errors).toHaveLength(0);
+
+			expect(parser.parse(`
+!value = |first|
+	& |second|
+	& |third|
+			`.trim()).errors).toHaveLength(0);
 		});
 	});
 
