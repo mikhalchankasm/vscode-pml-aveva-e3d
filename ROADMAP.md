@@ -441,6 +441,25 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.28 - 2026-05-11 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Variable-Less Do Loops** ✅ COMPLETED
+  - Parse `do from ... to ...` loops without an explicit loop variable.
+  - Parse `do to ...` loops without an explicit loop variable.
+
+- [x] **Logical-Line Expression Boundaries** ✅ COMPLETED
+  - Stop infix operators from crossing physical lines unless the next line is explicitly continued with `$`.
+  - Preserve explicit continued infix expressions.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Reduce installed AVEVA corpus parser errors from 3596 to 3429.
+  - Reduce `.pmlfnc` parser errors from 1077 to 1056, `.pmlfrm` from 919 to 849, and `.pmlobj` from 1597 to 1521.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.27 - 2026-05-11 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1223,7 +1242,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.27
+**Version:** 0.12.28
 **Released:** 2026-05-11
 
 **Statistics:**
@@ -1233,7 +1252,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **161 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + optional corpus snapshot)
+- Tests: **163 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + optional corpus snapshot)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1243,6 +1262,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.28`: added variable-less `do from/to` loops and logical-line infix boundaries, reducing installed AVEVA corpus parser errors from 3596 to 3429.
 - `v0.12.27`: added optional AVEVA corpus snapshot testing, dynamic member-chain AST assertions, and GitHub Actions Node 24 readiness.
 - `v0.12.26`: added dynamic substitute segments inside member chains, reducing installed AVEVA corpus parser errors from 3922 to 3596.
 - `v0.12.25`: hardened dynamic global variable lexing for incomplete `!!$...` forms and preserved the installed AVEVA corpus baseline at 3922 parser errors.

@@ -1500,6 +1500,27 @@ enddo
 			expect(doStmt.by).toBeDefined();
 		});
 
+		it('should parse do from-to loops without an explicit loop variable', () => {
+			const source = `
+do from 1 to !level
+	/*SC
+enddo
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const doStmt = result.ast.body[0] as DoStatement;
+			expect(doStmt.type).toBe('DoStatement');
+			expect(doStmt.variant).toBe('from-to');
+			expect(doStmt.variable).toBeUndefined();
+			expect(doStmt.from).toBeDefined();
+			expect(doStmt.to).toBeDefined();
+			expect(doStmt.body).toHaveLength(1);
+		});
+
 		it('should reject unexpected tokens after do from expression on the same line', () => {
 			const parser = new Parser();
 			const result = parser.parse(`
@@ -1524,6 +1545,20 @@ enddo
 				const result = parser.parse(source);
 				expect(result.errors.length).toBeGreaterThan(0);
 			}
+		});
+
+		it('should keep infix expressions on their logical line unless continued', () => {
+			const parser = new Parser();
+
+			expect(parser.parse(`
+!value = 1
+/*SC
+			`.trim()).errors).toHaveLength(0);
+
+			expect(parser.parse(`
+!value = 1 $
+	/ 2
+			`.trim()).errors).toHaveLength(0);
 		});
 	});
 

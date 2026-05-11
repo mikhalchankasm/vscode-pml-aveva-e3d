@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.28] - 2026-05-11
+
+### Fixed
+
+- Parse `do from ... to ...` and `do to ...` loops that omit an explicit loop variable.
+- Stop infix operators from crossing physical lines unless the next line is explicitly continued with PML `$` line continuation.
+
+### Improved
+
+- Added corpus snapshot file-count sanity checks.
+- Tightened the optional AVEVA corpus budgets to the new 3429-error parser baseline.
+- Reduced installed AVEVA corpus parser errors from 3596 to 3429.
+- Reduced `.pmlfnc` parser errors from 1077 to 1056, `.pmlfrm` from 919 to 849, and `.pmlobj` from 1597 to 1521.
+
 ## [0.12.27] - 2026-05-11
 
 ### Improved

@@ -1740,6 +1740,24 @@ export class Parser {
 				variant = 'from-to';
 				to = this.parseExpression();
 			}
+		} else if (this.check(TokenType.FROM)) {
+			this.advance();
+			variant = 'from-to';
+			from = this.parseExpression();
+			if (this.check(TokenType.TO)) {
+				this.advance();
+				to = this.parseExpression();
+			} else if (this.peek().line === startToken.line && !this.check(TokenType.BY)) {
+				throw this.error(this.peek(), "Expected 'to' or 'by' in do-from-to");
+			}
+			if (this.check(TokenType.BY)) {
+				this.advance();
+				by = this.parseExpression();
+			}
+		} else if (this.check(TokenType.TO)) {
+			this.advance();
+			variant = 'from-to';
+			to = this.parseExpression();
 		} else if (this.check(TokenType.WHILE)) {
 			this.advance();
 			variant = 'while';
@@ -2378,7 +2396,7 @@ export class Parser {
 	private parseOf(): Expression {
 		let left = this.parseAddition();
 
-		while (this.match(TokenType.OF)) {
+		while (this.canConsumeInfixOperator(left) && this.match(TokenType.OF)) {
 			const operator = this.previous().value;
 			const right = this.parseAddition();
 			left = {
@@ -2399,7 +2417,7 @@ export class Parser {
 	private parseAddition(): Expression {
 		let left = this.parseMultiplication();
 
-		while (this.match(TokenType.PLUS, TokenType.MINUS, TokenType.CONCAT)) {
+		while (this.canConsumeInfixOperator(left) && this.match(TokenType.PLUS, TokenType.MINUS, TokenType.CONCAT)) {
 			const operator = this.previous().value;
 			const right = this.parseMultiplication();
 			left = {
@@ -2420,7 +2438,7 @@ export class Parser {
 	private parseMultiplication(): Expression {
 		let left = this.parsePower();
 
-		while (this.match(TokenType.STAR, TokenType.SLASH, TokenType.MOD, TokenType.DIV)) {
+		while (this.canConsumeInfixOperator(left) && this.match(TokenType.STAR, TokenType.SLASH, TokenType.MOD, TokenType.DIV)) {
 			const operator = this.previous().value;
 			const right = this.parsePower();
 			left = {
@@ -2441,7 +2459,7 @@ export class Parser {
 	private parsePower(): Expression {
 		let left = this.parseUnary();
 
-		while (this.match(TokenType.POWER)) {
+		while (this.canConsumeInfixOperator(left) && this.match(TokenType.POWER)) {
 			const operator = this.previous().value;
 			const right = this.parseUnary();
 			left = {
@@ -2454,6 +2472,11 @@ export class Parser {
 		}
 
 		return left;
+	}
+
+	private canConsumeInfixOperator(left: Expression): boolean {
+		const operator = this.peek();
+		return operator.line - 1 === left.range.end.line || operator.continuesPreviousLine === true;
 	}
 
 	/**

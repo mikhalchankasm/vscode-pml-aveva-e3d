@@ -22,10 +22,10 @@ const maybeIt = corpusRoot ? it : it.skip;
 const extensions = new Set(['.pmlcmd', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlobj']);
 const errorBudgets: Record<string, number> = {
 	pmlcmd: 0,
-	pmlfnc: 1077,
-	pmlfrm: 919,
+	pmlfnc: 1056,
+	pmlfrm: 849,
 	pmlmac: 3,
-	pmlobj: 1597
+	pmlobj: 1521
 };
 
 function createEmptySummary(): Record<string, CorpusBucket> {
@@ -68,6 +68,7 @@ describe('AVEVA PMLLIB corpus snapshot', () => {
 		});
 
 		for (const [ext, budget] of Object.entries(errorBudgets)) {
+			expect(summary[ext].files, `${ext} files parsed`).toBeGreaterThan(0);
 			expect(summary[ext].errors, `${ext} parser errors`).toBeLessThanOrEqual(budget);
 		}
 	});
