@@ -2,6 +2,15 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.27] - 2026-05-11
+
+### Improved
+
+- Added an optional AVEVA PMLLIB corpus snapshot test gated by `AVEVA_PMLLIB_PATH`.
+- Added AST-shape assertions for dynamic substitute member chains to prevent silent multi-statement parsing regressions.
+- Updated GitHub Actions workflows to test with Node 24 and opt JavaScript actions into the Node 24 runtime.
+- Revalidated the installed AVEVA corpus parser baseline at 3596 errors.
+
 ## [0.12.26] - 2026-05-11
 
 ### Fixed

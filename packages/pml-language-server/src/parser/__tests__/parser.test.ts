@@ -17,10 +17,25 @@ import {
 	ExpressionStatement,
 	Identifier,
 	CallExpression,
+	Expression,
+	MemberExpression,
 	Literal,
 	BreakStatement,
 	ContinueStatement
 } from '../../ast/nodes';
+
+function collectMemberPropertyNames(expression: Expression): string[] {
+	if (expression.type !== 'MemberExpression') {
+		return [];
+	}
+
+	const member = expression as MemberExpression;
+	const names = collectMemberPropertyNames(member.object);
+	if (member.property.type === 'Identifier') {
+		names.push(member.property.name);
+	}
+	return names;
+}
 
 describe('PML Parser', () => {
 	describe('Method Definitions', () => {
@@ -1138,6 +1153,21 @@ endmethod
 			const result = parser.parse(source, { mode: 'object' });
 
 			expect(result.errors).toHaveLength(0);
+
+			const method = result.ast.body[0] as MethodDefinition;
+			const firstIf = method.body[0] as IfStatement;
+			const secondIf = method.body[1] as IfStatement;
+			expect(collectMemberPropertyNames((firstIf.test as CallExpression).callee)).toEqual(
+				expect.arrayContaining(['error', '$!<a>', 'val', 'eq'])
+			);
+			expect(collectMemberPropertyNames((secondIf.test as CallExpression).callee)).toEqual(
+				expect.arrayContaining(['$!<a>', 'origin', 'set'])
+			);
+
+			const assignment = secondIf.consequent[0] as VariableDeclaration;
+			expect(collectMemberPropertyNames(assignment.initializer as Expression)).toEqual(
+				expect.arrayContaining(['stack', '$!i', '$n', 'elevation'])
+			);
 		});
 
 		it('should recover nested pipe text fragments with non-ascii text in arguments', () => {

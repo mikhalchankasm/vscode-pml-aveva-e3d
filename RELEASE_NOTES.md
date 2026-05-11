@@ -2,22 +2,22 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.26
+## Current Release - v0.12.27
 
 **Release Date:** 2026-05-11
 
-**GitHub Release:** [v0.12.26](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.26)
+**GitHub Release:** [v0.12.27](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.27)
 
 ### What Changed
 
-- Parsed dynamic substitute segments inside member chains such as `!this.error$!<a>.val`, `!this.$!<a>origin`, and `!this.stack$!i$n[!a].elevation`.
-- Clarified dynamic global variable validation as a prefix check because real PML names can append additional dynamic suffix pieces.
-- Added negative coverage for incomplete dynamic global forms `!!$` and `!!$!!`.
-- Reduced installed AVEVA corpus parser errors from 3922 to 3596.
+- Added an optional AVEVA PMLLIB corpus snapshot test gated by `AVEVA_PMLLIB_PATH`.
+- Added AST-shape assertions for dynamic substitute member chains to prevent silent multi-statement parsing regressions.
+- Updated GitHub Actions workflows to test with Node 24 and opt JavaScript actions into the Node 24 runtime.
+- Revalidated the installed AVEVA corpus parser baseline at 3596 errors.
 
 ### Validation
 
-- Language server tests: 161 passed, 2 skipped.
+- Language server tests: 161 passed, 3 skipped by default; optional corpus snapshot passed with `AVEVA_PMLLIB_PATH`.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
@@ -29,7 +29,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.26.vsix`
+- VSIX: `pml-aveva-e3d-0.12.27.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 
