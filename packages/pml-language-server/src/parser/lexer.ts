@@ -343,8 +343,16 @@ export class Lexer {
 		}
 
 		if (type === TokenType.GLOBAL_VAR && this.peek() === '$') {
-			value += this.scanDynamicGlobalVariableSuffix();
-			this.addToken(type, value, line, column, offset, this.position - offset);
+			const dynamicSuffix = this.scanDynamicGlobalVariableSuffix();
+			value += dynamicSuffix;
+			this.addToken(
+				this.isValidDynamicGlobalVariableSuffix(dynamicSuffix) ? type : TokenType.UNKNOWN,
+				value,
+				line,
+				column,
+				offset,
+				this.position - offset
+			);
 			return;
 		}
 
@@ -380,6 +388,10 @@ export class Lexer {
 		}
 
 		return value;
+	}
+
+	private isValidDynamicGlobalVariableSuffix(value: string): boolean {
+		return /^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|!!?<[^>\r\n]+>|[A-Za-z_][A-Za-z0-9_]*)/.test(value);
 	}
 
 	private isDynamicGlobalVariableBoundary(char: string): boolean {

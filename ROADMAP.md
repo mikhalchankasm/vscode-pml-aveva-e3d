@@ -441,6 +441,21 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.25 - 2026-05-11 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Dynamic Global Validation** ✅ COMPLETED
+  - Reject incomplete dynamic global variable forms such as `!!$!` and `!!$!<`.
+  - Preserve real AVEVA dynamic global forms such as `!!$!!<ce.dbType>CE`.
+  - Keep missing-`define` diagnostics for statement-start `function` definitions covered by regression tests.
+
+- [x] **Corpus Validation** ✅ COMPLETED
+  - Preserve the installed AVEVA corpus parser baseline at 3922 errors.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+
+---
+
 ### v0.12.24 - 2026-05-11 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1170,7 +1185,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.24
+**Version:** 0.12.25
 **Released:** 2026-05-11
 
 **Statistics:**
@@ -1180,7 +1195,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **158 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
+- Tests: **160 tests passing, 2 skipped** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1190,6 +1205,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.25`: hardened dynamic global variable lexing for incomplete `!!$...` forms and preserved the installed AVEVA corpus baseline at 3922 parser errors.
 - `v0.12.24`: added `function of ...` attribute parsing and dynamic global variable names, reducing installed AVEVA corpus parser errors from 4026 to 3922.
 - `v0.12.23`: wired conditional `break if ...` and `skip if ...` expressions into diagnostics and preserved `continue` vs `skip` keyword identity.
 - `v0.12.22`: stored conditional `break if ...` and `skip if ...` expressions in the AST and preserved the installed AVEVA corpus baseline.

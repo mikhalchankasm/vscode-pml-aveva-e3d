@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.25] - 2026-05-11
+
+### Fixed
+
+- Reject incomplete dynamic global variable forms such as `!!$!` and `!!$!<` instead of tokenizing them as valid globals.
+
+### Improved
+
+- Preserved real AVEVA dynamic global forms such as `!!$!!<ce.dbType>CE`.
+- Added regression coverage for missing-`define` diagnostics on statement-start `function` definitions.
+- Revalidated the installed AVEVA corpus baseline at 3922 parser errors.
+
 ## [0.12.24] - 2026-05-11
 
 ### Fixed

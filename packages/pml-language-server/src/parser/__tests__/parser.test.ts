@@ -1075,6 +1075,7 @@ define method .readDynamicGlobal()
 	!value = !!$!gadgetValue
 	!form = !!$!<formName>
 	!style = !!$!fName$n.$!root$nLS
+	!!$!!<ce.dbType>CE = !!ce
 endmethod
 			`.trim();
 
@@ -1082,6 +1083,25 @@ endmethod
 			const result = parser.parse(source);
 
 			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should reject incomplete dynamic global variable names', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('!value = !!$!').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!value = !!$!<').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should keep missing define diagnostics for function definitions', () => {
+			const parser = new Parser();
+			const result = parser.parse(`
+function !!missingDefine()
+	return
+endfunction
+			`.trim());
+
+			expect(result.errors.length).toBeGreaterThan(0);
+			expect(result.errors[0].message).toContain("Expected 'define' before 'function'");
 		});
 
 		it('should parse define calls and dynamic substitute member access in forms', () => {
