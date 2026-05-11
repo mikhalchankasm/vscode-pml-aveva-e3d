@@ -2506,6 +2506,18 @@ export class Parser {
 				continue;
 			}
 
+			if (this.canConsumeDynamicSubstituteProperty()) {
+				const propertyToken = this.advance();
+				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
+				continue;
+			}
+
+			if (this.canConsumeDynamicPropertyContinuation()) {
+				const propertyToken = this.advance();
+				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
+				continue;
+			}
+
 			if (this.match(TokenType.DOT)) {
 				const dotToken = this.previous();
 				const propertyAccess = this.parsePropertyAfterDot(expr, dotToken);
@@ -2631,6 +2643,12 @@ export class Parser {
 						end: { line: methodToken.line - 1, character: methodToken.column - 1 + methodToken.length }
 					}
 				};
+			} else if (this.canConsumeDynamicSubstituteProperty()) {
+				const propertyToken = this.advance();
+				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
+			} else if (this.canConsumeDynamicPropertyContinuation()) {
+				const propertyToken = this.advance();
+				expr = this.createPropertyAccess(expr, propertyToken, propertyToken.value);
 			} else if (this.match(TokenType.DOT)) {
 				const dotToken = this.previous();
 				const propertyAccess = this.parsePropertyAfterDot(expr, dotToken);
@@ -2659,6 +2677,31 @@ export class Parser {
 		}
 
 		return expr;
+	}
+
+	private canConsumeDynamicSubstituteProperty(): boolean {
+		if (!this.check(TokenType.SUBSTITUTE_VAR)) {
+			return false;
+		}
+
+		const previous = this.previous();
+		const token = this.peek();
+		const canContinue = previous.type === TokenType.METHOD ||
+		                    previous.type === TokenType.LOCAL_VAR ||
+		                    previous.type === TokenType.GLOBAL_VAR ||
+		                    previous.type === TokenType.SUBSTITUTE_VAR ||
+		                    previous.type === TokenType.RBRACKET ||
+		                    previous.type === TokenType.IDENTIFIER;
+		return canContinue &&
+		       token.line === previous.line &&
+		       token.column === previous.column + previous.length;
+	}
+
+	private canConsumeDynamicPropertyContinuation(): boolean {
+		return this.check(TokenType.IDENTIFIER) &&
+		       this.previous().type === TokenType.SUBSTITUTE_VAR &&
+		       this.peek().line === this.previous().line &&
+		       this.peek().column === this.previous().column + this.previous().length;
 	}
 
 	private isRecoverableMissingProperty(dotToken: Token): boolean {

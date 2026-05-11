@@ -2,6 +2,19 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.26] - 2026-05-11
+
+### Fixed
+
+- Parse dynamic substitute segments inside member chains such as `!this.error$!<a>.val`, `!this.$!<a>origin`, and `!this.stack$!i$n[!a].elevation`.
+
+### Improved
+
+- Clarified dynamic global variable validation as a prefix check because real PML names can append additional dynamic suffix pieces.
+- Added negative coverage for incomplete dynamic global forms `!!$` and `!!$!!`.
+- Reduced installed AVEVA corpus parser errors from 3922 to 3596.
+- Reduced `.pmlfnc` parser errors from 1174 to 1077, `.pmlfrm` from 1034 to 919, and `.pmlobj` from 1711 to 1597.
+
 ## [0.12.25] - 2026-05-11
 
 ### Fixed

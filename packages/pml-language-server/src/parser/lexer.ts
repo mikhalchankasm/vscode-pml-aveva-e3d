@@ -346,7 +346,7 @@ export class Lexer {
 			const dynamicSuffix = this.scanDynamicGlobalVariableSuffix();
 			value += dynamicSuffix;
 			this.addToken(
-				this.isValidDynamicGlobalVariableSuffix(dynamicSuffix) ? type : TokenType.UNKNOWN,
+				this.hasValidDynamicGlobalVariablePrefix(dynamicSuffix) ? type : TokenType.UNKNOWN,
 				value,
 				line,
 				column,
@@ -390,7 +390,8 @@ export class Lexer {
 		return value;
 	}
 
-	private isValidDynamicGlobalVariableSuffix(value: string): boolean {
+	private hasValidDynamicGlobalVariablePrefix(value: string): boolean {
+		// The scanner intentionally keeps trailing dynamic pieces such as $n.$!root$nLS in the same token.
 		return /^\$(?:!!?[A-Za-z_][A-Za-z0-9_]*|!!?<[^>\r\n]+>|[A-Za-z_][A-Za-z0-9_]*)/.test(value);
 	}
 

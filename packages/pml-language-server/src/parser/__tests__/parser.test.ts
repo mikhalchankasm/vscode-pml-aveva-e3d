@@ -1088,8 +1088,10 @@ endmethod
 		it('should reject incomplete dynamic global variable names', () => {
 			const parser = new Parser();
 
+			expect(parser.parse('!value = !!$').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!value = !!$!').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!value = !!$!<').errors.length).toBeGreaterThan(0);
+			expect(parser.parse('!value = !!$!!').errors.length).toBeGreaterThan(0);
 		});
 
 		it('should keep missing define diagnostics for function definitions', () => {
@@ -1116,6 +1118,24 @@ endmethod
 
 			const parser = new Parser();
 			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+		});
+
+		it('should parse dynamic substitute segments inside member chains', () => {
+			const source = `
+define method .checkDynamicMembers()
+	if !this.error$!<a>.val.eq(!text) then
+		skip if !this.error$!<a>.val.neq('')
+	endif
+	if !this.$!<a>origin.set() then
+		!value = !this.stack$!i$n[!a].elevation
+	endif
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source, { mode: 'object' });
 
 			expect(result.errors).toHaveLength(0);
 		});
