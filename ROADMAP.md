@@ -448,6 +448,7 @@ Development plans and progress tracking.
 - [x] **Multi-Line Concatenation Regression Fix** ✅ COMPLETED
   - Restore leading `&` multi-line string concatenation without requiring `$` line continuation.
   - Keep the stricter logical-line guard for other infix operators.
+  - Run project CI commands on Node 22.x while forcing GitHub JavaScript actions onto Node 24.
 
 - [x] **Corpus Validation** ✅ COMPLETED
   - Reduce installed AVEVA corpus parser errors from 3429 to 3386.
@@ -488,7 +489,8 @@ Development plans and progress tracking.
   - Prevent regressions that parse dynamic member chains as separate statements while still reporting zero errors.
 
 - [x] **GitHub Actions Node 24 Readiness** ✅ COMPLETED
-  - Run CI and release workflows on Node 24.
+  - Force GitHub JavaScript actions onto the Node 24 runtime.
+  - Keep project test/build commands on Node 22.x until the Vitest/Vite stack is stable on Node 24.
   - Opt JavaScript actions into the Node 24 runtime ahead of GitHub's Node 20 runtime removal.
 
 ---

@@ -11,6 +11,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 ### Improved
 
 - Added regression coverage for multi-line `&` concatenation.
+- Kept GitHub JavaScript actions forced onto the Node 24 runtime while running project commands on Node 22.x to avoid a Vitest/V8 crash on Node 24.
 - Tightened the optional AVEVA corpus budgets to the new 3386-error parser baseline.
 - Reduced installed AVEVA corpus parser errors from 3429 to 3386.
 - Reduced `.pmlfnc` parser errors from 1056 to 1045, `.pmlfrm` from 849 to 843, and `.pmlobj` from 1521 to 1495.

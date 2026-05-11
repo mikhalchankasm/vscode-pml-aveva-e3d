@@ -13,6 +13,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Restored AVEVA-style multi-line string concatenation where leading `&` continues the previous expression without requiring `$` line continuation.
 - Preserved the v0.12.28 logical-line guard for other infix operators.
 - Added regression coverage for multi-line `&` concatenation.
+- Kept GitHub JavaScript actions on the Node 24 runtime while running project commands on Node 22.x to avoid a Vitest/V8 crash on Node 24.
 - Reduced installed AVEVA corpus parser errors from 3429 to 3386.
 
 ### Validation
