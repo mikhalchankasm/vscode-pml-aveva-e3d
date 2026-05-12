@@ -58,11 +58,51 @@ export class SignatureHelpProvider {
 			});
 		}
 
+		const parameterCounts = methods.map(method => method.parameters.length);
+		const activeSignature = this.selectActiveSignature(parameterCounts, activeParameter);
+
 		return {
 			signatures,
-			activeSignature: 0,
-			activeParameter: Math.max(0, activeParameter)
+			activeSignature,
+			activeParameter: this.clampActiveParameter(activeParameter, parameterCounts[activeSignature] ?? 0)
 		};
+	}
+
+	private selectActiveSignature(parameterCounts: number[], activeParameter: number): number {
+		const desiredParameterCount = activeParameter + 1;
+		let bestIndex = 0;
+		let bestCount = Number.MAX_SAFE_INTEGER;
+
+		for (let i = 0; i < parameterCounts.length; i++) {
+			const count = parameterCounts[i];
+			if (count >= desiredParameterCount && count < bestCount) {
+				bestIndex = i;
+				bestCount = count;
+			}
+		}
+
+		if (bestCount !== Number.MAX_SAFE_INTEGER) {
+			return bestIndex;
+		}
+
+		let largestIndex = 0;
+		let largestCount = -1;
+		for (let i = 0; i < parameterCounts.length; i++) {
+			if (parameterCounts[i] > largestCount) {
+				largestIndex = i;
+				largestCount = parameterCounts[i];
+			}
+		}
+
+		return largestIndex;
+	}
+
+	private clampActiveParameter(activeParameter: number, parameterCount: number): number {
+		if (parameterCount <= 0) {
+			return 0;
+		}
+
+		return Math.min(Math.max(0, activeParameter), parameterCount - 1);
 	}
 
 	private formatParameterName(parameter: string): string {
