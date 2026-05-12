@@ -43,11 +43,12 @@ export class SignatureHelpProvider {
 		const signatures: SignatureInformation[] = [];
 
 		for (const method of methods) {
-			const params = method.parameters.map(p => {
-				return ParameterInformation.create(p);
+			const parameterLabels = method.parameters.map(parameter => this.formatParameterName(parameter));
+			const params = parameterLabels.map(parameter => {
+				return ParameterInformation.create(parameter);
 			});
 
-			const label = `.${method.name}(${method.parameters.join(', ')})`;
+			const label = method.signature || `.${method.name}(${parameterLabels.join(', ')})`;
 			const documentation = method.documentation || `Method: .${method.name}`;
 
 			signatures.push({
@@ -62,5 +63,9 @@ export class SignatureHelpProvider {
 			activeSignature: 0,
 			activeParameter: Math.max(0, activeParameter)
 		};
+	}
+
+	private formatParameterName(parameter: string): string {
+		return parameter.startsWith('!') ? parameter : `!${parameter}`;
 	}
 }
