@@ -35,9 +35,8 @@ export class CompletionProvider {
 
 		const items: CompletionItem[] = [];
 
-		// Check if typing after a variable (for method calls)
-		const memberMatch = textBeforeCursor.match(/([!$]?\w+)\s*\.\s*$/);
-		if (memberMatch) {
+		// Check if typing after a variable or member expression (for method calls)
+		if (this.isMemberCompletionContext(textBeforeCursor)) {
 			// For .pmlfrm files, show only methods defined in the form (no built-ins)
 			// For other files, show current document methods + built-ins
 			const currentMethods = this.getCurrentDocumentMethodCompletions(document);
@@ -280,7 +279,7 @@ export class CompletionProvider {
 			items.push({
 				label: `.${method.name}`,
 				kind: CompletionItemKind.Method,
-				detail: `Method (${method.parameters.join(', ')})`,
+				detail: `Method (${this.formatParameterList(method.parameters)})`,
 				documentation: method.documentation,
 				filterText: method.name,
 				sortText: `0${method.name}` // Sort workspace methods first
@@ -342,7 +341,7 @@ export class CompletionProvider {
 			label: `.${method.name}`,
 			kind: CompletionItemKind.Method,
 			detail: method.parameters.length
-				? `Method (${method.parameters.map(param => '!' + param).join(', ')})`
+				? `Method (${this.formatParameterList(method.parameters)})`
 				: 'Method',
 			documentation: method.documentation,
 			insertText: method.name,
@@ -485,5 +484,25 @@ export class CompletionProvider {
 		}
 
 		return methods;
+	}
+
+	private isMemberCompletionContext(textBeforeCursor: string): boolean {
+		const trimmedText = textBeforeCursor.trimEnd();
+		if (!trimmedText.endsWith('.')) {
+			return false;
+		}
+
+		const receiverText = trimmedText.slice(0, -1).trimEnd();
+		if (!receiverText) {
+			return false;
+		}
+
+		const receiverLastChar = receiverText[receiverText.length - 1];
+		const receiverLooksLikeExpression = /[!$]/.test(receiverText) || /[)\]>]$/.test(receiverText);
+		return receiverLooksLikeExpression && /[A-Za-z0-9_)\]>]/.test(receiverLastChar);
+	}
+
+	private formatParameterList(parameters: string[]): string {
+		return parameters.map(parameter => parameter.startsWith('!') ? parameter : `!${parameter}`).join(', ');
 	}
 }
