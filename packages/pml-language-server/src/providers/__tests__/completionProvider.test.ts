@@ -86,16 +86,24 @@ describe('CompletionProvider', () => {
 		});
 	});
 
-	it('does not treat method definition dots as member completion receivers', () => {
-		const source = 'define method .';
-		const document = TextDocument.create('file:///definition-dot.pml', 'pml', 1, source);
+	it('does not treat non-member dots as member completion receivers', () => {
 		const provider = new CompletionProvider(new SymbolIndex());
+		const sources = [
+			'define method .',
+			'foo.',
+			'-- !comment.',
+			"'!string.",
+			'|!pipeString.'
+		];
 
-		const completions = provider.provide({
-			textDocument: { uri: document.uri },
-			position: document.positionAt(source.length)
-		}, document);
+		for (const source of sources) {
+			const document = TextDocument.create('file:///non-member-dot.pml', 'pml', 1, source);
+			const completions = provider.provide({
+				textDocument: { uri: document.uri },
+				position: document.positionAt(source.length)
+			}, document);
 
-		expect(completions).toEqual([]);
+			expect(completions, source).toEqual([]);
+		}
 	});
 });

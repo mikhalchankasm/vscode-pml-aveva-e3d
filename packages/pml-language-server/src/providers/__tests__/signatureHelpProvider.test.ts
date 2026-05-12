@@ -5,6 +5,23 @@ import { SymbolIndex } from '../../index/symbolIndex';
 import { SignatureHelpProvider } from '../signatureHelpProvider';
 
 describe('SignatureHelpProvider', () => {
+	it('indexes method parameter names without PML markers', () => {
+		const uri = 'file:///signature-index.pml';
+		const definitions = [
+			'define method .resize(!width is REAL, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const method = symbolIndex.findMethod('resize')[0];
+		expect(method.parameters).toEqual(['width', 'height']);
+		expect(method.signature).toBe('.resize(!width, !height)');
+	});
+
 	it('shows PML parameter markers and active argument for indexed method signatures', () => {
 		const uri = 'file:///signature.pml';
 		const definitions = [

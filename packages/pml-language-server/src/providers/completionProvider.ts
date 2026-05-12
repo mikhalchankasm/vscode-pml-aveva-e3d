@@ -10,6 +10,8 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
+import { Lexer } from '../parser/lexer';
+import { TokenType } from '../parser/tokens';
 
 type LightweightMethod = {
 	name: string;
@@ -487,19 +489,22 @@ export class CompletionProvider {
 	}
 
 	private isMemberCompletionContext(textBeforeCursor: string): boolean {
-		const trimmedText = textBeforeCursor.trimEnd();
-		if (!trimmedText.endsWith('.')) {
+		const tokens = new Lexer(textBeforeCursor).tokenize();
+		const dotToken = tokens[tokens.length - 2];
+		const receiverToken = tokens[tokens.length - 3];
+
+		if (!dotToken || dotToken.type !== TokenType.DOT || !receiverToken) {
 			return false;
 		}
 
-		const receiverText = trimmedText.slice(0, -1).trimEnd();
-		if (!receiverText) {
-			return false;
-		}
-
-		const receiverLastChar = receiverText[receiverText.length - 1];
-		const receiverLooksLikeExpression = /[!$]/.test(receiverText) || /[)\]>]$/.test(receiverText);
-		return receiverLooksLikeExpression && /[A-Za-z0-9_)\]>]/.test(receiverLastChar);
+		return [
+			TokenType.LOCAL_VAR,
+			TokenType.GLOBAL_VAR,
+			TokenType.SUBSTITUTE_VAR,
+			TokenType.METHOD,
+			TokenType.RBRACKET,
+			TokenType.RPAREN
+		].includes(receiverToken.type);
 	}
 
 	private formatParameterList(parameters: string[]): string {

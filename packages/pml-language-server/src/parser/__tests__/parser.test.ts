@@ -1191,6 +1191,22 @@ endmethod
 			);
 		});
 
+		it('should reject non-integer numeric member suffixes after dots', () => {
+			const parser = new Parser();
+			const sources = [
+				'!value = !path.SREF.5e2',
+				'!value = !path.SREF.1.5',
+				'!value = !path.SREF.1e-3'
+			];
+
+			for (const source of sources) {
+				const result = parser.parse(source, { mode: 'object' });
+
+				expect(result.errors.some(error => error.message.includes("Expected property name after '.'")), source)
+					.toBe(true);
+			}
+		});
+
 		it('should recover nested pipe text fragments with non-ascii text in arguments', () => {
 			const source = `
 define method .saveSettings()
