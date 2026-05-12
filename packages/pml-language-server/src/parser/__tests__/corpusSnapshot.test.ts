@@ -22,10 +22,10 @@ const maybeIt = corpusRoot ? it : it.skip;
 const extensions = new Set(['.pmlcmd', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlobj']);
 const errorBudgets: Record<string, number> = {
 	pmlcmd: 0,
-	pmlfnc: 1045,
-	pmlfrm: 843,
+	pmlfnc: 1034,
+	pmlfrm: 841,
 	pmlmac: 3,
-	pmlobj: 1495
+	pmlobj: 1428
 };
 
 function createEmptySummary(): Record<string, CorpusBucket> {
@@ -49,7 +49,7 @@ function walkCorpus(dir: string, onFile: (filePath: string) => void): void {
 }
 
 describe('AVEVA PMLLIB corpus snapshot', () => {
-	maybeIt('should stay within the v0.12.26 parser error budget', () => {
+	maybeIt('should stay within the v0.12.30 parser error budget', () => {
 		expect(corpusRoot).toBeDefined();
 		expect(fs.existsSync(corpusRoot as string)).toBe(true);
 
@@ -71,5 +71,5 @@ describe('AVEVA PMLLIB corpus snapshot', () => {
 			expect(summary[ext].files, `${ext} files parsed`).toBeGreaterThan(0);
 			expect(summary[ext].errors, `${ext} parser errors`).toBeLessThanOrEqual(budget);
 		}
-	});
+	}, 60000);
 });

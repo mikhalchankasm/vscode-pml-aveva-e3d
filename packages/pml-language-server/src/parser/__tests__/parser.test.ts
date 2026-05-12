@@ -1170,6 +1170,27 @@ endmethod
 			);
 		});
 
+		it('should parse numeric path-style member suffixes after dots', () => {
+			const source = `
+define method .pathSuffix()
+	!ssrefe = $!this.suppo.name/SREF.1
+	!plate = $!suppoName/PLAT.2
+	!member = !path.SREF.1
+endmethod
+			`.trim();
+
+			const parser = new Parser();
+			const result = parser.parse(source, { mode: 'object' });
+
+			expect(result.errors).toHaveLength(0);
+
+			const method = result.ast.body[0] as MethodDefinition;
+			const member = method.body[2] as VariableDeclaration;
+			expect(collectMemberPropertyNames(member.initializer as Expression)).toEqual(
+				expect.arrayContaining(['SREF', '1'])
+			);
+		});
+
 		it('should recover nested pipe text fragments with non-ascii text in arguments', () => {
 			const source = `
 define method .saveSettings()

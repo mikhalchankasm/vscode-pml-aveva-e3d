@@ -2595,7 +2595,7 @@ export class Parser {
 	}
 
 	private parsePropertyAfterDot(object: Expression, dotToken: Token): MemberExpression | undefined {
-		if (this.check(TokenType.IDENTIFIER)) {
+		if (this.check(TokenType.IDENTIFIER) || this.check(TokenType.NUMBER)) {
 			const propertyToken = this.advance();
 			return this.createPropertyAccess(object, propertyToken, propertyToken.value);
 		}
