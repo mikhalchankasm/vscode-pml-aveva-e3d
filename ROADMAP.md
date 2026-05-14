@@ -441,6 +441,28 @@ Development plans and progress tracking.
 
 ## 🚀 Future Milestones
 
+### v0.12.30 - 2026-05-14 ✅ COMPLETED
+
+### Patch Improvements
+
+- [x] **Provider Hardening** ✅ COMPLETED
+  - Preserve PML parameter markers in completion/signature labels.
+  - Restore member-method completion after indexed, dynamic, chained, and numeric path receivers.
+  - Select the signature-help overload that covers the active argument.
+
+- [x] **Numeric Path Member Suffixes** ✅ COMPLETED
+  - Parse integer path-style member suffixes such as `SREF.1` and `PLAT.2`.
+  - Keep malformed non-integer numeric suffixes diagnostic.
+  - Document leading-zero suffixes as literal property names.
+
+- [x] **Corpus and Packaging Validation** ✅ COMPLETED
+  - Reduce installed AVEVA corpus parser errors from 3386 to 3306.
+  - Reduce `.pmlfnc` parser errors from 1045 to 1034, `.pmlfrm` from 843 to 841, and `.pmlobj` from 1495 to 1428.
+  - Preserve `.pmlcmd` at 0 errors and `.pmlmac` at 3 errors.
+  - Exclude generated coverage reports from VSIX packages.
+
+---
+
 ### v0.12.29 - 2026-05-11 ✅ COMPLETED
 
 ### Patch Improvements
@@ -1259,8 +1281,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.29
-**Released:** 2026-05-11
+**Version:** 0.12.30
+**Released:** 2026-05-14
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
@@ -1269,7 +1291,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **163 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + optional corpus snapshot)
+- Tests: **175 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + optional corpus snapshot)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1279,6 +1301,7 @@ Development plans and progress tracking.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
 **Recent Release Summary:**
+- `v0.12.30`: added numeric path member suffix parsing, hardened completion/signature providers, and reduced installed AVEVA corpus parser errors from 3386 to 3306.
 - `v0.12.29`: restored AVEVA-style multi-line `&` concatenation and reduced installed AVEVA corpus parser errors from 3429 to 3386.
 - `v0.12.28`: added variable-less `do from/to` loops and logical-line infix boundaries, reducing installed AVEVA corpus parser errors from 3596 to 3429.
 - `v0.12.27`: added optional AVEVA corpus snapshot testing, dynamic member-chain AST assertions, and GitHub Actions Node 24 readiness.

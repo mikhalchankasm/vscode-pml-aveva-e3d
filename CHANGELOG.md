@@ -2,6 +2,23 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.30] - 2026-05-14
+
+### Fixed
+
+- Parse integer path-style member suffixes after dots, including AVEVA database paths such as `SREF.1` and `PLAT.2`.
+- Restore member-method completion after numeric path suffixes such as `!path.SREF.1.`.
+- Select the signature-help overload that covers the active argument and keep zero-parameter method signatures stable at the opening parenthesis.
+
+### Improved
+
+- Added regression coverage for indexed, dynamic, chained, and numeric member completion receivers while keeping bare identifiers such as `foo.` quiet.
+- Added parser regression coverage for invalid non-integer numeric suffixes and documented leading-zero numeric suffixes as literal property names.
+- Excluded coverage reports from VSIX packages and kept the packaged extension to runtime/user-facing files only.
+- Tightened the optional AVEVA corpus budgets to the new 3306-error parser baseline.
+- Reduced installed AVEVA corpus parser errors from 3386 to 3306.
+- Reduced `.pmlfnc` parser errors from 1045 to 1034, `.pmlfrm` from 843 to 841, and `.pmlobj` from 1495 to 1428.
+
 ## [0.12.29] - 2026-05-11
 
 ### Fixed

@@ -2,35 +2,37 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.29
+## Current Release - v0.12.30
 
-**Release Date:** 2026-05-11
+**Release Date:** 2026-05-14
 
-**GitHub Release:** [v0.12.29](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.29)
+**GitHub Release:** [v0.12.30](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.30)
 
 ### What Changed
 
-- Restored AVEVA-style multi-line string concatenation where leading `&` continues the previous expression without requiring `$` line continuation.
-- Preserved the v0.12.28 logical-line guard for other infix operators.
-- Added regression coverage for multi-line `&` concatenation.
-- Kept GitHub JavaScript actions on the Node 24 runtime while running project commands on Node 22.x to avoid a Vitest/V8 crash on Node 24.
-- Reduced installed AVEVA corpus parser errors from 3429 to 3386.
+- Added parser support for integer path-style member suffixes such as `SREF.1` and `PLAT.2`.
+- Restored member-method completion after numeric path suffixes such as `!path.SREF.1.`.
+- Improved signature help overload selection and added coverage for zero-parameter method signatures.
+- Hardened completion receiver tests for indexed, dynamic, chained, and numeric member access while keeping bare identifiers quiet.
+- Kept VSIX packaging clean by excluding generated coverage reports.
+- Reduced installed AVEVA corpus parser errors from 3386 to 3306.
 
 ### Validation
 
-- Language server tests: 163 passed, 3 skipped by default; optional corpus snapshot passed with `AVEVA_PMLLIB_PATH`.
+- Language server tests: 175 passed, 3 skipped by default; optional corpus snapshot passed with `AVEVA_PMLLIB_PATH`.
 - TypeScript compile: passed.
 - Root lint and language-server lint: passed.
 - Bundled compile: passed.
 - VSIX packaging and local VS Code/Cursor install: passed.
 - External AVEVA `.pmlcmd` corpus parse: 698 files, 0 errors.
-- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1045 errors.
-- External AVEVA `.pmlfrm` corpus parse: 1206 files, 843 errors.
-- External AVEVA `.pmlobj` corpus parse: 1334 files, 1495 errors.
+- External AVEVA `.pmlfnc` corpus parse: 2869 files, 1034 errors.
+- External AVEVA `.pmlfrm` corpus parse: 1206 files, 841 errors.
+- External AVEVA `.pmlmac` corpus parse: 3 errors.
+- External AVEVA `.pmlobj` corpus parse: 1334 files, 1428 errors.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.29.vsix`
+- VSIX: `pml-aveva-e3d-0.12.30.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 
