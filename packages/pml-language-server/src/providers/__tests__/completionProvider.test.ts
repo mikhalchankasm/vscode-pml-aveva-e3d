@@ -58,6 +58,24 @@ describe('CompletionProvider', () => {
 		}, dynamicDocument);
 
 		expect(dynamicCompletions.some(item => item.label === 'upcase')).toBe(true);
+
+		const numericPathSource = '!path.SREF.1.';
+		const numericPathDocument = TextDocument.create('file:///numeric-path.pml', 'pml', 1, numericPathSource);
+		const numericPathCompletions = provider.provide({
+			textDocument: { uri: numericPathDocument.uri },
+			position: numericPathDocument.positionAt(numericPathSource.length)
+		}, numericPathDocument);
+
+		expect(numericPathCompletions.some(item => item.label === 'upcase')).toBe(true);
+
+		const chainSource = '!obj.field.subfield.';
+		const chainDocument = TextDocument.create('file:///member-chain.pml', 'pml', 1, chainSource);
+		const chainCompletions = provider.provide({
+			textDocument: { uri: chainDocument.uri },
+			position: chainDocument.positionAt(chainSource.length)
+		}, chainDocument);
+
+		expect(chainCompletions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
 	it('formats workspace method parameters with PML markers', () => {

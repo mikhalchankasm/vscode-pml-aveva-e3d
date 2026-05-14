@@ -111,4 +111,33 @@ describe('SignatureHelpProvider', () => {
 		expect(help?.activeSignature).toBe(0);
 		expect(help?.activeParameter).toBe(1);
 	});
+
+	it('keeps zero-parameter signatures selectable at the opening parenthesis', () => {
+		const uri = 'file:///signature-zero-param.pml';
+		const definitions = [
+			'define method .ping()',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.ping(`;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.activeSignature).toBe(0);
+		expect(help?.activeParameter).toBe(0);
+		expect(help?.signatures[0]).toMatchObject({
+			label: '.ping()',
+			parameters: []
+		});
+	});
 });

@@ -1176,6 +1176,7 @@ define method .pathSuffix()
 	!ssrefe = $!this.suppo.name/SREF.1
 	!plate = $!suppoName/PLAT.2
 	!member = !path.SREF.1
+	!leadingZero = !path.SREF.001
 endmethod
 			`.trim();
 
@@ -1188,6 +1189,11 @@ endmethod
 			const member = method.body[2] as VariableDeclaration;
 			expect(collectMemberPropertyNames(member.initializer as Expression)).toEqual(
 				expect.arrayContaining(['SREF', '1'])
+			);
+
+			const leadingZeroMember = method.body[3] as VariableDeclaration;
+			expect(collectMemberPropertyNames(leadingZeroMember.initializer as Expression)).toEqual(
+				expect.arrayContaining(['SREF', '001'])
 			);
 		});
 

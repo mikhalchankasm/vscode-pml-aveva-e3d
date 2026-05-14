@@ -24,6 +24,10 @@ packages/**/src/**
 # Maps are only needed for debugging
 **/*.map
 
+# Test artifacts
+coverage/**
+**/coverage/**
+
 # Documentation and examples (reduce VSIX size)
 docs/**
 examples/**

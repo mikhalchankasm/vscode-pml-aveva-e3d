@@ -489,7 +489,12 @@ export class CompletionProvider {
 	}
 
 	private isMemberCompletionContext(textBeforeCursor: string): boolean {
-		const tokens = new Lexer(textBeforeCursor).tokenize();
+		const trimmedText = textBeforeCursor.trimEnd();
+		if (!trimmedText.endsWith('.')) {
+			return false;
+		}
+
+		const tokens = new Lexer(trimmedText).tokenize();
 		const dotToken = tokens[tokens.length - 2];
 		const receiverToken = tokens[tokens.length - 3];
 
@@ -502,6 +507,7 @@ export class CompletionProvider {
 			TokenType.GLOBAL_VAR,
 			TokenType.SUBSTITUTE_VAR,
 			TokenType.METHOD,
+			TokenType.NUMBER,
 			TokenType.RBRACKET,
 			TokenType.RPAREN
 		].includes(receiverToken.type);
