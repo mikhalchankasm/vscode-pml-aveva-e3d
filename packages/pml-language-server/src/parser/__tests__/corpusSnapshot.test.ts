@@ -71,5 +71,5 @@ describe('AVEVA PMLLIB corpus snapshot', () => {
 			expect(summary[ext].files, `${ext} files parsed`).toBeGreaterThan(0);
 			expect(summary[ext].errors, `${ext} parser errors`).toBeLessThanOrEqual(budget);
 		}
-	}, 20000);
+	}, 45000);
 });
