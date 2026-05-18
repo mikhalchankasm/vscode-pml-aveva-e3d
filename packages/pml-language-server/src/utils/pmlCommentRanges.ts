@@ -137,6 +137,10 @@ export function collectPmlMethodReferenceIgnoredRanges(text: string): TextRange[
 }
 
 export function isOffsetInTextRanges(ranges: readonly TextRange[], offset: number): boolean {
+	return findTextRangeContaining(ranges, offset) !== undefined;
+}
+
+export function findTextRangeContaining(ranges: readonly TextRange[], offset: number): TextRange | undefined {
 	let low = 0;
 	let high = ranges.length - 1;
 
@@ -148,11 +152,11 @@ export function isOffsetInTextRanges(ranges: readonly TextRange[], offset: numbe
 		} else if (offset >= range.endOffset) {
 			low = mid + 1;
 		} else {
-			return true;
+			return range;
 		}
 	}
 
-	return false;
+	return undefined;
 }
 
 function skipDelimitedText(text: string, startOffset: number, delimiter: string): number {

@@ -2,6 +2,12 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.32] - 2026-05-18
+
+### Fixed
+
+- Rename form references inside pipe-delimited callback targets such as `|!!OtherForm.show()|` while still leaving non-callback pipe strings untouched.
+
 ## [0.12.31] - 2026-05-18
 
 ### Fixed

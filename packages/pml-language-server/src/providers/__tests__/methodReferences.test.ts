@@ -353,14 +353,19 @@ describe('Method reference scanning', () => {
 			'-- !!Main',
 			'!message = "!!Main"',
 			'track |CALL| call |!!Main|',
+			'track |OPEN| call |!!Main.show()|',
+			'track |CTOR| call |!!Main(!target)|',
+			'!label = |Open !!Main.show()|',
 			'$( !!Main $)',
 			'!!Main.show()'
 		].join('\n');
 
 		const edits = (provider as any).findAndReplaceForm(text, 'Main', 'Next');
 
-		expect(edits).toHaveLength(2);
+		expect(edits).toHaveLength(4);
 		expect(edits.map((edit: any) => textInRange(text, edit.range))).toEqual([
+			'!!Main',
+			'!!Main',
 			'!!Main',
 			'!!Main'
 		]);

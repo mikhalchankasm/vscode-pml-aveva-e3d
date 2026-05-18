@@ -1281,7 +1281,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.31
+**Version:** 0.12.32
 **Released:** 2026-05-18
 
 **Statistics:**
@@ -1291,7 +1291,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **175 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + optional corpus snapshot)
+- Tests: **198 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1305,12 +1305,13 @@ Development plans and progress tracking.
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
 - **Workspace indexing:** avoid unnecessary full re-index work, add file-change debounce tests, and expose clearer indexing status when a workspace is large.
 - **Completions:** separate built-in method sets by inferred receiver type, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
-- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename share method-reference pattern construction and Rename avoids inactive text for supported symbol kinds; next move References/Rename toward AST/index-backed lookup.
+- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename share method-reference pattern construction, Rename avoids inactive text for supported symbol kinds, and form Rename updates pipe-delimited callback targets; next move References/Rename toward AST/index-backed lookup.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** split snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
 - **Smoke validation:** add a lightweight extension-host smoke test for activation, command registration, and packaged VSIX content before every release.
 
 **Recent Release Summary:**
+- `v0.12.32`: updated form Rename so pipe-delimited callback targets such as `|!!OtherForm.show()|` follow form renames without rewriting non-callback pipe strings.
 - `v0.12.31`: hardened release automation, required explicit Marketplace publish approval, added release-workflow test gates, improved `.pmlobj`/`.pmlcmd` Outline coverage, hardened References/Rename inactive-text handling, and added performance budget guards.
 - `v0.12.30`: added numeric path member suffix parsing, hardened completion/signature providers, and reduced installed AVEVA corpus parser errors from 3386 to 3306.
 - `v0.12.29`: restored AVEVA-style multi-line `&` concatenation and reduced installed AVEVA corpus parser errors from 3429 to 3386.

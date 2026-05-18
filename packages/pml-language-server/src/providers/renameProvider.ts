@@ -20,6 +20,7 @@ import { createMethodRenamePatterns, escapeRegex } from '../utils/methodReferenc
 import {
 	collectPmlInactiveTextRanges,
 	collectPmlMethodReferenceIgnoredRanges,
+	findTextRangeContaining,
 	isOffsetInTextRanges,
 	TextRange
 } from '../utils/pmlCommentRanges';
@@ -326,10 +327,12 @@ export class RenameProvider {
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
 			const startOffset = match.index;
+			const endOffset = startOffset + match[0].length;
 			if (!ignoredRanges) {
 				ignoredRanges = collectPmlInactiveTextRanges(text);
 			}
-			if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+			const ignoredRange = findTextRangeContaining(ignoredRanges, startOffset);
+			if (ignoredRange && !this.isPipeFormCallbackReference(text, startOffset, endOffset, ignoredRange)) {
 				continue;
 			}
 
@@ -337,8 +340,6 @@ export class RenameProvider {
 			if (!lineOffsets) {
 				lineOffsets = computeLineOffsets(text);
 			}
-
-			const endOffset = startOffset + match[0].length;
 
 			const range = offsetToRange(lineOffsets, startOffset, endOffset);
 
@@ -435,6 +436,24 @@ export class RenameProvider {
 		}
 
 		return edits;
+	}
+
+	private isPipeFormCallbackReference(text: string, startOffset: number, endOffset: number, range: TextRange): boolean {
+		if (text[range.startOffset] !== '|') {
+			return false;
+		}
+
+		const prefix = text.slice(range.startOffset + 1, startOffset);
+		if (prefix.trim().length > 0) {
+			return false;
+		}
+
+		let nextOffset = endOffset;
+		while (nextOffset < range.endOffset && /\s/.test(text[nextOffset])) {
+			nextOffset++;
+		}
+
+		return text[nextOffset] === '.' || text[nextOffset] === '(';
 	}
 
 	/**

@@ -2,11 +2,11 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.31
+## Current Release - v0.12.32
 
 **Release Date:** 2026-05-18
 
-**GitHub Release:** [v0.12.31](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.31)
+**GitHub Release:** [v0.12.32](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.32)
 
 ### What Changed
 
@@ -14,6 +14,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Avoided double-counting method declarations in public Find References results when `includeDeclaration: true`.
 - Ignored method references inside `--`, `$*`, `$( ... $)` comments, and regular quoted strings during Find References and method Rename while preserving pipe-delimited callback references.
 - Prevented object, form, and variable Rename from editing comments or string literals, including pipe-delimited strings.
+- Renamed form references inside pipe-delimited callback targets such as `|!!OtherForm.show()|` while still leaving non-callback pipe strings untouched.
 - Improved Outline navigation for `.pmlobj` files by showing object-contained methods as top-level method entries while preserving nested object symbols.
 - Added regression coverage so `.pmlcmd` files expose method symbols after `setup command` sections.
 - Added parser, workspace-index, completion, and references performance budget guards for large generated files and 100-file workspace models.
@@ -31,13 +32,13 @@ This file is the short release snapshot for the current public build. Full histo
 - Bundled compile: passed.
 - TypeScript compile: passed.
 - Language server tests: 198 passed, 3 skipped by default.
-- VSIX packaging: passed; `pml-aveva-e3d-0.12.31.vsix` contains 15 files.
-- VSIX smoke-check: passed; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.31 and no blocked source/config directories are included.
+- VSIX packaging: passed; `pml-aveva-e3d-0.12.32.vsix` contains 15 files.
+- VSIX smoke-check: passed; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.32 and no blocked source/config directories are included.
 - Local VS Code/Cursor install: passed with `npm run pack:install`.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.31.vsix`
+- VSIX: `pml-aveva-e3d-0.12.32.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `computed by GitHub Actions`
 
