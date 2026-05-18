@@ -33,6 +33,18 @@
 4. After each logical change, run the appropriate tests/compiles. If something fails, stop and document the failure with logs.
 5. Before requesting review or merging, scan the diff for unintended changes (formatting, large asset churn, regenerated artefacts).
 
+## Continuous Improvement Loop
+- Treat this repository as an active production product: after one task is implemented and validated, immediately identify the next highest-value improvement unless the user explicitly pauses.
+- Keep the loop moving in this order: review current state, capture findings, ask an external reviewer such as Claude/Codex for read-only review when useful, compare findings, plan the next focused implementation, make changes, validate, update release notes/roadmap, then select the next item.
+- Do not wait for a perfect roadmap before improving the extension. If no explicit task is queued, choose a small, defensible item from stabilization, performance, diagnostics quality, completion quality, navigation, snippets/presets, packaging safety, or test coverage.
+- Prefer improvements that reduce customer risk or user friction: fewer false diagnostics, faster indexing/completions, better Outline/navigation, safer commands, clearer settings, better snippets, and stronger release validation.
+- Keep each implementation slice small enough to review. Avoid mixing unrelated parser changes, UI changes, release automation, and documentation unless they are required for the same release item.
+- After every implementation slice, run targeted tests first, then the broader required validation when the change is release-relevant.
+- If validation passes, update `CHANGELOG.md`, `RELEASE_NOTES.md`, and `ROADMAP.md` when the change is user-visible, release-relevant, or changes project direction.
+- If validation fails, stop feature work, document the failure, and either fix the failure or revert only the changes from the current slice.
+- Do not publish, push tags, or create a GitHub release without the user's explicit `confirm publish`.
+- When handing work to another AI reviewer, provide a review-only prompt that forbids edits, commits, pushes, publishing, and fact invention. Treat that reviewer as advisory; verify findings before applying fixes.
+
 ## Failure Handling
 - If a task cannot be completed, document what was attempted, why it failed, and any partial progress.
 - Never leave the repository in a broken state—revert or fix intermediates before finishing the session.

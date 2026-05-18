@@ -13,6 +13,10 @@ on:
         description: 'Mark as prerelease'
         required: false
         default: 'false'
+      publishMarketplace:
+        description: 'Publish to VS Code Marketplace. Use only after explicit release approval.'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -44,6 +48,8 @@ jobs:
             npm install --no-audit --no-fund
           fi
       - run: npm run compile
+      - run: npm run compile:tsc
+      - run: npm --prefix packages/pml-language-server run test
       - name: Compute release tag
         id: vars
         shell: bash
@@ -54,24 +60,6 @@ jobs:
             TAG="v$(node -p "require('./package.json').version")"
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
-      - name: Ensure tag exists on origin
-        shell: bash
-        env:
-          TAG: ${{ steps.vars.outputs.tag }}
-        run: |
-          git fetch --tags --force
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists locally"
-          else
-            git tag "$TAG"
-            echo "Created tag $TAG"
-          fi
-          # Push tag if missing on remote
-          if git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
-            echo "Tag $TAG already exists on origin"
-          else
-            git push origin "refs/tags/$TAG"
-          fi
       - name: Package VSIX
         run: npm run pack
       - name: Validate VSIX package
@@ -116,6 +104,24 @@ jobs:
               raise SystemExit("SHA256 placeholder not found in RELEASE_NOTES.md")
           Path("release-body.md").write_text(new_body, encoding="utf-8")
           PY
+      - name: Ensure tag exists on origin
+        shell: bash
+        env:
+          TAG: ${{ steps.vars.outputs.tag }}
+        run: |
+          git fetch --tags --force
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists locally"
+          else
+            git tag "$TAG"
+            echo "Created tag $TAG"
+          fi
+          # Push tag only after validation and packaging have succeeded.
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG$"; then
+            echo "Tag $TAG already exists on origin"
+          else
+            git push origin "refs/tags/$TAG"
+          fi
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
@@ -151,7 +157,7 @@ jobs:
             echo "pat=" >> $GITHUB_OUTPUT
           fi
       - name: Publish to VS Code Marketplace (optional)
-        if: ${{ steps.vsce.outputs.pat != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publishMarketplace == 'true' && steps.vsce.outputs.pat != '' }}
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
         run: npx @vscode/vsce publish --packagePath *.vsix --no-yarn

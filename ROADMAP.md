@@ -1281,8 +1281,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.30
-**Released:** 2026-05-14
+**Version:** 0.12.31
+**Released:** 2026-05-18
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
@@ -1297,10 +1297,21 @@ Development plans and progress tracking.
 **Current Focus (v0.12.x):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
+- ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval and release automation runs TypeScript plus language-server tests before tag creation.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 
+**Next Stabilization Plan:**
+- **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
+- **Workspace indexing:** avoid unnecessary full re-index work, add file-change debounce tests, and expose clearer indexing status when a workspace is large.
+- **Completions:** separate built-in method sets by inferred receiver type, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
+- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename share method-reference pattern construction and Rename avoids inactive text for supported symbol kinds; next move References/Rename toward AST/index-backed lookup.
+- **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
+- **Preset packs:** split snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
+- **Smoke validation:** add a lightweight extension-host smoke test for activation, command registration, and packaged VSIX content before every release.
+
 **Recent Release Summary:**
+- `v0.12.31`: hardened release automation, required explicit Marketplace publish approval, added release-workflow test gates, improved `.pmlobj`/`.pmlcmd` Outline coverage, hardened References/Rename inactive-text handling, and added performance budget guards.
 - `v0.12.30`: added numeric path member suffix parsing, hardened completion/signature providers, and reduced installed AVEVA corpus parser errors from 3386 to 3306.
 - `v0.12.29`: restored AVEVA-style multi-line `&` concatenation and reduced installed AVEVA corpus parser errors from 3429 to 3386.
 - `v0.12.28`: added variable-less `do from/to` loops and logical-line infix boundaries, reducing installed AVEVA corpus parser errors from 3596 to 3429.

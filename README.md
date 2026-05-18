@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.30-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.31-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -16,7 +16,7 @@
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables
 - 🔍 **Navigation** — Go to Definition, Find References, Document Symbols
-- 🐛 **Diagnostics** — Real-time error detection (unclosed blocks, typos)
+- 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP Server** — Full Language Server Protocol support
 - 📋 **Signature Help** — Parameter hints for method calls
 - 🎯 **Hover Information** — Quick documentation on hover
@@ -119,7 +119,7 @@ vscode-pml-extension/
 ### 🐛 Known Issues
 
 - **Form files** (.pmlfrm) have limited parser support (intentional - complex DSL)
-- **Find All References** currently shows definitions instead of actual call sites (limitation of current implementation)
+- **Find All References / Rename** use workspace text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
 - **object ARRAY()** syntax may show "Expected expression" warning (parser limitation, does not affect functionality)
 
 ### 📝 License
@@ -135,7 +135,7 @@ MIT License - see [LICENSE](LICENSE)
 - 🎨 **Подсветка синтаксиса** — Полная поддержка PML1/PML2
 - 📝 **IntelliSense** — Умные подсказки для ключевых слов, методов, переменных
 - 🔍 **Навигация** — Переход к определению, поиск ссылок, символы документа
-- 🐛 **Диагностика** — Проверка ошибок в реальном времени (незакрытые блоки, опечатки)
+- 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP сервер** — Полная поддержка Language Server Protocol
 - 📋 **Подсказки параметров** — Помощь при вызове методов
 - 🎯 **Информация при наведении** — Быстрая документация
@@ -229,7 +229,7 @@ vscode-pml-extension/
 ### 🐛 Известные проблемы
 
 - **Файлы форм** (.pmlfrm) имеют ограниченную поддержку парсера (намеренно - сложный DSL)
-- **Find All References** показывает определения вместо реальных вызовов (ограничение текущей реализации)
+- **Find All References / Rename** use workspace text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
 - **object ARRAY()** может показывать предупреждение "Expected expression" (ограничение парсера, не влияет на функциональность)
 
 ### 📝 Лицензия

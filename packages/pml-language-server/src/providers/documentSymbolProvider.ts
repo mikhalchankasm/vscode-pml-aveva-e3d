@@ -10,6 +10,7 @@ export class DocumentSymbolProvider {
 
 	public provide(params: DocumentSymbolParams): DocumentSymbol[] {
 		const uri = params.textDocument.uri;
+		const isObjectFile = uri.toLowerCase().endsWith('.pmlobj');
 		const fileSymbols = this.symbolIndex.getFileSymbols(uri);
 		const symbols: DocumentSymbol[] = [];
 		const methodSymbols: DocumentSymbol[] = [];
@@ -18,13 +19,13 @@ export class DocumentSymbolProvider {
 		// Add methods
 		if (fileSymbols) {
 			for (const method of fileSymbols.methods) {
-				// Skip methods inside objects (they'll be nested)
-				if (method.containerName) continue;
+				// Object files benefit from a flat method outline as well as nested object children.
+				if (method.containerName && !isObjectFile) continue;
 
 				seenMethodNames.add(method.name.toLowerCase());
 				methodSymbols.push({
 					name: `.${method.name}(${method.parameters.map(p => '!' + p).join(', ')})`,
-					detail: method.deprecated ? '(deprecated)' : undefined,
+					detail: method.containerName ? `object ${method.containerName}` : method.deprecated ? '(deprecated)' : undefined,
 					kind: LSPSymbolKind.Method,
 					range: method.range,
 					selectionRange: method.range,

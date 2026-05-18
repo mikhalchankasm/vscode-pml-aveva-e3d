@@ -10,7 +10,6 @@ vsc-extension-quickstart.md
 .codex/**
 .husky/**
 AGENTS.md
--
 esbuild.js
 tsconfig.json
 **/tsconfig.json

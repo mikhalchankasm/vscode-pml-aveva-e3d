@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Parser } from '../../parser/parser';
+import { SymbolKind as LSPSymbolKind } from 'vscode-languageserver/node';
+import { Parser, parserModeFromUri } from '../../parser/parser';
 import { SymbolIndex } from '../../index/symbolIndex';
 import { DocumentSymbolProvider } from '../documentSymbolProvider';
 
@@ -41,5 +42,68 @@ exit
 		const innerChildren = outerChildren[0].children ?? [];
 		expect(innerChildren.map(child => child.name)).toEqual(['.grid']);
 		expect(innerChildren[0].detail).toBe('container');
+	});
+
+	it('should expose object methods as top-level outline entries in .pmlobj files', () => {
+		const source = `
+define object SAMPLE
+	member .name is STRING
+
+	define method .init(!value is STRING)
+		!this.name = !value
+	endmethod
+
+	define method .reset()
+		!this.name = ||
+	endmethod
+endobject
+		`.trim();
+
+		const uri = 'file:///sample.pmlobj';
+		const parseResult = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const symbols = provider.provide({ textDocument: { uri } });
+
+		expect(symbols.map(symbol => symbol.name)).toEqual([
+			'.init(!value)',
+			'.reset()',
+			'SAMPLE'
+		]);
+		expect(symbols[0].detail).toBe('object SAMPLE');
+		expect(symbols[2].children?.map(child => child.name)).toEqual(['.init(!value)', '.reset()']);
+	});
+
+	it('should expose command-file methods after setup command sections', () => {
+		const source = `
+setup command !!sample
+	!x = 1
+exit
+
+define method .run()
+	!x = 2
+endmethod
+
+define method .cleanup(!flag is BOOLEAN)
+	!x = 0
+endmethod
+		`.trim();
+
+		const uri = 'file:///sample.pmlcmd';
+		const parseResult = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const symbols = provider.provide({ textDocument: { uri } });
+
+		expect(symbols.map(symbol => symbol.name)).toEqual(['.run()', '.cleanup(!flag)']);
+		expect(symbols.every(symbol => symbol.kind === LSPSymbolKind.Method)).toBe(true);
 	});
 });

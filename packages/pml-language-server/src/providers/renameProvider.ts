@@ -16,6 +16,13 @@ import { URI } from 'vscode-uri';
 import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 import { computeLineOffsets, offsetToRange } from '../utils/offsetUtils';
+import { createMethodRenamePatterns, escapeRegex } from '../utils/methodReferencePatterns';
+import {
+	collectPmlInactiveTextRanges,
+	collectPmlMethodReferenceIgnoredRanges,
+	isOffsetInTextRanges,
+	TextRange
+} from '../utils/pmlCommentRanges';
 
 export class RenameProvider {
 	constructor(
@@ -144,30 +151,16 @@ export class RenameProvider {
 
 		// Quick pre-filter: skip if symbol is absent (optimization)
 		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
-		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		const preFilterPattern = new RegExp(escapeRegex(oldName), 'i');
 		if (!preFilterPattern.test(text)) {
 			return edits;
 		}
 
 		// Lazy line offsets: only compute on first match
 		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
 
-		const escapedOldName = this.escapeRegex(oldName);
-
-		// Shared expression prefix pattern for !var, !!global, $/attr, $!/attr, $/attr/sub
-		// with optional bracketed indexes and dotted segments
-		const exprPrefix = '[!$][!]?(?:\\w+(?:/\\w+)*|(?:/\\w+)+)(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*(?:\\.[\\w]+(?:\\[[^\\]]*\\])*)*';
-
-		// Patterns to match method definitions and calls: .methodName
-		// Must be case-insensitive since PML is case-insensitive
-		// Also match callback syntax: |.methodName| and |!obj.prop[1].methodName|
-		const patterns = [
-			// Standard method call/definition: .methodName( or .methodName followed by whitespace/end
-			new RegExp(`\\.${escapedOldName}(?=\\s*\\(|\\s+|$)`, 'gi'),
-			// Callback syntax: |.methodName| or |expression.methodName|
-			new RegExp(`\\|\\.${escapedOldName}\\|`, 'gi'),
-			new RegExp(`\\|(?:${exprPrefix})\\.${escapedOldName}\\|`, 'gi')
-		];
+		const patterns = createMethodRenamePatterns(oldName);
 		const foundOffsets = new Set<number>();
 
 		for (const pattern of patterns) {
@@ -179,6 +172,12 @@ export class RenameProvider {
 				const lowerOldName = oldName.toLowerCase();
 				const methodNameIndex = lowerMatch.lastIndexOf(lowerOldName);
 				const startOffset = match.index + methodNameIndex;
+				if (!ignoredRanges) {
+					ignoredRanges = collectPmlMethodReferenceIgnoredRanges(text);
+				}
+				if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+					continue;
+				}
 				if (foundOffsets.has(startOffset)) continue;
 				foundOffsets.add(startOffset);
 
@@ -231,34 +230,42 @@ export class RenameProvider {
 
 		// Quick pre-filter: skip if symbol is absent (optimization)
 		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
-		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		const preFilterPattern = new RegExp(escapeRegex(oldName), 'i');
 		if (!preFilterPattern.test(text)) {
 			return edits;
 		}
 
 		// Lazy line offsets: only compute on first match
 		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
 
 		// Patterns for object references:
 		// 1. define object ObjectName
 		// 2. OBJECT ObjectName()
 		// 3. is ObjectName
 		const patterns = [
-			new RegExp(`(define\\s+object\\s+)${this.escapeRegex(oldName)}(?=\\s|$)`, 'gi'),
-			new RegExp(`(OBJECT\\s+)${this.escapeRegex(oldName)}(?=\\s*\\()`, 'gi'),
-			new RegExp(`(is\\s+)${this.escapeRegex(oldName)}(?=\\s|$)`, 'gi')
+			new RegExp(`(define\\s+object\\s+)${escapeRegex(oldName)}(?=\\s|$)`, 'gi'),
+			new RegExp(`(OBJECT\\s+)${escapeRegex(oldName)}(?=\\s*\\()`, 'gi'),
+			new RegExp(`(is\\s+)${escapeRegex(oldName)}(?=\\s|$)`, 'gi')
 		];
 
 		for (const pattern of patterns) {
 			let match;
 			while ((match = pattern.exec(text)) !== null) {
+				const prefix = match[1];
+				const startOffset = match.index + prefix.length;
+				if (!ignoredRanges) {
+					ignoredRanges = collectPmlInactiveTextRanges(text);
+				}
+				if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+					continue;
+				}
+
 				// Lazy computation of line offsets on first actual match
 				if (!lineOffsets) {
 					lineOffsets = computeLineOffsets(text);
 				}
 
-				const prefix = match[1];
-				const startOffset = match.index + prefix.length;
 				const endOffset = startOffset + oldName.length;
 
 				const range = offsetToRange(lineOffsets, startOffset, endOffset);
@@ -303,26 +310,34 @@ export class RenameProvider {
 
 		// Quick pre-filter: skip if symbol is absent (optimization)
 		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
-		const preFilterPattern = new RegExp(this.escapeRegex(oldName), 'i');
+		const preFilterPattern = new RegExp(escapeRegex(oldName), 'i');
 		if (!preFilterPattern.test(text)) {
 			return edits;
 		}
 
 		// Lazy line offsets: only compute on first match
 		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
 
 		// Forms are global variables (!!FormName)
 		// Pattern: !!formName (case-insensitive)
-		const pattern = new RegExp(`!!${this.escapeRegex(oldName)}(?=\\s|\\.|\\(|$)`, 'gi');
+		const pattern = new RegExp(`!!${escapeRegex(oldName)}(?=\\s|\\.|\\(|$)`, 'gi');
 
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
+			const startOffset = match.index;
+			if (!ignoredRanges) {
+				ignoredRanges = collectPmlInactiveTextRanges(text);
+			}
+			if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+				continue;
+			}
+
 			// Lazy computation of line offsets on first actual match
 			if (!lineOffsets) {
 				lineOffsets = computeLineOffsets(text);
 			}
 
-			const startOffset = match.index;
 			const endOffset = startOffset + match[0].length;
 
 			const range = offsetToRange(lineOffsets, startOffset, endOffset);
@@ -355,8 +370,8 @@ export class RenameProvider {
 		// For local variables (!var), use negative lookbehind to avoid matching !!var
 		// For global variables (!!var), match exactly two exclamation marks
 		const pattern = isGlobal
-			? new RegExp(`!!${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi')
-			: new RegExp(`(?<![!])!${this.escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
+			? new RegExp(`!!${escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi')
+			: new RegExp(`(?<![!])!${escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
 
 		if (isGlobal) {
 			// Global variables: search across entire workspace
@@ -396,15 +411,23 @@ export class RenameProvider {
 
 		// Lazy line offsets: only compute on first match
 		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
 
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
+			const startOffset = match.index;
+			if (!ignoredRanges) {
+				ignoredRanges = collectPmlInactiveTextRanges(text);
+			}
+			if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+				continue;
+			}
+
 			// Lazy computation of line offsets on first actual match
 			if (!lineOffsets) {
 				lineOffsets = computeLineOffsets(text);
 			}
 
-			const startOffset = match.index;
 			const endOffset = startOffset + match[0].length;
 
 			const range = offsetToRange(lineOffsets, startOffset, endOffset);
@@ -515,7 +538,4 @@ export class RenameProvider {
 		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
 	}
 
-	private escapeRegex(str: string): string {
-		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	}
 }

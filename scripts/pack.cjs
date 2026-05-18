@@ -3,7 +3,7 @@ const { readdirSync, rmSync } = require('fs');
 const { join } = require('path');
 
 for (const entry of readdirSync(process.cwd())) {
-	if (/^pml-aveva-e3d-.*\.vsix$/i.test(entry)) {
+	if (/^pml-aveva-e3d-.*\.vsix(?:\.sha256)?$/i.test(entry)) {
 		rmSync(join(process.cwd(), entry), { force: true });
 	}
 }

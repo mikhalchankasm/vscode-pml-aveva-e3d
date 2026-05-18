@@ -8,8 +8,15 @@ import { URI } from 'vscode-uri';
 import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 import { computeLineOffsets, offsetToPosition } from '../utils/offsetUtils';
+import {
+	MethodReferencePatternCache,
+	isMethodDeclarationReference
+} from '../utils/methodReferencePatterns';
+import { collectPmlMethodReferenceIgnoredRanges, isOffsetInTextRanges, TextRange } from '../utils/pmlCommentRanges';
 
 export class ReferencesProvider {
+	private readonly referencePatternCache = new MethodReferencePatternCache();
+
 	constructor(
 		private symbolIndex: SymbolIndex,
 		private documents: TextDocuments<TextDocument>
@@ -34,6 +41,7 @@ export class ReferencesProvider {
 		}
 		// Remove leading ! or $ if still present
 		symbolName = symbolName.replace(/^[!$]+/, '');
+		if (symbolName.length === 0) return null;
 
 		const references: Location[] = [];
 
@@ -57,7 +65,8 @@ export class ReferencesProvider {
 
 		// Scan all workspace files for references (not just current document)
 		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
-			const workspaceRefs = await this.findReferencesInWorkspace(symbolName);
+			// Indexed definitions are added above, so text scanning must not add declaration matches again.
+			const workspaceRefs = await this.findReferencesInWorkspace(symbolName, false);
 			references.push(...workspaceRefs);
 		}
 
@@ -67,7 +76,7 @@ export class ReferencesProvider {
 	/**
 	 * Find all references to a symbol across the entire workspace
 	 */
-	private async findReferencesInWorkspace(symbolName: string): Promise<Location[]> {
+	private async findReferencesInWorkspace(symbolName: string, includeDeclaration = true): Promise<Location[]> {
 		const references: Location[] = [];
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
@@ -76,7 +85,7 @@ export class ReferencesProvider {
 		for (let i = 0; i < allFileUris.length; i += batchSize) {
 			const batch = allFileUris.slice(i, i + batchSize);
 			const batchResults = await Promise.all(
-				batch.map(fileUri => this.findReferencesInFile(fileUri, symbolName))
+				batch.map(fileUri => this.findReferencesInFile(fileUri, symbolName, includeDeclaration))
 			);
 			for (const fileRefs of batchResults) {
 				references.push(...fileRefs);
@@ -89,23 +98,23 @@ export class ReferencesProvider {
 	/**
 	 * Find references in a single file
 	 */
-	private async findReferencesInFile(fileUri: string, symbolName: string): Promise<Location[]> {
+	private async findReferencesInFile(fileUri: string, symbolName: string, includeDeclaration = true): Promise<Location[]> {
 		// Try to get cached document text first
 		const cachedText = this.symbolIndex.getDocumentText(fileUri);
 		if (cachedText) {
-			return this.findReferencesInText(cachedText, fileUri, symbolName);
+			return this.findReferencesInText(cachedText, fileUri, symbolName, includeDeclaration);
 		}
 
 		// Fallback: try to get open document
 		const openDoc = this.documents.get(fileUri);
 		if (openDoc) {
-			return this.findReferencesInText(openDoc.getText(), fileUri, symbolName);
+			return this.findReferencesInText(openDoc.getText(), fileUri, symbolName, includeDeclaration);
 		}
 
 		// Last resort: read file from disk asynchronously
 		const fileText = await this.readFileFromDisk(fileUri);
 		if (fileText) {
-			return this.findReferencesInText(fileText, fileUri, symbolName);
+			return this.findReferencesInText(fileText, fileUri, symbolName, includeDeclaration);
 		}
 
 		return [];
@@ -114,63 +123,46 @@ export class ReferencesProvider {
 	/**
 	 * Find all references to a symbol in text
 	 */
-	private findReferencesInText(text: string, fileUri: string, symbolName: string): Location[] {
+	private findReferencesInText(text: string, fileUri: string, symbolName: string, includeDeclaration = true): Location[] {
 		const references: Location[] = [];
-		const escapedName = this.escapeRegex(symbolName);
-		const symbolLower = symbolName.toLowerCase();
+		if (symbolName.length === 0) {
+			return references;
+		}
+		const patternSet = this.getReferencePatternSet(symbolName);
 
 		// Quick pre-filter: skip regex scans when symbol is absent (optimization)
-		// Use case-insensitive regex test to avoid text.toLowerCase() allocation
-		const preFilterPattern = new RegExp(escapedName, 'i');
-		if (!preFilterPattern.test(text)) {
+		if (!patternSet.preFilterPattern.test(text)) {
 			return references;
 		}
 
 		// Lazy line offsets: only compute after first match found
 		let lineOffsets: number[] | null = null;
-
-		// Pattern to match method calls: .methodName( or expression.methodName(
-		// Handles complex patterns like:
-		// - .methodName()
-		// - !var.methodName()
-		// - !!global.methodName()
-		// - !a.b[1].methodName()
-		// - $/attr.methodName()
-		// - $!/attr.methodName()
-		// - $/attr/sub.methodName() (nested attribute paths)
-		// - |.methodName| (callback syntax)
-		// - |!this.methodName| (callback with object reference)
-		// - |!obj.prop[1].methodName| (callback with indexed properties)
-		// Also match object instantiations: OBJECT ObjectName()
-
-		// Shared expression prefix pattern for !var, !!global, $/attr, $!/attr, $/attr/sub
-		// with optional bracketed indexes and dotted segments
-		const exprPrefix = '[!$][!]?(?:\\w+(?:/\\w+)*|(?:/\\w+)+)(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*(?:\\.[\\w]+(?:\\[[^\\]]*\\])*)*';
-
-		const patterns = [
-			// Direct method call: .methodName(
-			new RegExp(`\\.${escapedName}\\s*\\(`, 'gi'),
-			// Method call on any expression ending with .methodName(
-			new RegExp(`(?:${exprPrefix})\\.${escapedName}\\s*\\(`, 'gi'),
-			// Object instantiation: OBJECT ObjectName()
-			new RegExp(`\\bOBJECT\\s+${escapedName}\\s*\\(`, 'gi'),
-			// Method definition: define method .methodName or member .methodName
-			new RegExp(`(?:define\\s+method|member)\\s+\\.${escapedName}(?=\\s|\\(|$)`, 'gi'),
-			// Callback syntax: |.methodName| or |expression.methodName|
-			new RegExp(`\\|\\.${escapedName}\\|`, 'gi'),
-			new RegExp(`\\|(?:${exprPrefix})\\.${escapedName}\\|`, 'gi')
-		];
+		let ignoredRanges: TextRange[] | null = null;
 
 		const foundOffsets = new Set<number>();  // Deduplicate overlapping matches
 
-		for (const pattern of patterns) {
+		for (const pattern of patternSet.patterns) {
+			if (pattern.includeDeclaration && !includeDeclaration) {
+				continue;
+			}
+			// Shared global regex objects keep state between exec loops.
+			pattern.regex.lastIndex = 0;
 			let match;
-			while ((match = pattern.exec(text)) !== null) {
+			while ((match = pattern.regex.exec(text)) !== null) {
 				// Find the exact position of the symbol name (case-insensitive search)
 				const matchText = match[0];
 				const lowerMatch = matchText.toLowerCase();
-				const methodNameIndex = lowerMatch.lastIndexOf(symbolLower);
+				const methodNameIndex = lowerMatch.lastIndexOf(patternSet.symbolLower);
 				const startOffset = match.index + methodNameIndex;
+				if (!ignoredRanges) {
+					ignoredRanges = collectPmlMethodReferenceIgnoredRanges(text);
+				}
+				if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+					continue;
+				}
+				if (!includeDeclaration && isMethodDeclarationReference(text, startOffset)) {
+					continue;
+				}
 
 				// Skip if we've already found this location
 				if (foundOffsets.has(startOffset)) continue;
@@ -200,11 +192,8 @@ export class ReferencesProvider {
 		return references;
 	}
 
-	/**
-	 * Escape regex special characters
-	 */
-	private escapeRegex(str: string): string {
-		return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	private getReferencePatternSet(symbolName: string) {
+		return this.referencePatternCache.get(symbolName);
 	}
 
 	/**

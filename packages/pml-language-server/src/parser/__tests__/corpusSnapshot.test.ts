@@ -49,7 +49,7 @@ function walkCorpus(dir: string, onFile: (filePath: string) => void): void {
 }
 
 describe('AVEVA PMLLIB corpus snapshot', () => {
-	maybeIt('should stay within the v0.12.30 parser error budget', () => {
+	maybeIt('should stay within the parser error budget', () => {
 		expect(corpusRoot).toBeDefined();
 		expect(fs.existsSync(corpusRoot as string)).toBe(true);
 

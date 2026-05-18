@@ -2,6 +2,31 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.31] - 2026-05-18
+
+### Fixed
+
+- Honor `includeDeclaration: false` in Find References text scans so definition lines are not returned as reference-only results.
+- Avoid double-counting method declarations in public Find References results when `includeDeclaration: true`.
+- Ignore method references inside `--`, `$*`, `$( ... $)` comments, and regular quoted strings during Find References and method Rename while preserving pipe-delimited callback references.
+- Prevent object, form, and variable Rename from editing comments or string literals, including pipe-delimited strings.
+- Expose object-contained methods as top-level Outline entries in `.pmlobj` files while keeping the nested object outline.
+- Added regression coverage so `.pmlcmd` files expose methods after `setup command` sections in Outline.
+- Require an explicit workflow-dispatch approval flag before publishing to VS Code Marketplace from release automation.
+- Run TypeScript checks and the language-server test suite in the release workflow before a release tag is created or pushed.
+- Move release tag creation until after successful packaging and release-note checksum substitution.
+- Clean stale local VSIX checksum files when building a fresh package.
+- Remove a stray no-op glob from `.vscodeignore`.
+
+### Improved
+
+- Clarified that typo diagnostics are opt-in and default to off to avoid diagnostic noise.
+- Removed a stale version number from the optional AVEVA corpus snapshot test title.
+- Added parser, workspace-index, completion, and references performance budget guards for large generated files and 100-file workspace models.
+- Cached compiled reference-search patterns per symbol to reduce repeated regex setup during workspace Find References scans.
+- Added regression coverage for reference pattern cache reuse, cache eviction, declaration filtering, empty-symbol guards, and member-declaration word boundaries.
+- Shared method-reference pattern construction between Find References and Rename to keep callback/member-path matching rules aligned.
+
 ## [0.12.30] - 2026-05-14
 
 ### Fixed
