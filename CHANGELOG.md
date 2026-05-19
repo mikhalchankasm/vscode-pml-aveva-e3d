@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.33] - 2026-05-19
+
+### Fixed
+
+- Restore `$P` print navigation commands by explicitly activating print actions and accepting PML documents by supported file extension when language activation is still settling.
+- Reduce false-positive `[0]` array-index diagnostics for likely C#/.NET/PMLNET zero-based collections while keeping ordinary PML arrays 1-based.
+
+### Improved
+
+- Show method usage previews directly in the hover for `define method .name(...)` declarations, with clickable file/line links to the first matching references.
+- Add Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, including parser and hover regression coverage.
+- Keep method usage previews more informative on longer PML lines and avoid redundant Outline re-indexing when the current document version is already indexed.
+- Add compact hover help for the built-in `!!CE` DBREF current-element variable.
+- Simplify user-method hover layout: declaration hovers focus on `USAGES`, while call-site hovers show a clickable `DEFINED` link back to the method declaration.
+- Add low-noise `ELEMENTTYPE` metadata method completions and hover docs for distinct methods such as `isudet`, `systemtype`, and `membertypes`.
+
 ## [0.12.32] - 2026-05-18
 
 ### Fixed

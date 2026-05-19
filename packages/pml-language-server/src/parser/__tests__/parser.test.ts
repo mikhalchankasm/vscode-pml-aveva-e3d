@@ -1071,6 +1071,14 @@ enddo
 			expect(parser.parse('setcompdate(!value)').errors).toHaveLength(0);
 		});
 
+		it('should parse selected Common Commands starters from AVEVA UE help page 628', () => {
+			const parser = new Parser();
+
+			expect(parser.parse('PARAGON', { mode: 'form' }).errors).toHaveLength(0);
+			expect(parser.parse('SPECONMODE', { mode: 'form' }).errors).toHaveLength(0);
+			expect(parser.parse('FINISH', { mode: 'form' }).errors).toHaveLength(0);
+		});
+
 		it('should parse function as a database attribute name in expressions', () => {
 			const source = `
 define method .readFunctionAttribute()

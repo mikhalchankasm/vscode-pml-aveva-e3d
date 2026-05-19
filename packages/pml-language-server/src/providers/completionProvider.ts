@@ -125,6 +125,17 @@ export class CompletionProvider {
 			{ label: 'qreal', kind: CompletionItemKind.Method, detail: 'DBREF -> REAL', documentation: 'Query attribute as number', insertText: 'qreal(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
 			{ label: 'qboolean', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Query attribute as boolean', insertText: 'qboolean(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
 			{ label: 'delete', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Delete element (use with caution!)' },
+
+			// ELEMENTTYPE metadata methods
+			{ label: 'isudet', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> BOOLEAN', documentation: 'Whether the element type is a user-defined element type (UDET).' },
+			{ label: 'systemattributes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ATTRIBUTE[]', documentation: 'List system attributes for the element type, excluding UDAs.' },
+			{ label: 'dbtypes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> STRING[]', documentation: 'List valid database types for the element type.' },
+			{ label: 'changetype', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> STRING', documentation: 'Indicates whether elements of this type may have their type changed.' },
+			{ label: 'systemtype', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE', documentation: 'For UDETs, returns the base system element type.' },
+			{ label: 'udets', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE[]', documentation: 'List UDETs derived from this element type.' },
+			{ label: 'primary', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> BOOLEAN', documentation: 'Whether the element type is primary.' },
+			{ label: 'membertypes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE[]', documentation: 'List valid member element types, including UDETs.' },
+			{ label: 'parenttypes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE[]', documentation: 'List valid parent element types, including UDETs.' },
 		];
 	}
 

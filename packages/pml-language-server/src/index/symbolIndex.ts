@@ -238,6 +238,10 @@ export class SymbolIndex {
 		return this.fileSymbols.get(uri);
 	}
 
+	public isFileVersionIndexed(uri: string, version: number): boolean {
+		return this.fileSymbols.get(uri)?.version === version;
+	}
+
 	/**
 	 * Get all indexed file URIs
 	 */

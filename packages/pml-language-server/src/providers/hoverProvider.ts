@@ -6,6 +6,8 @@ import { Hover, HoverParams, MarkupKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getPdmsCommand } from '../data/pdmsCommands';
 import { SymbolIndex } from '../index/symbolIndex';
+import { isMethodDeclarationReference } from '../utils/methodReferencePatterns';
+import { ReferencePreview, ReferencesProvider } from './referencesProvider';
 
 export class HoverProvider {
 	// Built-in PML methods documentation
@@ -42,6 +44,17 @@ export class HoverProvider {
 			['qboolean', '**DBREF.qboolean(attribute)** → BOOLEAN\n\nQueries attribute value as boolean.\n\nExample:\n```pml\n!pipe = !!ce\n!isIssued = !pipe.qboolean(|LISSUE|)\n```'],
 			['delete', '**DBREF.delete()** → BOOLEAN\n\nDeletes the database element.\n\n⚠️ Use with caution!\n\nExample:\n```pml\n!elem = !!ce\n!success = !elem.delete()\n```'],
 		])],
+		['ELEMENTTYPE', new Map([
+			['isudet', '**ELEMENTTYPE.IsUdet()** -> BOOLEAN\n\nWhether the element type is a User Defined Element Type (UDET).'],
+			['systemattributes', '**ELEMENTTYPE.systemAttributes()** -> ATTRIBUTE[]\n\nLists system attributes for this element type, excluding user-defined attributes (UDAs).'],
+			['dbtypes', '**ELEMENTTYPE.DbTypes()** -> STRING[]\n\nLists valid database types for this element type.'],
+			['changetype', '**ELEMENTTYPE.ChangeType()** -> STRING\n\nIndicates whether elements of this type may have their type changed.'],
+			['systemtype', '**ELEMENTTYPE.SystemType()** -> ELEMENTTYPE\n\nFor UDETs, returns the base system element type.'],
+			['udets', '**ELEMENTTYPE.UDETs()** -> ELEMENTTYPE[]\n\nLists UDETs derived from this element type.'],
+			['primary', '**ELEMENTTYPE.Primary()** -> BOOLEAN\n\nWhether this element type is primary.'],
+			['membertypes', '**ELEMENTTYPE.MemberTypes()** -> ELEMENTTYPE[]\n\nLists valid member element types, including UDETs.'],
+			['parenttypes', '**ELEMENTTYPE.ParentTypes()** -> ELEMENTTYPE[]\n\nLists valid parent element types, including UDETs.'],
+		])],
 	]);
 
 	// Global functions documentation
@@ -52,9 +65,12 @@ export class HoverProvider {
 		['getobject', '**getobject(type, name)** → DBREF\n\nFinds database element by type and name.\n\nExample:\n```pml\n!pipe = !!getobject(|PIPE|, |/PIPE-100|)\nif (!pipe.exists()) then\n    -- handle error\nendif\n```'],
 	]);
 
-	constructor(private symbolIndex: SymbolIndex) {}
+	constructor(
+		private symbolIndex: SymbolIndex,
+		private referencesProvider?: Pick<ReferencesProvider, 'getReferencePreviews'>
+	) {}
 
-	public provide(params: HoverParams, document: TextDocument): Hover | null {
+	public async provide(params: HoverParams, document: TextDocument): Promise<Hover | null> {
 		const position = params.position;
 		const wordRange = this.getWordRangeAtPosition(document, position);
 		if (!wordRange) return null;
@@ -64,6 +80,11 @@ export class HoverProvider {
 		const pdmsCommandHover = this.getPdmsCommandHover(word, document, wordRange);
 		if (pdmsCommandHover) {
 			return pdmsCommandHover;
+		}
+
+		const globalVariableHover = this.getGlobalVariableHover(word, document, wordRange);
+		if (globalVariableHover) {
+			return globalVariableHover;
 		}
 
 		// Extract method name from patterns like .method, var.method, !obj.method
@@ -83,7 +104,7 @@ export class HoverProvider {
 			}
 
 			// Then check user-defined methods
-			const userMethodHover = this.getMethodHover(methodName);
+			const userMethodHover = await this.getMethodHover(methodName, document, wordRange);
 			if (userMethodHover) {
 				return userMethodHover;
 			}
@@ -150,6 +171,42 @@ export class HoverProvider {
 				value: content
 			},
 			range: commandRange
+		};
+	}
+
+	private getGlobalVariableHover(
+		word: string,
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): Hover | null {
+		if (word.toLowerCase() !== 'ce' || wordRange.start.character < 2) {
+			return null;
+		}
+
+		const prefixRange = {
+			start: { line: wordRange.start.line, character: wordRange.start.character - 2 },
+			end: wordRange.start
+		};
+		if (
+			document.getText(prefixRange) !== '!!' ||
+			this.isPositionInComment(document, wordRange.start.line, wordRange.start.character)
+		) {
+			return null;
+		}
+
+		return {
+			contents: {
+				kind: MarkupKind.Markdown,
+				value: this.joinCompactLines([
+					'`!!CE`',
+					'Type: `DBREF`',
+					'Current Element: tracks the current database element and can be queried from PML.'
+				])
+			},
+			range: {
+				start: prefixRange.start,
+				end: wordRange.end
+			}
 		};
 	}
 
@@ -246,7 +303,11 @@ export class HoverProvider {
 	/**
 	 * Get hover for user-defined method
 	 */
-	private getMethodHover(methodName: string): Hover | null {
+	private async getMethodHover(
+		methodName: string,
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): Promise<Hover | null> {
 		const methods = this.symbolIndex.findMethod(methodName);
 
 		if (methods.length === 0) {
@@ -256,38 +317,113 @@ export class HoverProvider {
 		// Take first match
 		const method = methods[0];
 
-		// Build hover content
-		let content = `### Method: .${method.name}\n\n`;
+		const parameters = method.parameters.map(parameter => `!${parameter}`);
+		const signature = `.${method.name}(${parameters.join(', ')})`;
+		const isDeclarationHover = this.isMethodDeclarationHover(document, wordRange);
+		const rows = [`\`${signature}\``];
 
-		// Add signature
-		content += '```pml\n';
-		content += `define method .${method.name}(`;
-		content += method.parameters.join(', ');
-		content += ')\n```\n\n';
-
-		// Add location
-		// Extract filename from URI (handle both file:/// and file:// schemes)
-		const uriMatch = method.uri.match(/[/\\]([^/\\]+)$/);
-		const filePath = uriMatch ? uriMatch[1] : method.uri;
-		const line = method.range.start.line + 1;
-		content += `📁 Defined in: **${filePath}:${line}**\n\n`;
-
-		// Add documentation if available
-		if (method.documentation) {
-			content += `---\n\n${method.documentation}`;
+		if (method.parameters.length > 0) {
+			rows.push(`\`PARAMS\` ${parameters.map(parameter => `\`${parameter}\``).join(', ')}`);
 		}
 
-		// Show all definitions if multiple
+		if (!isDeclarationHover) {
+			rows.push(`\`DEFINED\` ${this.formatMethodDefinitionLink(method.uri, method.range.start.line)}`);
+		}
+
 		if (methods.length > 1) {
-			content += `\n\n---\n\n**${methods.length} definitions found**`;
+			rows.push(`\`DEFINITIONS\` ${methods.length}`);
+		}
+
+		if (method.documentation) {
+			rows.push(`\`DOC\` ${this.compactDocumentation(method.documentation)}`);
+		}
+
+		if (isDeclarationHover) {
+			rows.push(await this.getMethodUsagesMarkdown(methodName));
 		}
 
 		return {
 			contents: {
 				kind: MarkupKind.Markdown,
-				value: content
+				value: this.joinCompactLines(rows)
 			}
 		};
+	}
+
+	private formatMethodDefinitionLink(uri: string, zeroBasedLine: number): string {
+		const line = zeroBasedLine + 1;
+		return `[${this.getFileName(uri)}:${line}](${uri}#L${line})`;
+	}
+
+	private async getMethodUsagesMarkdown(methodName: string): Promise<string> {
+		if (!this.referencesProvider) {
+			return '';
+		}
+
+		const { total, previews } = await this.referencesProvider.getReferencePreviews(methodName, 5, false);
+		if (total === 0) {
+			return '\n`USAGES` none found';
+		}
+
+		const suffix = total > previews.length ? ` (showing first ${previews.length})` : '';
+		const lines = [
+			'',
+			`\`USAGES\` ${total} location${total === 1 ? '' : 's'}${suffix}`
+		];
+
+		for (const preview of previews) {
+			lines.push(this.formatReferenceLine(preview));
+		}
+
+		return `\n${this.joinCompactLines(lines)}`;
+	}
+
+	private formatReferenceLine(preview: ReferencePreview): string {
+		const line = preview.location.range.start.line + 1;
+		const fileName = this.getFileName(preview.location.uri);
+		const target = `${preview.location.uri}#L${line}`;
+		const lineText = preview.lineText ? ` - \`${this.truncateLine(preview.lineText)}\`` : '';
+		return `[${fileName}:${line}](${target})${lineText}`;
+	}
+
+	private getFileName(uri: string): string {
+		const match = uri.match(/[/\\]([^/\\]+)$/);
+		return match ? decodeURIComponent(match[1]) : uri;
+	}
+
+	private truncateLine(line: string): string {
+		const maxLength = 120;
+		if (line.length <= maxLength) {
+			return line;
+		}
+
+		const candidate = line.slice(0, maxLength - 3);
+		const boundary = candidate.search(/\s+\S*$/);
+		if (boundary >= Math.floor(maxLength * 0.75)) {
+			return `${candidate.slice(0, boundary)}...`;
+		}
+		return `${candidate}...`;
+	}
+
+	private compactDocumentation(documentation: string): string {
+		const compact = documentation
+			.replace(/\s+/g, ' ')
+			.trim();
+		return compact.length > 160 ? `${compact.slice(0, 157)}...` : compact;
+	}
+
+	private joinCompactLines(lines: string[]): string {
+		return lines.filter(line => line !== '').join('  \n');
+	}
+
+	private isMethodDeclarationHover(
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): boolean {
+		const text = document.getText();
+		const word = document.getText(wordRange);
+		const methodNameOffset = document.offsetAt(wordRange.start) + (word.startsWith('.') ? 1 : 0);
+		return isMethodDeclarationReference(text, methodNameOffset);
 	}
 
 	/**

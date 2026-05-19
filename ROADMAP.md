@@ -1281,8 +1281,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.32
-**Released:** 2026-05-18
+**Version:** 0.12.33
+**Released:** 2026-05-19
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
@@ -1291,7 +1291,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **198 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
+- Tests: **210 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1311,6 +1311,7 @@ Development plans and progress tracking.
 - **Smoke validation:** add a lightweight extension-host smoke test for activation, command registration, and packaged VSIX content before every release.
 
 **Recent Release Summary:**
+- `v0.12.33`: restored `$P` print navigation activation, reduced `[0]` diagnostics false positives for likely C#/.NET/PMLNET zero-based collections, added focused method hover navigation with declaration usages and call-site definition links, expanded Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, added `!!CE` DBREF hover help, added selected `ELEMENTTYPE` metadata method completions/hovers, and closed review follow-ups for hover truncation plus redundant Outline re-indexing.
 - `v0.12.32`: updated form Rename so pipe-delimited callback targets such as `|!!OtherForm.show()|` follow form renames without rewriting non-callback pipe strings.
 - `v0.12.31`: hardened release automation, required explicit Marketplace publish approval, added release-workflow test gates, improved `.pmlobj`/`.pmlcmd` Outline coverage, hardened References/Rename inactive-text handling, and added performance budget guards.
 - `v0.12.30`: added numeric path member suffix parsing, hardened completion/signature providers, and reduced installed AVEVA corpus parser errors from 3386 to 3306.

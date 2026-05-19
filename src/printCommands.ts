@@ -26,6 +26,7 @@ interface PMLPrintCommandTarget {
 }
 
 const REFRESH_DELAY_MS = 125;
+const PML_FILE_EXTENSION_PATTERN = /\.(pml|pmlobj|pmlfnc|pmlfrm|pmlmac|pmlcmd)$/i;
 
 export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
     private readonly disposables: vscode.Disposable[] = [];
@@ -62,7 +63,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             vscode.commands.registerCommand('pml.prints.deleteLine', (target?: number | PMLPrintCommandTarget) => this.deletePrintLine(target)),
             vscode.window.onDidChangeActiveTextEditor(() => this.scheduleRefresh()),
             vscode.workspace.onDidChangeTextDocument(event => {
-                if (event.document.languageId === 'pml') {
+                if (isPMLDocument(event.document)) {
                     this.invalidateDocument(event.document);
                     if (this.isVisibleDocument(event.document)) {
                         this.scheduleRefresh();
@@ -127,7 +128,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
 
     private updateDecorations(): void {
         for (const editor of vscode.window.visibleTextEditors) {
-            if (editor.document.languageId !== 'pml') {
+            if (!isPMLDocument(editor.document)) {
                 editor.setDecorations(this.decorationType, []);
                 continue;
             }
@@ -142,7 +143,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
 
     private updateStatusBar(): void {
         const editor = vscode.window.activeTextEditor;
-        if (!editor || editor.document.languageId !== 'pml') {
+        if (!editor || !isPMLDocument(editor.document)) {
             this.statusBarItem.hide();
             return;
         }
@@ -375,11 +376,18 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
 
 function getActivePMLEditor(): vscode.TextEditor | undefined {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'pml') {
+    if (!editor || !isPMLDocument(editor.document)) {
         vscode.window.showErrorMessage('No active PML editor');
         return undefined;
     }
     return editor;
+}
+
+function isPMLDocument(document: vscode.TextDocument): boolean {
+    // Commands can run before VS Code finishes language activation, so keep an extension fallback.
+    return document.languageId === 'pml' ||
+        PML_FILE_EXTENSION_PATTERN.test(document.fileName) ||
+        PML_FILE_EXTENSION_PATTERN.test(document.uri.path);
 }
 
 function getTargetLine(

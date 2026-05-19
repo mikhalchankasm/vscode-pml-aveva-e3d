@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.12.32",
+  "version": "0.12.33",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -25,7 +25,15 @@
   "main": "./out/extension.js",
   "icon": "./icons/pml-icon.png",
   "activationEvents": [
-    "onLanguage:pml"
+    "onLanguage:pml",
+    "onCommand:pml.prints.next",
+    "onCommand:pml.prints.previous",
+    "onCommand:pml.prints.clear",
+    "onCommand:pml.prints.commentAll",
+    "onCommand:pml.prints.uncommentAll",
+    "onCommand:pml.prints.deleteAll",
+    "onCommand:pml.prints.commentLine",
+    "onCommand:pml.prints.deleteLine"
   ],
   "contributes": {
     "keybindings": [
@@ -876,6 +884,30 @@
         },
         {
           "command": "pml.removeComments",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.clear",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.next",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.previous",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.commentAll",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.uncommentAll",
+          "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
+        },
+        {
+          "command": "pml.prints.deleteAll",
           "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
         },
         {

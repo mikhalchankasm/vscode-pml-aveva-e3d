@@ -2,45 +2,39 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.32
+## Current Release - v0.12.33
 
-**Release Date:** 2026-05-18
+**Release Date:** 2026-05-19
 
-**GitHub Release:** [v0.12.32](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.32)
+**GitHub Release:** [v0.12.33](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.33)
 
 ### What Changed
 
-- Fixed Find References handling for `includeDeclaration: false` so definition lines are not returned in reference-only results.
-- Avoided double-counting method declarations in public Find References results when `includeDeclaration: true`.
-- Ignored method references inside `--`, `$*`, `$( ... $)` comments, and regular quoted strings during Find References and method Rename while preserving pipe-delimited callback references.
-- Prevented object, form, and variable Rename from editing comments or string literals, including pipe-delimited strings.
-- Renamed form references inside pipe-delimited callback targets such as `|!!OtherForm.show()|` while still leaving non-callback pipe strings untouched.
-- Improved Outline navigation for `.pmlobj` files by showing object-contained methods as top-level method entries while preserving nested object symbols.
-- Added regression coverage so `.pmlcmd` files expose method symbols after `setup command` sections.
-- Added parser, workspace-index, completion, and references performance budget guards for large generated files and 100-file workspace models.
-- Reduced repeated regex setup during workspace Find References scans by caching reference-search patterns per symbol.
-- Added regression coverage for reference pattern cache reuse, cache eviction, declaration filtering, empty-symbol guards, and member-declaration word boundaries.
-- Shared method-reference pattern construction between Find References and Rename to keep callback/member-path matching rules aligned.
-- Hardened release automation so Marketplace publication requires an explicit workflow-dispatch approval flag.
-- Added release-workflow TypeScript and language-server test gates before tag creation and release publication.
-- Moved automated release tag creation until after successful packaging and release-note checksum substitution.
-- Cleaned local packaging behavior so stale VSIX checksum files are removed before a fresh package is built.
-- Clarified opt-in typo diagnostic wording and removed minor release/packaging hygiene issues.
+- Restored `$P` print navigation commands by explicitly activating print actions and accepting supported PML file extensions even when language activation is still settling.
+- Added direct Command Palette entries for `$P` print actions, scoped to supported PML file extensions.
+- Reduced false-positive `[0]` array-index diagnostics for likely C#/.NET/PMLNET zero-based collections such as `NET...` form members, `PMLNETCONTROL` gadgets, and .NET-style collection variables.
+- Kept ordinary PML arrays 1-based: cases such as `!arr[0]` and `member .items is ARRAY` still report the diagnostic.
+- Added method declaration hover usage previews so `define method .name(...)` shows the first matching references with clickable file/line links.
+- Added Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, including parser acceptance and line-start hover help.
+- Refined method usage preview truncation for longer PML lines and avoided redundant Outline re-indexing when the current document version is already indexed.
+- Added compact hover help for the built-in `!!CE` DBREF current-element variable.
+- Simplified user-method hover layout so declaration hovers focus on `USAGES`, while call-site hovers show a clickable `DEFINED` link back to the method declaration.
+- Added low-noise `ELEMENTTYPE` metadata method completions and hover docs for distinct methods such as `isudet`, `systemtype`, and `membertypes`.
 
 ### Validation
 
 - Bundled compile: passed.
 - TypeScript compile: passed.
-- Language server tests: 198 passed, 3 skipped by default.
-- VSIX packaging: passed; `pml-aveva-e3d-0.12.32.vsix` contains 15 files.
-- VSIX smoke-check: passed; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.32 and no blocked source/config directories are included.
+- Language server tests: 210 passed, 3 skipped by default.
+- VSIX packaging: passed; `pml-aveva-e3d-0.12.33.vsix` contains 15 files.
+- VSIX smoke-check: passed; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.33 and no blocked source/config directories are included.
 - Local VS Code/Cursor install: passed with `npm run pack:install`.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.32.vsix`
+- VSIX: `pml-aveva-e3d-0.12.33.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
-- SHA256: `computed by GitHub Actions`
+- SHA256: `6C967263199CA1445CBE4FF0513E86F7BD5D4A0976E22F1B552A36E7F26C1E06`
 
 ## Active Release Track
 

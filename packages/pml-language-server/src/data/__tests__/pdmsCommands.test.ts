@@ -18,4 +18,13 @@ describe('PDMS command data', () => {
 		expect(isPdmsCommandStarter('move')).toBe(true);
 		expect(PDMS_COMMANDS.every(command => command.category && command.brief)).toBe(true);
 	});
+
+	it('includes selected Common Commands starters from AVEVA UE help page 628', () => {
+		expect(getPdmsCommand('PARAGON')?.category).toBe('system');
+		expect(getPdmsCommand('SPECONMODE')?.category).toBe('system');
+		expect(getPdmsCommand('FINISH')?.category).toBe('system');
+		expect(isPdmsCommandStarter('paragon')).toBe(true);
+		expect(isPdmsCommandStarter('speconmode')).toBe(true);
+		expect(isPdmsCommandStarter('finish')).toBe(true);
+	});
 });

@@ -78,6 +78,28 @@ describe('CompletionProvider', () => {
 		expect(chainCompletions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
+	it('suggests selected ELEMENTTYPE metadata methods after member receivers', () => {
+		const source = '!elementType.';
+		const document = TextDocument.create('file:///elementtype-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === 'isudet')).toMatchObject({
+			detail: 'ELEMENTTYPE -> BOOLEAN'
+		});
+		expect(completions.find(item => item.label === 'systemtype')).toMatchObject({
+			detail: 'ELEMENTTYPE -> ELEMENTTYPE'
+		});
+		expect(completions.find(item => item.label === 'membertypes')).toMatchObject({
+			detail: 'ELEMENTTYPE -> ELEMENTTYPE[]'
+		});
+		expect(completions.some(item => item.label === 'name')).toBe(false);
+	});
+
 	it('formats workspace method parameters with PML markers', () => {
 		const uri = 'file:///workspace-completion.pml';
 		const source = [

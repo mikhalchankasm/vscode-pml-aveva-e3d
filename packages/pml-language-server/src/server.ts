@@ -55,7 +55,7 @@ const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
 const definitionProvider = new DefinitionProvider(symbolIndex, documents);
 const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
-const hoverProvider = new HoverProvider(symbolIndex);
+const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
 const renameProvider = new RenameProvider(symbolIndex, documents);
@@ -345,19 +345,13 @@ documents.onDidSave(event => {
  * Validate document (AST-based diagnostics)
  */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	const settings = await getDocumentSettings(textDocument.uri);
 	const text = textDocument.getText();
 
 	const diagnostics: Diagnostic[] = [];
 
 	try {
-		// Parse document to AST
-		const parser = new Parser();
-		const parseResult = parser.parse(text, { mode: parserModeFromUri(textDocument.uri) });
-
-		// Index document symbols (pass document text for comment extraction)
-		// SymbolIndex stores the necessary information from AST
-		symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
+		const parseResult = parseAndIndexDocument(textDocument, text);
+		const settings = await getDocumentSettings(textDocument.uri);
 
 		// Convert parse errors to diagnostics. Form files use a broader DSL, so
 		// diagnostics stay opt-in until the form parser is first-class.
@@ -399,7 +393,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		// Array index checking (arr[0] error)
 		if (settings.diagnostics.arrayIndexZero !== 'off') {
 			const arrayChecker = new ArrayIndexChecker();
-			const arrayDiagnostics = arrayChecker.check(parseResult.ast);
+			const arrayDiagnostics = arrayChecker.check(parseResult.ast, textDocument.getText());
 
 			// Adjust severity based on settings
 			for (const diag of arrayDiagnostics) {
@@ -440,6 +434,16 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
+function parseAndIndexDocument(textDocument: TextDocument, text = textDocument.getText()): ReturnType<Parser['parse']> {
+	const parser = new Parser();
+	const parseResult = parser.parse(text, { mode: parserModeFromUri(textDocument.uri) });
+
+	// Keep Outline and navigation responsive before slower diagnostics settings resolve.
+	symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
+
+	return parseResult;
+}
+
 /**
  * Completion Provider - Enhanced context-aware completion
  */
@@ -464,6 +468,10 @@ connection.onHover(params => {
  * Document Symbol Provider (Outline)
  */
 connection.onDocumentSymbol(params => {
+	const document = documents.get(params.textDocument.uri);
+	if (document && !symbolIndex.isFileVersionIndexed(document.uri, document.version)) {
+		parseAndIndexDocument(document);
+	}
 	return documentSymbolProvider.provide(params);
 });
 

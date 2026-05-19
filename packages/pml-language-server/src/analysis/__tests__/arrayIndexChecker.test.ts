@@ -76,6 +76,59 @@ describe('Array Index Checker', () => {
 
 			expect(diagnostics).toHaveLength(0);
 		});
+
+		it('should not flag zero-based .NET-style collection variables', () => {
+			const source = '!value = !netRows[0]';
+			const result = parser.parse(source);
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(0);
+		});
+
+		it('should not flag zero-based indexes returned by declared .NET controls', () => {
+			const source = `
+setup form !!GridForm
+	member .grid is NETGRIDCONTROL
+	define method .select()
+		!row = !this.grid.GetRows()[0]
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(0);
+		});
+
+		it('should not flag zero-based indexes on PMLNETCONTROL gadgets', () => {
+			const source = `
+setup form !!GridForm
+	container .gridFrame nobox PMLNETCONTROL |Grid|
+	define method .select()
+		!cell = !this.gridFrame.Rows[0]
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(0);
+		});
+
+		it('should still flag zero indexes on ordinary form members', () => {
+			const source = `
+setup form !!GridForm
+	member .items is ARRAY
+	define method .select()
+		!item = !this.items[0]
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(1);
+		});
 	});
 
 	describe('Array[0] in method bodies', () => {

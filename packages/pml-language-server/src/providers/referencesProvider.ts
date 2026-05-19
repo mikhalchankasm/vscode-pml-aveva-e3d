@@ -14,6 +14,11 @@ import {
 } from '../utils/methodReferencePatterns';
 import { collectPmlMethodReferenceIgnoredRanges, isOffsetInTextRanges, TextRange } from '../utils/pmlCommentRanges';
 
+export interface ReferencePreview {
+	location: Location;
+	lineText: string;
+}
+
 export class ReferencesProvider {
 	private readonly referencePatternCache = new MethodReferencePatternCache();
 
@@ -73,6 +78,40 @@ export class ReferencesProvider {
 		return references.length > 0 ? references : null;
 	}
 
+	public async getReferencePreviews(symbolName: string, limit = 5, includeDeclaration = false): Promise<{ total: number; previews: ReferencePreview[] }> {
+		if (symbolName.length === 0) {
+			return { total: 0, previews: [] };
+		}
+
+		const previews: ReferencePreview[] = [];
+		let total = 0;
+
+		for (const fileUri of this.symbolIndex.getAllFileUris()) {
+			const text = await this.getFileText(fileUri);
+			if (!text) {
+				continue;
+			}
+
+			const locations = this.findReferencesInText(text, fileUri, symbolName, includeDeclaration);
+			total += locations.length;
+
+			if (previews.length < limit) {
+				const lines = text.split(/\r?\n/);
+				for (const location of locations) {
+					if (previews.length >= limit) {
+						break;
+					}
+					previews.push({
+						location,
+						lineText: (lines[location.range.start.line] ?? '').trim()
+					});
+				}
+			}
+		}
+
+		return { total, previews };
+	}
+
 	/**
 	 * Find all references to a symbol across the entire workspace
 	 */
@@ -99,25 +138,26 @@ export class ReferencesProvider {
 	 * Find references in a single file
 	 */
 	private async findReferencesInFile(fileUri: string, symbolName: string, includeDeclaration = true): Promise<Location[]> {
-		// Try to get cached document text first
-		const cachedText = this.symbolIndex.getDocumentText(fileUri);
-		if (cachedText) {
-			return this.findReferencesInText(cachedText, fileUri, symbolName, includeDeclaration);
-		}
-
-		// Fallback: try to get open document
-		const openDoc = this.documents.get(fileUri);
-		if (openDoc) {
-			return this.findReferencesInText(openDoc.getText(), fileUri, symbolName, includeDeclaration);
-		}
-
-		// Last resort: read file from disk asynchronously
-		const fileText = await this.readFileFromDisk(fileUri);
+		const fileText = await this.getFileText(fileUri);
 		if (fileText) {
 			return this.findReferencesInText(fileText, fileUri, symbolName, includeDeclaration);
 		}
 
 		return [];
+	}
+
+	private async getFileText(fileUri: string): Promise<string | undefined> {
+		const cachedText = this.symbolIndex.getDocumentText(fileUri);
+		if (cachedText) {
+			return cachedText;
+		}
+
+		const openDoc = this.documents.get(fileUri);
+		if (openDoc) {
+			return openDoc.getText();
+		}
+
+		return this.readFileFromDisk(fileUri);
 	}
 
 	/**
