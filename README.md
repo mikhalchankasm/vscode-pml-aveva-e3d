@@ -55,6 +55,19 @@ npm run pack  # Creates pml-aveva-e3d-X.X.X.vsix
 ### 📁 Supported File Types
 `.pml` `.pmlobj` `.pmlfnc` `.pmlfrm` `.pmlmac` `.pmlcmd`
 
+### PML Assistant External CLI
+
+This repository owns the official parser/LSP CLI contract for `e3d-pml-agent-kit`:
+
+```bash
+npm run pml:parse -- <file> --json
+npm run pml:diagnose -- <file> --json
+npm run pml:symbols -- <folder> --json
+npm run pml:scope -- <file> --line <line> --column <column> --json
+```
+
+See [docs/pml-assistant-cli.md](docs/pml-assistant-cli.md) for the JSON contract and ownership boundaries.
+
 ### 🖨️ `$P` Print Tools
 
 Lines that start with `$P` or `$p` are treated as PML print/debug output lines:

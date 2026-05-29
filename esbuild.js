@@ -80,15 +80,42 @@ async function main() {
 		}
 	});
 
+	const ctxCli = await esbuild.context({
+		entryPoints: [
+			'packages/pml-language-server/src/cli.ts',
+		],
+		bundle: true,
+		format: 'cjs',
+		minify: production,
+		sourcemap: !production,
+		sourcesContent: false,
+		platform: 'node',
+		outfile: 'packages/pml-language-server/out/cli.js',
+		external: ['vscode'],
+		logLevel: 'silent',
+		plugins: [
+			esbuildProblemMatcherPlugin,
+		],
+		loader: {
+			'.ts': 'ts'
+		},
+		define: {
+			'process.env.NODE_ENV': production ? '"production"' : '"development"'
+		}
+	});
+
 	if (watch) {
 		await ctx.watch();
 		await ctxServer.watch();
+		await ctxCli.watch();
 		console.log('[watch] Watching for changes...');
 	} else {
 		await ctx.rebuild();
 		await ctxServer.rebuild();
+		await ctxCli.rebuild();
 		await ctx.dispose();
 		await ctxServer.dispose();
+		await ctxCli.dispose();
 		console.log('[build] Build complete');
 	}
 }
