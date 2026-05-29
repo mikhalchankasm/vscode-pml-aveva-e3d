@@ -26,6 +26,11 @@
   "icon": "./icons/pml-icon.png",
   "activationEvents": [
     "onLanguage:pml",
+    "onCommand:pml.agentKit.reviewCurrentFile",
+    "onCommand:pml.agentKit.explainCurrentFinding",
+    "onCommand:pml.agentKit.openHelpForFinding",
+    "onCommand:pml.agentKit.checkHealth",
+    "onCommand:pml.agentKit.checkLiveE3dAvoxStatus",
     "onCommand:pml.prints.next",
     "onCommand:pml.prints.previous",
     "onCommand:pml.prints.clear",
@@ -100,6 +105,36 @@
       }
     ],
     "commands": [
+      {
+        "command": "pml.agentKit.reviewCurrentFile",
+        "title": "Review Current File",
+        "category": "PML",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "pml.agentKit.explainCurrentFinding",
+        "title": "Explain Current Finding",
+        "category": "PML",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "pml.agentKit.openHelpForFinding",
+        "title": "Open Help For Finding",
+        "category": "PML",
+        "icon": "$(book)"
+      },
+      {
+        "command": "pml.agentKit.checkHealth",
+        "title": "Check Agent Kit Health",
+        "category": "PML",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "pml.agentKit.checkLiveE3dAvoxStatus",
+        "title": "Check Live E3D/Avox Status",
+        "category": "PML",
+        "icon": "$(radio-tower)"
+      },
       {
         "command": "pml.formatDocument",
         "title": "Format PML Document",
@@ -427,6 +462,21 @@
             "verbose"
           ]
         },
+        "pml.agentKit.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable VS Code integration with e3d-pml-agent-kit."
+        },
+        "pml.agentKit.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the e3d-pml-agent-kit repository used for PML review commands. Leave empty to auto-discover a sibling workspace folder."
+        },
+        "pml.agentKit.showRawReport": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the raw Agent Kit JSON report in the PML Agent Kit output channel."
+        },
         "pml.diagnostics.typoDetection": {
           "type": "string",
           "default": "off",
@@ -530,6 +580,11 @@
     },
     "menus": {
       "editor/context": [
+        {
+          "command": "pml.agentKit.reviewCurrentFile",
+          "when": "editorLangId == pml",
+          "group": "1_pml@0"
+        },
         {
           "submenu": "pml.quickActions",
           "when": "editorLangId == pml && editorHasSelection",
