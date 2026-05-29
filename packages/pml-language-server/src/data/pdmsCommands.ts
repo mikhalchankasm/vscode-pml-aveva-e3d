@@ -85,7 +85,7 @@ export const PDMS_COMMANDS: readonly PdmsCommandDefinition[] = [
 	{ name: 'plane', category: 'drawing', brief: 'Selects or configures a working plane.' },
 	{ name: 'pos', category: 'navigation', brief: 'Sets, queries, or uses a position.' },
 	{ name: 'prec', category: 'system', brief: 'Sets precision for numeric output or commands.' },
-	{ name: 'q', category: 'query', brief: 'Queries the current element, attribute, or command state.' },
+	{ name: 'q', category: 'query', brief: 'Queries the current element, attribute, or command state. Common forms include `Q VAR` for variables and `Q ATT [AS ANY | <type>]` for attribute values.' },
 	{ name: 'refresh', category: 'drawing', brief: 'Refreshes the display or current view.' },
 	{ name: 'rem', category: 'system', brief: 'Adds a command-stream remark or comment.' },
 	{ name: 'repre', category: 'drawing', brief: 'Short form for representation commands.' },

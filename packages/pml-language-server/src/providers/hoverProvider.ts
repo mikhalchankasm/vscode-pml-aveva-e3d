@@ -42,7 +42,12 @@ export class HoverProvider {
 			['query', '**DBREF.query(attribute)** → STRING\n\nQueries attribute value as string.\n\nExample:\n```pml\n!pipe = !!ce\n!name = !pipe.query(|NAME|)\n!type = !pipe.query(|TYPE|)\n```'],
 			['qreal', '**DBREF.qreal(attribute)** → REAL\n\nQueries attribute value as real number.\n\nExample:\n```pml\n!pipe = !!ce\n!bore = !pipe.qreal(|BORE|)\n!length = !pipe.qreal(|LENGTH|)\n```'],
 			['qboolean', '**DBREF.qboolean(attribute)** → BOOLEAN\n\nQueries attribute value as boolean.\n\nExample:\n```pml\n!pipe = !!ce\n!isIssued = !pipe.qboolean(|LISSUE|)\n```'],
-			['delete', '**DBREF.delete()** → BOOLEAN\n\nDeletes the database element.\n\n⚠️ Use with caution!\n\nExample:\n```pml\n!elem = !!ce\n!success = !elem.delete()\n```'],
+			['attribute', '**DBREF.attribute(name)** -> ANY\n\nReturns the value of the named database attribute.\n\nExample:\n```pml\n!elem = !!CE\n!name = !elem.attribute(|NAME|)\n```'],
+			['attributes', '**DBREF.attributes()** -> STRING[]\n\nLists attributes available on the referenced database element.'],
+			['badref', '**DBREF.badRef()** -> BOOLEAN\n\nReturns TRUE when the DBREF is invalid or cannot be navigated to.'],
+			['mcount', '**DBREF.mcount([type])** -> REAL\n\nCounts members of the referenced element, optionally filtered by element type.'],
+			['line', '**DBREF.line([CUT|UNCUT])** -> LINE\n\nReturns the cut or uncut pline for supported SCTN/GENSEC elements.'],
+			['delete', '**DBREF.delete()** -> NO RESULT\n\nDeletes the PML DBREF object, not the database element it points to.'],
 		])],
 		['ELEMENTTYPE', new Map([
 			['isudet', '**ELEMENTTYPE.IsUdet()** -> BOOLEAN\n\nWhether the element type is a User Defined Element Type (UDET).'],
@@ -54,6 +59,21 @@ export class HoverProvider {
 			['primary', '**ELEMENTTYPE.Primary()** -> BOOLEAN\n\nWhether this element type is primary.'],
 			['membertypes', '**ELEMENTTYPE.MemberTypes()** -> ELEMENTTYPE[]\n\nLists valid member element types, including UDETs.'],
 			['parenttypes', '**ELEMENTTYPE.ParentTypes()** -> ELEMENTTYPE[]\n\nLists valid parent element types, including UDETs.'],
+		])],
+		['ATTRIBUTE', new Map([
+			['ispseudo', '**ATTRIBUTE.IsPseudo()** -> BOOLEAN\n\nReturns TRUE when the attribute is a pseudo attribute.'],
+			['isuda', '**ATTRIBUTE.IsUda()** -> BOOLEAN\n\nReturns TRUE when the attribute is a User Defined Attribute (UDA).'],
+			['units', '**ATTRIBUTE.units()** -> STRING\n\nReturns the attribute unit category such as BORE, DIST, MASS, ANGL, or NONE.'],
+			['category', '**ATTRIBUTE.Category()** -> STRING\n\nReturns the Attribute Utility grouping category.'],
+			['noclaim', '**ATTRIBUTE.NoClaim()** -> BOOLEAN\n\nReturns whether the attribute can be changed without claiming the element.'],
+			['elementtypes', '**ATTRIBUTE.ElementTypes()** -> ELEMENTTYPE[]\n\nLists element types for which the UDA is valid.'],
+			['validvalues', '**ATTRIBUTE.ValidValues(elementType)** -> STRING[]\n\nLists valid text values for the supplied element type.'],
+			['defaultvalue', '**ATTRIBUTE.DefaultValue(elementType)** -> STRING\n\nReturns the UDA default value for the supplied element type.'],
+			['querytext', '**ATTRIBUTE.queryText()** -> STRING\n\nReturns the command-line query text for this attribute.'],
+			['hyperlink', '**ATTRIBUTE.hyperlink()** -> BOOLEAN\n\nReturns TRUE when the attribute value refers to an external file.'],
+			['connection', '**ATTRIBUTE.connection()** -> BOOLEAN\n\nReturns TRUE when the attribute value appears on the reference list form.'],
+			['hidden', '**ATTRIBUTE.hidden()** -> BOOLEAN\n\nReturns TRUE when the attribute is hidden from Attribute Utility and Q ATT output.'],
+			['protected', '**ATTRIBUTE.protected()** -> BOOLEAN\n\nReturns TRUE when the attribute is protected from normal visibility.'],
 		])],
 	]);
 
@@ -160,7 +180,7 @@ export class HoverProvider {
 			'',
 			`**Category:** ${command.category}`,
 			'',
-			command.brief,
+			this.getPdmsCommandBrief(command.name, document, commandRange.start.line),
 			'',
 			'Recognized as a line command only when it is the first non-whitespace token on the line.'
 		].join('\n');
@@ -208,6 +228,25 @@ export class HoverProvider {
 				end: wordRange.end
 			}
 		};
+	}
+
+	private getPdmsCommandBrief(commandName: string, document: TextDocument, line: number): string {
+		if (commandName.toLowerCase() === 'q' && this.isQAttCommandLine(document, line)) {
+			return [
+				'Queries attributes for the Current Element (CE).',
+				'',
+				'`Q ATT [AS ANY | <type>]` lists attribute values, including distributed attribute views such as `Q ATT AS :PROCESS`.',
+				'Distributed attributes can use qualified names such as `:LOCAL\\:PROCESS` and optional instance indexes like `[2]`.'
+			].join('\n');
+		}
+
+		const command = getPdmsCommand(commandName);
+		return command?.brief ?? '';
+	}
+
+	private isQAttCommandLine(document: TextDocument, line: number): boolean {
+		const lineText = document.getText().split(/\r?\n/)[line] ?? '';
+		return /^\s*q\s+att\b/i.test(lineText);
 	}
 
 	private isFirstTokenOnLine(document: TextDocument, line: number, character: number): boolean {
@@ -316,43 +355,31 @@ export class HoverProvider {
 
 		// Take first match
 		const method = methods[0];
-
-		const parameters = method.parameters.map(parameter => `!${parameter}`);
-		const signature = `.${method.name}(${parameters.join(', ')})`;
 		const isDeclarationHover = this.isMethodDeclarationHover(document, wordRange);
-		const rows = [`\`${signature}\``];
+		const description = this.extractMethodDescription(method.documentation);
+		const sections: string[] = [];
 
-		if (method.parameters.length > 0) {
-			rows.push(`\`PARAMS\` ${parameters.map(parameter => `\`${parameter}\``).join(', ')}`);
-		}
-
-		if (!isDeclarationHover) {
-			rows.push(`\`DEFINED\` ${this.formatMethodDefinitionLink(method.uri, method.range.start.line)}`);
-		}
-
-		if (methods.length > 1) {
-			rows.push(`\`DEFINITIONS\` ${methods.length}`);
-		}
-
-		if (method.documentation) {
-			rows.push(`\`DOC\` ${this.compactDocumentation(method.documentation)}`);
+		if (description) {
+			sections.push(description);
 		}
 
 		if (isDeclarationHover) {
-			rows.push(await this.getMethodUsagesMarkdown(methodName));
+			const usages = await this.getMethodUsagesMarkdown(methodName);
+			if (usages) {
+				sections.push(usages);
+			}
+		}
+
+		if (sections.length === 0) {
+			return null;
 		}
 
 		return {
 			contents: {
 				kind: MarkupKind.Markdown,
-				value: this.joinCompactLines(rows)
+				value: sections.join('\n\n')
 			}
 		};
-	}
-
-	private formatMethodDefinitionLink(uri: string, zeroBasedLine: number): string {
-		const line = zeroBasedLine + 1;
-		return `[${this.getFileName(uri)}:${line}](${uri}#L${line})`;
 	}
 
 	private async getMethodUsagesMarkdown(methodName: string): Promise<string> {
@@ -362,12 +389,11 @@ export class HoverProvider {
 
 		const { total, previews } = await this.referencesProvider.getReferencePreviews(methodName, 5, false);
 		if (total === 0) {
-			return '\n`USAGES` none found';
+			return '`USAGES` none found';
 		}
 
 		const suffix = total > previews.length ? ` (showing first ${previews.length})` : '';
 		const lines = [
-			'',
 			`\`USAGES\` ${total} location${total === 1 ? '' : 's'}${suffix}`
 		];
 
@@ -375,15 +401,7 @@ export class HoverProvider {
 			lines.push(this.formatReferenceLine(preview));
 		}
 
-		return `\n${this.joinCompactLines(lines)}`;
-	}
-
-	private formatReferenceLine(preview: ReferencePreview): string {
-		const line = preview.location.range.start.line + 1;
-		const fileName = this.getFileName(preview.location.uri);
-		const target = `${preview.location.uri}#L${line}`;
-		const lineText = preview.lineText ? ` - \`${this.truncateLine(preview.lineText)}\`` : '';
-		return `[${fileName}:${line}](${target})${lineText}`;
+		return this.joinCompactLines(lines);
 	}
 
 	private getFileName(uri: string): string {
@@ -405,11 +423,114 @@ export class HoverProvider {
 		return `${candidate}...`;
 	}
 
-	private compactDocumentation(documentation: string): string {
-		const compact = documentation
+	private formatReferenceLine(preview: ReferencePreview): string {
+		const line = preview.location.range.start.line + 1;
+		const fileName = this.getFileName(preview.location.uri);
+		const target = `${preview.location.uri}#L${line}`;
+		const lineText = preview.lineText ? ` - \`${this.truncateLine(preview.lineText)}\`` : '';
+		return `[${fileName}:${line}](${target})${lineText}`;
+	}
+
+	private extractMethodDescription(documentation?: string): string {
+		if (!documentation) {
+			return '';
+		}
+
+		const lines = documentation
+			.split(/\r?\n/)
+			.map(line => this.cleanDocumentationLine(line))
+			.filter(line => line !== '' && !this.isDocumentationNoiseLine(line));
+
+		if (lines.length === 0) {
+			return '';
+		}
+
+		const explicitDescription = this.extractDescriptionBlock(lines);
+		const description = explicitDescription || lines
+			.filter(line => !this.isDocumentationHeadingLine(line))
+			.join(' ');
+
+		return this.compactDescription(description);
+	}
+
+	private extractDescriptionBlock(lines: string[]): string {
+		const descriptionLines: string[] = [];
+		let collecting = false;
+
+		for (const line of lines) {
+			const descriptionMatch = line.match(/^(?:Description|Purpose|Summary|Synopsis)\s*:\s*(.*)$/i);
+			if (descriptionMatch) {
+				collecting = true;
+				const inlineDescription = descriptionMatch[1].trim();
+				if (inlineDescription) {
+					descriptionLines.push(inlineDescription);
+				}
+				continue;
+			}
+
+			if (collecting && this.isDocumentationHeadingLine(line)) {
+				break;
+			}
+
+			if (collecting) {
+				descriptionLines.push(line);
+			}
+		}
+
+		return descriptionLines.join(' ');
+	}
+
+	private cleanDocumentationLine(line: string): string {
+		let cleaned = line.trim();
+		let previous: string;
+		do {
+			previous = cleaned;
+			cleaned = cleaned.replace(/^(?:--|\$p|\$\*)\s*/i, '').trim();
+		} while (cleaned !== previous);
+
+		return cleaned.replace(/\*\*/g, '').trim();
+	}
+
+	private isDocumentationNoiseLine(line: string): boolean {
+		return /^[-_=]{5,}$/.test(line) ||
+			/^End\s+of\s+method\s+definition\b/i.test(line);
+	}
+
+	private isDocumentationHeadingLine(line: string): boolean {
+		return /^Method\s*:/i.test(line) ||
+			/^Method\s+Type\b/i.test(line) ||
+			/^Parameters?\s*:/i.test(line) ||
+			/^Arguments?\s*:/i.test(line) ||
+			/^Returns?\s*:/i.test(line) ||
+			/^Examples?\s*:/i.test(line) ||
+			/^Purpose\s*:/i.test(line) ||
+			/^Summary\s*:/i.test(line) ||
+			/^Synopsis\s*:/i.test(line) ||
+			/^Usage\s*:/i.test(line) ||
+			/^Notes?\s*:/i.test(line) ||
+			/^See\s+Also\s*:/i.test(line) ||
+			/^Author\s*:/i.test(line) ||
+			/^Created\s*:/i.test(line) ||
+			/^Modified\s*:/i.test(line) ||
+			/^Version\s*:/i.test(line) ||
+			/^Status\s*:/i.test(line) ||
+			/^@/.test(line);
+	}
+
+	private compactDescription(description: string): string {
+		const compact = description
 			.replace(/\s+/g, ' ')
 			.trim();
-		return compact.length > 160 ? `${compact.slice(0, 157)}...` : compact;
+		if (compact.length <= 240) {
+			return compact;
+		}
+
+		const candidate = compact.slice(0, 237);
+		const boundary = candidate.search(/\s+\S*$/);
+		if (boundary >= 180) {
+			return `${candidate.slice(0, boundary)}...`;
+		}
+		return `${candidate}...`;
 	}
 
 	private joinCompactLines(lines: string[]): string {

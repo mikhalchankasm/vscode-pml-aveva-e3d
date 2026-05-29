@@ -19,6 +19,13 @@ describe('PDMS command data', () => {
 		expect(PDMS_COMMANDS.every(command => command.category && command.brief)).toBe(true);
 	});
 
+	it('documents common Q query forms in the generic command hover data', () => {
+		const query = getPdmsCommand('Q');
+
+		expect(query?.brief).toContain('Q VAR');
+		expect(query?.brief).toContain('Q ATT [AS ANY | <type>]');
+	});
+
 	it('includes selected Common Commands starters from AVEVA UE help page 628', () => {
 		expect(getPdmsCommand('PARAGON')?.category).toBe('system');
 		expect(getPdmsCommand('SPECONMODE')?.category).toBe('system');

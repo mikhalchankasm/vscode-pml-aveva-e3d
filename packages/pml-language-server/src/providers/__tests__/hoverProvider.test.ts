@@ -13,7 +13,7 @@ describe('HoverProvider', () => {
 				'!result = move'
 			].join('\n')
 		);
-		const provider = new HoverProvider({} as any);
+		const provider = new HoverProvider({ findMethod: () => [] } as any);
 
 		const commandHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 1 } }, document);
 		const expressionHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 11 } }, document);
@@ -39,7 +39,7 @@ describe('HoverProvider', () => {
 				'MOVE N45E DIST 1500'
 			].join('\n')
 		);
-		const provider = new HoverProvider({} as any);
+		const provider = new HoverProvider({ findMethod: () => [] } as any);
 
 		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 4 } }, document)).resolves.toBeNull();
 		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 4 } }, document)).resolves.toBeNull();
@@ -86,6 +86,32 @@ describe('HoverProvider', () => {
 		expect(String((hover?.contents as any).value)).toContain('Specon command mode');
 	});
 
+	it('shows focused hover help for Q ATT query attribute commands', async () => {
+		const document = TextDocument.create(
+			'file:///q-att-hover.pml',
+			'pml',
+			1,
+			[
+				'Q ATT AS :PROCESS',
+				'!value = q',
+				'-- Q ATT AS :PROCESS'
+			].join('\n')
+		);
+		const provider = new HoverProvider({} as any);
+
+		const hover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 0 } }, document);
+		const expressionHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 9 } }, document);
+		const commentHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 3 } }, document);
+		const value = String((hover?.contents as any).value);
+
+		expect(value).toContain('PDMS Command: Q');
+		expect(value).toContain('Q ATT [AS ANY | <type>]');
+		expect(value).toContain(':LOCAL\\:PROCESS');
+		expect(value).toContain('[2]');
+		expect(expressionHover).toBeNull();
+		expect(commentHover).toBeNull();
+	});
+
 	it('shows compact hover help for the built-in !!CE DBREF variable', async () => {
 		const document = TextDocument.create(
 			'file:///dbref-hover.pml',
@@ -129,7 +155,64 @@ describe('HoverProvider', () => {
 		expect(value).toContain('base system element type');
 	});
 
-	it('shows user method usages on declaration hover and definition links on call hover', async () => {
+	it('shows hover help for selected DBREF object methods', async () => {
+		const document = TextDocument.create(
+			'file:///dbref-method-hover.pml',
+			'pml',
+			1,
+			[
+				'!name = !element.Attribute(|NAME|)',
+				'!invalid = !element.BadRef()',
+				'!count = !element.MCount(|BRAN|)',
+				'!element.Delete()'
+			].join('\n')
+		);
+		const provider = new HoverProvider({} as any);
+
+		const attributeHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 18 } }, document);
+		const badRefHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 21 } }, document);
+		const mcountHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 20 } }, document);
+		const deleteHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 3, character: 11 } }, document);
+
+		expect(String((attributeHover?.contents as any).value)).toContain('DBREF.attribute(name)');
+		expect(String((badRefHover?.contents as any).value)).toContain('invalid or cannot be navigated');
+		expect(String((mcountHover?.contents as any).value)).toContain('Counts members');
+		const deleteValue = String((deleteHover?.contents as any).value);
+		expect(deleteValue).toContain('PML DBREF object');
+		expect(deleteValue).not.toContain('Deletes the database element');
+	});
+
+	it('shows hover help for selected ATTRIBUTE metadata methods', async () => {
+		const document = TextDocument.create(
+			'file:///attribute-method-hover.pml',
+			'pml',
+			1,
+			[
+				'!isPseudo = !attribute.IsPseudo()',
+				'!values = !attribute.ValidValues(!elementType)',
+				'!hidden = !attribute.Hidden()'
+			].join('\n')
+		);
+		const provider = new HoverProvider({ findMethod: () => [] } as any);
+
+		const isPseudoHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 24 } }, document);
+		const validValuesHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 22 } }, document);
+		const hiddenHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 22 } }, document);
+		const nameDocument = TextDocument.create('file:///attribute-name-hover.pml', 'pml', 1, '!name = !attribute.Name()');
+		const nameHover = await provider.provide({
+			textDocument: { uri: nameDocument.uri },
+			position: { line: 0, character: 20 }
+		}, nameDocument);
+
+		expect(String((isPseudoHover?.contents as any).value)).toContain('ATTRIBUTE.IsPseudo()');
+		expect(String((isPseudoHover?.contents as any).value)).toContain('pseudo attribute');
+		expect(String((validValuesHover?.contents as any).value)).toContain('ATTRIBUTE.ValidValues(elementType)');
+		expect(String((validValuesHover?.contents as any).value)).toContain('valid text values');
+		expect(String((hiddenHover?.contents as any).value)).toContain('Q ATT output');
+		expect(nameHover).toBeNull();
+	});
+
+	it('shows compact user method descriptions and declaration usages', async () => {
 		const document = TextDocument.create(
 			'file:///forms/Main.pmlfrm',
 			'pml',
@@ -152,7 +235,14 @@ describe('HoverProvider', () => {
 							end: { line: 1, character: 9 }
 						},
 						parameters: ['target'],
-						documentation: undefined
+						documentation: [
+							'End of method definition for .RunCommand() ----------------------------------------------------------------------',
+							'Method: NavigateTo',
+							'-- $P Description:',
+							'-- $P Moves the active selection to the requested target.',
+							'-- $P Method Type: Action',
+							'-- @target - Target name'
+						].join('\n')
 					}]
 					: []
 			} as any,
@@ -190,17 +280,24 @@ describe('HoverProvider', () => {
 		const callHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 9 } }, document);
 		const callValue = String((callHover?.contents as any).value);
 
-		expect(value).toContain('`.NavigateTo(!target)`');
-		expect(value).toContain('`PARAMS` `!target`');
+		expect(value.startsWith('Moves the active selection to the requested target.')).toBe(true);
+		expect(value.startsWith('Moves the active selection to the requested target.\n\n`USAGES` 2 locations')).toBe(true);
 		expect(value).toContain('`USAGES` 2 locations');
 		expect(value).toContain('[Main.pmlfrm:3]');
 		expect(value).toContain('[Other.pmlfrm:11]');
 		expect(value).toContain('`!this.NavigateTo(!target)`');
 		expect(value).toContain(`\`${longUsage}\``);
+		expect(value).not.toContain('`.NavigateTo(!target)`');
+		expect(value).not.toContain('`PARAMS`');
+		expect(value).not.toContain('`DOC`');
 		expect(value).not.toContain('`DEFINED`');
-		expect(callValue).toContain('`.NavigateTo(!target)`');
-		expect(callValue).toContain('`PARAMS` `!target`');
-		expect(callValue).toContain('`DEFINED` [Main.pmlfrm:1](file:///forms/Main.pmlfrm#L1)');
+		expect(value).not.toContain('End of method definition');
+		expect(value).not.toContain('Method Type');
+		expect(value).not.toContain('Method: NavigateTo');
+		expect(value).not.toContain('$P');
+		expect(value).not.toContain('@target');
+		expect(callValue).toBe('Moves the active selection to the requested target.');
+		expect(callValue).not.toContain('`DEFINED`');
 		expect(callValue).not.toContain('`USAGES`');
 		expect(value).not.toContain('###');
 		expect(value).not.toContain('```');

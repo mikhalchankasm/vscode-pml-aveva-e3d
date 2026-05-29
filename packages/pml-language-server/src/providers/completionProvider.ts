@@ -39,19 +39,16 @@ export class CompletionProvider {
 
 		// Check if typing after a variable or member expression (for method calls)
 		if (this.isMemberCompletionContext(textBeforeCursor)) {
-			// For .pmlfrm files, show only methods defined in the form (no built-ins)
-			// For other files, show current document methods + built-ins
 			const currentMethods = this.getCurrentDocumentMethodCompletions(document);
 
 			const isFormFile = document.uri.toLowerCase().endsWith('.pmlfrm');
-			if (isFormFile) {
-				// Forms: only show methods defined in this form
+			if (isFormFile && this.isThisMemberCompletionContext(textBeforeCursor)) {
+				// Keep !this. focused on form-local methods; other receivers still need built-ins.
 				return currentMethods;
-			} else {
-				// Regular files: show built-ins + current document methods
-				const builtInItems = this.getBuiltInMethodCompletions();
-				return [...currentMethods, ...builtInItems];
 			}
+
+			const builtInItems = this.getBuiltInMethodCompletions();
+			return [...currentMethods, ...builtInItems];
 		}
 
 		// If cursor is after a bare dot, do not spam unrelated completions
@@ -124,7 +121,12 @@ export class CompletionProvider {
 			{ label: 'query', kind: CompletionItemKind.Method, detail: 'DBREF -> STRING', documentation: 'Query attribute as string', insertText: 'query(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
 			{ label: 'qreal', kind: CompletionItemKind.Method, detail: 'DBREF -> REAL', documentation: 'Query attribute as number', insertText: 'qreal(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
 			{ label: 'qboolean', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Query attribute as boolean', insertText: 'qboolean(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
-			{ label: 'delete', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Delete element (use with caution!)' },
+			{ label: 'attribute', kind: CompletionItemKind.Method, detail: 'DBREF -> ANY', documentation: 'Return the value of a named database attribute.', insertText: 'attribute(|$1|)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'attributes', kind: CompletionItemKind.Method, detail: 'DBREF -> STRING[]', documentation: 'List attributes available on the referenced database element.' },
+			{ label: 'badref', kind: CompletionItemKind.Method, detail: 'DBREF -> BOOLEAN', documentation: 'Whether the DBREF is invalid or cannot be navigated to.' },
+			{ label: 'mcount', kind: CompletionItemKind.Method, detail: 'DBREF -> REAL', documentation: 'Count members of the referenced element.', insertText: 'mcount($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'line', kind: CompletionItemKind.Method, detail: 'DBREF -> LINE', documentation: 'Return the cut or uncut pline for supported section elements.', insertText: 'line($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'delete', kind: CompletionItemKind.Method, detail: 'DBREF -> NO RESULT', documentation: 'Delete the PML DBREF object, not the referenced database element.' },
 
 			// ELEMENTTYPE metadata methods
 			{ label: 'isudet', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> BOOLEAN', documentation: 'Whether the element type is a user-defined element type (UDET).' },
@@ -136,6 +138,21 @@ export class CompletionProvider {
 			{ label: 'primary', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> BOOLEAN', documentation: 'Whether the element type is primary.' },
 			{ label: 'membertypes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE[]', documentation: 'List valid member element types, including UDETs.' },
 			{ label: 'parenttypes', kind: CompletionItemKind.Method, detail: 'ELEMENTTYPE -> ELEMENTTYPE[]', documentation: 'List valid parent element types, including UDETs.' },
+
+			// ATTRIBUTE metadata methods
+			{ label: 'ispseudo', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is a pseudo attribute.' },
+			{ label: 'isuda', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is a user-defined attribute (UDA).' },
+			{ label: 'units', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> STRING', documentation: 'Return the attribute unit category such as BORE, DIST, MASS, ANGL, or NONE.' },
+			{ label: 'category', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> STRING', documentation: 'Return the Attribute Utility grouping category.' },
+			{ label: 'noclaim', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute can be changed without claiming the element.' },
+			{ label: 'elementtypes', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> ELEMENTTYPE[]', documentation: 'List element types for which the UDA is valid.' },
+			{ label: 'validvalues', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> STRING[]', documentation: 'List valid text values for an element type.', insertText: 'validValues($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'defaultvalue', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> STRING', documentation: 'Return the UDA default value for an element type.', insertText: 'defaultValue($1)$0', insertTextFormat: InsertTextFormat.Snippet },
+			{ label: 'querytext', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> STRING', documentation: 'Return the command-line query text for this attribute.' },
+			{ label: 'hyperlink', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute value refers to an external file.' },
+			{ label: 'connection', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute value appears on the reference list form.' },
+			{ label: 'hidden', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is hidden from Attribute Utility and Q ATT output.' },
+			{ label: 'protected', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is protected from normal visibility.' },
 		];
 	}
 
@@ -350,12 +367,16 @@ export class CompletionProvider {
 			return [];
 		}
 
+		const isFormFile = document.uri.toLowerCase().endsWith('.pmlfrm');
+		const methodKind = isFormFile ? CompletionItemKind.Event : CompletionItemKind.Method;
+		const detailPrefix = isFormFile ? 'Form method' : 'Method';
+
 		return methods.map(method => ({
 			label: `.${method.name}`,
-			kind: CompletionItemKind.Method,
+			kind: methodKind,
 			detail: method.parameters.length
-				? `Method (${this.formatParameterList(method.parameters)})`
-				: 'Method',
+				? `${detailPrefix} (${this.formatParameterList(method.parameters)})`
+				: detailPrefix,
 			documentation: method.documentation,
 			insertText: method.name,
 			filterText: method.name,
@@ -522,6 +543,10 @@ export class CompletionProvider {
 			TokenType.RBRACKET,
 			TokenType.RPAREN
 		].includes(receiverToken.type);
+	}
+
+	private isThisMemberCompletionContext(textBeforeCursor: string): boolean {
+		return /(?:^|[^\w!])!this\.\s*$/i.test(textBeforeCursor);
 	}
 
 	private formatParameterList(parameters: string[]): string {

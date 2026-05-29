@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CompletionItemKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { CompletionProvider } from '../completionProvider';
 import { SymbolIndex } from '../../index/symbolIndex';
@@ -25,11 +26,46 @@ describe('CompletionProvider', () => {
 
 		expect(completions.map(item => item.label)).toEqual(['.refresh']);
 		expect(completions[0]).toMatchObject({
-			detail: 'Method (!target)',
+			kind: CompletionItemKind.Event,
+			detail: 'Form method (!target)',
 			insertText: 'refresh',
 			filterText: 'refresh'
 		});
 		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('suggests built-in methods for non-!this receivers in form files', () => {
+		const source = [
+			'setup form !!TestForm dialog',
+			'exit',
+			'',
+			'define method .refresh()',
+			'endmethod',
+			'',
+			'!attr = object attribute(|XLEN|)',
+			'!attr.'
+		].join('\n');
+		const document = TextDocument.create('file:///test.pmlfrm', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === '.refresh')).toMatchObject({
+			kind: CompletionItemKind.Event,
+			detail: 'Form method'
+		});
+		expect(completions.find(item => item.label === 'ispseudo')).toMatchObject({
+			kind: CompletionItemKind.Method,
+			detail: 'ATTRIBUTE -> BOOLEAN'
+		});
+		expect(completions.find(item => item.label === 'validvalues')).toMatchObject({
+			kind: CompletionItemKind.Method,
+			detail: 'ATTRIBUTE -> STRING[]'
+		});
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
 	it('suggests methods after indexed and dynamic member receivers', () => {
@@ -98,6 +134,68 @@ describe('CompletionProvider', () => {
 			detail: 'ELEMENTTYPE -> ELEMENTTYPE[]'
 		});
 		expect(completions.some(item => item.label === 'name')).toBe(false);
+	});
+
+	it('suggests selected DBREF object methods after member receivers', () => {
+		const source = '!element.';
+		const document = TextDocument.create('file:///dbref-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === 'attribute')).toMatchObject({
+			detail: 'DBREF -> ANY',
+			insertText: 'attribute(|$1|)$0'
+		});
+		expect(completions.find(item => item.label === 'attributes')).toMatchObject({
+			detail: 'DBREF -> STRING[]'
+		});
+		expect(completions.find(item => item.label === 'badref')).toMatchObject({
+			detail: 'DBREF -> BOOLEAN'
+		});
+		expect(completions.find(item => item.label === 'mcount')).toMatchObject({
+			detail: 'DBREF -> REAL'
+		});
+		expect(completions.find(item => item.label === 'line')).toMatchObject({
+			detail: 'DBREF -> LINE'
+		});
+		expect(completions.find(item => item.label === 'delete')).toMatchObject({
+			detail: 'DBREF -> NO RESULT'
+		});
+	});
+
+	it('suggests selected ATTRIBUTE metadata methods after member receivers', () => {
+		const source = '!attribute.';
+		const document = TextDocument.create('file:///attribute-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === 'ispseudo')).toMatchObject({
+			detail: 'ATTRIBUTE -> BOOLEAN'
+		});
+		expect(completions.find(item => item.label === 'isuda')).toMatchObject({
+			detail: 'ATTRIBUTE -> BOOLEAN'
+		});
+		expect(completions.find(item => item.label === 'validvalues')).toMatchObject({
+			detail: 'ATTRIBUTE -> STRING[]',
+			insertText: 'validValues($1)$0'
+		});
+		expect(completions.find(item => item.label === 'defaultvalue')).toMatchObject({
+			detail: 'ATTRIBUTE -> STRING',
+			insertText: 'defaultValue($1)$0'
+		});
+		expect(completions.find(item => item.label === 'hidden')).toMatchObject({
+			detail: 'ATTRIBUTE -> BOOLEAN'
+		});
+		expect(completions.some(item => item.label === 'name')).toBe(false);
+		expect(completions.some(item => item.label === 'type')).toBe(false);
 	});
 
 	it('formats workspace method parameters with PML markers', () => {

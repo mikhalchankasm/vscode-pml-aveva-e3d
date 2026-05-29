@@ -12,6 +12,12 @@ const EXTERNAL_COLLECTION_MEMBER_PATTERN = /^(?:GetRows|GetSelectedRows|GetColum
 const MEMBER_DECLARATION_PATTERN = /\bmember\s+\.([A-Za-z_][\w$]*)\s+is\s+([A-Za-z_][\w$.]*)/gi;
 const PMLNET_GADGET_PATTERN = /\b[A-Za-z_][\w$]*\s+\.([A-Za-z_][\w$]*)\b[^\r\n]*(?:PMLNETCONTROL|\bNET[A-Za-z_]*CONTROL\b)/gi;
 const EXTERNAL_ASSIGNMENT_PATTERN = /!([A-Za-z_][\w$]*)\s*=\s*(?:object\s+)?(?:!!)?([A-Za-z_][\w$.]*?(?:NET|DotNet|CSharp|Control|Grid|DataTable|DataSet)[A-Za-z_\w$.]*)\s*\(/gi;
+const UI_CALLBACK_METHOD_PATTERN = /(?:^on[A-Za-z0-9_]*(?:callback|click|popup)|(?:callback|rightclick|leftclick|doubleclick|popup)(?:$|[A-Z_]))/i;
+const UI_CALLBACK_PAYLOAD_PARAMETER_PATTERN = /^(?:data|event|args|arguments|callbackdata)$/i;
+
+type ArrayIndexCheckContext = {
+	zeroBasedCallbackPayloads: Set<string>;
+};
 
 export class ArrayIndexChecker {
 	private diagnostics: Diagnostic[] = [];
@@ -20,25 +26,27 @@ export class ArrayIndexChecker {
 	public check(program: Program, sourceText = ''): Diagnostic[] {
 		this.diagnostics = [];
 		this.zeroBasedExternalSymbols = this.collectZeroBasedExternalSymbols(program, sourceText);
+		const rootContext: ArrayIndexCheckContext = { zeroBasedCallbackPayloads: new Set() };
 
 		for (const statement of program.body) {
-			this.checkStatement(statement);
+			this.checkStatement(statement, rootContext);
 		}
 
 		return this.diagnostics;
 	}
 
-	private checkStatement(stmt: Statement): void {
+	private checkStatement(stmt: Statement, context: ArrayIndexCheckContext): void {
 		switch (stmt.type) {
 			case 'ExpressionStatement':
-				this.checkExpression((stmt as any).expression);
+				this.checkExpression((stmt as any).expression, context);
 				break;
 
 			case 'MethodDefinition': {
 				const method = stmt as any;
+				const methodContext = this.createMethodContext(method, context);
 				if (method.body) {
 					for (const bodyStmt of method.body) {
-						this.checkStatement(bodyStmt);
+						this.checkStatement(bodyStmt, methodContext);
 					}
 				}
 				break;
@@ -46,9 +54,10 @@ export class ArrayIndexChecker {
 
 			case 'FunctionDefinition': {
 				const func = stmt as any;
+				const functionContext = this.createMethodContext(func, context);
 				if (func.body) {
 					for (const bodyStmt of func.body) {
-						this.checkStatement(bodyStmt);
+						this.checkStatement(bodyStmt, functionContext);
 					}
 				}
 				break;
@@ -59,7 +68,7 @@ export class ArrayIndexChecker {
 				// Check methods inside object
 				if (obj.members) {
 					for (const member of obj.members) {
-						this.checkStatement(member);
+						this.checkStatement(member, context);
 					}
 				}
 				break;
@@ -70,7 +79,7 @@ export class ArrayIndexChecker {
 				// Check form body statements
 				if (form.body) {
 					for (const bodyStmt of form.body) {
-						this.checkStatement(bodyStmt);
+						this.checkStatement(bodyStmt, context);
 					}
 				}
 				break;
@@ -81,13 +90,13 @@ export class ArrayIndexChecker {
 				// Check handler body
 				if (handle.body) {
 					for (const bodyStmt of handle.body) {
-						this.checkStatement(bodyStmt);
+						this.checkStatement(bodyStmt, context);
 					}
 				}
 				// Check elsehandle block (field is 'alternate' in AST)
 				if (handle.alternate) {
 					for (const elseStmt of handle.alternate) {
-						this.checkStatement(elseStmt);
+						this.checkStatement(elseStmt, context);
 					}
 				}
 				break;
@@ -95,19 +104,19 @@ export class ArrayIndexChecker {
 
 			case 'IfStatement': {
 				const ifStmt = stmt as any;
-				this.checkExpression(ifStmt.test);
+				this.checkExpression(ifStmt.test, context);
 				for (const thenStmt of ifStmt.consequent) {
-					this.checkStatement(thenStmt);
+					this.checkStatement(thenStmt, context);
 				}
 				if (ifStmt.alternate) {
 					// alternate can be either an IfStatement (elseif) or Statement[] (else)
 					if (Array.isArray(ifStmt.alternate)) {
 						for (const elseStmt of ifStmt.alternate) {
-							this.checkStatement(elseStmt);
+							this.checkStatement(elseStmt, context);
 						}
 					} else {
 						// Handle elseif - alternate is an IfStatement
-						this.checkStatement(ifStmt.alternate);
+						this.checkStatement(ifStmt.alternate, context);
 					}
 				}
 				break;
@@ -115,10 +124,10 @@ export class ArrayIndexChecker {
 
 			case 'DoStatement': {
 				const doStmt = stmt as any;
-				if (doStmt.collection) this.checkExpression(doStmt.collection);
-				if (doStmt.condition) this.checkExpression(doStmt.condition);
+				if (doStmt.collection) this.checkExpression(doStmt.collection, context);
+				if (doStmt.condition) this.checkExpression(doStmt.condition, context);
 				for (const bodyStmt of doStmt.body) {
-					this.checkStatement(bodyStmt);
+					this.checkStatement(bodyStmt, context);
 				}
 				break;
 			}
@@ -126,7 +135,7 @@ export class ArrayIndexChecker {
 			case 'ReturnStatement': {
 				const returnStmt = stmt as any;
 				if (returnStmt.argument) {
-					this.checkExpression(returnStmt.argument);
+					this.checkExpression(returnStmt.argument, context);
 				}
 				break;
 			}
@@ -135,7 +144,7 @@ export class ArrayIndexChecker {
 			case 'ContinueStatement': {
 				const loopControl = stmt as any;
 				if (loopControl.condition) {
-					this.checkExpression(loopControl.condition);
+					this.checkExpression(loopControl.condition, context);
 				}
 				break;
 			}
@@ -143,14 +152,14 @@ export class ArrayIndexChecker {
 			case 'VariableDeclaration': {
 				const varDecl = stmt as any;
 				if (varDecl.initializer) {
-					this.checkExpression(varDecl.initializer);
+					this.checkExpression(varDecl.initializer, context);
 				}
 				break;
 			}
 		}
 	}
 
-	private checkExpression(expr: Expression): void {
+	private checkExpression(expr: Expression, context: ArrayIndexCheckContext): void {
 		if (!expr) return;
 
 		switch (expr.type) {
@@ -161,7 +170,7 @@ export class ArrayIndexChecker {
 					// property is now an Expression - check if it's a Literal with value 0
 					if (member.property.type === 'Literal') {
 						const literal = member.property as any;
-						if ((literal.value === 0 || literal.value === '0') && !this.isLikelyZeroBasedExternalAccess(member)) {
+						if ((literal.value === 0 || literal.value === '0') && !this.isLikelyZeroBasedExternalAccess(member, context)) {
 							this.diagnostics.push({
 								range: member.property.range,
 								message: 'Array indices in PML start at 1, not 0. Accessing [0] will cause a runtime error.',
@@ -172,46 +181,46 @@ export class ArrayIndexChecker {
 						}
 					}
 					// Recursively check the index expression
-					this.checkExpression(member.property);
+					this.checkExpression(member.property, context);
 				}
 				// Recursively check object
-				this.checkExpression(member.object);
+				this.checkExpression(member.object, context);
 				break;
 			}
 
 			case 'CallExpression': {
 				const call = expr as any;
-				this.checkExpression(call.callee);
+				this.checkExpression(call.callee, context);
 				for (const arg of call.arguments) {
-					this.checkExpression(arg);
+					this.checkExpression(arg, context);
 				}
 				break;
 			}
 
 			case 'BinaryExpression': {
 				const binary = expr as any;
-				this.checkExpression(binary.left);
-				this.checkExpression(binary.right);
+				this.checkExpression(binary.left, context);
+				this.checkExpression(binary.right, context);
 				break;
 			}
 
 			case 'UnaryExpression': {
 				const unary = expr as any;
-				this.checkExpression(unary.argument);
+				this.checkExpression(unary.argument, context);
 				break;
 			}
 
 			case 'AssignmentExpression': {
 				const assignment = expr as any;
-				this.checkExpression(assignment.left);
-				this.checkExpression(assignment.right);
+				this.checkExpression(assignment.left, context);
+				this.checkExpression(assignment.right, context);
 				break;
 			}
 
 			case 'ArrayExpression': {
 				const arrayExpr = expr as any;
 				for (const element of arrayExpr.elements) {
-					this.checkExpression(element);
+					this.checkExpression(element, context);
 				}
 				break;
 			}
@@ -259,8 +268,27 @@ export class ArrayIndexChecker {
 		}
 	}
 
-	private isLikelyZeroBasedExternalAccess(member: MemberExpression): boolean {
-		return this.isLikelyZeroBasedExternalExpression(member.object);
+	private createMethodContext(method: any, parentContext: ArrayIndexCheckContext): ArrayIndexCheckContext {
+		const zeroBasedCallbackPayloads = new Set(parentContext.zeroBasedCallbackPayloads);
+		if (!UI_CALLBACK_METHOD_PATTERN.test(String(method.name ?? ''))) {
+			return { zeroBasedCallbackPayloads };
+		}
+
+		for (const parameter of method.parameters ?? []) {
+			if (
+				UI_CALLBACK_PAYLOAD_PARAMETER_PATTERN.test(String(parameter.name ?? '')) &&
+				String(parameter.paramType?.kind ?? '').toUpperCase() === 'ARRAY'
+			) {
+				zeroBasedCallbackPayloads.add(String(parameter.name).toLowerCase());
+			}
+		}
+
+		return { zeroBasedCallbackPayloads };
+	}
+
+	private isLikelyZeroBasedExternalAccess(member: MemberExpression, context: ArrayIndexCheckContext): boolean {
+		return this.isZeroBasedCallbackPayloadAccess(member.object, context) ||
+			this.isLikelyZeroBasedExternalExpression(member.object);
 	}
 
 	private isLikelyZeroBasedExternalExpression(expr: Expression | undefined): boolean {
@@ -336,5 +364,10 @@ export class ArrayIndexChecker {
 
 	private hasExternalCollectionMemberName(names: string[]): boolean {
 		return names.some(name => EXTERNAL_COLLECTION_MEMBER_PATTERN.test(name));
+	}
+
+	private isZeroBasedCallbackPayloadAccess(expr: Expression | undefined, context: ArrayIndexCheckContext): boolean {
+		return expr?.type === 'Identifier' &&
+			context.zeroBasedCallbackPayloads.has(String((expr as any).name ?? '').toLowerCase());
 	}
 }

@@ -115,6 +115,82 @@ exit
 			expect(diagnostics).toHaveLength(0);
 		});
 
+		it('should not flag zero-based UI callback payload arrays', () => {
+			const source = `
+setup form !!GridForm
+	define method .RightClickGrid(!data is ARRAY)
+		if (!data[2].set()) then
+			!this.container.showPopup(!data[0], !data[1])
+		endif
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(0);
+		});
+
+		it('should not flag alternate zero-based UI callback payload names', () => {
+			const source = `
+setup form !!GridForm
+	define method .OnPopupCallback(!event is ARRAY, !args is ARRAY)
+		!this.container.showPopup(!event[0], !args[1])
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(0);
+		});
+
+		it('should still flag zero indexes on ordinary ARRAY parameters', () => {
+			const source = `
+define method .ProcessData(!data is ARRAY)
+	!item = !data[0]
+endmethod
+			`.trim();
+			const result = parser.parse(source);
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(1);
+		});
+
+		it('should keep UI callback payload suppression scoped to the callback method', () => {
+			const source = `
+setup form !!GridForm
+	define method .RightClickGrid(!data is ARRAY)
+		!this.container.showPopup(!data[0], !data[1])
+	endmethod
+
+	define method .ProcessData(!data is ARRAY)
+		!item = !data[0]
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(1);
+			expect(diagnostics[0].range.start.line).toBe(6);
+		});
+
+		it('should still flag non-ARRAY callback parameters and non-payload ARRAY parameters', () => {
+			const source = `
+setup form !!GridForm
+	define method .RightClickGrid(!data is STRING, !items is ARRAY)
+		!first = !data[0]
+		!second = !items[0]
+	endmethod
+exit
+			`.trim();
+			const result = parser.parse(source, { mode: 'form' });
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(diagnostics).toHaveLength(2);
+		});
+
 		it('should still flag zero indexes on ordinary form members', () => {
 			const source = `
 setup form !!GridForm
