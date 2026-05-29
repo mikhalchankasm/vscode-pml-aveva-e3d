@@ -44,6 +44,12 @@ This file is the short release snapshot for the current public build. Full histo
 - Current coverage includes chained method calls, callback assignments, nested frames, form outline metadata, guarded callback/gadget reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, additional form gadgets, command-controller syntax, and fixture/corpus smoke tests.
 - Remaining parser work includes broader PML.NET form patterns, more PML1 command forms in `.pmlfrm`/`.pmlobj`/`.pmlfnc`, and deciding whether to repair or exclude intentionally broken fixture snippets.
 
+### PML Assistant Integration Track
+
+- Added an extension-owned external CLI contract for `e3d-pml-agent-kit`: parse, diagnose, workspace symbols, and scope lookup.
+- Added initial VS Code Agent Kit commands for reviewing PML files, mapping returned findings to Problems diagnostics, checking health, and opening mapped help pages.
+- Agent Kit still owns review policy, normalized findings beyond parser/LSP diagnostics, MCP orchestration, and optional live E3D validation.
+
 ### v0.11.x - Parser Hardening and Print Tools
 
 - Added `$P` print/debug tools, PDMS command starter metadata, command hover, packaging cleanup, and parser compatibility fixes for real PML/PMLFNC files.

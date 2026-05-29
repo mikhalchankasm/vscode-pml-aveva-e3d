@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## Unreleased
+
+### Improved
+
+- Add a unified `PML: Quick Actions and Presets...` launcher for common cleanup tools, `$P` print actions, documentation helpers, and practical PML starter blocks; the launcher is available from the PML editor context menu even without a selection.
+- Add `pml.prints.actions` as the clearer command ID for the `$P` print action picker while keeping `pml.prints.clear` as a legacy alias for existing keybindings.
+- Add low-noise DBREF object method completions and hover docs for `attribute`, `attributes`, `badref`, `mcount`, and `line`; correct `delete` docs to avoid implying it deletes the referenced database element.
+- Reduce `[0]` array-index false positives for UI callback payload arrays such as right-click grid callback data while preserving diagnostics for ordinary PML arrays.
+- Make documented user-defined method hovers more compact: call sites now show only the cleaned method description, while declaration hovers keep usage links in a separate block.
+- Add focused `Q ATT` line-command hover help for query-attribute syntax and distributed attribute qualifiers, and mention common `Q VAR`/`Q ATT` forms in the generic `Q` hover fallback.
+- Add low-noise ATTRIBUTE metadata method completions and hover docs for distinctive methods such as `isPseudo`, `isUda`, `validValues`, `defaultValue`, and `hidden`.
+- Distinguish form-local method completions from built-in/object method completions by using a separate completion icon kind for form methods.
+- Add the stable PML Assistant extension CLI contract for parse, diagnostics, symbols, and scope queries, plus initial Agent Kit review commands, diagnostics mapping, health check, and finding help pages.
+
 ## [0.12.33] - 2026-05-19
 
 ### Fixed

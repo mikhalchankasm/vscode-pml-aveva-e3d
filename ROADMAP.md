@@ -6,6 +6,20 @@ Development plans and progress tracking.
 
 ## ✅ Completed Features
 
+### PML Assistant Integration
+
+- ✅ **Stable external CLI contract**
+  - `npm run pml:parse -- <file> --json`
+  - `npm run pml:diagnose -- <file> --json`
+  - `npm run pml:symbols -- <folder> --json`
+  - `npm run pml:scope -- <file> --line <line> --column <column> --json`
+  - Reuses the language-server parser, diagnostics, symbol index, and document-symbol provider.
+
+- ✅ **Initial Agent Kit VS Code bridge**
+  - Agent Kit settings under `pml.agentKit.*`
+  - Review, health, finding explanation, and finding help commands
+  - Agent Kit findings mapped into a dedicated VS Code diagnostic collection
+
 ### Major Milestones (v0.5.0 - v0.8.8)
 
 <details>
@@ -1300,6 +1314,8 @@ Development plans and progress tracking.
 - ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval and release automation runs TypeScript plus language-server tests before tag creation.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
+- 🔄 **Quick UX Presets** - Add a single discoverable launcher for common cleanup actions, debug-print actions, and practical starter blocks before reorganizing deeper menus.
+- ✅ **DBREF Method Assistance** - Add selected DBREF object method completions and hover docs from the AVEVA help source while avoiding generic method noise.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
@@ -1307,7 +1323,7 @@ Development plans and progress tracking.
 - **Completions:** separate built-in method sets by inferred receiver type, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
 - **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename share method-reference pattern construction, Rename avoids inactive text for supported symbol kinds, and form Rename updates pipe-delimited callback targets; next move References/Rename toward AST/index-backed lookup.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
-- **Preset packs:** split snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
+- **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
 - **Smoke validation:** add a lightweight extension-host smoke test for activation, command registration, and packaged VSIX content before every release.
 
 **Recent Release Summary:**
