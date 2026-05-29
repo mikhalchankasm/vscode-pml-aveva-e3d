@@ -169,7 +169,7 @@ function parseFile(filePath: string) {
 		code: 'PML_PARSE_ERROR'
 	}));
 
-	const semanticDiagnostics = createSemanticDiagnostics(parseResult.ast, text, context.fileKind);
+	const semanticDiagnostics = createCliSemanticDiagnostics(parseResult.ast, text, context.fileKind, parseResult.errors.length > 0);
 	const diagnostics = [
 		...parseDiagnostics,
 		...semanticDiagnostics.map(normalizeDiagnostic)
@@ -184,9 +184,9 @@ function parseFile(filePath: string) {
 	};
 }
 
-function createSemanticDiagnostics(ast: ReturnType<Parser['parse']>['ast'], text: string, fileKind: string): Diagnostic[] {
+export function createCliSemanticDiagnostics(ast: ReturnType<Parser['parse']>['ast'], text: string, fileKind: string, hasParseErrors: boolean): Diagnostic[] {
 	const diagnostics: Diagnostic[] = new ArrayIndexChecker().check(ast, text);
-	if (fileKind === 'pmlfrm') {
+	if (fileKind === 'pmlfrm' && !hasParseErrors) {
 		diagnostics.push(...new FormReferenceValidator().check(ast, DiagnosticSeverity.Warning));
 	}
 	return diagnostics;
@@ -409,4 +409,6 @@ function fail(message: string): never {
 	process.exit(2);
 }
 
-main();
+if (require.main === module) {
+	main();
+}

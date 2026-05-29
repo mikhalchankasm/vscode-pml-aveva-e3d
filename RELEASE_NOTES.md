@@ -2,63 +2,58 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.33
+## Current Release - v0.12.34
 
-**Release Date:** 2026-05-19
+**Release Date:** 2026-05-29
 
-**GitHub Release:** [v0.12.33](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.33)
+**GitHub Release:** [v0.12.34](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.34)
 
 ### What Changed
 
-- Restored `$P` print navigation commands by explicitly activating print actions and accepting supported PML file extensions even when language activation is still settling.
-- Added direct Command Palette entries for `$P` print actions, scoped to supported PML file extensions.
-- Reduced false-positive `[0]` array-index diagnostics for likely C#/.NET/PMLNET zero-based collections such as `NET...` form members, `PMLNETCONTROL` gadgets, and .NET-style collection variables.
-- Kept ordinary PML arrays 1-based: cases such as `!arr[0]` and `member .items is ARRAY` still report the diagnostic.
-- Added method declaration hover usage previews so `define method .name(...)` shows the first matching references with clickable file/line links.
-- Added Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, including parser acceptance and line-start hover help.
-- Refined method usage preview truncation for longer PML lines and avoided redundant Outline re-indexing when the current document version is already indexed.
-- Added compact hover help for the built-in `!!CE` DBREF current-element variable.
-- Simplified user-method hover layout so declaration hovers focus on `USAGES`, while call-site hovers show a clickable `DEFINED` link back to the method declaration.
-- Added low-noise `ELEMENTTYPE` metadata method completions and hover docs for distinct methods such as `isudet`, `systemtype`, and `membertypes`.
+- Added a unified `PML: Quick Actions and Presets...` launcher for common cleanup tools, `$P` print actions, documentation helpers, and practical PML starter blocks.
+- Added `pml.prints.actions` as the clearer `$P` print action picker command while keeping `pml.prints.clear` as a legacy alias.
+- Added the stable PML Assistant extension CLI contract for parse, diagnostics, workspace symbols, and scope queries.
+- Added initial VS Code Agent Kit bridge commands for reviewing the current PML file, mapping findings to Problems diagnostics, checking Agent Kit health, checking live E3D/Avox status, and opening mapped help pages.
+- Fixed VSIX packaging so the bundled CLI entry point `packages/pml-language-server/out/cli.js` is included in installed packages.
+- Reduced `[0]` array-index false positives for UI callback payload arrays while preserving diagnostics for ordinary PML arrays.
+- Added low-noise DBREF object method completions and hover docs for `attribute`, `attributes`, `badref`, `mcount`, and `line`; corrected `delete` docs to describe deleting the PML DBREF object, not the referenced database element.
+- Added focused `Q ATT` command hover help and expanded generic `Q` hover fallback with common `Q VAR` and `Q ATT` forms.
+- Added low-noise ATTRIBUTE metadata method completions and hover docs for distinctive methods such as `isPseudo`, `isUda`, `validValues`, `defaultValue`, and `hidden`.
+- Made documented user-defined method hovers more compact: call sites show only the cleaned method description, while declaration hovers keep usage links in a separate block.
+- Distinguished form-local method completions from built-in/object method completions by using a separate completion icon kind for form methods.
 
 ### Validation
 
-- Bundled compile: passed.
-- TypeScript compile: passed.
-- Language server tests: 210 passed, 3 skipped by default.
-- VSIX packaging: passed; `pml-aveva-e3d-0.12.33.vsix` contains 15 files.
-- VSIX smoke-check: passed; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.33 and no blocked source/config directories are included.
+- Bundled compile: passed with `npm run compile`.
+- TypeScript compile: passed with `npm run compile:tsc`.
+- Language server tests: passed with `npm --prefix packages/pml-language-server run test` (`223 passed`, `3 skipped`).
+- Quick Actions command validation: passed with `npm run validate:quick-actions` (`15 references`).
+- PML Assistant CLI smoke commands: passed for `parse`, `diagnose`, `symbols`, and `scope`; CLI reports contract version `1.0` and extension version `0.12.34`.
+- VSIX packaging: passed with `npm run pack`; `pml-aveva-e3d-0.12.34.vsix` contains 16 files.
+- VSIX smoke-check: passed with `npm run validate:vsix`; manifest/package identity match `mikhalchankasm.pml-aveva-e3d` v0.12.34, `out/extension.js`, `packages/pml-language-server/out/server.js`, and `packages/pml-language-server/out/cli.js` are included, and no blocked source/config directories are included.
 - Local VS Code/Cursor install: passed with `npm run pack:install`.
+- Live E3D validation: not confirmed in this repository; current ecosystem baseline remains `PARTIAL_LIVE_UNAVAILABLE_CLEAN` until real E3D/Avox contact is verified by the owning workspace.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.12.33.vsix`
+- VSIX: `pml-aveva-e3d-0.12.34.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
-- SHA256: `6C967263199CA1445CBE4FF0513E86F7BD5D4A0976E22F1B552A36E7F26C1E06`
+- SHA256: `ECB2FC3911A9CF54E5F3FC93D73CB0EBFF4E1060C0A11765632C8FF8FD5B525C`
 
 ## Active Release Track
 
-### v0.12.x - Form Parser Foundation
+### v0.12.x - Form Parser Foundation and PML Assistant Integration
 
-- `.pmlfrm` parser support is the active focus.
-- Current coverage includes chained method calls, callback assignments, nested frames, form outline metadata, guarded callback/gadget reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, additional form gadgets, command-controller syntax, and fixture/corpus smoke tests.
-- Remaining parser work includes broader PML.NET form patterns, more PML1 command forms in `.pmlfrm`/`.pmlobj`/`.pmlfnc`, and deciding whether to repair or exclude intentionally broken fixture snippets.
-
-### PML Assistant Integration Track
-
-- Added an extension-owned external CLI contract for `e3d-pml-agent-kit`: parse, diagnose, workspace symbols, and scope lookup.
-- Added initial VS Code Agent Kit commands for reviewing PML files, mapping returned findings to Problems diagnostics, checking health, and opening mapped help pages.
-- Agent Kit still owns review policy, normalized findings beyond parser/LSP diagnostics, MCP orchestration, and optional live E3D validation.
-
-### v0.11.x - Parser Hardening and Print Tools
-
-- Added `$P` print/debug tools, PDMS command starter metadata, command hover, packaging cleanup, and parser compatibility fixes for real PML/PMLFNC files.
-- This track is considered stable unless regressions are reported.
+- `.pmlfrm` parser support remains the active foundation track.
+- PML Assistant integration now has an extension-owned static CLI contract, but live E3D validation remains external and must not be inferred from static validation.
+- Current coverage includes chained method calls, callback assignments, nested frames, form outline metadata, guarded callback/gadget reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, additional form gadgets, command-controller syntax, curated hovers/completions, and fixture/corpus smoke tests.
+- Remaining parser work includes broader PML.NET form patterns, more PML1 command forms in `.pmlfrm`/`.pmlobj`/`.pmlfnc`, and moving References/Rename toward AST/index-backed lookup.
 
 ## Next Planned Work
 
-1. Continue `v0.12.x` by mining the installed AVEVA PMLLIB corpus for high-frequency `.pmlfrm`, `.pmlobj`, and `.pmlfnc` parser gaps.
+1. Keep static CLI contract stable and coordinate any contract changes with `D:\GitHub\pml-assistant-workspace`.
 2. Preserve low-noise defaults for `.pmlfrm` diagnostics while expanding parser coverage.
-3. After form parsing stabilizes, move references/rename toward AST/index-based lookup.
+3. Add stronger extension-host smoke checks for command registration, packaged CLI availability, and Agent Kit setup errors.
+4. Continue curated completions/hovers by receiver type without flooding member completion lists.
 
 For full history, see [CHANGELOG.md](CHANGELOG.md).

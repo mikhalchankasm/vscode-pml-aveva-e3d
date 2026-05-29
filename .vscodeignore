@@ -73,3 +73,4 @@ out/**/*.map
 # Include ONLY these bundled files
 !out/extension.js
 !packages/pml-language-server/out/server.js
+!packages/pml-language-server/out/cli.js

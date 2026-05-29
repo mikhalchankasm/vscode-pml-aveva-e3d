@@ -4,6 +4,12 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## Unreleased
 
+## [0.12.34] - 2026-05-29
+
+### Fixed
+
+- Include the bundled PML Assistant CLI entry point in packaged VSIX builds so the extension-owned CLI contract is available after installation.
+
 ### Improved
 
 - Add a unified `PML: Quick Actions and Presets...` launcher for common cleanup tools, `$P` print actions, documentation helpers, and practical PML starter blocks; the launcher is available from the PML editor context menu even without a selection.

@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.12.33",
+  "version": "0.12.34",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -950,7 +950,8 @@
     "pack": "node scripts/pack.cjs",
     "install:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reinstall.ps1",
     "pack:install": "npm run pack && npm run install:local",
-    "prepare": "husky"
+    "prepare": "husky",
+    "validate:vsix": "node scripts/validate-vsix.cjs"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
