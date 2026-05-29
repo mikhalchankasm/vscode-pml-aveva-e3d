@@ -46,7 +46,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
         });
 
         this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 80);
-        this.statusBarItem.command = 'pml.prints.clear';
+        this.statusBarItem.command = 'pml.prints.actions';
         this.statusBarItem.tooltip = 'PML print commands in the active file';
 
         this.disposables.push(
@@ -55,6 +55,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             vscode.languages.registerHoverProvider('pml', this),
             vscode.commands.registerCommand('pml.prints.next', () => this.navigatePrint('next')),
             vscode.commands.registerCommand('pml.prints.previous', () => this.navigatePrint('previous')),
+            vscode.commands.registerCommand('pml.prints.actions', () => this.showPrintActions()),
             vscode.commands.registerCommand('pml.prints.clear', () => this.showPrintActions()),
             vscode.commands.registerCommand('pml.prints.commentAll', () => this.commentAllPrints()),
             vscode.commands.registerCommand('pml.prints.uncommentAll', () => this.uncommentAllPrints()),
@@ -106,7 +107,7 @@ export class PMLPrintTools implements vscode.Disposable, vscode.HoverProvider {
             commandLink('Next', 'pml.prints.next'),
             commandLink('Comment', 'pml.prints.commentLine', [{ line: print.line, text: print.text }]),
             commandLink('Delete', 'pml.prints.deleteLine', [{ line: print.line, text: print.text }]),
-            commandLink('Actions', 'pml.prints.clear')
+            commandLink('Actions', 'pml.prints.actions')
         ].join(' | '));
 
         return new vscode.Hover(markdown, print.range);

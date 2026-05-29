@@ -26,6 +26,7 @@
   "icon": "./icons/pml-icon.png",
   "activationEvents": [
     "onLanguage:pml",
+    "onCommand:pml.quickActions.open",
     "onCommand:pml.agentKit.reviewCurrentFile",
     "onCommand:pml.agentKit.explainCurrentFinding",
     "onCommand:pml.agentKit.openHelpForFinding",
@@ -33,6 +34,7 @@
     "onCommand:pml.agentKit.checkLiveE3dAvoxStatus",
     "onCommand:pml.prints.next",
     "onCommand:pml.prints.previous",
+    "onCommand:pml.prints.actions",
     "onCommand:pml.prints.clear",
     "onCommand:pml.prints.commentAll",
     "onCommand:pml.prints.uncommentAll",
@@ -105,6 +107,12 @@
       }
     ],
     "commands": [
+      {
+        "command": "pml.quickActions.open",
+        "title": "Quick Actions and Presets...",
+        "category": "PML",
+        "icon": "$(zap)"
+      },
       {
         "command": "pml.agentKit.reviewCurrentFile",
         "title": "Review Current File",
@@ -253,8 +261,14 @@
         "icon": "$(arrow-up)"
       },
       {
-        "command": "pml.prints.clear",
+        "command": "pml.prints.actions",
         "title": "$P Print Actions",
+        "category": "PML Prints",
+        "icon": "$(output)"
+      },
+      {
+        "command": "pml.prints.clear",
+        "title": "$P Print Actions (Legacy Alias)",
         "category": "PML Prints",
         "icon": "$(output)"
       },
@@ -406,11 +420,6 @@
         "id": "pml.array",
         "label": "PML - Array",
         "icon": "$(symbol-array)"
-      },
-      {
-        "id": "pml.quickActions",
-        "label": "PML - Quick Action",
-        "icon": "$(zap)"
       },
       {
         "id": "pml.examples",
@@ -581,13 +590,13 @@
     "menus": {
       "editor/context": [
         {
-          "command": "pml.agentKit.reviewCurrentFile",
+          "command": "pml.quickActions.open",
           "when": "editorLangId == pml",
           "group": "1_pml@0"
         },
         {
-          "submenu": "pml.quickActions",
-          "when": "editorLangId == pml && editorHasSelection",
+          "command": "pml.agentKit.reviewCurrentFile",
+          "when": "editorLangId == pml",
           "group": "1_pml@1"
         },
         {
@@ -672,7 +681,7 @@
           "group": "6_comments@2"
         },
         {
-          "command": "pml.prints.clear",
+          "command": "pml.prints.actions",
           "group": "7_prints@1"
         },
         {
@@ -752,108 +761,6 @@
           "group": "3_add@1"
         }
       ],
-      "pml.quickActions": [
-        {
-          "command": "pml.sortLinesAsc",
-          "group": "1_sort@1"
-        },
-        {
-          "command": "pml.sortLinesDesc",
-          "group": "1_sort@2"
-        },
-        {
-          "command": "pml.sortLinesLength",
-          "group": "1_sort@3"
-        },
-        {
-          "command": "pml.sortLinesSmart",
-          "group": "1_sort@4"
-        },
-        {
-          "command": "pml.removeDuplicates",
-          "group": "2_duplicates@1"
-        },
-        {
-          "command": "pml.removeConsecutiveDuplicates",
-          "group": "2_duplicates@2"
-        },
-        {
-          "command": "pml.removeEmptyLines",
-          "group": "3_whitespace@1"
-        },
-        {
-          "command": "pml.removeWhitespaceLines",
-          "group": "3_whitespace@2"
-        },
-        {
-          "command": "pml.trimWhitespace",
-          "group": "3_whitespace@3"
-        },
-        {
-          "command": "pml.tabsToSpaces",
-          "group": "3_whitespace@4"
-        },
-        {
-          "command": "pml.spacesToTabs",
-          "group": "3_whitespace@5"
-        },
-        {
-          "command": "pml.extractVariables",
-          "group": "4_extract@1"
-        },
-        {
-          "command": "pml.extractMethods",
-          "group": "4_extract@2"
-        },
-        {
-          "command": "pml.alignPML",
-          "group": "5_align@1"
-        },
-        {
-          "command": "pml.addComments",
-          "group": "6_comments@1"
-        },
-        {
-          "command": "pml.removeComments",
-          "group": "6_comments@2"
-        },
-        {
-          "command": "pml.prints.clear",
-          "group": "7_prints@1"
-        },
-        {
-          "command": "pml.prints.next",
-          "group": "7_prints@2"
-        },
-        {
-          "command": "pml.prints.previous",
-          "group": "7_prints@3"
-        },
-        {
-          "command": "pml.prints.commentAll",
-          "group": "7_prints@4"
-        },
-        {
-          "command": "pml.prints.uncommentAll",
-          "group": "7_prints@5"
-        },
-        {
-          "command": "pml.prints.deleteAll",
-          "group": "7_prints@6"
-        },
-        {
-          "submenu": "pml.forms",
-          "group": "7_forms"
-        },
-        {
-          "submenu": "pml.array",
-          "group": "8_array"
-        },
-        {
-          "submenu": "pml.examples",
-          "group": "9_examples"
-        }
-      ],
       "pml.examples": [
         {
           "command": "pml.openButtonExample",
@@ -877,6 +784,14 @@
         }
       ],
       "commandPalette": [
+        {
+          "command": "pml.prints.clear",
+          "when": "false"
+        },
+        {
+          "command": "pml.quickActions.open",
+          "when": "editorLangId == pml"
+        },
         {
           "command": "pml.sortMethodsAscending",
           "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
@@ -942,7 +857,7 @@
           "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
         },
         {
-          "command": "pml.prints.clear",
+          "command": "pml.prints.actions",
           "when": "resourceExtname == '.pml' || resourceExtname == '.pmlobj' || resourceExtname == '.pmlfnc' || resourceExtname == '.pmlfrm' || resourceExtname == '.pmlmac' || resourceExtname == '.pmlcmd'"
         },
         {
@@ -1020,6 +935,7 @@
     "vscode:prepublish": "npm run esbuild-base -- --production",
     "compile": "npm run esbuild-base",
     "compile:tsc": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
+    "validate:quick-actions": "node scripts/validate-quick-actions.cjs",
     "watch": "npm run esbuild-base -- --watch",
     "watch:tsc": "tsc -watch -p ./",
     "esbuild-base": "node esbuild.js",

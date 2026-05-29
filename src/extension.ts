@@ -6,6 +6,7 @@ import { PMLCodeActionProvider } from './codeActions';
 import { activateLanguageServer, deactivateLanguageServer, ClientState } from './languageClient';
 import { sortMethodsAscending, sortMethodsDescending } from './commands/sortMethods';
 import { PMLPrintTools } from './printCommands';
+import { registerPMLQuickActions } from './quickActions';
 import { registerAgentKitCommands } from './agentKit';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -61,6 +62,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register $P print helpers
     new PMLPrintTools(context);
+
+    // Register the unified action launcher
+    registerPMLQuickActions(context);
 
     // Register Agent Kit review and help commands
     registerAgentKitCommands(context);
