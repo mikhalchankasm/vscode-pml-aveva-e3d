@@ -25,6 +25,20 @@ type DocumentVariable = {
 	line: number;           // Line where first defined
 };
 
+type FormThisMember = {
+	name: string;
+	kind: CompletionItemKind;
+	detail: string;
+};
+
+type FormFrameCompletionSource = {
+	name: string;
+	frames: FormFrameCompletionSource[];
+	gadgets: { name: string; gadgetType: string }[];
+};
+
+type ReceiverType = 'STRING' | 'REAL' | 'ARRAY' | 'DBREF' | 'ELEMENTTYPE' | 'ATTRIBUTE';
+
 export class CompletionProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
 
@@ -43,11 +57,15 @@ export class CompletionProvider {
 
 			const isFormFile = document.uri.toLowerCase().endsWith('.pmlfrm');
 			if (isFormFile && this.isThisMemberCompletionContext(textBeforeCursor)) {
-				// Keep !this. focused on form-local methods; other receivers still need built-ins.
-				return currentMethods;
+				// Keep !this. focused on form-local members; other receivers still need built-ins.
+				return [
+					...currentMethods,
+					...this.getCurrentFormMemberCompletions(document)
+				];
 			}
 
-			const builtInItems = this.getBuiltInMethodCompletions();
+			const receiverType = this.inferReceiverType(document, position, textBeforeCursor);
+			const builtInItems = this.getBuiltInMethodCompletions(receiverType);
 			return [...currentMethods, ...builtInItems];
 		}
 
@@ -89,8 +107,8 @@ export class CompletionProvider {
 	/**
 	 * Get built-in method completions (STRING, REAL, ARRAY, DBREF)
 	 */
-	private getBuiltInMethodCompletions(): CompletionItem[] {
-		return [
+	private getBuiltInMethodCompletions(receiverType?: ReceiverType): CompletionItem[] {
+		const items = [
 			// STRING methods
 			{ label: 'upcase', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Convert to uppercase' },
 			{ label: 'lowcase', kind: CompletionItemKind.Method, detail: 'STRING -> STRING', documentation: 'Convert to lowercase' },
@@ -154,6 +172,12 @@ export class CompletionProvider {
 			{ label: 'hidden', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is hidden from Attribute Utility and Q ATT output.' },
 			{ label: 'protected', kind: CompletionItemKind.Method, detail: 'ATTRIBUTE -> BOOLEAN', documentation: 'Whether the attribute is protected from normal visibility.' },
 		];
+
+		if (!receiverType) {
+			return items;
+		}
+
+		return items.filter(item => typeof item.detail === 'string' && item.detail.startsWith(`${receiverType} ->`));
 	}
 
 	/**
@@ -384,6 +408,112 @@ export class CompletionProvider {
 		}));
 	}
 
+	private getCurrentFormMemberCompletions(document: TextDocument): CompletionItem[] {
+		const memberMap = new Map<string, FormThisMember>();
+		const fileSymbols = this.symbolIndex.getFileSymbols(document.uri);
+
+		for (const form of fileSymbols?.forms ?? []) {
+			for (const member of form.members) {
+				this.addFormThisMember(memberMap, {
+					name: member.name,
+					kind: CompletionItemKind.Property,
+					detail: `Form member ${member.memberType}`
+				});
+			}
+			for (const gadget of form.gadgets) {
+				this.addFormThisMember(memberMap, {
+					name: gadget.name,
+					kind: CompletionItemKind.Field,
+					detail: `${gadget.gadgetType} gadget`
+				});
+			}
+			for (const frame of form.frames) {
+				this.addFormThisMember(memberMap, {
+					name: frame.name,
+					kind: CompletionItemKind.Field,
+					detail: 'frame'
+				});
+				this.collectFrameCompletions(frame, memberMap);
+			}
+		}
+
+		for (const member of this.extractFormMembersFromDocument(document)) {
+			this.addFormThisMember(memberMap, member);
+		}
+
+		return Array.from(memberMap.values()).map(member => ({
+			label: `.${member.name}`,
+			kind: member.kind,
+			detail: member.detail,
+			insertText: member.name,
+			filterText: member.name,
+			sortText: `1${member.name}`
+		}));
+	}
+
+	private collectFrameCompletions(
+		frame: FormFrameCompletionSource,
+		memberMap: Map<string, FormThisMember>
+	): void {
+		for (const gadget of frame.gadgets) {
+			this.addFormThisMember(memberMap, {
+				name: gadget.name,
+				kind: CompletionItemKind.Field,
+				detail: `${gadget.gadgetType} gadget`
+			});
+		}
+
+		for (const childFrame of frame.frames) {
+			this.addFormThisMember(memberMap, {
+				name: childFrame.name,
+				kind: CompletionItemKind.Field,
+				detail: 'frame'
+			});
+			this.collectFrameCompletions(childFrame, memberMap);
+		}
+	}
+
+	private extractFormMembersFromDocument(document: TextDocument): FormThisMember[] {
+		const members: FormThisMember[] = [];
+		const lines = document.getText().split(/\r?\n/);
+		const gadgetPattern = /^\s*(button|text|combo|option|toggle|frame|list|view|alpha|paragraph|rgroup|menu|bar)\s+\.([A-Za-z_][A-Za-z0-9_]*)\b/i;
+		const memberPattern = /^\s*member\s+\.([A-Za-z_][A-Za-z0-9_]*)\s+is\s+([A-Za-z_][A-Za-z0-9_]*)\b/i;
+
+		for (const line of lines) {
+			if (line.trim().startsWith('--')) {
+				continue;
+			}
+
+			const gadgetMatch = line.match(gadgetPattern);
+			if (gadgetMatch) {
+				members.push({
+					name: gadgetMatch[2],
+					kind: CompletionItemKind.Field,
+					detail: `${gadgetMatch[1].toLowerCase()} gadget`
+				});
+				continue;
+			}
+
+			const memberMatch = line.match(memberPattern);
+			if (memberMatch) {
+				members.push({
+					name: memberMatch[1],
+					kind: CompletionItemKind.Property,
+					detail: `Form member ${memberMatch[2].toUpperCase()}`
+				});
+			}
+		}
+
+		return members;
+	}
+
+	private addFormThisMember(memberMap: Map<string, FormThisMember>, member: FormThisMember): void {
+		const key = member.name.toLowerCase();
+		if (!memberMap.has(key)) {
+			memberMap.set(key, member);
+		}
+	}
+
 	/**
 	 * Get variable completions from the entire document.
 	 * Extracts all variables (! and !!) and offers them as completions.
@@ -547,6 +677,102 @@ export class CompletionProvider {
 
 	private isThisMemberCompletionContext(textBeforeCursor: string): boolean {
 		return /(?:^|[^\w!])!this\.\s*$/i.test(textBeforeCursor);
+	}
+
+	private inferReceiverType(
+		document: TextDocument,
+		position: { line: number; character: number },
+		textBeforeCursor: string
+	): ReceiverType | undefined {
+		const thisMemberType = this.inferThisMemberReceiverType(document, textBeforeCursor);
+		if (thisMemberType) {
+			return thisMemberType;
+		}
+
+		const receiverMatch = textBeforeCursor.match(/(?:^|[^\w!])(!{1,2}[A-Za-z][A-Za-z0-9_]*)\.\s*$/);
+		if (!receiverMatch) {
+			return undefined;
+		}
+
+		const receiverName = receiverMatch[1].toLowerCase();
+		const textBeforePosition = document.getText({
+			start: { line: 0, character: 0 },
+			end: position
+		});
+		const lines = textBeforePosition.split(/\r?\n/);
+
+		for (const line of lines) {
+			if (line.trim().startsWith('--')) {
+				continue;
+			}
+
+			const declaredType = this.matchDeclaredVariableType(line, receiverName) ??
+				this.matchConstructedVariableType(line, receiverName);
+			if (declaredType) {
+				return declaredType;
+			}
+		}
+
+		return undefined;
+	}
+
+	private inferThisMemberReceiverType(document: TextDocument, textBeforeCursor: string): ReceiverType | undefined {
+		const memberMatch = textBeforeCursor.match(/(?:^|[^\w!])!this\.([A-Za-z_][A-Za-z0-9_]*)\.\s*$/i);
+		if (!memberMatch) {
+			return undefined;
+		}
+
+		const memberName = memberMatch[1].toLowerCase();
+		const fileSymbols = this.symbolIndex.getFileSymbols(document.uri);
+		for (const form of fileSymbols?.forms ?? []) {
+			const member = form.members.find(candidate => candidate.name.toLowerCase() === memberName);
+			const memberType = this.normalizeReceiverType(member?.memberType);
+			if (memberType) {
+				return memberType;
+			}
+		}
+
+		return this.inferThisMemberReceiverTypeFromText(document, memberName);
+	}
+
+	private inferThisMemberReceiverTypeFromText(document: TextDocument, memberName: string): ReceiverType | undefined {
+		const memberPattern = new RegExp(`^\\s*member\\s+\\.${this.escapeRegex(memberName)}\\s+is\\s+(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\b`, 'im');
+		const match = document.getText().match(memberPattern);
+		return this.normalizeReceiverType(match?.[1]);
+	}
+
+	private matchDeclaredVariableType(line: string, receiverName: string): ReceiverType | undefined {
+		const escapedName = this.escapeRegex(receiverName);
+		const declarationPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s+is\\s+(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\b`, 'i');
+		const match = line.match(declarationPattern);
+		return this.normalizeReceiverType(match?.[2]);
+	}
+
+	private matchConstructedVariableType(line: string, receiverName: string): ReceiverType | undefined {
+		const escapedName = this.escapeRegex(receiverName);
+		const assignmentPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s*=\\s*(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE)\\s*\\(`, 'i');
+		const match = line.match(assignmentPattern);
+		return this.normalizeReceiverType(match?.[2]);
+	}
+
+	private normalizeReceiverType(typeName?: string): ReceiverType | undefined {
+		switch (typeName?.toUpperCase()) {
+			case 'STRING':
+			case 'ARRAY':
+			case 'DBREF':
+			case 'ELEMENTTYPE':
+			case 'ATTRIBUTE':
+				return typeName.toUpperCase() as ReceiverType;
+			case 'REAL':
+			case 'INTEGER':
+				return 'REAL';
+			default:
+				return undefined;
+		}
+	}
+
+	private escapeRegex(value: string): string {
+		return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
 	private formatParameterList(parameters: string[]): string {

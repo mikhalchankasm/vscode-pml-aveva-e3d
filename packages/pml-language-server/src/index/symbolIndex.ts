@@ -3,7 +3,19 @@
  */
 
 import { Range } from 'vscode-languageserver/node';
-import { Program, MethodDefinition, ObjectDefinition, FormDefinition, FrameDefinition, GadgetDeclaration } from '../ast/nodes';
+import {
+	Program,
+	Statement,
+	Expression,
+	MethodDefinition,
+	ObjectDefinition,
+	FormDefinition,
+	FrameDefinition,
+	GadgetDeclaration,
+	Identifier,
+	MemberDeclaration,
+	typeToString
+} from '../ast/nodes';
 import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
 
 /**
@@ -37,6 +49,12 @@ export interface MethodInfo extends SymbolInfo {
 	signature: string; // .methodName(!param1, !param2)
 }
 
+export interface MethodReferenceInfo {
+	name: string;
+	uri: string;
+	range: Range;
+}
+
 /**
  * Object-specific information
  */
@@ -51,8 +69,15 @@ export interface ObjectInfo extends SymbolInfo {
 export interface FormInfo extends SymbolInfo {
 	kind: SymbolKind.Form;
 	frames: FrameInfo[]; // Frame hierarchy
+	members: FormMemberInfo[];
 	gadgets: GadgetInfo[]; // Top-level form gadgets
 	callbacks: Record<string, string>; // gadget -> method
+}
+
+export interface FormMemberInfo {
+	name: string;
+	memberType: string;
+	range: Range;
 }
 
 export interface FrameInfo {
@@ -75,6 +100,7 @@ export interface FileSymbols {
 	uri: string;
 	version: number; // Document version for incremental updates
 	methods: MethodInfo[];
+	methodReferences: MethodReferenceInfo[];
 	objects: ObjectInfo[];
 	forms: FormInfo[];
 	lastIndexed: number; // Timestamp
@@ -87,6 +113,7 @@ export interface FileSymbols {
 export class SymbolIndex {
 	// Map: symbol name (lowercase) -> list of locations
 	private methodIndex: Map<string, MethodInfo[]> = new Map();
+	private methodReferenceIndex: Map<string, MethodReferenceInfo[]> = new Map();
 	private objectIndex: Map<string, ObjectInfo[]> = new Map();
 	private formIndex: Map<string, FormInfo[]> = new Map();
 
@@ -115,6 +142,7 @@ export class SymbolIndex {
 			uri,
 			version,
 			methods: [],
+			methodReferences: [],
 			objects: [],
 			forms: [],
 			lastIndexed: Date.now()
@@ -126,6 +154,9 @@ export class SymbolIndex {
 				const methodInfo = this.extractMethodInfo(node, uri, documentText);
 				fileSymbols.methods.push(methodInfo);
 				this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
+				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
+			} else if (node.type === 'FunctionDefinition') {
+				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
 			} else if (node.type === 'ObjectDefinition') {
 				const objectInfo = this.extractObjectInfo(node, uri);
 				fileSymbols.objects.push(objectInfo);
@@ -136,12 +167,18 @@ export class SymbolIndex {
 					const methodInfo = this.extractMethodInfo(method, uri, documentText, objectInfo.name);
 					fileSymbols.methods.push(methodInfo);
 					this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
+					this.indexMethodReferences(method.body, uri, fileSymbols.methodReferences);
 				}
 			} else if (node.type === 'FormDefinition') {
 				const formInfo = this.extractFormInfo(node, uri);
 				fileSymbols.forms.push(formInfo);
 				this.addToIndex(this.formIndex, formInfo.name.toLowerCase(), formInfo);
+				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
 			}
+		}
+
+		for (const reference of fileSymbols.methodReferences) {
+			this.addToIndex(this.methodReferenceIndex, reference.name.toLowerCase(), reference);
 		}
 
 		// Store file symbols
@@ -158,6 +195,9 @@ export class SymbolIndex {
 		// Remove from indexes
 		for (const method of fileSymbols.methods) {
 			this.removeFromIndex(this.methodIndex, method.name.toLowerCase(), method);
+		}
+		for (const reference of fileSymbols.methodReferences) {
+			this.removeFromIndex(this.methodReferenceIndex, reference.name.toLowerCase(), reference);
 		}
 		for (const object of fileSymbols.objects) {
 			this.removeFromIndex(this.objectIndex, object.name.toLowerCase(), object);
@@ -182,6 +222,10 @@ export class SymbolIndex {
 	 */
 	public findMethod(name: string): MethodInfo[] {
 		return this.methodIndex.get(name.toLowerCase()) || [];
+	}
+
+	public findMethodReferences(name: string): MethodReferenceInfo[] {
+		return this.methodReferenceIndex.get(name.toLowerCase()) || [];
 	}
 
 	/**
@@ -304,9 +348,12 @@ export class SymbolIndex {
 	 */
 	public clear(): void {
 		this.methodIndex.clear();
+		this.methodReferenceIndex.clear();
 		this.objectIndex.clear();
 		this.formIndex.clear();
 		this.fileSymbols.clear();
+		this.documentTexts.clear();
+		this.documentAccessOrder = [];
 	}
 
 	/**
@@ -366,6 +413,7 @@ export class SymbolIndex {
 			uri,
 			range: node.range,
 			frames: node.frames.map(frame => this.extractFrameInfo(frame)),
+			members: node.members.map(member => this.extractFormMemberInfo(member)),
 			gadgets: node.body
 				.filter((statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration')
 				.map(gadget => this.extractGadgetInfo(gadget)),
@@ -390,10 +438,164 @@ export class SymbolIndex {
 		};
 	}
 
+	private extractFormMemberInfo(node: MemberDeclaration): FormMemberInfo {
+		return {
+			name: node.name,
+			memberType: typeToString(node.memberType),
+			range: node.range
+		};
+	}
+
+	private indexMethodReferences(statements: Statement[], uri: string, references: MethodReferenceInfo[]): void {
+		for (const statement of statements) {
+			this.visitStatementForMethodReferences(statement, uri, references);
+		}
+	}
+
+	private visitStatementForMethodReferences(statement: Statement, uri: string, references: MethodReferenceInfo[]): void {
+		switch (statement.type) {
+			case 'MethodDefinition':
+			case 'FunctionDefinition':
+				this.indexMethodReferences(statement.body, uri, references);
+				break;
+			case 'FormDefinition':
+				this.indexMethodReferences(statement.body, uri, references);
+				break;
+			case 'VariableDeclaration':
+				if (statement.initializer) {
+					this.visitExpressionForMethodReferences(statement.initializer, uri, references);
+				}
+				break;
+			case 'ExpressionStatement':
+				this.visitExpressionForMethodReferences(statement.expression, uri, references);
+				break;
+			case 'IfStatement':
+				this.visitExpressionForMethodReferences(statement.test, uri, references);
+				this.indexMethodReferences(statement.consequent, uri, references);
+				if (Array.isArray(statement.alternate)) {
+					this.indexMethodReferences(statement.alternate, uri, references);
+				} else if (statement.alternate) {
+					this.visitStatementForMethodReferences(statement.alternate, uri, references);
+				}
+				break;
+			case 'DoStatement':
+				if (statement.collection) {
+					this.visitExpressionForMethodReferences(statement.collection, uri, references);
+				}
+				if (statement.from) {
+					this.visitExpressionForMethodReferences(statement.from, uri, references);
+				}
+				if (statement.to) {
+					this.visitExpressionForMethodReferences(statement.to, uri, references);
+				}
+				if (statement.by) {
+					this.visitExpressionForMethodReferences(statement.by, uri, references);
+				}
+				if (statement.condition) {
+					this.visitExpressionForMethodReferences(statement.condition, uri, references);
+				}
+				this.indexMethodReferences(statement.body, uri, references);
+				break;
+			case 'HandleStatement':
+				this.indexMethodReferences(statement.body, uri, references);
+				if (statement.alternate) {
+					this.indexMethodReferences(statement.alternate, uri, references);
+				}
+				break;
+			case 'ReturnStatement':
+				if (statement.argument) {
+					this.visitExpressionForMethodReferences(statement.argument, uri, references);
+				}
+				break;
+			case 'BreakStatement':
+			case 'ContinueStatement':
+				if (statement.condition) {
+					this.visitExpressionForMethodReferences(statement.condition, uri, references);
+				}
+				break;
+		}
+	}
+
+	private visitExpressionForMethodReferences(expression: Expression, uri: string, references: MethodReferenceInfo[]): void {
+		switch (expression.type) {
+			case 'CallExpression':
+				this.addCallReference(expression.callee, uri, references);
+				this.visitExpressionForMethodReferences(expression.callee, uri, references);
+				for (const argument of expression.arguments) {
+					this.visitExpressionForMethodReferences(argument, uri, references);
+				}
+				break;
+			case 'MemberExpression':
+				this.visitExpressionForMethodReferences(expression.object, uri, references);
+				this.visitExpressionForMethodReferences(expression.property, uri, references);
+				break;
+			case 'BinaryExpression':
+				this.visitExpressionForMethodReferences(expression.left, uri, references);
+				this.visitExpressionForMethodReferences(expression.right, uri, references);
+				break;
+			case 'UnaryExpression':
+				this.visitExpressionForMethodReferences(expression.argument, uri, references);
+				break;
+			case 'ArrayExpression':
+				for (const element of expression.elements) {
+					this.visitExpressionForMethodReferences(element, uri, references);
+				}
+				break;
+			case 'AssignmentExpression':
+				this.visitExpressionForMethodReferences(expression.left, uri, references);
+				this.visitExpressionForMethodReferences(expression.right, uri, references);
+				break;
+		}
+	}
+
+	private addCallReference(callee: Expression, uri: string, references: MethodReferenceInfo[]): void {
+		const identifier = this.methodIdentifierFromCallee(callee);
+		if (!identifier) {
+			return;
+		}
+
+		references.push({
+			name: identifier.name,
+			uri,
+			range: this.methodNameRange(identifier)
+		});
+	}
+
+	private methodNameRange(identifier: Identifier): Range {
+		if (identifier.range.start.line !== identifier.range.end.line) {
+			return identifier.range;
+		}
+
+		const tokenLength = identifier.range.end.character - identifier.range.start.character;
+		if (tokenLength <= identifier.name.length) {
+			return identifier.range;
+		}
+
+		return {
+			start: {
+				line: identifier.range.end.line,
+				character: identifier.range.end.character - identifier.name.length
+			},
+			end: identifier.range.end
+		};
+	}
+
+	private methodIdentifierFromCallee(callee: Expression): Identifier | undefined {
+		if (callee.type === 'Identifier' && callee.scope === 'method') {
+			return callee;
+		}
+
+		if (callee.type === 'MemberExpression' && !callee.computed && callee.property.type === 'Identifier') {
+			return callee.property;
+		}
+
+		return undefined;
+	}
+
 	/**
 	 * Helper: Add to index
 	 */
-	private addToIndex<T extends SymbolInfo>(index: Map<string, T[]>, key: string, value: T): void {
+	private addToIndex<T extends { uri: string }>(index: Map<string, T[]>, key: string, value: T): void {
 		const existing = index.get(key);
 		if (existing) {
 			existing.push(value);
@@ -405,7 +607,7 @@ export class SymbolIndex {
 	/**
 	 * Helper: Remove from index
 	 */
-	private removeFromIndex<T extends SymbolInfo>(index: Map<string, T[]>, key: string, value: T): void {
+	private removeFromIndex<T extends { uri: string }>(index: Map<string, T[]>, key: string, value: T): void {
 		const existing = index.get(key);
 		if (!existing) return;
 

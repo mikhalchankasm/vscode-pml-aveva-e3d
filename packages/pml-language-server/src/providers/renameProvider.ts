@@ -127,6 +127,14 @@ export class RenameProvider {
 		const newMethodName = newName.startsWith('.') ? newName.substring(1) : newName;
 
 		const allFileUris = this.symbolIndex.getAllFileUris();
+		const indexedEditsByUri = this.groupTextEditsByUri(
+			this.symbolIndex
+				.findMethodReferences(oldName)
+				.map(reference => ({
+					uri: reference.uri,
+					edit: TextEdit.replace(reference.range, newMethodName)
+				}))
+		);
 
 		// Process files in parallel batches
 		const batchSize = 10;
@@ -136,7 +144,10 @@ export class RenameProvider {
 				const text = await this.getFileText(fileUri);
 				if (!text) return;
 
-				const edits = this.findAndReplaceMethod(text, oldName, newMethodName);
+				const edits = this.deduplicateTextEdits([
+					...(indexedEditsByUri.get(fileUri) ?? []),
+					...this.findAndReplaceMethod(text, oldName, newMethodName)
+				]);
 				if (edits.length > 0) {
 					changes[fileUri] = edits;
 				}
@@ -454,6 +465,43 @@ export class RenameProvider {
 		}
 
 		return text[nextOffset] === '.' || text[nextOffset] === '(';
+	}
+
+	private deduplicateTextEdits(edits: TextEdit[]): TextEdit[] {
+		const seen = new Set<string>();
+		const unique: TextEdit[] = [];
+
+		for (const edit of edits) {
+			const key = `${this.rangeKey(edit.range)}:${edit.newText}`;
+			if (seen.has(key)) {
+				continue;
+			}
+			seen.add(key);
+			unique.push(edit);
+		}
+
+		return unique;
+	}
+
+	private rangeKey(range: Range): string {
+		return [
+			range.start.line,
+			range.start.character,
+			range.end.line,
+			range.end.character
+		].join(':');
+	}
+
+	private groupTextEditsByUri(entries: { uri: string; edit: TextEdit }[]): Map<string, TextEdit[]> {
+		const grouped = new Map<string, TextEdit[]>();
+
+		for (const entry of entries) {
+			const group = grouped.get(entry.uri) ?? [];
+			group.push(entry.edit);
+			grouped.set(entry.uri, group);
+		}
+
+		return grouped;
 	}
 
 	/**

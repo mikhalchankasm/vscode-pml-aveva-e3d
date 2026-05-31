@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.12.34",
+  "version": "0.12.35",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -22,26 +22,13 @@
     "pdms",
     "macro"
   ],
+  "galleryBanner": {
+    "color": "#1f4f7a",
+    "theme": "dark"
+  },
+  "qna": "marketplace",
   "main": "./out/extension.js",
   "icon": "./icons/pml-icon.png",
-  "activationEvents": [
-    "onLanguage:pml",
-    "onCommand:pml.quickActions.open",
-    "onCommand:pml.agentKit.reviewCurrentFile",
-    "onCommand:pml.agentKit.explainCurrentFinding",
-    "onCommand:pml.agentKit.openHelpForFinding",
-    "onCommand:pml.agentKit.checkHealth",
-    "onCommand:pml.agentKit.checkLiveE3dAvoxStatus",
-    "onCommand:pml.prints.next",
-    "onCommand:pml.prints.previous",
-    "onCommand:pml.prints.actions",
-    "onCommand:pml.prints.clear",
-    "onCommand:pml.prints.commentAll",
-    "onCommand:pml.prints.uncommentAll",
-    "onCommand:pml.prints.deleteAll",
-    "onCommand:pml.prints.commentLine",
-    "onCommand:pml.prints.deleteLine"
-  ],
   "contributes": {
     "keybindings": [
       {
@@ -935,6 +922,8 @@
     "vscode:prepublish": "npm run esbuild-base -- --production",
     "compile": "npm run esbuild-base",
     "compile:tsc": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
+    "validate:extension-smoke": "node scripts/validate-extension-smoke.cjs",
+    "test:extension-smoke": "node scripts/run-extension-host-smoke.cjs",
     "validate:quick-actions": "node scripts/validate-quick-actions.cjs",
     "watch": "npm run esbuild-base -- --watch",
     "watch:tsc": "tsc -watch -p ./",
@@ -961,6 +950,7 @@
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
+    "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.25.11",
     "eslint": "^8.57.1",
     "husky": "^9.1.7",

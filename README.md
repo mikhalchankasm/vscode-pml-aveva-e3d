@@ -1,7 +1,7 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.34-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.12.35-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
 
@@ -66,7 +66,7 @@ npm run pml:symbols -- <folder> --json
 npm run pml:scope -- <file> --line <line> --column <column> --json
 ```
 
-See [docs/pml-assistant-cli.md](docs/pml-assistant-cli.md) for the JSON contract and ownership boundaries.
+See [docs/pml-assistant-cli.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/docs/pml-assistant-cli.md) for the JSON contract and ownership boundaries.
 
 ### 🖨️ `$P` Print Tools
 
@@ -99,10 +99,10 @@ Entries include the first command word, category, and short hover text. Add only
 
 ### 📚 Documentation
 
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
-- [CHANGELOG.md](CHANGELOG.md) - Version history and updates
-- [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute to the project
-- [examples/](examples/) - PML code examples for testing
+- [TROUBLESHOOTING.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/TROUBLESHOOTING.md) - Common issues and solutions
+- [CHANGELOG.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/CHANGELOG.md) - Version history and updates
+- [CONTRIBUTING.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/CONTRIBUTING.md) - How to contribute to the project
+- [examples/](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/tree/main/examples) - PML code examples for testing
 
 ### 🛠️ Development
 
@@ -133,12 +133,12 @@ vscode-pml-extension/
 ### 🐛 Known Issues
 
 - **Form files** (.pmlfrm) have limited parser support (intentional - complex DSL)
-- **Find All References / Rename** use workspace text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
+- **Find All References / Rename** now prefer indexed method call sites, with text scanning retained for callback strings and dynamic fallback cases.
 - **object ARRAY()** syntax may show "Expected expression" warning (parser limitation, does not affect functionality)
 
 ### 📝 License
 
-MIT License - see [LICENSE](LICENSE)
+MIT License - see [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 ---
 
@@ -209,10 +209,10 @@ Whitelist стартовых слов команд лежит здесь:
 
 ### 📚 Документация
 
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Решение распространенных проблем
-- [CHANGELOG.md](CHANGELOG.md) - История версий и обновлений
-- [CONTRIBUTING.md](CONTRIBUTING.md) - Как внести вклад в проект
-- [examples/](examples/) - Примеры PML кода для тестирования
+- [TROUBLESHOOTING.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/TROUBLESHOOTING.md) - Решение распространенных проблем
+- [CHANGELOG.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/CHANGELOG.md) - История версий и обновлений
+- [CONTRIBUTING.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/CONTRIBUTING.md) - Как внести вклад в проект
+- [examples/](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/tree/main/examples) - Примеры PML кода для тестирования
 
 ### 🛠️ Разработка
 
@@ -243,18 +243,18 @@ vscode-pml-extension/
 ### 🐛 Известные проблемы
 
 - **Файлы форм** (.pmlfrm) имеют ограниченную поддержку парсера (намеренно - сложный DSL)
-- **Find All References / Rename** use workspace text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
+- **Find All References / Rename** теперь в первую очередь используют индексированные вызовы методов; текстовый поиск сохранён для callback-строк и динамических fallback-сценариев.
 - **object ARRAY()** может показывать предупреждение "Expected expression" (ограничение парсера, не влияет на функциональность)
 
 ### 📝 Лицензия
 
-MIT License - см. [LICENSE](LICENSE)
+MIT License - см. [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/CONTRIBUTING.md) for guidelines.
 
 ## 💬 Support
 

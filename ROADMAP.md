@@ -1295,8 +1295,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.34
-**Released:** 2026-05-29
+**Version:** 0.12.35
+**Released:** 2026-05-31
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
@@ -1305,29 +1305,32 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **223 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
+- Tests: **233 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
-- ✅ **Stable Packaging** - VSIX ships 15 runtime/user-facing files and stays in GitHub Releases only.
-- ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval and release automation runs TypeScript plus language-server tests before tag creation.
+- ✅ **Stable Packaging** - VSIX ships 16 runtime/user-facing files and stays in GitHub Releases only.
+- ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval and release automation runs TypeScript, language-server tests, extension smoke, extension-host smoke, and VSIX validation before release publication.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 - ✅ **Quick UX Presets** - A single discoverable launcher now groups common cleanup actions, debug-print actions, documentation helpers, and practical starter blocks.
 - ✅ **DBREF and ATTRIBUTE Method Assistance** - Selected DBREF and ATTRIBUTE object method completions and hover docs are available from reviewed AVEVA help slices while avoiding generic method noise.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
+- ✅ **Indexed Method Navigation** - Workspace method References and Rename now use indexed AST call sites first, with text scanning retained for callback-string fallback cases.
+- ✅ **Form Completion UX** - `.pmlfrm` `!this.` completions include form members, frames, and gadgets, with first-pass receiver-aware method filtering for typed members.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
 - **Workspace indexing:** avoid unnecessary full re-index work, add file-change debounce tests, and expose clearer indexing status when a workspace is large.
-- **Completions:** separate built-in method sets by inferred receiver type, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
-- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename share method-reference pattern construction, Rename avoids inactive text for supported symbol kinds, and form Rename updates pipe-delimited callback targets; next move References/Rename toward AST/index-backed lookup.
+- **Completions:** broaden receiver inference from obvious local declarations/constructors to additional safe AST-backed cases, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
+- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename use indexed AST method call sites first, keep text fallback for callback strings, and still need broader coverage for additional dynamic PML invocation forms.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
-- **Smoke validation:** add a lightweight extension-host smoke test for activation, command registration, and packaged VSIX content before every release.
+- **Smoke validation:** expand extension-host smoke coverage for packaged CLI availability, Agent Kit setup errors, and disposable-profile install checks.
 
 **Recent Release Summary:**
+- `v0.12.35`: moves method References/Rename toward AST/index-backed lookup, adds first-pass type-aware member completions, improves `.pmlfrm` `!this.` completions for members/frames/gadgets, adds a missing callback-stub Quick Fix, and strengthens extension/VSIX smoke validation in CI and release workflows.
 - `v0.12.34`: adds the unified Quick Actions launcher, stable PML Assistant static CLI contract, Agent Kit bridge commands, packaged CLI availability, lower-noise callback array diagnostics, compact user-method hovers, focused `Q ATT` hover help, selected DBREF/ATTRIBUTE method completions and hovers, and separate completion icon kinds for form-local methods.
 - `v0.12.33`: restored `$P` print navigation activation, reduced `[0]` diagnostics false positives for likely C#/.NET/PMLNET zero-based collections, added focused method hover navigation with declaration usages and call-site definition links, expanded Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, added `!!CE` DBREF hover help, added selected `ELEMENTTYPE` metadata method completions/hovers, and closed review follow-ups for hover truncation plus redundant Outline re-indexing.
 - `v0.12.32`: updated form Rename so pipe-delimited callback targets such as `|!!OtherForm.show()|` follow form renames without rewriting non-callback pipe strings.
@@ -1370,8 +1373,8 @@ For full history, see [CHANGELOG.md](CHANGELOG.md).
 
 **Known Limitations:**
 - `.pmlfrm` support is improving but still has known gaps: broader PML.NET form patterns, intentionally broken fixture snippets, and some PML1 collection constructs.
-- Find References/Rename still rely on text scanning in important paths; AST/index-based lookup is planned after form parser stabilization.
-- Type inference is intentionally limited and should be reintroduced only with a clear architecture.
+- Find References/Rename still retain text scanning for callback-string and dynamic invocation fallback cases.
+- Type inference is intentionally limited to obvious local declarations, constructors, and typed form members.
 - Workspace indexer and client-side tooling commands still need broader automated tests.
 
 ---
@@ -1386,5 +1389,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2026-05-08*
+*Last updated: 2026-05-31*
 *Roadmap may change based on feedback and priorities*

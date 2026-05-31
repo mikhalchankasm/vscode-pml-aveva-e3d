@@ -68,6 +68,117 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
+	it('suggests form members, frames, and gadgets after !this in form files', () => {
+		const uri = 'file:///form-members.pmlfrm';
+		const source = [
+			'setup form !!TestForm dialog',
+			'	member .title is STRING',
+			'	button .btnApply |Apply| callback |!this.apply()|',
+			'	frame .main',
+			'		text .nameField |20|',
+			'	exit',
+			'exit',
+			'',
+			'define method .apply()',
+			'endmethod',
+			'',
+			'!this.'
+		].join('\n');
+		const parser = new Parser();
+		const parseResult = parser.parse(source, { mode: 'form' });
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new CompletionProvider(symbolIndex);
+
+		const completions = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === '.apply')).toMatchObject({
+			kind: CompletionItemKind.Event,
+			detail: 'Form method'
+		});
+		expect(completions.find(item => item.label === '.title')).toMatchObject({
+			kind: CompletionItemKind.Property,
+			detail: 'Form member STRING'
+		});
+		expect(completions.find(item => item.label === '.btnApply')).toMatchObject({
+			kind: CompletionItemKind.Field,
+			detail: 'button gadget'
+		});
+		expect(completions.find(item => item.label === '.main')).toMatchObject({
+			kind: CompletionItemKind.Field,
+			detail: 'frame'
+		});
+		expect(completions.find(item => item.label === '.nameField')).toMatchObject({
+			kind: CompletionItemKind.Field,
+			detail: 'text gadget'
+		});
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('filters member completions by indexed form member type after !this.member', () => {
+		const uri = 'file:///form-member-type.pmlfrm';
+		const source = [
+			'setup form !!TestForm dialog',
+			'	member .title is STRING',
+			'	member .items is ARRAY',
+			'exit',
+			'',
+			'define method .refresh()',
+			'	!this.title.',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const parseResult = parser.parse(source, { mode: 'form' });
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new CompletionProvider(symbolIndex);
+		const position = document.positionAt(source.indexOf('!this.title.') + '!this.title.'.length);
+
+		const completions = provider.provide({
+			textDocument: { uri },
+			position
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'substring')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('filters member completions by text form member type before indexing catches up', () => {
+		const source = [
+			'setup form !!TestForm dialog',
+			'	member .items is ARRAY',
+			'exit',
+			'',
+			'define method .refresh()',
+			'	!this.items.',
+			'endmethod'
+		].join('\n');
+		const document = TextDocument.create('file:///unindexed-form-member-type.pmlfrm', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+		const position = document.positionAt(source.indexOf('!this.items.') + '!this.items.'.length);
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'size')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
 	it('suggests methods after indexed and dynamic member receivers', () => {
 		const source = [
 			'define method .refresh(!target is STRING)',
@@ -196,6 +307,61 @@ describe('CompletionProvider', () => {
 		});
 		expect(completions.some(item => item.label === 'name')).toBe(false);
 		expect(completions.some(item => item.label === 'type')).toBe(false);
+	});
+
+	it('filters built-in member completions for explicit STRING receivers', () => {
+		const source = [
+			'define method .format(!name is STRING)',
+			'	!name.'
+		].join('\n');
+		const document = TextDocument.create('file:///string-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'substring')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('filters built-in member completions for obvious ARRAY constructors', () => {
+		const source = [
+			'!items = object ARRAY()',
+			'!items.'
+		].join('\n');
+		const document = TextDocument.create('file:///array-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'size')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('does not infer receiver types from assignments after the cursor', () => {
+		const source = [
+			'!items.',
+			'!items = object ARRAY()'
+		].join('\n');
+		const document = TextDocument.create('file:///future-type-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt('!items.'.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
 	it('formats workspace method parameters with PML markers', () => {

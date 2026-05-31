@@ -4,6 +4,23 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## Unreleased
 
+## [0.12.35] - 2026-05-31
+
+### Improved
+
+- Strengthened VSIX validation to fail packaged JavaScript files with unresolved local `require()` imports.
+- Updated Marketplace-facing metadata and packaged README links for safer pre-publish rendering.
+- Added a final pre-publish extension-host smoke checklist to the release notes.
+- Began moving workspace method References and Rename toward indexed AST lookup while keeping text scanning as a callback-string fallback.
+- Added first-pass type-aware member completions for obvious STRING, REAL, ARRAY, DBREF, ELEMENTTYPE, and ATTRIBUTE receivers.
+- Kept type-aware member completion inference scoped to declarations and assignments before the cursor.
+- Added a `.pmlfrm` Quick Fix that generates a missing callback method stub from opt-in form reference diagnostics.
+- Added `.pmlfrm` `!this.` completions for form members, frames, and gadgets alongside form-local methods.
+- Added type-aware `.pmlfrm` completions for typed form members such as `!this.title.` and `!this.items.`.
+- Added a lightweight extension smoke validator for critical command contributions, source registrations, and packaged CLI scripts.
+- Wired extension smoke, Quick Actions, and full VSIX validators into CI and release workflows.
+- Added an extension-host smoke test for activation, critical command registration, and missing form-callback Quick Fix availability.
+
 ## [0.12.34] - 2026-05-29
 
 ### Fixed

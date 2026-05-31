@@ -49,6 +49,9 @@ jobs:
           fi
       - run: npm run compile
       - run: npm run compile:tsc
+      - run: npm run validate:extension-smoke
+      - run: npm run validate:quick-actions
+      - run: xvfb-run -a npm run test:extension-smoke
       - run: npm --prefix packages/pml-language-server run test
       - name: Compute release tag
         id: vars
@@ -62,6 +65,7 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
       - name: Package VSIX
         run: npm run pack
+      - run: npm run validate:vsix
       - name: Validate VSIX package
         shell: bash
         run: |

@@ -2,7 +2,7 @@
  * References Provider - Find All References (Shift+F12)
  */
 
-import { Location, ReferenceParams, TextDocuments } from 'vscode-languageserver/node';
+import { Location, ReferenceParams, Range, TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs/promises';
@@ -68,14 +68,17 @@ export class ReferencesProvider {
 			}
 		}
 
-		// Scan all workspace files for references (not just current document)
+		// Scan all workspace files for references (not just current document).
+		// Indexed AST references are the primary source; text scanning remains a fallback for
+		// callback strings and parser recovery gaps that are not represented as expressions.
 		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
 			// Indexed definitions are added above, so text scanning must not add declaration matches again.
 			const workspaceRefs = await this.findReferencesInWorkspace(symbolName, false);
 			references.push(...workspaceRefs);
 		}
 
-		return references.length > 0 ? references : null;
+		const uniqueReferences = this.deduplicateLocations(references);
+		return uniqueReferences.length > 0 ? uniqueReferences : null;
 	}
 
 	public async getReferencePreviews(symbolName: string, limit = 5, includeDeclaration = false): Promise<{ total: number; previews: ReferencePreview[] }> {
@@ -84,7 +87,8 @@ export class ReferencesProvider {
 		}
 
 		const previews: ReferencePreview[] = [];
-		let total = 0;
+		const allLocations: Location[] = [];
+		const indexedReferencesByUri = this.groupLocationsByUri(this.findIndexedReferences(symbolName));
 
 		for (const fileUri of this.symbolIndex.getAllFileUris()) {
 			const text = await this.getFileText(fileUri);
@@ -92,12 +96,16 @@ export class ReferencesProvider {
 				continue;
 			}
 
-			const locations = this.findReferencesInText(text, fileUri, symbolName, includeDeclaration);
-			total += locations.length;
+			const locations = [
+				...(indexedReferencesByUri.get(fileUri) ?? []),
+				...this.findReferencesInText(text, fileUri, symbolName, includeDeclaration)
+			];
+			const uniqueLocations = this.deduplicateLocations(locations);
+			allLocations.push(...uniqueLocations);
 
 			if (previews.length < limit) {
 				const lines = text.split(/\r?\n/);
-				for (const location of locations) {
+				for (const location of uniqueLocations) {
 					if (previews.length >= limit) {
 						break;
 					}
@@ -109,7 +117,7 @@ export class ReferencesProvider {
 			}
 		}
 
-		return { total, previews };
+		return { total: this.deduplicateLocations(allLocations).length, previews };
 	}
 
 	/**
@@ -117,6 +125,8 @@ export class ReferencesProvider {
 	 */
 	private async findReferencesInWorkspace(symbolName: string, includeDeclaration = true): Promise<Location[]> {
 		const references: Location[] = [];
+		references.push(...this.findIndexedReferences(symbolName));
+
 		const allFileUris = this.symbolIndex.getAllFileUris();
 
 		// Process files in parallel batches for better performance
@@ -131,7 +141,25 @@ export class ReferencesProvider {
 			}
 		}
 
-		return references;
+		return this.deduplicateLocations(references);
+	}
+
+	private findIndexedReferences(symbolName: string): Location[] {
+		return this.symbolIndex
+			.findMethodReferences(symbolName)
+			.map(reference => Location.create(reference.uri, reference.range));
+	}
+
+	private groupLocationsByUri(locations: Location[]): Map<string, Location[]> {
+		const grouped = new Map<string, Location[]>();
+
+		for (const location of locations) {
+			const group = grouped.get(location.uri) ?? [];
+			group.push(location);
+			grouped.set(location.uri, group);
+		}
+
+		return grouped;
 	}
 
 	/**
@@ -265,6 +293,31 @@ export class ReferencesProvider {
 	private isWordChar(char: string): boolean {
 		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
 		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
+	}
+
+	private deduplicateLocations(locations: Location[]): Location[] {
+		const seen = new Set<string>();
+		const unique: Location[] = [];
+
+		for (const location of locations) {
+			const key = `${location.uri}:${this.rangeKey(location.range)}`;
+			if (seen.has(key)) {
+				continue;
+			}
+			seen.add(key);
+			unique.push(location);
+		}
+
+		return unique;
+	}
+
+	private rangeKey(range: Range): string {
+		return [
+			range.start.line,
+			range.start.character,
+			range.end.line,
+			range.end.character
+		].join(':');
 	}
 
 	/**

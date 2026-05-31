@@ -63,6 +63,35 @@ describe('Method reference scanning', () => {
 		]);
 	});
 
+	it('should index AST method call references for provider lookups', () => {
+		const parser = new Parser();
+		const methodSource = [
+			'define method .refresh()',
+			'endmethod',
+			'',
+			'define method .run(!items is ARRAY)',
+			'	!this.refresh()',
+			'	if (!items[1].refresh()) then',
+			'		!value = .refresh()',
+			'	endif',
+			'endmethod'
+		].join('\n');
+		const parseResult = parser.parse(methodSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, methodSource);
+
+		const references = symbolIndex.findMethodReferences('refresh');
+
+		expect(references).toHaveLength(3);
+		expect(references.map(reference => textInRange(methodSource, reference.range))).toEqual([
+			'refresh',
+			'refresh',
+			'refresh'
+		]);
+	});
+
 	it('should not double-count declarations through the public provider API', async () => {
 		const { document, documents, symbolIndex } = createProviderFixture();
 		const provider = new ReferencesProvider(symbolIndex, documents as any);
@@ -76,6 +105,24 @@ describe('Method reference scanning', () => {
 
 		expect(references).toHaveLength(7);
 		expect(references?.filter(reference => reference.range.start.line === 0)).toHaveLength(1);
+	});
+
+	it('should use indexed AST references for usage previews without duplicate fallback matches', async () => {
+		const { documents, symbolIndex } = createProviderFixture();
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+
+		const { total, previews } = await provider.getReferencePreviews('refresh', 10, false);
+
+		expect(total).toBe(6);
+		expect(previews).toHaveLength(6);
+		expect(previews.map(preview => textInRange(source, preview.location.range))).toEqual([
+			'refresh',
+			'refresh',
+			'refresh',
+			'refresh',
+			'refresh',
+			'refresh'
+		]);
 	});
 
 	it('should provide workspace rename edits through the public provider API', async () => {
@@ -104,6 +151,45 @@ describe('Method reference scanning', () => {
 			'refresh',
 			'refresh',
 			'refresh',
+			'refresh',
+			'refresh',
+			'refresh'
+		]);
+	});
+
+	it('should use indexed AST method references for rename even when text fallback finds nothing', async () => {
+		const parser = new Parser();
+		const methodSource = [
+			'define method .refresh()',
+			'endmethod',
+			'',
+			'define method .run(!items is ARRAY)',
+			'	!this.refresh()',
+			'	if (!items[1].refresh()) then',
+			'		!value = .refresh()',
+			'	endif',
+			'endmethod'
+		].join('\n');
+		const parseResult = parser.parse(methodSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, methodSource);
+		const document = TextDocument.create(uri, 'pml', 1, methodSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		(provider as any).findAndReplaceMethod = () => [];
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(methodSource.indexOf('refresh')),
+			newName: 'reload'
+		});
+
+		expect(edit?.changes?.[uri]).toHaveLength(3);
+		expect(edit?.changes?.[uri].map(change => textInRange(methodSource, change.range))).toEqual([
 			'refresh',
 			'refresh',
 			'refresh'
