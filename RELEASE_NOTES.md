@@ -47,7 +47,7 @@ Before publishing a Marketplace package:
 
 - VSIX: `pml-aveva-e3d-0.12.35.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
-- SHA256: `A6C185126C7FA4ED0A242D704A4F2D6AFE5FF0C59AB7322E830732B6555F67AF`
+- SHA256: `38E5C3D7E19C6D75527C4E9E28501DDEE443970057B54C4DB6C48DFE013F5743`
 
 ## Active Release Track
 
