@@ -14,17 +14,16 @@ import {
 	TextDocumentSyncKind,
 	InitializeResult,
 	WorkDoneProgressServerReporter,
-	FileChangeType,
 	DidChangeWatchedFilesParams,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import * as fs from 'fs';
 import { Parser, parserModeFromUri } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
 import { FileChangeDebouncer } from './index/fileChangeDebouncer';
 import { SymbolIndex } from './index/symbolIndex';
+import { WatchedFileIndexer } from './index/watchedFileIndexer';
 import { WorkspaceIndexer } from './index/workspaceIndexer';
 import { DocumentSymbolProvider } from './providers/documentSymbolProvider';
 import { DefinitionProvider } from './providers/definitionProvider';
@@ -186,56 +185,19 @@ connection.onInitialized(async () => {
  * This ensures the index stays up-to-date when files are modified externally
  */
 const FILE_WATCHER_DEBOUNCE_MS = 250;
+const watchedFileIndexer = new WatchedFileIndexer({
+	symbolIndex,
+	isDocumentOpen: uri => Boolean(documents.get(uri)),
+	logger: connection.console
+});
 const watchedFileChangeDebouncer = new FileChangeDebouncer(
 	FILE_WATCHER_DEBOUNCE_MS,
-	processWatchedFileChanges
+	changes => watchedFileIndexer.process(changes)
 );
 
 connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
 	watchedFileChangeDebouncer.enqueue(params.changes);
 });
-
-function processWatchedFileChanges(changes: DidChangeWatchedFilesParams['changes']): void {
-	const pmlExtensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
-	const parser = new Parser();
-
-	for (const change of changes) {
-		const fileUri = change.uri;
-		const ext = fileUri.substring(fileUri.lastIndexOf('.')).toLowerCase();
-
-		// Only process PML files
-		if (!pmlExtensions.includes(ext)) {
-			continue;
-		}
-
-		try {
-			if (change.type === FileChangeType.Deleted) {
-				// File deleted - remove from index
-				symbolIndex.removeFile(fileUri);
-				connection.console.log(`File deleted, removed from index: ${fileUri}`);
-			} else if (change.type === FileChangeType.Created || change.type === FileChangeType.Changed) {
-				// File created or changed - reindex it
-				// Skip if the file is open in editor (will be handled by onDidChangeContent)
-				if (documents.get(fileUri)) {
-					continue;
-				}
-
-				// Read file from disk and reindex
-				const filePath = URI.parse(fileUri).fsPath;
-				const content = fs.readFileSync(filePath, 'utf-8');
-				const parseResult = parser.parse(content, { mode: parserModeFromUri(fileUri) });
-
-				if (parseResult.ast) {
-					symbolIndex.indexFile(fileUri, parseResult.ast, 0, content);
-					connection.console.log(`File ${change.type === FileChangeType.Created ? 'created' : 'changed'}, reindexed: ${fileUri}`);
-				}
-			}
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			connection.console.warn(`Failed to process file change for ${fileUri}: ${message}`);
-		}
-	}
-}
 
 // PML Settings interface
 interface PMLSettings {
