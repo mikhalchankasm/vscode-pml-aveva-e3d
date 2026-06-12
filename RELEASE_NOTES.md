@@ -2,6 +2,26 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
+## Unreleased Stabilization Snapshot
+
+### What Changed
+
+- Added standard and super Claude review npm wrappers, with the super path defaulting to `claude-fable-5` and both paths using a no-tools, non-interactive review contract.
+- Reduced member-completion noise for constructed `ATTRIBUTE` receivers and obvious string/numeric literal receivers.
+- Avoided redundant document indexing when the same document version is already indexed.
+- Debounced external file watcher re-indexing, preserved recreated files during watcher bursts, and moved watched-file indexing into a tested helper.
+- Improved References and Rename coverage for dynamic substitute callback paths such as `!this.$!<gadget>.method`.
+
+### Validation
+
+- Bundled compile: passed with `npm run compile`.
+- Language server tests: passed with `npm --prefix packages/pml-language-server test -- run` (`249 passed`, `3 skipped`).
+- Targeted indexing/navigation tests: passed for file-change debounce, watched-file indexing, workspace indexing, and method references.
+- Claude review wrapper smoke: passed with `npm run -s review:claude` and `npm run -s review:claude:super`.
+- External Claude super review: completed; confirmed findings were addressed in follow-up hardening.
+- VSIX packaging: passed with `npm run pack`; `pml-aveva-e3d-0.12.35.vsix` contains 16 files.
+- VSIX smoke-check: passed with `npm run validate:vsix`.
+
 ## Current Release - v0.12.35
 
 **Release Date:** 2026-05-31
