@@ -8,6 +8,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 - Reduced member-completion noise for variables constructed as `object ATTRIBUTE(...)` by limiting suggestions to ATTRIBUTE metadata methods.
 - Filter member completions for variables assigned obvious string or numeric literals so literal receivers no longer show unrelated built-in methods.
+- Avoid redundant workspace index updates when a document version is already indexed.
 
 ## [0.12.35] - 2026-05-31
 

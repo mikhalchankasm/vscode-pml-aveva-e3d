@@ -67,6 +67,11 @@ export class WorkspaceIndexer {
 	 */
 	public indexDocument(document: TextDocument): void {
 		try {
+			if (this.symbolIndex.isFileVersionIndexed(document.uri, document.version)) {
+				this.connection.console.log(`Skipped ${document.uri}: version ${document.version} is already indexed`);
+				return;
+			}
+
 			const text = document.getText();
 			const parseResult = this.parser.parse(text, { mode: parserModeFromUri(document.uri) });
 
