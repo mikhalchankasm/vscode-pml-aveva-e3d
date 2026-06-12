@@ -261,6 +261,16 @@ describe('Method reference scanning', () => {
 		]);
 	});
 
+	it('should not match dynamic substitute callback paths across line breaks', () => {
+		const provider = new ReferencesProvider(undefined as any, undefined as any);
+		const text = [
+			'track |BROKEN| call |!this.$!<gadgetName',
+			'>.refresh|'
+		].join('\n');
+
+		expect((provider as any).findReferencesInText(text, uri, 'refresh', false)).toEqual([]);
+	});
+
 	it('should honor includeDeclaration=false during text reference scans', () => {
 		const provider = new ReferencesProvider(undefined as any, undefined as any);
 		const text = [

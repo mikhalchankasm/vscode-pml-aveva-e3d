@@ -62,7 +62,13 @@ try {
     }
 
     $reviewPrompt | & $claudeCommand.Source @arguments
-    exit $LASTEXITCODE
+    if ($null -ne $LASTEXITCODE) {
+        exit $LASTEXITCODE
+    }
+    if ($?) {
+        exit 0
+    }
+    exit 1
 } finally {
     if ($null -ne $oldAnthropicApiKey) {
         $env:ANTHROPIC_API_KEY = $oldAnthropicApiKey
