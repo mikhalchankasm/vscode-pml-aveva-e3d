@@ -1319,6 +1319,7 @@ Development plans and progress tracking.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
 - ✅ **Indexed Method Navigation** - Workspace method References and Rename now use indexed AST call sites first, with text scanning retained for callback-string fallback cases.
 - ✅ **Form Completion UX** - `.pmlfrm` `!this.` completions include form members, frames, and gadgets, with first-pass receiver-aware method filtering for typed members.
+- ✅ **Completion Noise Reduction** - Constructed `ATTRIBUTE` receivers now get focused ATTRIBUTE metadata completions instead of the full built-in method list.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.

@@ -707,7 +707,8 @@ export class CompletionProvider {
 			}
 
 			const declaredType = this.matchDeclaredVariableType(line, receiverName) ??
-				this.matchConstructedVariableType(line, receiverName);
+				this.matchConstructedVariableType(line, receiverName) ??
+				this.matchLiteralAssignedVariableType(line, receiverName);
 			if (declaredType) {
 				return declaredType;
 			}
@@ -750,9 +751,25 @@ export class CompletionProvider {
 
 	private matchConstructedVariableType(line: string, receiverName: string): ReceiverType | undefined {
 		const escapedName = this.escapeRegex(receiverName);
-		const assignmentPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s*=\\s*(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE)\\s*\\(`, 'i');
+		const assignmentPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s*=\\s*(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\s*\\(`, 'i');
 		const match = line.match(assignmentPattern);
 		return this.normalizeReceiverType(match?.[2]);
+	}
+
+	private matchLiteralAssignedVariableType(line: string, receiverName: string): ReceiverType | undefined {
+		const escapedName = this.escapeRegex(receiverName);
+		const assignmentPrefix = `(^|[\\s(,])${escapedName}\\s*=\\s*`;
+		const stringPattern = new RegExp(`${assignmentPrefix}(?:\\|[^|]*\\||'[^']*')\\s*$`, 'i');
+		if (stringPattern.test(line)) {
+			return 'STRING';
+		}
+
+		const numberPattern = new RegExp(`${assignmentPrefix}[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*$`, 'i');
+		if (numberPattern.test(line)) {
+			return 'REAL';
+		}
+
+		return undefined;
 	}
 
 	private normalizeReceiverType(typeName?: string): ReceiverType | undefined {

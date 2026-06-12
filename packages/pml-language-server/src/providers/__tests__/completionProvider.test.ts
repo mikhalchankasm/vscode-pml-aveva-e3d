@@ -34,7 +34,7 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'upcase')).toBe(false);
 	});
 
-	it('suggests built-in methods for non-!this receivers in form files', () => {
+	it('filters built-in methods for typed non-!this receivers in form files', () => {
 		const source = [
 			'setup form !!TestForm dialog',
 			'exit',
@@ -65,7 +65,51 @@ describe('CompletionProvider', () => {
 			kind: CompletionItemKind.Method,
 			detail: 'ATTRIBUTE -> STRING[]'
 		});
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('keeps built-in fallback methods for untyped non-!this receivers in form files', () => {
+		const source = [
+			'setup form !!TestForm dialog',
+			'exit',
+			'',
+			'define method .refresh()',
+			'endmethod',
+			'',
+			'!unknown.'
+		].join('\n');
+		const document = TextDocument.create('file:///untyped-form-receiver.pmlfrm', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === '.refresh')).toMatchObject({
+			kind: CompletionItemKind.Event,
+			detail: 'Form method'
+		});
 		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'qreal')).toBe(true);
+	});
+
+	it('does not treat DBREF attribute value calls as ATTRIBUTE object receivers', () => {
+		const source = [
+			'!val = !ce.attribute(|XLEN|)',
+			'!val.'
+		].join('\n');
+		const document = TextDocument.create('file:///attribute-value-call.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'qreal')).toBe(true);
 	});
 
 	it('suggests form members, frames, and gadgets after !this in form files', () => {
@@ -344,6 +388,45 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'append')).toBe(true);
 		expect(completions.some(item => item.label === 'size')).toBe(true);
 		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('filters built-in member completions for obvious string literal assignments', () => {
+		const source = [
+			'!label = |Pump A|',
+			'!label.'
+		].join('\n');
+		const document = TextDocument.create('file:///string-literal-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'substring')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('filters built-in member completions for obvious numeric literal assignments', () => {
+		const source = [
+			'!distance = 42.5',
+			'!distance.'
+		].join('\n');
+		const document = TextDocument.create('file:///numeric-literal-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'abs')).toBe(true);
+		expect(completions.some(item => item.label === 'sqrt')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 

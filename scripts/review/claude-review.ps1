@@ -1,10 +1,13 @@
 param(
     [string]$PromptPath,
     [string]$Prompt,
-    [string]$Model
+    [string]$Model,
+    [ValidateSet('standard', 'super')]
+    [string]$Mode = 'standard'
 )
 
 $ErrorActionPreference = 'Stop'
+$superReviewModel = if ($env:PML_CLAUDE_SUPER_REVIEW_MODEL) { $env:PML_CLAUDE_SUPER_REVIEW_MODEL } else { 'claude-fable-5' }
 
 if ($PromptPath -and $Prompt) {
     throw 'Use either -PromptPath or -Prompt, not both.'
@@ -15,7 +18,14 @@ if ($PromptPath) {
 } elseif ($Prompt) {
     $reviewPrompt = $Prompt
 } else {
-    $reviewPrompt = [Console]::In.ReadToEnd()
+    $reviewPrompt = $input | Out-String
+    if ([string]::IsNullOrWhiteSpace($reviewPrompt)) {
+        if (-not [Console]::IsInputRedirected) {
+            throw 'Claude review prompt is empty. Pipe prompt text via stdin or pass -Prompt/-PromptPath.'
+        }
+
+        $reviewPrompt = [Console]::In.ReadToEnd()
+    }
 }
 
 if ([string]::IsNullOrWhiteSpace($reviewPrompt)) {
@@ -31,10 +41,24 @@ $oldAnthropicApiKey = $env:ANTHROPIC_API_KEY
 try {
     Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
 
-    # Claude Code documents --tools "" as disabling all tools; plan mode is an extra guard.
-    $arguments = @('--print', '--tools', '', '--permission-mode', 'plan')
-    if ($Model) {
-        $arguments += @('--model', $Model)
+    $effectiveModel = $Model
+    if (-not $effectiveModel -and $Mode -eq 'super') {
+        $effectiveModel = $superReviewModel
+    }
+
+    $disabledTools = 'Bash,Read,Edit,Write,Glob,Grep,LS,MultiEdit,NotebookEdit,WebFetch,WebSearch,TodoWrite,Task'
+    $arguments = @(
+        '--print',
+        '--input-format', 'text',
+        '--output-format', 'text',
+        '--tools', '',
+        '--disallowedTools', $disabledTools,
+        '--permission-mode', 'dontAsk',
+        '--no-session-persistence',
+        '--disable-slash-commands'
+    )
+    if ($effectiveModel) {
+        $arguments += @('--model', $effectiveModel)
     }
 
     $reviewPrompt | & $claudeCommand.Source @arguments

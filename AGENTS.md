@@ -44,15 +44,19 @@
 - If validation fails, stop feature work, document the failure, and either fix the failure or revert only the changes from the current slice.
 - Do not publish, push tags, or create a GitHub release without the user's explicit `confirm publish`.
 - When handing work to another AI reviewer, provide a review-only prompt that forbids edits, commits, pushes, publishing, and fact invention. Treat that reviewer as advisory; verify findings before applying fixes.
+- End every final response with the next concrete action or plan. If the work is blocked or the team is in a planning loop, state the blocker, discuss the next plan, and continue with the loop.
 
 ## External Reviewer Invocation
 - Claude review is a required checkpoint before release prep, before risky UX/parser/diagnostic changes are finalized, and whenever the user asks for external review.
+- Prefer the installed Codex slash command `/claude-review`.
+- If invoking Claude manually, Codex must collect the necessary diff/context first and pipe that plain text bundle to Claude. Do not ask Claude to inspect the workspace itself.
 - Use the local Claude Code subscription flow via the `claude` command. Do not use `ANTHROPIC_API_KEY` for these reviews.
-- Invoke Claude in read-only mode: `claude --print --tools "" --permission-mode plan`. The installed Claude Code CLI documents `--tools ""` as disabling all tools; keep `--permission-mode plan` as a second guard.
+- Invoke Claude non-interactively with no tools:
+  `claude --print --input-format text --output-format text --tools "" --disallowedTools "Bash,Read,Edit,Write,Glob,Grep,LS,MultiEdit,NotebookEdit,WebFetch,WebSearch,TodoWrite,Task" --permission-mode dontAsk --no-session-persistence --disable-slash-commands`
 - Do not use `--bare` for subscription-based review because it forces API-key authentication.
 - Do not use low `--max-budget-usd` limits for subscription-based review; Claude Code may reject even small prompts before answering.
-- Prefer `scripts/review/claude-review.ps1` so `ANTHROPIC_API_KEY` is temporarily removed only for the Claude process and restored afterward.
 - Send only the necessary diff/context. Do not let Claude edit files, run commands, commit, push, publish, or create releases.
+- If Claude requests or implies a tool call, treat the external review as failed and continue with a Codex-only review.
 - Verify every Claude finding locally before applying changes. Claude output is advisory, not authoritative.
 
 ## Failure Handling

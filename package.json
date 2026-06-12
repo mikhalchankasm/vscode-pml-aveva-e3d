@@ -939,6 +939,8 @@
     "pack": "node scripts/pack.cjs",
     "install:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reinstall.ps1",
     "pack:install": "npm run pack && npm run install:local",
+    "review:claude": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/review/claude-review.ps1",
+    "review:claude:super": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/review/claude-review.ps1 -Mode super",
     "prepare": "husky",
     "validate:vsix": "node scripts/validate-vsix.cjs"
   },
