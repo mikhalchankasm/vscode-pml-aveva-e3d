@@ -243,6 +243,24 @@ describe('Method reference scanning', () => {
 		}
 	});
 
+	it('should find method references through dynamic substitute callback paths', () => {
+		const provider = new ReferencesProvider(undefined as any, undefined as any);
+		const text = [
+			'track |DYNAMIC| call |!this.$!<gadgetName>.refresh|',
+			'track |ROOT| call |$!<formName>.refresh|',
+			'track |CALL| call |!this.$!<gadgetName>.refresh()|'
+		].join('\n');
+
+		const references = (provider as any).findReferencesInText(text, uri, 'refresh', false);
+
+		expect(references).toHaveLength(3);
+		expect(references.map((reference: any) => textInRange(text, reference.range))).toEqual([
+			'refresh',
+			'refresh',
+			'refresh'
+		]);
+	});
+
 	it('should honor includeDeclaration=false during text reference scans', () => {
 		const provider = new ReferencesProvider(undefined as any, undefined as any);
 		const text = [
@@ -500,6 +518,25 @@ describe('Method reference scanning', () => {
 			'refresh',
 			'refresh',
 			'refresh',
+			'refresh',
+			'refresh',
+			'refresh'
+		]);
+	});
+
+	it('should rename method references through dynamic substitute callback paths', () => {
+		const provider = new RenameProvider(undefined as any, undefined as any);
+		const text = [
+			'track |DYNAMIC| call |!this.$!<gadgetName>.refresh|',
+			'track |ROOT| call |$!<formName>.refresh|',
+			'track |CALL| call |!this.$!<gadgetName>.refresh()|'
+		].join('\n');
+
+		const edits = (provider as any).findAndReplaceMethod(text, 'refresh', 'reload');
+
+		expect(edits).toHaveLength(3);
+		expect(edits.map((edit: any) => edit.newText)).toEqual(['reload', 'reload', 'reload']);
+		expect(edits.map((edit: any) => textInRange(text, edit.range))).toEqual([
 			'refresh',
 			'refresh',
 			'refresh'

@@ -10,7 +10,10 @@ export interface MethodReferencePatternSet {
 	patterns: MethodReferencePattern[];
 }
 
-const EXPR_PREFIX = '[!$][!]?(?:\\w+(?:/\\w+)*|(?:/\\w+)+)(?:\\.[\\w]+)*(?:\\[[^\\]]*\\])*(?:\\.[\\w]+(?:\\[[^\\]]*\\])*)*';
+const DYNAMIC_SEGMENT = '\\$!?<[^>]+>';
+const MEMBER_SEGMENT = `(?:\\w+|${DYNAMIC_SEGMENT})`;
+const ROOT_SEGMENT = `(?:\\w+(?:/\\w+)*|(?:/\\w+)+|<[^>]+>)`;
+const EXPR_PREFIX = `[!$][!]?(?:${ROOT_SEGMENT})(?:\\.${MEMBER_SEGMENT})*(?:\\[[^\\]]*\\])*(?:\\.${MEMBER_SEGMENT}(?:\\[[^\\]]*\\])*)*`;
 
 export function escapeRegex(str: string): string {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

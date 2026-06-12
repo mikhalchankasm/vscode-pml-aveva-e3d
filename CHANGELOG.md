@@ -10,6 +10,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 - Filter member completions for variables assigned obvious string or numeric literals so literal receivers no longer show unrelated built-in methods.
 - Avoid redundant workspace index updates when a document version is already indexed.
 - Debounce external file watcher re-indexing so bursts of save events for the same PML file are processed once.
+- Improve References and Rename coverage for dynamic substitute callback paths such as `!this.$!<gadget>.method`.
 
 ## [0.12.35] - 2026-05-31
 
