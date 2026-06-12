@@ -23,6 +23,7 @@ import { URI } from 'vscode-uri';
 import * as fs from 'fs';
 import { Parser, parserModeFromUri } from './parser/parser';
 import { detectTypos } from './diagnostics/typoDetector';
+import { FileChangeDebouncer } from './index/fileChangeDebouncer';
 import { SymbolIndex } from './index/symbolIndex';
 import { WorkspaceIndexer } from './index/workspaceIndexer';
 import { DocumentSymbolProvider } from './providers/documentSymbolProvider';
@@ -184,11 +185,21 @@ connection.onInitialized(async () => {
  * File Watcher - Handle changes to files on disk (not opened in editor)
  * This ensures the index stays up-to-date when files are modified externally
  */
+const FILE_WATCHER_DEBOUNCE_MS = 250;
+const watchedFileChangeDebouncer = new FileChangeDebouncer(
+	FILE_WATCHER_DEBOUNCE_MS,
+	processWatchedFileChanges
+);
+
 connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
+	watchedFileChangeDebouncer.enqueue(params.changes);
+});
+
+function processWatchedFileChanges(changes: DidChangeWatchedFilesParams['changes']): void {
 	const pmlExtensions = ['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd'];
 	const parser = new Parser();
 
-	for (const change of params.changes) {
+	for (const change of changes) {
 		const fileUri = change.uri;
 		const ext = fileUri.substring(fileUri.lastIndexOf('.')).toLowerCase();
 
@@ -224,7 +235,7 @@ connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
 			connection.console.warn(`Failed to process file change for ${fileUri}: ${message}`);
 		}
 	}
-});
+}
 
 // PML Settings interface
 interface PMLSettings {
