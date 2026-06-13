@@ -98,7 +98,7 @@ export class CompletionProvider {
 		const identifierMatch = textBeforeCursor.match(/([A-Za-z_][A-Za-z0-9_]*)$/);
 		if (identifierMatch && identifierMatch[1].length >= 2) {
 			const prefix = identifierMatch[1].toLowerCase();
-			items.push(...this.getWorkspaceSymbolCompletions(prefix));
+			items.push(...this.getWorkspaceSymbolCompletions(document.uri, prefix));
 		}
 
 		return items;
@@ -318,12 +318,12 @@ export class CompletionProvider {
 	 * Get workspace symbol completions (user-defined methods and objects)
 	 * @param prefix Optional prefix to filter symbols (case-insensitive)
 	 */
-	private getWorkspaceSymbolCompletions(prefix?: string): CompletionItem[] {
+	private getWorkspaceSymbolCompletions(uri: string, prefix?: string): CompletionItem[] {
 		const items: CompletionItem[] = [];
 		const lowerPrefix = prefix?.toLowerCase();
 
 		// Add methods - filter by prefix if provided
-		const methods = this.symbolIndex.getAllMethods();
+		const methods = this.symbolIndex.getFileSymbols(uri)?.methods ?? [];
 		for (const method of methods) {
 			// Skip if prefix doesn't match
 			if (lowerPrefix && !method.name.toLowerCase().startsWith(lowerPrefix)) {

@@ -54,6 +54,42 @@ describe('SignatureHelpProvider', () => {
 		});
 	});
 
+	it('does not show signatures from another file with the same method name', () => {
+		const uri = 'file:///signature-current.pml';
+		const otherUri = 'file:///signature-other.pml';
+		const currentDefinitions = [
+			'define method .refresh(!target is STRING)',
+			'endmethod'
+		].join('\n');
+		const otherDefinitions = [
+			'define method .refresh(!width is REAL, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const currentResult = parser.parse(currentDefinitions);
+		const otherResult = parser.parse(otherDefinitions);
+		expect(currentResult.errors).toHaveLength(0);
+		expect(otherResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, currentResult.ast, 1, currentDefinitions);
+		symbolIndex.indexFile(otherUri, otherResult.ast, 1, otherDefinitions);
+
+		const source = `${currentDefinitions}\n\n!this.refresh(`;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures.map(signature => signature.label)).toEqual([
+			'.refresh(!target)'
+		]);
+	});
+
+
 	it('selects the overload that covers the active argument', () => {
 		const uri = 'file:///signature-overloads.pml';
 		const definitions = [

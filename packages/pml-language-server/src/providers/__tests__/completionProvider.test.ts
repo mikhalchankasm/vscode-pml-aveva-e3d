@@ -473,6 +473,41 @@ describe('CompletionProvider', () => {
 		});
 	});
 
+	it('does not suggest methods from other files in bare identifier completions', () => {
+		const uri = 'file:///current-completion.pml';
+		const otherUri = 'file:///other-completion.pml';
+		const currentSource = [
+			'define method .refresh(!target is STRING)',
+			'endmethod',
+			'',
+			're'
+		].join('\n');
+		const otherSource = [
+			'define method .remoteRefresh()',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const currentResult = parser.parse(currentSource);
+		const otherResult = parser.parse(otherSource);
+		expect(currentResult.errors).toHaveLength(0);
+		expect(otherResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, currentResult.ast, 1, currentSource);
+		symbolIndex.indexFile(otherUri, otherResult.ast, 1, otherSource);
+		const document = TextDocument.create(uri, 'pml', 1, currentSource);
+		const provider = new CompletionProvider(symbolIndex);
+
+		const completions = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(currentSource.length)
+		}, document);
+
+		expect(completions.some(item => item.label === '.refresh')).toBe(true);
+		expect(completions.some(item => item.label === '.remoteRefresh')).toBe(false);
+	});
+
+
 	it('does not treat non-member dots as member completion receivers', () => {
 		const provider = new CompletionProvider(new SymbolIndex());
 		const sources = [

@@ -51,9 +51,9 @@ export class ReferencesProvider {
 		const references: Location[] = [];
 
 		// Find definition
-		const methods = this.symbolIndex.findMethod(symbolName);
-		const objects = this.symbolIndex.findObject(symbolName);
-		const forms = this.symbolIndex.findForm(symbolName);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const objects = methods.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
+		const forms = methods.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 
 		// Add definitions to references (if includeDeclaration is true)
 		if (params.context.includeDeclaration) {
@@ -73,7 +73,9 @@ export class ReferencesProvider {
 		// callback strings and parser recovery gaps that are not represented as expressions.
 		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
 			// Indexed definitions are added above, so text scanning must not add declaration matches again.
-			const workspaceRefs = await this.findReferencesInWorkspace(symbolName, false);
+			const workspaceRefs = methods.length > 0 && objects.length === 0 && forms.length === 0
+				? await this.findReferencesInFileScope(document.uri, symbolName, false)
+				: await this.findReferencesInWorkspace(symbolName, false);
 			references.push(...workspaceRefs);
 		}
 
@@ -81,24 +83,25 @@ export class ReferencesProvider {
 		return uniqueReferences.length > 0 ? uniqueReferences : null;
 	}
 
-	public async getReferencePreviews(symbolName: string, limit = 5, includeDeclaration = false): Promise<{ total: number; previews: ReferencePreview[] }> {
+	public async getReferencePreviews(symbolName: string, limit = 5, includeDeclaration = false, fileUri?: string): Promise<{ total: number; previews: ReferencePreview[] }> {
 		if (symbolName.length === 0) {
 			return { total: 0, previews: [] };
 		}
 
 		const previews: ReferencePreview[] = [];
 		const allLocations: Location[] = [];
-		const indexedReferencesByUri = this.groupLocationsByUri(this.findIndexedReferences(symbolName));
+		const indexedReferencesByUri = this.groupLocationsByUri(this.findIndexedReferences(symbolName, fileUri));
 
-		for (const fileUri of this.symbolIndex.getAllFileUris()) {
-			const text = await this.getFileText(fileUri);
+		const fileUris = fileUri ? [fileUri] : this.symbolIndex.getAllFileUris();
+		for (const targetUri of fileUris) {
+			const text = await this.getFileText(targetUri);
 			if (!text) {
 				continue;
 			}
 
 			const locations = [
-				...(indexedReferencesByUri.get(fileUri) ?? []),
-				...this.findReferencesInText(text, fileUri, symbolName, includeDeclaration)
+				...(indexedReferencesByUri.get(targetUri) ?? []),
+				...this.findReferencesInText(text, targetUri, symbolName, includeDeclaration)
 			];
 			const uniqueLocations = this.deduplicateLocations(locations);
 			allLocations.push(...uniqueLocations);
@@ -144,9 +147,19 @@ export class ReferencesProvider {
 		return this.deduplicateLocations(references);
 	}
 
-	private findIndexedReferences(symbolName: string): Location[] {
-		return this.symbolIndex
-			.findMethodReferences(symbolName)
+	private async findReferencesInFileScope(fileUri: string, symbolName: string, includeDeclaration = true): Promise<Location[]> {
+		const references: Location[] = [];
+		references.push(...this.findIndexedReferences(symbolName, fileUri));
+		references.push(...await this.findReferencesInFile(fileUri, symbolName, includeDeclaration));
+		return this.deduplicateLocations(references);
+	}
+
+	private findIndexedReferences(symbolName: string, fileUri?: string): Location[] {
+		const references = fileUri
+			? this.symbolIndex.findMethodReferencesInFile(fileUri, symbolName)
+			: this.symbolIndex.findMethodReferences(symbolName);
+
+		return references
 			.map(reference => Location.create(reference.uri, reference.range));
 	}
 

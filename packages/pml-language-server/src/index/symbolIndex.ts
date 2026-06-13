@@ -228,6 +228,18 @@ export class SymbolIndex {
 		return this.methodReferenceIndex.get(name.toLowerCase()) || [];
 	}
 
+	public findMethodsInFile(uri: string, name: string): MethodInfo[] {
+		const lowerName = name.toLowerCase();
+		return (this.fileSymbols.get(uri)?.methods ?? [])
+			.filter(method => method.name.toLowerCase() === lowerName);
+	}
+
+	public findMethodReferencesInFile(uri: string, name: string): MethodReferenceInfo[] {
+		const lowerName = name.toLowerCase();
+		return (this.fileSymbols.get(uri)?.methodReferences ?? [])
+			.filter(reference => reference.name.toLowerCase() === lowerName);
+	}
+
 	/**
 	 * Find object by name
 	 */

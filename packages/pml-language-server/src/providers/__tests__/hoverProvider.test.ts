@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { HoverProvider } from '../hoverProvider';
+import { Parser } from '../../parser/parser';
+import { SymbolIndex } from '../../index/symbolIndex';
 
 describe('HoverProvider', () => {
 	it('shows PDMS command hover only for line-start command starters', async () => {
@@ -13,7 +15,7 @@ describe('HoverProvider', () => {
 				'!result = move'
 			].join('\n')
 		);
-		const provider = new HoverProvider({ findMethod: () => [] } as any);
+		const provider = new HoverProvider({ findMethodsInFile: () => [] } as any);
 
 		const commandHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 1 } }, document);
 		const expressionHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 11 } }, document);
@@ -39,7 +41,7 @@ describe('HoverProvider', () => {
 				'MOVE N45E DIST 1500'
 			].join('\n')
 		);
-		const provider = new HoverProvider({ findMethod: () => [] } as any);
+		const provider = new HoverProvider({ findMethodsInFile: () => [] } as any);
 
 		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 4 } }, document)).resolves.toBeNull();
 		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 4 } }, document)).resolves.toBeNull();
@@ -193,7 +195,7 @@ describe('HoverProvider', () => {
 				'!hidden = !attribute.Hidden()'
 			].join('\n')
 		);
-		const provider = new HoverProvider({ findMethod: () => [] } as any);
+		const provider = new HoverProvider({ findMethodsInFile: () => [] } as any);
 
 		const isPseudoHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 24 } }, document);
 		const validValuesHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 22 } }, document);
@@ -223,10 +225,10 @@ describe('HoverProvider', () => {
 				'!this.NavigateTo(!target)'
 			].join('\n')
 		);
-		const longUsage = '|!!Main.NavigateTo(!target, !source, !destination, !mode, !context, !selection)|';
+		let previewScopeUri = '';
 		const provider = new HoverProvider(
 			{
-				findMethod: (name: string) => name === 'NavigateTo'
+				findMethodsInFile: (uri: string, name: string) => uri === document.uri && name === 'NavigateTo'
 					? [{
 						name: 'NavigateTo',
 						uri: document.uri,
@@ -247,31 +249,24 @@ describe('HoverProvider', () => {
 					: []
 			} as any,
 			{
-				getReferencePreviews: async () => ({
-					total: 2,
-					previews: [
-						{
-							location: {
-								uri: document.uri,
-								range: {
-									start: { line: 2, character: 6 },
-									end: { line: 2, character: 16 }
-								}
-							},
-							lineText: '!this.NavigateTo(!target)'
-						},
-						{
-							location: {
-								uri: 'file:///forms/Other.pmlfrm',
-								range: {
-									start: { line: 10, character: 8 },
-									end: { line: 10, character: 18 }
-								}
-							},
-							lineText: longUsage
-						}
-					]
-				})
+				getReferencePreviews: async (_name: string, _limit: number, _includeDeclaration: boolean, fileUri?: string) => {
+					previewScopeUri = fileUri ?? '';
+					return {
+						total: 1,
+						previews: [
+							{
+								location: {
+									uri: document.uri,
+									range: {
+										start: { line: 2, character: 6 },
+										end: { line: 2, character: 16 }
+									}
+								},
+								lineText: '!this.NavigateTo(!target)'
+							}
+						]
+					};
+				}
 			}
 		);
 
@@ -281,12 +276,12 @@ describe('HoverProvider', () => {
 		const callValue = String((callHover?.contents as any).value);
 
 		expect(value.startsWith('Moves the active selection to the requested target.')).toBe(true);
-		expect(value.startsWith('Moves the active selection to the requested target.\n\n`USAGES` 2 locations')).toBe(true);
-		expect(value).toContain('`USAGES` 2 locations');
+		expect(value.startsWith('Moves the active selection to the requested target.\n\n`USAGES` 1 location')).toBe(true);
+		expect(value).toContain('`USAGES` 1 location');
 		expect(value).toContain('[Main.pmlfrm:3]');
-		expect(value).toContain('[Other.pmlfrm:11]');
 		expect(value).toContain('`!this.NavigateTo(!target)`');
-		expect(value).toContain(`\`${longUsage}\``);
+		expect(value).not.toContain('[Other.pmlfrm');
+		expect(previewScopeUri).toBe(document.uri);
 		expect(value).not.toContain('`.NavigateTo(!target)`');
 		expect(value).not.toContain('`PARAMS`');
 		expect(value).not.toContain('`DOC`');
@@ -302,5 +297,41 @@ describe('HoverProvider', () => {
 		expect(value).not.toContain('###');
 		expect(value).not.toContain('```');
 		expect(value).not.toContain('|-');
+	});
+
+	it('does not show hover documentation from another file with the same method name', async () => {
+		const uri = 'file:///forms/Main.pmlfrm';
+		const otherUri = 'file:///forms/Other.pmlfrm';
+		const source = [
+			'-- $P Description: Current form refresh.',
+			'define method .Refresh()',
+			'endmethod',
+			'!this.Refresh()'
+		].join('\n');
+		const otherSource = [
+			'-- $P Description: Other form refresh.',
+			'define method .Refresh()',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const currentResult = parser.parse(source);
+		const otherResult = parser.parse(otherSource);
+		expect(currentResult.errors).toHaveLength(0);
+		expect(otherResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, currentResult.ast, 1, source);
+		symbolIndex.indexFile(otherUri, otherResult.ast, 1, otherSource);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new HoverProvider(symbolIndex);
+
+		const hover = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.lastIndexOf('Refresh'))
+		}, document);
+		const value = String((hover?.contents as any).value);
+
+		expect(value).toContain('Current form refresh.');
+		expect(value).not.toContain('Other form refresh.');
 	});
 });

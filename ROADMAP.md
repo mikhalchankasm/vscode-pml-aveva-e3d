@@ -1318,6 +1318,7 @@ Development plans and progress tracking.
 - ✅ **DBREF and ATTRIBUTE Method Assistance** - Selected DBREF and ATTRIBUTE object method completions and hover docs are available from reviewed AVEVA help slices while avoiding generic method noise.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
 - ✅ **Indexed Method Navigation** - Workspace method References and Rename now use indexed AST call sites first, with text scanning retained for callback-string fallback cases.
+- ✅ **File-Scoped User Methods** - User-defined method completions, hover usages, Go to Definition, Find References, Rename, and Signature Help stay inside the current file to avoid collisions between forms with the same method names.
 - ✅ **Form Completion UX** - `.pmlfrm` `!this.` completions include form members, frames, and gadgets, with first-pass receiver-aware method filtering for typed members.
 - ✅ **Completion Noise Reduction** - Constructed `ATTRIBUTE` receivers now get focused ATTRIBUTE metadata completions instead of the full built-in method list.
 - ✅ **Workspace Indexing Stability** - Open-document conflicts, repeated unchanged document indexing, and external file watcher bursts are covered with debounced, tested indexing paths.
@@ -1327,7 +1328,7 @@ Development plans and progress tracking.
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
 - **Workspace indexing:** next expose clearer indexing status when a workspace is large and consider measured hot-spot tuning from the existing performance budgets.
 - **Completions:** broaden receiver inference from obvious local declarations/constructors to additional safe AST-backed cases, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
-- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; References/Rename use indexed AST method call sites first, keep text fallback for callback strings, and should continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
+- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped while References/Rename use indexed AST call sites first and keep text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
 - **Smoke validation:** expand extension-host smoke coverage for packaged CLI availability, Agent Kit setup errors, and disposable-profile install checks.

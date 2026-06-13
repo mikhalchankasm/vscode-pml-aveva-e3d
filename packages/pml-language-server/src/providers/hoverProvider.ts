@@ -347,7 +347,7 @@ export class HoverProvider {
 		document: TextDocument,
 		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
 	): Promise<Hover | null> {
-		const methods = this.symbolIndex.findMethod(methodName);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, methodName);
 
 		if (methods.length === 0) {
 			return null;
@@ -364,7 +364,7 @@ export class HoverProvider {
 		}
 
 		if (isDeclarationHover) {
-			const usages = await this.getMethodUsagesMarkdown(methodName);
+			const usages = await this.getMethodUsagesMarkdown(methodName, document.uri);
 			if (usages) {
 				sections.push(usages);
 			}
@@ -382,12 +382,12 @@ export class HoverProvider {
 		};
 	}
 
-	private async getMethodUsagesMarkdown(methodName: string): Promise<string> {
+	private async getMethodUsagesMarkdown(methodName: string, uri: string): Promise<string> {
 		if (!this.referencesProvider) {
 			return '';
 		}
 
-		const { total, previews } = await this.referencesProvider.getReferencePreviews(methodName, 5, false);
+		const { total, previews } = await this.referencesProvider.getReferencePreviews(methodName, 5, false, uri);
 		if (total === 0) {
 			return '`USAGES` none found';
 		}

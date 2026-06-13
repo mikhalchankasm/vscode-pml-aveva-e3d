@@ -34,7 +34,7 @@ export class SignatureHelpProvider {
 		const activeParameter = currentParams.split(',').length - 1;
 
 		// Find method in symbol index
-		const methods = this.symbolIndex.findMethod(methodName);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, methodName);
 		if (methods.length === 0) {
 			return null;
 		}

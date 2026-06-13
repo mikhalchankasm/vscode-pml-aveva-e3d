@@ -5,6 +5,7 @@ import { Parser } from '../../parser/parser';
 import { SymbolIndex } from '../../index/symbolIndex';
 import { ReferencesProvider } from '../referencesProvider';
 import { RenameProvider } from '../renameProvider';
+import { DefinitionProvider } from '../definitionProvider';
 
 function textInRange(text: string, range: Range): string {
 	const lines = text.split(/\r?\n/);
@@ -41,6 +42,34 @@ describe('Method reference scanning', () => {
 		return { document, documents, symbolIndex };
 	}
 
+	function createTwoFileFixture() {
+		const otherUri = 'file:///other.pmlfrm';
+		const otherSource = [
+			'define method .refresh()',
+			'endmethod',
+			'track |OTHER| call |!this.refresh|',
+			'!this.refresh()'
+		].join('\n');
+		const parser = new Parser();
+		const currentResult = parser.parse(source);
+		const otherResult = parser.parse(otherSource);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, currentResult.ast, 1, source);
+		symbolIndex.indexFile(otherUri, otherResult.ast, 1, otherSource);
+
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const otherDocument = TextDocument.create(otherUri, 'pml', 1, otherSource);
+		const documents = {
+			get: (requestedUri: string) => {
+				if (requestedUri === uri) return document;
+				if (requestedUri === otherUri) return otherDocument;
+				return undefined;
+			}
+		};
+
+		return { document, documents, otherUri, otherSource, symbolIndex };
+	}
+
 	it('should provide workspace references through the public provider API', async () => {
 		const { document, documents, symbolIndex } = createProviderFixture();
 		const provider = new ReferencesProvider(symbolIndex, documents as any);
@@ -61,6 +90,38 @@ describe('Method reference scanning', () => {
 			'refresh',
 			'refresh'
 		]);
+	});
+
+	it('should scope method references to the current file when another file defines the same method', async () => {
+		const { document, documents, otherUri, symbolIndex } = createTwoFileFixture();
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('refresh'));
+
+		const references = await provider.provide({
+			textDocument: { uri },
+			position,
+			context: { includeDeclaration: false }
+		});
+
+		expect(references).toHaveLength(6);
+		expect(references?.every(reference => reference.uri === uri)).toBe(true);
+		expect(references?.some(reference => reference.uri === otherUri)).toBe(false);
+	});
+
+	it('should scope method definition lookup to the current file when another file defines the same method', () => {
+		const { document, documents, symbolIndex } = createTwoFileFixture();
+		const provider = new DefinitionProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.lastIndexOf('refresh'));
+
+		const definition = provider.provide({
+			textDocument: { uri },
+			position
+		});
+		const definitions = Array.isArray(definition) ? definition : definition ? [definition] : [];
+
+		expect(definitions).toHaveLength(1);
+		expect(definitions[0].uri).toBe(uri);
+		expect(definitions[0].range.start.line).toBe(0);
 	});
 
 	it('should index AST method call references for provider lookups', () => {
@@ -125,6 +186,18 @@ describe('Method reference scanning', () => {
 		]);
 	});
 
+	it('should scope usage previews to the requested file', async () => {
+		const { documents, otherUri, symbolIndex } = createTwoFileFixture();
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+
+		const { total, previews } = await provider.getReferencePreviews('refresh', 10, false, uri);
+
+		expect(total).toBe(6);
+		expect(previews).toHaveLength(6);
+		expect(previews.every(preview => preview.location.uri === uri)).toBe(true);
+		expect(previews.some(preview => preview.location.uri === otherUri)).toBe(false);
+	});
+
 	it('should provide workspace rename edits through the public provider API', async () => {
 		const { document, documents, symbolIndex } = createProviderFixture();
 		const provider = new RenameProvider(symbolIndex, documents as any);
@@ -155,6 +228,22 @@ describe('Method reference scanning', () => {
 			'refresh',
 			'refresh'
 		]);
+	});
+
+	it('should scope method rename edits to the current file when another file defines the same method', async () => {
+		const { document, documents, otherUri, symbolIndex } = createTwoFileFixture();
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('refresh'));
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position,
+			newName: 'reload'
+		});
+
+		expect(Object.keys(edit?.changes ?? {})).toEqual([uri]);
+		expect(edit?.changes?.[uri]).toHaveLength(7);
+		expect(edit?.changes?.[otherUri]).toBeUndefined();
 	});
 
 	it('should use indexed AST method references for rename even when text fallback finds nothing', async () => {

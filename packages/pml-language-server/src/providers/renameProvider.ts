@@ -1,6 +1,7 @@
 /**
  * Rename Provider - Rename Symbol (F2)
- * Provides workspace-wide symbol renaming for methods, objects, forms, and variables
+ * Provides symbol renaming for methods, objects, forms, and variables.
+ * User-defined methods are file-scoped; objects, forms, and global variables remain workspace-scoped.
  */
 
 import {
@@ -49,7 +50,7 @@ export class RenameProvider {
 		if (!symbolName) return null;
 
 		// Check if symbol exists in index (method, object, form, or variable)
-		const methods = this.symbolIndex.findMethod(symbolName);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = this.symbolIndex.findObject(symbolName);
 		const forms = this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
@@ -90,7 +91,7 @@ export class RenameProvider {
 		const changes: { [uri: string]: TextEdit[] } = {};
 
 		// Check what kind of symbol we're renaming
-		const methods = this.symbolIndex.findMethod(symbolName);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = this.symbolIndex.findObject(symbolName);
 		const forms = this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
@@ -98,7 +99,7 @@ export class RenameProvider {
 
 		if (methods.length > 0) {
 			// Renaming a method
-			await this.collectMethodRenames(symbolName, newName, changes);
+			await this.collectMethodRenames(document.uri, symbolName, newName, changes);
 		} else if (objects.length > 0) {
 			// Renaming an object
 			await this.collectObjectRenames(symbolName, newName, changes);
@@ -119,6 +120,7 @@ export class RenameProvider {
 	 * Collect all edits needed to rename a method
 	 */
 	private async collectMethodRenames(
+		fileUri: string,
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
@@ -126,32 +128,24 @@ export class RenameProvider {
 		// Extract new name without leading dot if present
 		const newMethodName = newName.startsWith('.') ? newName.substring(1) : newName;
 
-		const allFileUris = this.symbolIndex.getAllFileUris();
 		const indexedEditsByUri = this.groupTextEditsByUri(
 			this.symbolIndex
-				.findMethodReferences(oldName)
+				.findMethodReferencesInFile(fileUri, oldName)
 				.map(reference => ({
 					uri: reference.uri,
 					edit: TextEdit.replace(reference.range, newMethodName)
 				}))
 		);
 
-		// Process files in parallel batches
-		const batchSize = 10;
-		for (let i = 0; i < allFileUris.length; i += batchSize) {
-			const batch = allFileUris.slice(i, i + batchSize);
-			await Promise.all(batch.map(async (fileUri) => {
-				const text = await this.getFileText(fileUri);
-				if (!text) return;
+		const text = await this.getFileText(fileUri);
+		if (!text) return;
 
-				const edits = this.deduplicateTextEdits([
-					...(indexedEditsByUri.get(fileUri) ?? []),
-					...this.findAndReplaceMethod(text, oldName, newMethodName)
-				]);
-				if (edits.length > 0) {
-					changes[fileUri] = edits;
-				}
-			}));
+		const edits = this.deduplicateTextEdits([
+			...(indexedEditsByUri.get(fileUri) ?? []),
+			...this.findAndReplaceMethod(text, oldName, newMethodName)
+		]);
+		if (edits.length > 0) {
+			changes[fileUri] = edits;
 		}
 	}
 

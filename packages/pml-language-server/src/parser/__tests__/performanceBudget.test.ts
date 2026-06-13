@@ -118,15 +118,18 @@ describe('performance budget guards', () => {
 		expect(elapsedMs).toBeLessThan(indexBudgetMs);
 	});
 
-	maybeIt('provides completions from a large workspace index within the release budget', () => {
+	maybeIt('provides file-local method completions with a large workspace index within the release budget', () => {
 		const { symbolIndex } = createIndexedWorkspace();
 		const source = [
 			'define method .localRefresh(!target is STRING)',
 			'endmethod',
 			'',
-			'sh'
+			'lo'
 		].join('\n');
 		const document = TextDocument.create('file:///workspace/current.pml', 'pml', 1, source);
+		const result = new Parser().parse(source, { mode: parserModeFromUri(document.uri) });
+		expect(result.errors).toHaveLength(0);
+		symbolIndex.indexFile(document.uri, result.ast, document.version, source);
 		const provider = new CompletionProvider(symbolIndex);
 
 		const startedAt = performance.now();
@@ -136,11 +139,12 @@ describe('performance budget guards', () => {
 		}, document);
 		const elapsedMs = performance.now() - startedAt;
 
-		expect(completions.some(item => item.label === '.sharedRefresh')).toBe(true);
+		expect(completions.some(item => item.label === '.localRefresh')).toBe(true);
+		expect(completions.some(item => item.label === '.sharedRefresh')).toBe(false);
 		expect(elapsedMs).toBeLessThan(completionBudgetMs);
 	});
 
-	maybeIt('finds references across a 100-file workspace model within the release budget', async () => {
+	maybeIt('finds file-local method references with a 100-file workspace model within the release budget', async () => {
 		const { symbolIndex, documents } = createIndexedWorkspace();
 		const uri = 'file:///workspace/file1.pml';
 		const document = documents.get(uri);
@@ -159,7 +163,8 @@ describe('performance budget guards', () => {
 		});
 		const elapsedMs = performance.now() - startedAt;
 
-		expect(references?.length).toBe(200);
+		expect(references?.length).toBe(2);
+		expect(references?.every(reference => reference.uri === uri)).toBe(true);
 		expect(elapsedMs).toBeLessThan(referencesBudgetMs);
 	});
 });

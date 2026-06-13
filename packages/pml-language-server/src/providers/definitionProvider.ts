@@ -25,14 +25,14 @@ export class DefinitionProvider {
 		// Check if it's a method call (.methodName or just methodName after .)
 		if (word.startsWith('.')) {
 			const methodName = word.substring(1);
-			return this.findMethodDefinition(methodName);
+			return this.findMethodDefinition(document.uri, methodName);
 		}
 
 		// Check if word contains a dot (e.g., "var.methodName" or "this.methodName")
 		if (word.includes('.')) {
 			const lastDotIndex = word.lastIndexOf('.');
 			const methodName = word.substring(lastDotIndex + 1);
-			return this.findMethodDefinition(methodName);
+			return this.findMethodDefinition(document.uri, methodName);
 		}
 
 		// Check if previous character before word is a dot (for .methodName() calls)
@@ -40,12 +40,12 @@ export class DefinitionProvider {
 		const wordStartOffset = document.offsetAt(wordRange.start);
 		if (wordStartOffset > 0 && text[wordStartOffset - 1] === '.') {
 			// This is a method call after dot: !var.methodName()
-			return this.findMethodDefinition(word);
+			return this.findMethodDefinition(document.uri, word);
 		}
 
 		// Check if it's just a method name without dot
 		// (e.g., in "define method .test" -> cursor on "test")
-		const methods = this.symbolIndex.findMethod(word);
+		const methods = this.symbolIndex.findMethodsInFile(document.uri, word);
 		if (methods.length > 0) {
 			// Return first match (could be multiple)
 			return Location.create(methods[0].uri, methods[0].range);
@@ -69,8 +69,8 @@ export class DefinitionProvider {
 	/**
 	 * Find method definition
 	 */
-	private findMethodDefinition(methodName: string): Definition | null {
-		const methods = this.symbolIndex.findMethod(methodName);
+	private findMethodDefinition(uri: string, methodName: string): Definition | null {
+		const methods = this.symbolIndex.findMethodsInFile(uri, methodName);
 
 		if (methods.length === 0) {
 			return null;
