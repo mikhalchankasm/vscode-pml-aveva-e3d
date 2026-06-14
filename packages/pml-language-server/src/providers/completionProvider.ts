@@ -83,6 +83,9 @@ export class CompletionProvider {
 			if (prefix.length >= 2) {
 				const variableCompletions = this.getDocumentVariableCompletions(document);
 				items.push(...variableCompletions);
+				if (prefix.startsWith('!!')) {
+					items.push(...this.getWorkspaceFunctionCompletions(prefix.substring(2)));
+				}
 			}
 		}
 
@@ -406,6 +409,21 @@ export class CompletionProvider {
 			filterText: method.name,
 			sortText: `0${method.name}`
 		}));
+	}
+
+	private getWorkspaceFunctionCompletions(prefix?: string): CompletionItem[] {
+		const lowerPrefix = prefix?.toLowerCase();
+		return this.symbolIndex.getAllFunctions()
+			.filter(func => !lowerPrefix || func.name.toLowerCase().startsWith(lowerPrefix))
+			.map(func => ({
+				label: `!!${func.name}`,
+				kind: CompletionItemKind.Function,
+				detail: `Function (${this.formatParameterList(func.parameters)})`,
+				documentation: func.documentation,
+				insertText: `!!${func.name}`,
+				filterText: `!!${func.name}`,
+				sortText: `0${func.name}`
+			}));
 	}
 
 	private getCurrentFormMemberCompletions(document: TextDocument): CompletionItem[] {

@@ -3,6 +3,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { HoverProvider } from '../hoverProvider';
 import { Parser } from '../../parser/parser';
 import { SymbolIndex } from '../../index/symbolIndex';
+import { ReferencesProvider } from '../referencesProvider';
 
 describe('HoverProvider', () => {
 	it('shows PDMS command hover only for line-start command starters', async () => {
@@ -333,5 +334,45 @@ describe('HoverProvider', () => {
 
 		expect(value).toContain('Current form refresh.');
 		expect(value).not.toContain('Other form refresh.');
+	});
+
+	it('shows compact global function descriptions and declaration usages', async () => {
+		const uri = 'file:///functions.pmlfnc';
+		const source = [
+			'-- $P Description: Builds report data.',
+			'define function !!BuildReport(!items is ARRAY)',
+			'	return !items',
+			'endfunction',
+			'',
+			'!result = !!BuildReport(!items)'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const referencesProvider = new ReferencesProvider(symbolIndex, documents as any);
+		const provider = new HoverProvider(symbolIndex, referencesProvider);
+
+		const declarationHover = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.indexOf('BuildReport'))
+		}, document);
+		const callHover = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.lastIndexOf('BuildReport'))
+		}, document);
+
+		const declarationValue = String((declarationHover?.contents as any).value);
+		const callValue = String((callHover?.contents as any).value);
+
+		expect(declarationValue).toContain('Builds report data.');
+		expect(declarationValue).toContain('`USAGES` 1 location');
+		expect(declarationValue).toContain('[functions.pmlfnc:6]');
+		expect(callValue).toBe('Builds report data.');
 	});
 });

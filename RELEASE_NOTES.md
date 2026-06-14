@@ -12,6 +12,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Debounced external file watcher re-indexing, preserved recreated files during watcher bursts, and moved watched-file indexing into a tested helper.
 - Improved References and Rename coverage for dynamic substitute callback paths such as `!this.$!<gadget>.method`.
 - Kept user-defined method navigation and hints file-local so duplicate method names in separate forms no longer leak into completions, hover usage previews, definition lookup, references, rename, or signature help.
+- Added a separate global-function path for `!!function(...)` calls, with indexed references, definition lookup, hover usages, signature help, completions, workspace/document symbols, and CLI symbol output.
 
 ### Validation
 

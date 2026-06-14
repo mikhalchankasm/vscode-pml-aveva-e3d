@@ -162,7 +162,7 @@ connection.onInitialized(async () => {
 			startupProgress.done();
 			startupProgress = undefined;
 
-			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
+			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.functions} functions, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
 		}
 	} catch (error: unknown) {
 		// Ensure any progress indicator is closed on error

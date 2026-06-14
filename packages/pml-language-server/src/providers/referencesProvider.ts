@@ -49,14 +49,19 @@ export class ReferencesProvider {
 		if (symbolName.length === 0) return null;
 
 		const references: Location[] = [];
+		const isGlobalFunctionCall = word.startsWith('!!') && !word.includes('.');
 
 		// Find definition
-		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const functions = isGlobalFunctionCall ? this.symbolIndex.findFunction(symbolName) : [];
+		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = methods.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = methods.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 
 		// Add definitions to references (if includeDeclaration is true)
 		if (params.context.includeDeclaration) {
+			for (const func of functions) {
+				references.push(Location.create(func.uri, func.range));
+			}
 			for (const method of methods) {
 				references.push(Location.create(method.uri, method.range));
 			}
@@ -71,7 +76,9 @@ export class ReferencesProvider {
 		// Scan all workspace files for references (not just current document).
 		// Indexed AST references are the primary source; text scanning remains a fallback for
 		// callback strings and parser recovery gaps that are not represented as expressions.
-		if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
+		if (functions.length > 0) {
+			references.push(...this.findFunctionReferencesInWorkspace(symbolName));
+		} else if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
 			// Indexed definitions are added above, so text scanning must not add declaration matches again.
 			const workspaceRefs = methods.length > 0 && objects.length === 0 && forms.length === 0
 				? await this.findReferencesInFileScope(document.uri, symbolName, false)
@@ -123,6 +130,26 @@ export class ReferencesProvider {
 		return { total: this.deduplicateLocations(allLocations).length, previews };
 	}
 
+	public async getFunctionReferencePreviews(symbolName: string, limit = 5): Promise<{ total: number; previews: ReferencePreview[] }> {
+		if (symbolName.length === 0) {
+			return { total: 0, previews: [] };
+		}
+
+		const locations = this.deduplicateLocations(this.findFunctionReferencesInWorkspace(symbolName));
+		const previews: ReferencePreview[] = [];
+
+		for (const location of locations) {
+			if (previews.length >= limit) {
+				break;
+			}
+			const text = await this.getFileText(location.uri);
+			const lineText = text?.split(/\r?\n/)[location.range.start.line]?.trim() ?? '';
+			previews.push({ location, lineText });
+		}
+
+		return { total: locations.length, previews };
+	}
+
 	/**
 	 * Find all references to a symbol across the entire workspace
 	 */
@@ -152,6 +179,12 @@ export class ReferencesProvider {
 		references.push(...this.findIndexedReferences(symbolName, fileUri));
 		references.push(...await this.findReferencesInFile(fileUri, symbolName, includeDeclaration));
 		return this.deduplicateLocations(references);
+	}
+
+	private findFunctionReferencesInWorkspace(symbolName: string): Location[] {
+		return this.symbolIndex
+			.findFunctionReferences(symbolName)
+			.map(reference => Location.create(reference.uri, reference.range));
 	}
 
 	private findIndexedReferences(symbolName: string, fileUri?: string): Location[] {

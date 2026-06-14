@@ -275,6 +275,7 @@ function createWorkspaceSymbolsResult(folderPath: string, metadata: CliMetadata)
 		diagnostics,
 		symbols: {
 			methods: symbolIndex.getAllMethods().map(normalizeSymbolInfo),
+			functions: symbolIndex.getAllFunctions().map(normalizeSymbolInfo),
 			objects: symbolIndex.getAllObjects().map(normalizeSymbolInfo),
 			forms: symbolIndex.getAllForms().map(normalizeSymbolInfo)
 		}

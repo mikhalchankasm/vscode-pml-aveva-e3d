@@ -87,7 +87,7 @@ export class HoverProvider {
 
 	constructor(
 		private symbolIndex: SymbolIndex,
-		private referencesProvider?: Pick<ReferencesProvider, 'getReferencePreviews'>
+		private referencesProvider?: Pick<ReferencesProvider, 'getReferencePreviews' | 'getFunctionReferencePreviews'>
 	) {}
 
 	public async provide(params: HoverParams, document: TextDocument): Promise<Hover | null> {
@@ -96,6 +96,8 @@ export class HoverProvider {
 		if (!wordRange) return null;
 
 		const word = document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
 
 		const pdmsCommandHover = this.getPdmsCommandHover(word, document, wordRange);
 		if (pdmsCommandHover) {
@@ -105,6 +107,13 @@ export class HoverProvider {
 		const globalVariableHover = this.getGlobalVariableHover(word, document, wordRange);
 		if (globalVariableHover) {
 			return globalVariableHover;
+		}
+
+		if (!word.includes('.') && wordStartOffset >= 2 && text.slice(wordStartOffset - 2, wordStartOffset) === '!!') {
+			const functionHover = await this.getFunctionHover(word, document, wordRange);
+			if (functionHover) {
+				return functionHover;
+			}
 		}
 
 		// Extract method name from patterns like .method, var.method, !obj.method
@@ -402,6 +411,79 @@ export class HoverProvider {
 		}
 
 		return this.joinCompactLines(lines);
+	}
+
+	private async getFunctionHover(
+		functionName: string,
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): Promise<Hover | null> {
+		const functions = this.symbolIndex.findFunction?.(functionName) ?? [];
+		if (functions.length === 0) {
+			return null;
+		}
+
+		const func = functions[0];
+		const description = this.extractMethodDescription(func.documentation);
+		const sections: string[] = [];
+		if (description) {
+			sections.push(description);
+		}
+
+		if (this.isFunctionDeclarationHover(document, wordRange)) {
+			const usages = await this.getFunctionUsagesMarkdown(functionName);
+			if (usages) {
+				sections.push(usages);
+			}
+		}
+
+		if (sections.length === 0) {
+			return null;
+		}
+
+		return {
+			contents: {
+				kind: MarkupKind.Markdown,
+				value: sections.join('\n\n')
+			},
+			range: {
+				start: { line: wordRange.start.line, character: Math.max(0, wordRange.start.character - 2) },
+				end: wordRange.end
+			}
+		};
+	}
+
+	private async getFunctionUsagesMarkdown(functionName: string): Promise<string> {
+		if (!this.referencesProvider?.getFunctionReferencePreviews) {
+			return '';
+		}
+
+		const { total, previews } = await this.referencesProvider.getFunctionReferencePreviews(functionName, 5);
+		if (total === 0) {
+			return '`USAGES` none found';
+		}
+
+		const suffix = total > previews.length ? ` (showing first ${previews.length})` : '';
+		const lines = [
+			`\`USAGES\` ${total} location${total === 1 ? '' : 's'}${suffix}`
+		];
+
+		for (const preview of previews) {
+			lines.push(this.formatReferenceLine(preview));
+		}
+
+		return this.joinCompactLines(lines);
+	}
+
+	private isFunctionDeclarationHover(
+		document: TextDocument,
+		wordRange: { start: { line: number; character: number }; end: { line: number; character: number } }
+	): boolean {
+		const linePrefix = document.getText({
+			start: { line: wordRange.start.line, character: 0 },
+			end: wordRange.start
+		});
+		return /\bdefine\s+function\s+!!\s*$/i.test(linePrefix);
 	}
 
 	private getFileName(uri: string): string {

@@ -21,35 +21,37 @@ export class SignatureHelpProvider {
 			end: position
 		});
 
-		// Find method call: .methodName(
 		const methodMatch = line.match(/\.(\w+)\s*\(([^)]*)$/);
-		if (!methodMatch) {
+		const functionMatch = methodMatch ? null : line.match(/!!(\w+)\s*\(([^)]*)$/);
+		if (!methodMatch && !functionMatch) {
 			return null;
 		}
 
-		const methodName = methodMatch[1];
-		const currentParams = methodMatch[2];
+		const symbolName = (methodMatch ?? functionMatch)![1];
+		const currentParams = (methodMatch ?? functionMatch)![2];
 
 		// Count how many parameters already entered (by counting commas)
 		const activeParameter = currentParams.split(',').length - 1;
 
 		// Find method in symbol index
-		const methods = this.symbolIndex.findMethodsInFile(document.uri, methodName);
-		if (methods.length === 0) {
+		const signaturesSource = methodMatch
+			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
+			: this.symbolIndex.findFunction(symbolName);
+		if (signaturesSource.length === 0) {
 			return null;
 		}
 
 		// Build signatures for all overloads
 		const signatures: SignatureInformation[] = [];
 
-		for (const method of methods) {
-			const parameterLabels = method.parameters.map(parameter => this.formatParameterName(parameter));
+		for (const symbol of signaturesSource) {
+			const parameterLabels = symbol.parameters.map(parameter => this.formatParameterName(parameter));
 			const params = parameterLabels.map(parameter => {
 				return ParameterInformation.create(parameter);
 			});
 
-			const label = method.signature || `.${method.name}(${parameterLabels.join(', ')})`;
-			const documentation = method.documentation || `Method: .${method.name}`;
+			const label = symbol.signature || `${methodMatch ? '.' : '!!'}${symbol.name}(${parameterLabels.join(', ')})`;
+			const documentation = symbol.documentation || `${methodMatch ? 'Method' : 'Function'}: ${methodMatch ? '.' : '!!'}${symbol.name}`;
 
 			signatures.push({
 				label,
@@ -58,7 +60,7 @@ export class SignatureHelpProvider {
 			});
 		}
 
-		const parameterCounts = methods.map(method => method.parameters.length);
+		const parameterCounts = signaturesSource.map(symbol => symbol.parameters.length);
 		const activeSignature = this.selectActiveSignature(parameterCounts, activeParameter);
 
 		return {

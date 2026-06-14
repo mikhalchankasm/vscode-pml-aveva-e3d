@@ -1,0 +1,111 @@
+import { describe, expect, it } from 'vitest';
+import { Range } from 'vscode-languageserver/node';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { Parser } from '../../parser/parser';
+import { SymbolIndex } from '../../index/symbolIndex';
+import { DefinitionProvider } from '../definitionProvider';
+import { ReferencesProvider } from '../referencesProvider';
+
+function textInRange(text: string, range: Range): string {
+	const lines = text.split(/\r?\n/);
+	if (range.start.line === range.end.line) {
+		return lines[range.start.line].slice(range.start.character, range.end.character);
+	}
+	return '';
+}
+
+describe('Global function references', () => {
+	const uri = 'file:///functions.pmlfnc';
+	const source = [
+		'define function !!Process(!target is STRING)',
+		'	return !target',
+		'endfunction',
+		'',
+		'define method .run()',
+		'	!value = !!Process(!target)',
+		'	!!Process(!value)',
+		'	!!Main.Process()',
+		'	!this.Process()',
+		'endmethod'
+	].join('\n');
+
+	function createFixture() {
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+
+		return { document, documents, symbolIndex };
+	}
+
+	it('indexes only direct !!function calls as function references', () => {
+		const { symbolIndex } = createFixture();
+
+		const functionReferences = symbolIndex.findFunctionReferences('Process');
+		const methodReferences = symbolIndex.findMethodReferences('Process');
+
+		expect(functionReferences).toHaveLength(2);
+		expect(functionReferences.map(reference => textInRange(source, reference.range))).toEqual([
+			'!!Process',
+			'!!Process'
+		]);
+		expect(methodReferences.map(reference => textInRange(source, reference.range))).toEqual([
+			'Process',
+			'Process'
+		]);
+	});
+
+	it('finds direct !!function calls without method or form member calls', async () => {
+		const { document, documents, symbolIndex } = createFixture();
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('!!Process(!target)') + 2);
+
+		const references = await provider.provide({
+			textDocument: { uri },
+			position,
+			context: { includeDeclaration: false }
+		});
+
+		expect(references).toHaveLength(2);
+		expect(references?.map(reference => textInRange(source, reference.range))).toEqual([
+			'!!Process',
+			'!!Process'
+		]);
+	});
+
+	it('includes function definitions when requested', async () => {
+		const { document, documents, symbolIndex } = createFixture();
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('!!Process(!target)') + 2);
+
+		const references = await provider.provide({
+			textDocument: { uri },
+			position,
+			context: { includeDeclaration: true }
+		});
+
+		expect(references).toHaveLength(3);
+		expect(references?.[0].range.start.line).toBe(0);
+	});
+
+	it('goes to the global function definition from a !!function call', () => {
+		const { document, documents, symbolIndex } = createFixture();
+		const provider = new DefinitionProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('!!Process(!target)') + 2);
+
+		const definition = provider.provide({
+			textDocument: { uri },
+			position
+		});
+		const definitions = Array.isArray(definition) ? definition : definition ? [definition] : [];
+
+		expect(definitions).toHaveLength(1);
+		expect(definitions[0].uri).toBe(uri);
+		expect(definitions[0].range.start.line).toBe(0);
+	});
+});

@@ -35,6 +35,8 @@ export class WorkspaceSymbolProvider {
 		switch (kind) {
 			case 'method':
 				return SymbolKind.Method;
+			case 'function':
+				return SymbolKind.Function;
 			case 'object':
 				return SymbolKind.Class;
 			case 'form':

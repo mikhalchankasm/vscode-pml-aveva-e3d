@@ -82,7 +82,7 @@ export class WorkspaceIndexer {
 				const stats = this.symbolIndex.getStats();
 				this.connection.console.log(
 					`Indexed ${document.uri}: ${parseResult.ast.body.length} symbols. ` +
-					`Total: ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`
+					`Total: ${stats.methods} methods, ${stats.functions} functions, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`
 				);
 			}
 		} catch (error) {
@@ -149,7 +149,7 @@ export class WorkspaceIndexer {
 
 			this.connection.console.log(
 				`Workspace indexing complete: ${totalFiles} files indexed in ${duration}ms. ` +
-				`Found ${stats.methods} methods, ${stats.objects} objects, ${stats.forms} forms`
+				`Found ${stats.methods} methods, ${stats.functions} functions, ${stats.objects} objects, ${stats.forms} forms`
 			);
 		} catch (error) {
 			this.connection.console.error(`Workspace indexing failed: ${error}`);

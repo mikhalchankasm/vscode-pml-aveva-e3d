@@ -507,6 +507,42 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === '.remoteRefresh')).toBe(false);
 	});
 
+	it('suggests indexed global functions only after !! prefix', () => {
+		const uri = 'file:///function-completion.pmlfnc';
+		const source = [
+			'define function !!ProcessItems(!items is ARRAY)',
+			'endfunction',
+			'',
+			'!!Pro'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new CompletionProvider(symbolIndex);
+
+		const functionCompletions = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(functionCompletions.find(item => item.label === '!!ProcessItems')).toMatchObject({
+			kind: CompletionItemKind.Function,
+			detail: 'Function (!items)'
+		});
+
+		const bareSource = `${source}\n\nPro`;
+		const bareDocument = TextDocument.create(uri, 'pml', 1, bareSource);
+		const bareCompletions = provider.provide({
+			textDocument: { uri },
+			position: bareDocument.positionAt(bareSource.length)
+		}, bareDocument);
+
+		expect(bareCompletions.some(item => item.label === '!!ProcessItems')).toBe(false);
+	});
+
 
 	it('does not treat non-member dots as member completion receivers', () => {
 		const provider = new CompletionProvider(new SymbolIndex());

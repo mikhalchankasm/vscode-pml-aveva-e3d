@@ -33,6 +33,7 @@ export interface SymbolInfo {
 
 export enum SymbolKind {
 	Method = 'method',
+	Function = 'function',
 	Object = 'object',
 	Form = 'form',
 	Frame = 'frame',
@@ -50,6 +51,19 @@ export interface MethodInfo extends SymbolInfo {
 }
 
 export interface MethodReferenceInfo {
+	name: string;
+	uri: string;
+	range: Range;
+}
+
+export interface FunctionInfo extends SymbolInfo {
+	kind: SymbolKind.Function;
+	parameters: string[];
+	parameterCount: number;
+	signature: string;
+}
+
+export interface FunctionReferenceInfo {
 	name: string;
 	uri: string;
 	range: Range;
@@ -101,6 +115,8 @@ export interface FileSymbols {
 	version: number; // Document version for incremental updates
 	methods: MethodInfo[];
 	methodReferences: MethodReferenceInfo[];
+	functions: FunctionInfo[];
+	functionReferences: FunctionReferenceInfo[];
 	objects: ObjectInfo[];
 	forms: FormInfo[];
 	lastIndexed: number; // Timestamp
@@ -114,6 +130,8 @@ export class SymbolIndex {
 	// Map: symbol name (lowercase) -> list of locations
 	private methodIndex: Map<string, MethodInfo[]> = new Map();
 	private methodReferenceIndex: Map<string, MethodReferenceInfo[]> = new Map();
+	private functionIndex: Map<string, FunctionInfo[]> = new Map();
+	private functionReferenceIndex: Map<string, FunctionReferenceInfo[]> = new Map();
 	private objectIndex: Map<string, ObjectInfo[]> = new Map();
 	private formIndex: Map<string, FormInfo[]> = new Map();
 
@@ -143,6 +161,8 @@ export class SymbolIndex {
 			version,
 			methods: [],
 			methodReferences: [],
+			functions: [],
+			functionReferences: [],
 			objects: [],
 			forms: [],
 			lastIndexed: Date.now()
@@ -154,9 +174,12 @@ export class SymbolIndex {
 				const methodInfo = this.extractMethodInfo(node, uri, documentText);
 				fileSymbols.methods.push(methodInfo);
 				this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
-				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
+				this.indexCallReferences(node.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
 			} else if (node.type === 'FunctionDefinition') {
-				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
+				const functionInfo = this.extractFunctionInfo(node, uri, documentText);
+				fileSymbols.functions.push(functionInfo);
+				this.addToIndex(this.functionIndex, functionInfo.name.toLowerCase(), functionInfo);
+				this.indexCallReferences(node.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
 			} else if (node.type === 'ObjectDefinition') {
 				const objectInfo = this.extractObjectInfo(node, uri);
 				fileSymbols.objects.push(objectInfo);
@@ -167,18 +190,23 @@ export class SymbolIndex {
 					const methodInfo = this.extractMethodInfo(method, uri, documentText, objectInfo.name);
 					fileSymbols.methods.push(methodInfo);
 					this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
-					this.indexMethodReferences(method.body, uri, fileSymbols.methodReferences);
+					this.indexCallReferences(method.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
 				}
 			} else if (node.type === 'FormDefinition') {
 				const formInfo = this.extractFormInfo(node, uri);
 				fileSymbols.forms.push(formInfo);
 				this.addToIndex(this.formIndex, formInfo.name.toLowerCase(), formInfo);
-				this.indexMethodReferences(node.body, uri, fileSymbols.methodReferences);
+				this.indexCallReferences(node.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
+			} else {
+				this.visitStatementForCallReferences(node, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
 			}
 		}
 
 		for (const reference of fileSymbols.methodReferences) {
 			this.addToIndex(this.methodReferenceIndex, reference.name.toLowerCase(), reference);
+		}
+		for (const reference of fileSymbols.functionReferences) {
+			this.addToIndex(this.functionReferenceIndex, reference.name.toLowerCase(), reference);
 		}
 
 		// Store file symbols
@@ -198,6 +226,12 @@ export class SymbolIndex {
 		}
 		for (const reference of fileSymbols.methodReferences) {
 			this.removeFromIndex(this.methodReferenceIndex, reference.name.toLowerCase(), reference);
+		}
+		for (const func of fileSymbols.functions) {
+			this.removeFromIndex(this.functionIndex, func.name.toLowerCase(), func);
+		}
+		for (const reference of fileSymbols.functionReferences) {
+			this.removeFromIndex(this.functionReferenceIndex, reference.name.toLowerCase(), reference);
 		}
 		for (const object of fileSymbols.objects) {
 			this.removeFromIndex(this.objectIndex, object.name.toLowerCase(), object);
@@ -228,6 +262,14 @@ export class SymbolIndex {
 		return this.methodReferenceIndex.get(name.toLowerCase()) || [];
 	}
 
+	public findFunction(name: string): FunctionInfo[] {
+		return this.functionIndex.get(name.toLowerCase()) || [];
+	}
+
+	public findFunctionReferences(name: string): FunctionReferenceInfo[] {
+		return this.functionReferenceIndex.get(name.toLowerCase()) || [];
+	}
+
 	public findMethodsInFile(uri: string, name: string): MethodInfo[] {
 		const lowerName = name.toLowerCase();
 		return (this.fileSymbols.get(uri)?.methods ?? [])
@@ -237,6 +279,18 @@ export class SymbolIndex {
 	public findMethodReferencesInFile(uri: string, name: string): MethodReferenceInfo[] {
 		const lowerName = name.toLowerCase();
 		return (this.fileSymbols.get(uri)?.methodReferences ?? [])
+			.filter(reference => reference.name.toLowerCase() === lowerName);
+	}
+
+	public findFunctionsInFile(uri: string, name: string): FunctionInfo[] {
+		const lowerName = name.toLowerCase();
+		return (this.fileSymbols.get(uri)?.functions ?? [])
+			.filter(func => func.name.toLowerCase() === lowerName);
+	}
+
+	public findFunctionReferencesInFile(uri: string, name: string): FunctionReferenceInfo[] {
+		const lowerName = name.toLowerCase();
+		return (this.fileSymbols.get(uri)?.functionReferences ?? [])
 			.filter(reference => reference.name.toLowerCase() === lowerName);
 	}
 
@@ -294,6 +348,14 @@ export class SymbolIndex {
 		return this.fileSymbols.get(uri);
 	}
 
+	public getAllFunctions(): FunctionInfo[] {
+		const all: FunctionInfo[] = [];
+		for (const functions of this.functionIndex.values()) {
+			all.push(...functions);
+		}
+		return all;
+	}
+
 	public isFileVersionIndexed(uri: string, version: number): boolean {
 		return this.fileSymbols.get(uri)?.version === version;
 	}
@@ -326,6 +388,12 @@ export class SymbolIndex {
 			}
 		}
 
+		for (const [name, functions] of this.functionIndex.entries()) {
+			if (name.includes(lowerQuery)) {
+				results.push(...functions);
+			}
+		}
+
 		// Search objects
 		for (const [name, objects] of this.objectIndex.entries()) {
 			if (name.includes(lowerQuery)) {
@@ -350,6 +418,7 @@ export class SymbolIndex {
 		return {
 			files: this.fileSymbols.size,
 			methods: Array.from(this.methodIndex.values()).reduce((sum, arr) => sum + arr.length, 0),
+			functions: Array.from(this.functionIndex.values()).reduce((sum, arr) => sum + arr.length, 0),
 			objects: Array.from(this.objectIndex.values()).reduce((sum, arr) => sum + arr.length, 0),
 			forms: Array.from(this.formIndex.values()).reduce((sum, arr) => sum + arr.length, 0)
 		};
@@ -361,6 +430,8 @@ export class SymbolIndex {
 	public clear(): void {
 		this.methodIndex.clear();
 		this.methodReferenceIndex.clear();
+		this.functionIndex.clear();
+		this.functionReferenceIndex.clear();
 		this.objectIndex.clear();
 		this.formIndex.clear();
 		this.fileSymbols.clear();
@@ -433,6 +504,32 @@ export class SymbolIndex {
 		};
 	}
 
+	private extractFunctionInfo(node: FunctionDefinition, uri: string, documentText?: string): FunctionInfo {
+		const parameters = node.parameters.map(p => p.name);
+		const signature = `!!${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
+
+		let documentation: string | undefined = node.documentation?.description;
+		if (!documentation && documentText) {
+			const lineNumber = node.range.start.line;
+			const rawComments = extractPrecedingComments(documentText, lineNumber);
+			if (rawComments) {
+				documentation = formatDocumentation(rawComments, node.name, parameters.map(p => '!' + p));
+			}
+		}
+
+		return {
+			name: node.name,
+			kind: SymbolKind.Function,
+			uri,
+			range: node.range,
+			deprecated: node.deprecated,
+			documentation,
+			parameters,
+			parameterCount: parameters.length,
+			signature
+		};
+	}
+
 	private extractFrameInfo(node: FrameDefinition): FrameInfo {
 		return {
 			name: node.name,
@@ -458,119 +555,145 @@ export class SymbolIndex {
 		};
 	}
 
-	private indexMethodReferences(statements: Statement[], uri: string, references: MethodReferenceInfo[]): void {
+	private indexCallReferences(
+		statements: Statement[],
+		uri: string,
+		methodReferences: MethodReferenceInfo[],
+		functionReferences: FunctionReferenceInfo[]
+	): void {
 		for (const statement of statements) {
-			this.visitStatementForMethodReferences(statement, uri, references);
+			this.visitStatementForCallReferences(statement, uri, methodReferences, functionReferences);
 		}
 	}
 
-	private visitStatementForMethodReferences(statement: Statement, uri: string, references: MethodReferenceInfo[]): void {
+	private visitStatementForCallReferences(
+		statement: Statement,
+		uri: string,
+		methodReferences: MethodReferenceInfo[],
+		functionReferences: FunctionReferenceInfo[]
+	): void {
 		switch (statement.type) {
 			case 'MethodDefinition':
 			case 'FunctionDefinition':
-				this.indexMethodReferences(statement.body, uri, references);
+				this.indexCallReferences(statement.body, uri, methodReferences, functionReferences);
 				break;
 			case 'FormDefinition':
-				this.indexMethodReferences(statement.body, uri, references);
+				this.indexCallReferences(statement.body, uri, methodReferences, functionReferences);
 				break;
 			case 'VariableDeclaration':
 				if (statement.initializer) {
-					this.visitExpressionForMethodReferences(statement.initializer, uri, references);
+					this.visitExpressionForCallReferences(statement.initializer, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'ExpressionStatement':
-				this.visitExpressionForMethodReferences(statement.expression, uri, references);
+				this.visitExpressionForCallReferences(statement.expression, uri, methodReferences, functionReferences);
 				break;
 			case 'IfStatement':
-				this.visitExpressionForMethodReferences(statement.test, uri, references);
-				this.indexMethodReferences(statement.consequent, uri, references);
+				this.visitExpressionForCallReferences(statement.test, uri, methodReferences, functionReferences);
+				this.indexCallReferences(statement.consequent, uri, methodReferences, functionReferences);
 				if (Array.isArray(statement.alternate)) {
-					this.indexMethodReferences(statement.alternate, uri, references);
+					this.indexCallReferences(statement.alternate, uri, methodReferences, functionReferences);
 				} else if (statement.alternate) {
-					this.visitStatementForMethodReferences(statement.alternate, uri, references);
+					this.visitStatementForCallReferences(statement.alternate, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'DoStatement':
 				if (statement.collection) {
-					this.visitExpressionForMethodReferences(statement.collection, uri, references);
+					this.visitExpressionForCallReferences(statement.collection, uri, methodReferences, functionReferences);
 				}
 				if (statement.from) {
-					this.visitExpressionForMethodReferences(statement.from, uri, references);
+					this.visitExpressionForCallReferences(statement.from, uri, methodReferences, functionReferences);
 				}
 				if (statement.to) {
-					this.visitExpressionForMethodReferences(statement.to, uri, references);
+					this.visitExpressionForCallReferences(statement.to, uri, methodReferences, functionReferences);
 				}
 				if (statement.by) {
-					this.visitExpressionForMethodReferences(statement.by, uri, references);
+					this.visitExpressionForCallReferences(statement.by, uri, methodReferences, functionReferences);
 				}
 				if (statement.condition) {
-					this.visitExpressionForMethodReferences(statement.condition, uri, references);
+					this.visitExpressionForCallReferences(statement.condition, uri, methodReferences, functionReferences);
 				}
-				this.indexMethodReferences(statement.body, uri, references);
+				this.indexCallReferences(statement.body, uri, methodReferences, functionReferences);
 				break;
 			case 'HandleStatement':
-				this.indexMethodReferences(statement.body, uri, references);
+				this.indexCallReferences(statement.body, uri, methodReferences, functionReferences);
 				if (statement.alternate) {
-					this.indexMethodReferences(statement.alternate, uri, references);
+					this.indexCallReferences(statement.alternate, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'ReturnStatement':
 				if (statement.argument) {
-					this.visitExpressionForMethodReferences(statement.argument, uri, references);
+					this.visitExpressionForCallReferences(statement.argument, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'BreakStatement':
 			case 'ContinueStatement':
 				if (statement.condition) {
-					this.visitExpressionForMethodReferences(statement.condition, uri, references);
+					this.visitExpressionForCallReferences(statement.condition, uri, methodReferences, functionReferences);
 				}
 				break;
 		}
 	}
 
-	private visitExpressionForMethodReferences(expression: Expression, uri: string, references: MethodReferenceInfo[]): void {
+	private visitExpressionForCallReferences(
+		expression: Expression,
+		uri: string,
+		methodReferences: MethodReferenceInfo[],
+		functionReferences: FunctionReferenceInfo[]
+	): void {
 		switch (expression.type) {
 			case 'CallExpression':
-				this.addCallReference(expression.callee, uri, references);
-				this.visitExpressionForMethodReferences(expression.callee, uri, references);
+				this.addCallReferences(expression.callee, uri, methodReferences, functionReferences);
+				this.visitExpressionForCallReferences(expression.callee, uri, methodReferences, functionReferences);
 				for (const argument of expression.arguments) {
-					this.visitExpressionForMethodReferences(argument, uri, references);
+					this.visitExpressionForCallReferences(argument, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'MemberExpression':
-				this.visitExpressionForMethodReferences(expression.object, uri, references);
-				this.visitExpressionForMethodReferences(expression.property, uri, references);
+				this.visitExpressionForCallReferences(expression.object, uri, methodReferences, functionReferences);
+				this.visitExpressionForCallReferences(expression.property, uri, methodReferences, functionReferences);
 				break;
 			case 'BinaryExpression':
-				this.visitExpressionForMethodReferences(expression.left, uri, references);
-				this.visitExpressionForMethodReferences(expression.right, uri, references);
+				this.visitExpressionForCallReferences(expression.left, uri, methodReferences, functionReferences);
+				this.visitExpressionForCallReferences(expression.right, uri, methodReferences, functionReferences);
 				break;
 			case 'UnaryExpression':
-				this.visitExpressionForMethodReferences(expression.argument, uri, references);
+				this.visitExpressionForCallReferences(expression.argument, uri, methodReferences, functionReferences);
 				break;
 			case 'ArrayExpression':
 				for (const element of expression.elements) {
-					this.visitExpressionForMethodReferences(element, uri, references);
+					this.visitExpressionForCallReferences(element, uri, methodReferences, functionReferences);
 				}
 				break;
 			case 'AssignmentExpression':
-				this.visitExpressionForMethodReferences(expression.left, uri, references);
-				this.visitExpressionForMethodReferences(expression.right, uri, references);
+				this.visitExpressionForCallReferences(expression.left, uri, methodReferences, functionReferences);
+				this.visitExpressionForCallReferences(expression.right, uri, methodReferences, functionReferences);
 				break;
 		}
 	}
 
-	private addCallReference(callee: Expression, uri: string, references: MethodReferenceInfo[]): void {
+	private addCallReferences(
+		callee: Expression,
+		uri: string,
+		methodReferences: MethodReferenceInfo[],
+		functionReferences: FunctionReferenceInfo[]
+	): void {
 		const identifier = this.methodIdentifierFromCallee(callee);
-		if (!identifier) {
-			return;
+		if (identifier) {
+			methodReferences.push({
+				name: identifier.name,
+				uri,
+				range: this.methodNameRange(identifier)
+			});
 		}
 
-		references.push({
-			name: identifier.name,
-			uri,
-			range: this.methodNameRange(identifier)
-		});
+		if (callee.type === 'Identifier' && callee.scope === 'global') {
+			functionReferences.push({
+				name: callee.name,
+				uri,
+				range: callee.range
+			});
+		}
 	}
 
 	private methodNameRange(identifier: Identifier): Range {
@@ -661,6 +784,7 @@ export class SymbolIndex {
 export interface IndexStats {
 	files: number;
 	methods: number;
+	functions: number;
 	objects: number;
 	forms: number;
 }

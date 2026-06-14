@@ -13,6 +13,9 @@ describe('WorkspaceSymbolProvider', () => {
 			'	endmethod',
 			'endobject',
 			'',
+			'define function !!pumpReport(!target is STRING)',
+			'endfunction',
+			'',
 			'setup form !!PumpForm dialog',
 			'exit'
 		].join('\n');
@@ -31,6 +34,7 @@ describe('WorkspaceSymbolProvider', () => {
 			containerName: symbol.containerName
 		}))).toEqual([
 			{ name: 'pumpStart', kind: SymbolKind.Method, containerName: 'PumpController' },
+			{ name: 'pumpReport', kind: SymbolKind.Function, containerName: undefined },
 			{ name: 'PumpController', kind: SymbolKind.Class, containerName: undefined },
 			{ name: '!!PumpForm', kind: SymbolKind.Interface, containerName: undefined }
 		]);

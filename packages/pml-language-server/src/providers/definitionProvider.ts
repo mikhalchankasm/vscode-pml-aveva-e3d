@@ -21,6 +21,12 @@ export class DefinitionProvider {
 		if (!wordRange) return null;
 
 		const word = document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+
+		if (!word.includes('.') && wordStartOffset >= 2 && text.slice(wordStartOffset - 2, wordStartOffset) === '!!') {
+			return this.findFunctionDefinition(word);
+		}
 
 		// Check if it's a method call (.methodName or just methodName after .)
 		if (word.startsWith('.')) {
@@ -36,8 +42,6 @@ export class DefinitionProvider {
 		}
 
 		// Check if previous character before word is a dot (for .methodName() calls)
-		const text = document.getText();
-		const wordStartOffset = document.offsetAt(wordRange.start);
 		if (wordStartOffset > 0 && text[wordStartOffset - 1] === '.') {
 			// This is a method call after dot: !var.methodName()
 			return this.findMethodDefinition(document.uri, word);
@@ -83,6 +87,19 @@ export class DefinitionProvider {
 
 		// Multiple definitions - return all
 		return methods.map(m => Location.create(m.uri, m.range));
+	}
+
+	private findFunctionDefinition(functionName: string): Definition | null {
+		const functions = this.symbolIndex.findFunction(functionName);
+		if (functions.length === 0) {
+			return null;
+		}
+
+		if (functions.length === 1) {
+			return Location.create(functions[0].uri, functions[0].range);
+		}
+
+		return functions.map(func => Location.create(func.uri, func.range));
 	}
 
 	/**

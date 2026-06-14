@@ -106,4 +106,34 @@ endmethod
 		expect(symbols.map(symbol => symbol.name)).toEqual(['.run()', '.cleanup(!flag)']);
 		expect(symbols.every(symbol => symbol.kind === LSPSymbolKind.Method)).toBe(true);
 	});
+
+	it('should expose global functions as document symbols', () => {
+		const source = `
+define function !!buildReport(!items is ARRAY, !folder is STRING)
+	return !items
+endfunction
+		`.trim();
+
+		const uri = 'file:///report.pmlfnc';
+		const parseResult = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const symbols = provider.provide({ textDocument: { uri } });
+
+		expect(symbols.map(symbol => ({
+			name: symbol.name,
+			kind: symbol.kind,
+			detail: symbol.detail
+		}))).toEqual([
+			{
+				name: '!!buildReport(!items, !folder)',
+				kind: LSPSymbolKind.Function,
+				detail: 'function'
+			}
+		]);
+	});
 });

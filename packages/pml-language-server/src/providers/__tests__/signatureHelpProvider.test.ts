@@ -54,6 +54,39 @@ describe('SignatureHelpProvider', () => {
 		});
 	});
 
+	it('shows PML parameter markers for indexed global function signatures', () => {
+		const uri = 'file:///function-signature.pmlfnc';
+		const definitions = [
+			'define function !!ProcessItems(!items is ARRAY, !mode is STRING)',
+			'endfunction'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!result = !!ProcessItems(!items, `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help).not.toBeNull();
+		expect(help?.activeParameter).toBe(1);
+		expect(help?.signatures[0]).toMatchObject({
+			label: '!!ProcessItems(!items, !mode)',
+			parameters: [
+				{ label: '!items' },
+				{ label: '!mode' }
+			]
+		});
+	});
+
+
 	it('does not show signatures from another file with the same method name', () => {
 		const uri = 'file:///signature-current.pml';
 		const otherUri = 'file:///signature-other.pml';

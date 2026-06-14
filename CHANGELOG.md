@@ -12,6 +12,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 - Debounce external file watcher re-indexing so bursts of save events for the same PML file are processed once.
 - Improve References and Rename coverage for dynamic substitute callback paths such as `!this.$!<gadget>.method`.
 - Scope user-defined method completions, hover usage previews, Go to Definition, Find References, Rename, and Signature Help to the current file to avoid cross-form method collisions.
+- Index global PML functions separately from form/object methods, including `!!function(...)` References, Go to Definition, hover usages, Signature Help, completions, symbols, and CLI symbol output.
 - Preserve recreated files during debounced watcher bursts and cap sustained watcher debounce delay.
 - Harden dynamic callback reference matching and Claude review wrapper exit-code propagation.
 

@@ -46,6 +46,17 @@ export class DocumentSymbolProvider {
 			return symbols;
 		}
 
+		for (const func of fileSymbols.functions) {
+			symbols.push({
+				name: func.signature,
+				detail: func.deprecated ? '(deprecated)' : 'function',
+				kind: LSPSymbolKind.Function,
+				range: func.range,
+				selectionRange: func.range,
+				children: []
+			});
+		}
+
 		// Add objects (with methods as children)
 		for (const object of fileSymbols.objects) {
 			const objectSymbol: DocumentSymbol = {
