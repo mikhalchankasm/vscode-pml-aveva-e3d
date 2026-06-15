@@ -1296,7 +1296,7 @@ Development plans and progress tracking.
 ## 📊 Current Status
 
 **Version:** 0.12.36
-**Released:** Pending publication
+**Released:** 2026-06-15
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)

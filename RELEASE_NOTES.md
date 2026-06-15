@@ -6,7 +6,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 **Release Date:** 2026-06-15
 
-**GitHub Release:** Pending publication after explicit `confirm publish`.
+**GitHub Release:** [v0.12.36](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.36)
 
 ### What Changed
 
@@ -34,7 +34,7 @@ This file is the short release snapshot for the current public build. Full histo
 ### Assets
 
 - VSIX: `pml-aveva-e3d-0.12.36.vsix`
-- SHA256: `7A4101768FD6983A0F9B03B46B59522EE37072833569CD8EC61FE01D06DE55AC`
+- SHA256: `f225b1c80baa8b6ab570c5ac11ce057b673c6957430bf53f65ddf79339538fc6`
 
 ## Previous Release - v0.12.35
 
