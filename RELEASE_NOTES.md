@@ -22,6 +22,7 @@ This file is the short release snapshot for the current public build. Full histo
 ### Validation
 
 - Bundled compile: passed with `npm run compile`.
+- TypeScript compile: passed with `npm run compile:tsc`.
 - Language server tests: passed with `npm --prefix packages/pml-language-server run test -- run` (`264 passed`, `3 skipped`).
 - Quick Actions command validation: passed with `npm run validate:quick-actions`.
 - Extension smoke validation: passed with `npm run validate:extension-smoke`.

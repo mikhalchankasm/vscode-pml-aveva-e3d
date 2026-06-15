@@ -8,6 +8,7 @@ import {
 	Statement,
 	Expression,
 	MethodDefinition,
+	FunctionDefinition,
 	ObjectDefinition,
 	FormDefinition,
 	FrameDefinition,
