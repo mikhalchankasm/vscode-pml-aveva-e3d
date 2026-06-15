@@ -10,7 +10,6 @@ This file is the short release snapshot for the current public build. Full histo
 
 ### What Changed
 
-- Added standard and super Claude review npm wrappers, with the super path defaulting to `claude-fable-5` and both paths using a no-tools, non-interactive review contract.
 - Reduced member-completion noise for constructed `ATTRIBUTE` receivers and obvious string/numeric literal receivers.
 - Avoided redundant document indexing when the same document version is already indexed.
 - Debounced external file watcher re-indexing, preserved recreated files during watcher bursts, and moved watched-file indexing into a tested helper.

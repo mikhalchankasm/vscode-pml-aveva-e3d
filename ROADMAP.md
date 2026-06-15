@@ -823,7 +823,7 @@ Development plans and progress tracking.
 
 ### Patch Improvements
 
-- [x] **Claude Review Follow-up** ✅ COMPLETED
+- [x] **Parser Safeguard Follow-up** ✅ COMPLETED
   - Report malformed `setup command` controllers instead of silently consuming input.
   - Keep `$T<n>` trace control recognition narrow and add assignment guards for command-line whitelist handling.
   - Add `$M` hover support for dollar-prefixed PDMS command starters.
@@ -1363,7 +1363,7 @@ Development plans and progress tracking.
 - `v0.12.11`: reduced installed `.pmlfrm` parser errors from 3010 to 1409 with layout form and nested form-block support.
 - `v0.12.10`: applied post-review parser safeguards for missing `define function`, DBREF AST typing, compose continuation recovery, and recovered block ranges.
 - `v0.12.9`: reduced installed `.pmlobj` parser errors from 11007 to 2694 and improved shared recovery for `.pmlfnc`/`.pmlfrm`.
-- `v0.12.8`: closed Claude review parser safeguards and eliminated `.pmlfnc` regressions vs `v0.12.6`.
+- `v0.12.8`: closed parser safeguards and eliminated `.pmlfnc` regressions vs `v0.12.6`.
 - `v0.12.7`: reduced installed AVEVA `.pmlcmd` parser errors from 1200 to 0 across 698 files.
 - `v0.12.6`: reduced `test2form.pmlfrm` parser baseline to two real fixture issues.
 - `v0.12.5`: reduced `test2form.pmlfrm` parser gaps with attribute member access, `inset`, pipe-string fragments, and `do !x to ...`.

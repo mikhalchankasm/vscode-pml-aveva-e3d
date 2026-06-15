@@ -17,7 +17,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 - Index global PML functions separately from form/object methods, including `!!function(...)` References, Go to Definition, hover usages, Signature Help, completions, symbols, and CLI symbol output.
 - Rename the array `ReIndex` command to `Reindex Selected Array` so the UI makes its local selection scope clear.
 - Preserve recreated files during debounced watcher bursts and cap sustained watcher debounce delay.
-- Harden dynamic callback reference matching and Claude review wrapper exit-code propagation.
+- Harden dynamic callback reference matching for malformed multiline segments.
 
 ## [0.12.35] - 2026-05-31
 
