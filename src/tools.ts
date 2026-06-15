@@ -49,7 +49,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         this.registerCommand('pml.makeListPath', 'Make Array (add /)', this.makeListPath);
         this.registerCommand('pml.makeListString', 'Make Array (add |....|)', this.makeListString);
         this.registerCommand('pml.makeListPathString', 'Make Array (add / and |....|)', this.makeListPathString);
-        this.registerCommand('pml.reindexArray', 'ReIndex', this.reindexArray);
+        this.registerCommand('pml.reindexArray', 'Reindex Selected Array', this.reindexArray);
         this.registerCommand('pml.addToArray', 'Add to Array', this.addToArray);
 
         // Examples
@@ -715,7 +715,7 @@ export class PMLToolsProvider implements vscode.Disposable {
     };
 
     /**
-     * ReIndex - перенумеровывает индексы массива, начиная с текущего максимального индекса + 1
+     * Reindex selected array assignment lines from 1 within the current selection.
      */
     private reindexArray = async () => {
         const editor = this.getActiveEditor();
@@ -781,7 +781,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return;
         }
 
-        // Перенумеровываем строки начиная с 1
+        // Reindex selected array assignment lines from 1.
         let currentIndex = 1;
 
         // Подсчитываем количество строк массива для определения длины индекса

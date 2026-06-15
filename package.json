@@ -369,7 +369,7 @@
       },
       {
         "command": "pml.reindexArray",
-        "title": "ReIndex",
+        "title": "Reindex Selected Array",
         "category": "PML Array",
         "icon": "$(list-ordered)"
       },
