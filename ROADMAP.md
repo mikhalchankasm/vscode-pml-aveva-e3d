@@ -1295,8 +1295,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.35
-**Released:** 2026-05-31
+**Version:** 0.12.36
+**Released:** Pending publication
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
@@ -1335,6 +1335,7 @@ Development plans and progress tracking.
 - **Smoke validation:** expand extension-host smoke coverage for packaged CLI availability, Agent Kit setup errors, and disposable-profile install checks.
 
 **Recent Release Summary:**
+- `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.
 - `v0.12.35`: moves method References/Rename toward AST/index-backed lookup, adds first-pass type-aware member completions, improves `.pmlfrm` `!this.` completions for members/frames/gadgets, adds a missing callback-stub Quick Fix, and strengthens extension/VSIX smoke validation in CI and release workflows.
 - `v0.12.34`: adds the unified Quick Actions launcher, stable PML Assistant static CLI contract, Agent Kit bridge commands, packaged CLI availability, lower-noise callback array diagnostics, compact user-method hovers, focused `Q ATT` hover help, selected DBREF/ATTRIBUTE method completions and hovers, and separate completion icon kinds for form-local methods.
 - `v0.12.33`: restored `$P` print navigation activation, reduced `[0]` diagnostics false positives for likely C#/.NET/PMLNET zero-based collections, added focused method hover navigation with declaration usages and call-site definition links, expanded Common Commands starter coverage for `PARAGON`, `SPECONMODE`, and `FINISH`, added `!!CE` DBREF hover help, added selected `ELEMENTTYPE` metadata method completions/hovers, and closed review follow-ups for hover truncation plus redundant Outline re-indexing.

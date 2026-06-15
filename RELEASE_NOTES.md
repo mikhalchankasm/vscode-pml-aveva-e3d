@@ -2,7 +2,11 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Unreleased Stabilization Snapshot
+## Current Release - v0.12.36
+
+**Release Date:** 2026-06-15
+
+**GitHub Release:** Pending publication after explicit `confirm publish`.
 
 ### What Changed
 
@@ -18,14 +22,20 @@ This file is the short release snapshot for the current public build. Full histo
 ### Validation
 
 - Bundled compile: passed with `npm run compile`.
-- Language server tests: passed with `npm --prefix packages/pml-language-server test -- run` (`249 passed`, `3 skipped`).
-- Targeted indexing/navigation tests: passed for file-change debounce, watched-file indexing, workspace indexing, and method references.
-- Claude review wrapper smoke: passed with `npm run -s review:claude` and `npm run -s review:claude:super`.
-- External Claude super review: completed; confirmed findings were addressed in follow-up hardening.
-- VSIX packaging: passed with `npm run pack`; `pml-aveva-e3d-0.12.35.vsix` contains 16 files.
+- Language server tests: passed with `npm --prefix packages/pml-language-server run test -- run` (`264 passed`, `3 skipped`).
+- Quick Actions command validation: passed with `npm run validate:quick-actions`.
+- Extension smoke validation: passed with `npm run validate:extension-smoke`.
+- Extension-host smoke validation: passed with `npm run test:extension-smoke`.
+- VSIX packaging: passed with `npm run pack`; `pml-aveva-e3d-0.12.36.vsix` contains 16 files.
 - VSIX smoke-check: passed with `npm run validate:vsix`.
+- Local VS Code/Cursor install: passed with `npm run install:local`.
 
-## Current Release - v0.12.35
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.12.36.vsix`
+- SHA256: `7A4101768FD6983A0F9B03B46B59522EE37072833569CD8EC61FE01D06DE55AC`
+
+## Previous Release - v0.12.35
 
 **Release Date:** 2026-05-31
 

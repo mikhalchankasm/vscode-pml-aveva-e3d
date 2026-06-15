@@ -4,6 +4,8 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## Unreleased
 
+## [0.12.36] - 2026-06-15
+
 ### Improved
 
 - Reduced member-completion noise for variables constructed as `object ATTRIBUTE(...)` by limiting suggestions to ATTRIBUTE metadata methods.
