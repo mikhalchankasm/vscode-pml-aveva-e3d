@@ -1349,7 +1349,7 @@ Development plans and progress tracking.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
-- **Workspace indexing:** next expose clearer indexing status when a workspace is large and consider measured hot-spot tuning from the existing performance budgets.
+- ✅ **Workspace Indexing Status** - Progress now reports discovered PML file counts and final indexing duration; next use measured performance baselines to tune hotspots.
 - **Completions:** broaden receiver inference from obvious local declarations/constructors to additional safe AST-backed cases, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
 - **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.

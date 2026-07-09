@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Connection } from 'vscode-languageserver/node';
+import { WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as fs from 'fs/promises';
 import * as os from 'os';
@@ -70,6 +71,26 @@ describe('WorkspaceIndexer', () => {
 
 			expect(symbolIndex.findMethodsInFile(uri, 'openVersion')).toHaveLength(1);
 			expect(symbolIndex.findMethodsInFile(uri, 'diskVersion')).toHaveLength(0);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it('reports discovered file counts and completion duration while indexing a workspace', async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pml-workspace-indexer-progress-'));
+		const report = vi.fn();
+		const progress = { report } as unknown as WorkDoneProgressServerReporter;
+
+		try {
+			await fs.writeFile(path.join(tempDir, 'first.pml'), 'define method .first()\nendmethod', 'utf-8');
+			await fs.writeFile(path.join(tempDir, 'second.pml'), 'define method .second()\nendmethod', 'utf-8');
+
+			const indexer = new WorkspaceIndexer(new SymbolIndex(), createConnectionStub());
+			await indexer.indexWorkspace([tempDir], progress);
+
+			expect(report).toHaveBeenCalledWith(0, 'Found 2 PML files. Indexing...');
+			expect(report).toHaveBeenCalledWith(100, 'Indexed 2/2 files');
+			expect(report).toHaveBeenLastCalledWith(100, expect.stringMatching(/^Indexed 2 PML files in (?:\d+ ms|\d+\.\d s)\.$/));
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}

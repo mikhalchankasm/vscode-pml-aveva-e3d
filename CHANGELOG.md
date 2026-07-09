@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Make workspace-index progress state clearer by reporting discovered PML file counts and indexing duration.
 - Install the freshly packaged VSIX into a disposable VS Code profile in CI and release validation, then verify the extension ID and version reported by the isolated profile.
 - Treat invalid configured Agent Kit paths as a setup problem and smoke-test the actionable setup guidance in the extension host.
 - Run Agent Kit npm scripts through `npm-cli.js` without `cmd.exe` shell parsing, preserving Windows paths that contain `%`, `&`, `!`, spaces, or parentheses.

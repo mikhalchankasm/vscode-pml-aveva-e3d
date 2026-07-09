@@ -132,6 +132,11 @@ export class WorkspaceIndexer {
 
 			const totalFiles = allFiles.length;
 			this.connection.console.log(`Found ${totalFiles} PML files to index`);
+			if (progress) {
+				progress.report(0, totalFiles > 0
+					? `Found ${totalFiles} PML files. Indexing...`
+					: 'No PML files found.');
+			}
 
 			// Second pass: index files with progress reporting
 			let indexedCount = 0;
@@ -148,6 +153,9 @@ export class WorkspaceIndexer {
 
 			const duration = Date.now() - startTime;
 			const stats = this.symbolIndex.getStats();
+			if (progress && totalFiles > 0) {
+				progress.report(100, `Indexed ${totalFiles} PML files in ${formatIndexingDuration(duration)}.`);
+			}
 
 			this.connection.console.log(
 				`Workspace indexing complete: ${totalFiles} files indexed in ${duration}ms. ` +
@@ -282,4 +290,8 @@ export class WorkspaceIndexer {
 	public isIndexing(): boolean {
 		return this.indexingInProgress;
 	}
+}
+
+function formatIndexingDuration(durationMs: number): string {
+	return durationMs < 1000 ? `${durationMs} ms` : `${(durationMs / 1000).toFixed(1)} s`;
 }
