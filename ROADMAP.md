@@ -1344,6 +1344,7 @@ Development plans and progress tracking.
 - ✅ **Completion Performance** - Receiver type inference reuses compiled patterns during each completion request instead of rebuilding them for every scanned line.
 - ✅ **Workspace Indexing Stability** - Open-document conflicts, repeated unchanged document indexing, workspace-folder changes, and external file watcher bursts are covered with debounced, tested indexing paths.
 - ✅ **Dynamic Callback Navigation** - References and Rename cover dynamic substitute callback paths such as `!this.$!<gadget>.method` without crossing malformed multiline segments.
+- ✅ **Packaged CLI Smoke Coverage** - Extension-host smoke validation executes the bundled PML Assistant CLI and verifies its JSON parse contract.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
@@ -1352,7 +1353,7 @@ Development plans and progress tracking.
 - **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
-- **Smoke validation:** expand extension-host smoke coverage for packaged CLI availability, Agent Kit setup errors, and disposable-profile install checks.
+- **Smoke validation:** continue expanding extension-host smoke coverage for Agent Kit setup errors and disposable-profile install checks.
 
 **Recent Release Summary:**
 - `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.

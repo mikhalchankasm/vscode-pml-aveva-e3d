@@ -33,6 +33,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Kept Go to Definition from resolving symbols embedded in comments or string literals.
 - Suppressed Completion and Signature Help inside comments and string literals, and ignored string-argument delimiters when locating active calls or choosing the active signature parameter.
 - Kept Find References and Rename from starting on symbols embedded in comments or string literals.
+- Extended extension-host smoke validation to execute the bundled PML Assistant CLI and verify JSON output.
 
 ## Current Release - v0.12.36
 
@@ -127,7 +128,7 @@ Before publishing a Marketplace package:
 
 1. Keep the static CLI contract stable and document any contract changes in this repository.
 2. Preserve low-noise defaults for `.pmlfrm` diagnostics while expanding parser coverage.
-3. Continue expanding extension-host smoke checks for packaged CLI availability and Agent Kit setup errors.
+3. Continue expanding extension-host smoke checks for Agent Kit setup errors and disposable-profile install behavior.
 4. Continue curated completions/hovers by receiver type without flooding member completion lists.
 
 For full history, see [CHANGELOG.md](CHANGELOG.md).

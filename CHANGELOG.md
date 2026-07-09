@@ -41,6 +41,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 - Keep Go to Definition from resolving symbols inside PML comments and string literals.
 - Suppress Completion and Signature Help inside PML comments and string literals, and keep Signature Help call detection and parameter selection from counting delimiters inside string arguments.
 - Keep Find References and Rename from starting on symbols embedded inside PML comments or string literals.
+- Extend extension-host smoke validation to execute the bundled PML Assistant CLI and verify its JSON parse contract.
 
 ## [0.12.36] - 2026-06-15
 

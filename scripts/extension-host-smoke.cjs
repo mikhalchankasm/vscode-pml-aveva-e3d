@@ -1,4 +1,5 @@
 const assert = require('assert');
+const cp = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -31,6 +32,7 @@ async function run() {
     }
 
     await assertFormCallbackQuickFix();
+    await assertPackagedCliAvailability(extension.extensionPath);
 }
 
 async function assertFormCallbackQuickFix() {
@@ -74,6 +76,38 @@ async function assertFormCallbackQuickFix() {
     diagnostics.dispose();
     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
     fs.rmSync(tempDir, { recursive: true, force: true });
+}
+
+async function assertPackagedCliAvailability(extensionPath) {
+    const cliPath = path.join(extensionPath, 'packages', 'pml-language-server', 'out', 'cli.js');
+    assert(fs.existsSync(cliPath), `Packaged PML Assistant CLI was not found at ${cliPath}.`);
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pml-extension-cli-smoke-'));
+    const filePath = path.join(tempDir, 'SmokeCli.pml');
+    fs.writeFileSync(
+        filePath,
+        [
+            'define method .smokeCli()',
+            'endmethod'
+        ].join('\n'),
+        'utf8'
+    );
+
+    try {
+        const stdout = cp.execFileSync(
+            process.execPath,
+            [cliPath, 'parse', filePath, '--json'],
+            { cwd: extensionPath, encoding: 'utf8', maxBuffer: 5 * 1024 * 1024 }
+        );
+        const result = JSON.parse(stdout);
+
+        assert.strictEqual(result.tool, 'vscode-pml-extension');
+        assert.strictEqual(result.command, 'parse');
+        assert.strictEqual(result.parse?.ok, true);
+        assert.strictEqual(result.parse?.topLevelStatements, 1);
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
 }
 
 module.exports = { run };
