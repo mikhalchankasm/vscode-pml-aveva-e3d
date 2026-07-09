@@ -49,15 +49,18 @@ export class RenameProvider {
 		const symbolName = this.extractSymbolName(word);
 		if (!symbolName) return null;
 
-		// Check if symbol exists in index (method, object, form, or variable)
+		// Check if symbol exists in index (method, function, object, form, or variable)
 		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
-		const objects = this.symbolIndex.findObject(symbolName);
-		const forms = this.symbolIndex.findForm(symbolName);
+		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
+			? this.symbolIndex.findFunction(symbolName)
+			: [];
+		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
+		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = word.startsWith('!') && !word.includes('.');
+		const isVariable = functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		// If not a known symbol and not a variable, can't rename
-		if (methods.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
+		if (methods.length === 0 && functions.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
 			return null;
 		}
 
@@ -92,14 +95,20 @@ export class RenameProvider {
 
 		// Check what kind of symbol we're renaming
 		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
-		const objects = this.symbolIndex.findObject(symbolName);
-		const forms = this.symbolIndex.findForm(symbolName);
+		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
+			? this.symbolIndex.findFunction(symbolName)
+			: [];
+		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
+		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = word.startsWith('!') && !word.includes('.');
+		const isVariable = functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		if (methods.length > 0) {
 			// Renaming a method
 			await this.collectMethodRenames(document.uri, symbolName, newName, changes);
+		} else if (functions.length > 0) {
+			// Renaming a global function
+			await this.collectFunctionRenames(symbolName, newName, changes);
 		} else if (objects.length > 0) {
 			// Renaming an object
 			await this.collectObjectRenames(symbolName, newName, changes);
@@ -147,6 +156,77 @@ export class RenameProvider {
 		if (edits.length > 0) {
 			changes[fileUri] = edits;
 		}
+	}
+
+	private async collectFunctionRenames(
+		oldName: string,
+		newName: string,
+		changes: { [uri: string]: TextEdit[] }
+	): Promise<void> {
+		const fullNewName = this.normalizeGlobalFunctionName(newName);
+		const editsByUri = this.groupTextEditsByUri(
+			this.symbolIndex
+				.findFunctionReferences(oldName)
+				.map(reference => ({
+					uri: reference.uri,
+					edit: TextEdit.replace(reference.range, fullNewName)
+				}))
+		);
+
+		for (const func of this.symbolIndex.findFunction(oldName)) {
+			const text = await this.getFileText(func.uri);
+			if (!text) {
+				continue;
+			}
+			const edits = editsByUri.get(func.uri) ?? [];
+			edits.push(...this.findAndReplaceFunctionDefinitions(text, oldName, fullNewName));
+			const uniqueEdits = this.deduplicateTextEdits(edits);
+			if (uniqueEdits.length > 0) {
+				changes[func.uri] = uniqueEdits;
+			}
+		}
+
+		for (const [uri, edits] of editsByUri) {
+			if (changes[uri]) {
+				continue;
+			}
+			const uniqueEdits = this.deduplicateTextEdits(edits);
+			if (uniqueEdits.length > 0) {
+				changes[uri] = uniqueEdits;
+			}
+		}
+	}
+
+	private findAndReplaceFunctionDefinitions(text: string, oldName: string, newName: string): TextEdit[] {
+		const edits: TextEdit[] = [];
+		const preFilterPattern = new RegExp(escapeRegex(oldName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return edits;
+		}
+
+		const pattern = new RegExp(`(^[ \\t]*define\\s+function\\s+)!!${escapeRegex(oldName)}(?=\\s*\\()`, 'gmi');
+		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
+
+		let match;
+		while ((match = pattern.exec(text)) !== null) {
+			const prefix = match[1];
+			const startOffset = match.index + prefix.length;
+			if (!ignoredRanges) {
+				ignoredRanges = collectPmlInactiveTextRanges(text);
+			}
+			if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+				continue;
+			}
+			if (!lineOffsets) {
+				lineOffsets = computeLineOffsets(text);
+			}
+
+			const endOffset = startOffset + oldName.length + 2;
+			edits.push(TextEdit.replace(offsetToRange(lineOffsets, startOffset, endOffset), newName));
+		}
+
+		return edits;
 	}
 
 	/**
@@ -459,6 +539,40 @@ export class RenameProvider {
 		}
 
 		return text[nextOffset] === '.' || text[nextOffset] === '(';
+	}
+
+	private isGlobalFunctionSymbolAt(document: TextDocument, wordRange: Range, symbolName: string): boolean {
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const endOffset = document.offsetAt(wordRange.end);
+		const word = text.slice(startOffset, endOffset);
+
+		if (!word.startsWith('!!') || word.includes('.') || this.symbolIndex.findFunction(symbolName).length === 0) {
+			return false;
+		}
+
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+		if (/^\s*define\s+function\s+$/i.test(linePrefix)) {
+			return true;
+		}
+
+		let nextOffset = endOffset;
+		while (nextOffset < text.length && /[ \t]/.test(text[nextOffset])) {
+			nextOffset++;
+		}
+
+		return text[nextOffset] === '(';
+	}
+
+	private normalizeGlobalFunctionName(name: string): string {
+		if (name.startsWith('!!')) {
+			return name;
+		}
+		if (name.startsWith('!')) {
+			return '!!' + name.substring(1);
+		}
+		return '!!' + name;
 	}
 
 	private deduplicateTextEdits(edits: TextEdit[]): TextEdit[] {

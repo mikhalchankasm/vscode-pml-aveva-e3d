@@ -4,6 +4,10 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## Unreleased
 
+### Improved
+
+- Add safe Rename support for direct global `!!function(...)` symbols, updating function definitions and indexed direct calls without touching global variables, form member calls, or file-local methods.
+
 ## [0.12.36] - 2026-06-15
 
 ### Improved

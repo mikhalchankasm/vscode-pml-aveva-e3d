@@ -2,6 +2,10 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
+## In Development
+
+- Added safe Rename support for direct global `!!function(...)` symbols so function definitions and indexed direct calls can be renamed without changing global variables, form member calls, or file-local methods.
+
 ## Current Release - v0.12.36
 
 **Release Date:** 2026-06-15
