@@ -67,6 +67,7 @@ jobs:
       - name: Package VSIX
         run: npm run pack
       - run: npm run validate:vsix
+      - run: npm run test:vsix-install-smoke
       - name: Validate VSIX package
         shell: bash
         run: |

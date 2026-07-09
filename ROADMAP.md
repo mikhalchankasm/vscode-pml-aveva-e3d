@@ -1354,7 +1354,7 @@ Development plans and progress tracking.
 - **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
-- **Smoke validation:** Agent Kit setup errors are covered in the extension host; next add disposable-profile install checks.
+- ✅ **Disposable VSIX Install Smoke** - CI and release validation install the newly packaged extension into an isolated VS Code profile and verify its extension ID and version.
 
 **Recent Release Summary:**
 - `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.

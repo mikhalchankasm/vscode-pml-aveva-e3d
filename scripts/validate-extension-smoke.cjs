@@ -45,6 +45,7 @@ const requiredScripts = [
     'pml:symbols',
     'pml:scope',
     'test:extension-smoke',
+    'test:vsix-install-smoke',
     'validate:quick-actions',
     'validate:vsix'
 ];
