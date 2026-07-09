@@ -406,6 +406,26 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 
+	it('filters built-in member completions through a direct variable alias', () => {
+		const source = [
+			'!items = object ARRAY()',
+			'!working = !items',
+			'!working.'
+		].join('\n');
+		const document = TextDocument.create('file:///alias-array-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'size')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
 	it('filters built-in member completions for obvious string literal assignments', () => {
 		const source = [
 			'!label = |Pump A|',

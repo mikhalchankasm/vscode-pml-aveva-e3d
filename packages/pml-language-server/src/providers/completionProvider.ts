@@ -732,6 +732,15 @@ export class CompletionProvider {
 			end: position
 		});
 		const lines = textBeforePosition.split(/\r?\n/);
+		return this.inferReceiverTypeFromLines(receiverName, lines);
+	}
+
+	private inferReceiverTypeFromLines(receiverName: string, lines: string[], visited = new Set<string>()): ReceiverType | undefined {
+		if (visited.has(receiverName)) {
+			return undefined;
+		}
+		visited.add(receiverName);
+
 		const receiverPatterns = this.createReceiverTypePatterns(receiverName);
 
 		for (const line of lines) {
@@ -742,6 +751,20 @@ export class CompletionProvider {
 			const declaredType = this.matchReceiverType(line, receiverPatterns);
 			if (declaredType) {
 				return declaredType;
+			}
+		}
+
+		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=\\s*`;
+		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*)\\s*$`, 'i');
+		for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
+			const line = lines[lineIndex];
+			if (line.trim().startsWith('--')) {
+				continue;
+			}
+
+			const match = line.match(aliasAssignment);
+			if (match) {
+				return this.inferReceiverTypeFromLines(match[2].toLowerCase(), lines.slice(0, lineIndex), visited);
 			}
 		}
 
