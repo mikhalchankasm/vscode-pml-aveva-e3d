@@ -20,7 +20,7 @@ import {
 	createStringType, createRealType, createBooleanType, createArrayType,
 	createIntegerType, createAnyType, createDBRefType
 } from '../ast/nodes';
-import { Range } from 'vscode-languageserver-textdocument';
+import { Position, Range } from 'vscode-languageserver-textdocument';
 import { isPdmsCommandStarter } from '../data/pdmsCommands';
 
 export type ParserMode = 'default' | 'object' | 'form' | 'function' | 'command';
@@ -393,15 +393,18 @@ export class Parser {
 		while (!this.check(TokenType.ENDOBJECT) && !this.isAtEnd()) {
 			// Parse member properties: member .property is TYPE
 			if (this.check(TokenType.MEMBER)) {
-				this.advance(); // consume 'member'
+				const memberToken = this.advance(); // consume 'member'
 				// Skip member property declaration (just consume tokens until newline/statement end)
 				// member .data is STRING
 				while (!this.isAtEnd() && this.peek().type !== TokenType.MEMBER &&
 				       this.peek().type !== TokenType.DEFINE &&
 				       this.peek().type !== TokenType.ENDOBJECT) {
+					if (this.peek().line !== memberToken.line && !this.peek().continuesPreviousLine) {
+						break;
+					}
 					this.advance();
 					// Break at potential statement boundary (simple heuristic)
-					if (this.previous().value === '\n' || this.check(TokenType.MEMBER) || this.check(TokenType.DEFINE)) {
+					if (this.check(TokenType.MEMBER) || this.check(TokenType.DEFINE)) {
 						break;
 					}
 				}
@@ -2755,8 +2758,14 @@ export class Parser {
 		// These are used in "var !x compose space $!var |string|" which we don't fully parse yet
 		if (this.check(TokenType.COMPOSE) || this.check(TokenType.SPACE)) {
 			const startToken = this.advance();
+			let logicalLine = startToken.line;
 			// Skip entire compose expression including all parts
 			while (!this.isAtEnd()) {
+				const token = this.peek();
+				if (token.line !== logicalLine && !token.continuesPreviousLine) {
+					break;
+				}
+
 				// Consume all compose-related tokens
 				if (this.check(TokenType.COMPOSE) ||
 				    this.check(TokenType.SPACE) ||
@@ -2768,7 +2777,10 @@ export class Parser {
 				    this.check(TokenType.MINUS) ||
 				    this.check(TokenType.LEFT) ||
 				    this.check(TokenType.RIGHT)) {
-					this.advance();
+					const consumed = this.advance();
+					if (consumed.continuesPreviousLine) {
+						logicalLine = consumed.line;
+					}
 				} else {
 					// Stop at any other token (likely end of compose expression)
 					break;
@@ -3379,6 +3391,9 @@ export class Parser {
 		while (!this.isAtEnd()) {
 			// Sync on statement boundaries
 			if (this.previous().type === TokenType.NEWLINE) return;
+			if (this.peek().line !== this.previous().line && !this.peek().continuesPreviousLine && this.isRecoveryStatementStart()) {
+				return;
+			}
 
 			switch (this.peek().type) {
 				case TokenType.DEFINE:
@@ -3395,6 +3410,41 @@ export class Parser {
 			}
 
 			this.advance();
+		}
+	}
+
+	private isRecoveryStatementStart(): boolean {
+		if (this.isAtEnd()) {
+			return false;
+		}
+
+		switch (this.peek().type) {
+			case TokenType.DEFINE:
+			case TokenType.SETUP:
+			case TokenType.IF:
+			case TokenType.DO:
+			case TokenType.RETURN:
+			case TokenType.HANDLE:
+			case TokenType.BREAK:
+			case TokenType.CONTINUE:
+			case TokenType.SKIP:
+			case TokenType.COLLECT:
+			case TokenType.VAR:
+			case TokenType.LOCAL_VAR:
+			case TokenType.GLOBAL_VAR:
+			case TokenType.ENDMETHOD:
+			case TokenType.ENDOBJECT:
+			case TokenType.ENDFUNCTION:
+			case TokenType.ENDIF:
+			case TokenType.ENDDO:
+			case TokenType.ENDHANDLE:
+			case TokenType.ELSE:
+			case TokenType.ELSEIF:
+			case TokenType.ELSEHANDLE:
+			case TokenType.EXIT:
+				return true;
+			default:
+				return this.isPrintLineCommandStart() || this.isTraceLineCommandStart() || this.isLineCommandStart();
 		}
 	}
 
@@ -3458,12 +3508,26 @@ export class Parser {
 	private createRange(startIdx: number, endIdx: number): Range {
 		const start = this.tokens[startIdx] || this.tokens[0];
 		const end = this.tokens[endIdx] || this.tokens[this.tokens.length - 1];
+		const endPosition = this.getTokenEndPosition(end);
 
 		return {
 			start: { line: start.line - 1, character: start.column - 1 },
-			// end.column is 1-based, so convert to 0-based: (column - 1) + length
-			end: { line: end.line - 1, character: end.column - 1 + end.length }
+			end: endPosition
 		};
+	}
+
+	private getTokenEndPosition(token: Token): Position {
+		const tokenText = this.sourceText.slice(token.offset, token.offset + token.length);
+		if (tokenText.includes('\n')) {
+			const lastNewlineIndex = tokenText.lastIndexOf('\n');
+			return {
+				line: token.line - 1 + (tokenText.match(/\n/g)?.length ?? 0),
+				character: tokenText.length - lastNewlineIndex - 1
+			};
+		}
+
+		// token.column is 1-based, so convert to 0-based: (column - 1) + length
+		return { line: token.line - 1, character: token.column - 1 + token.length };
 	}
 
 	private createRangeFromNodes(start: { range: Range }, end: { range: Range }): Range {

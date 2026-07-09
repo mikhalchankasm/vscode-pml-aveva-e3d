@@ -140,6 +140,28 @@ export function isOffsetInTextRanges(ranges: readonly TextRange[], offset: numbe
 	return findTextRangeContaining(ranges, offset) !== undefined;
 }
 
+export function isCursorInsidePmlInactiveText(text: string, ranges: readonly TextRange[], cursorOffset: number): boolean {
+	if (isOffsetInTextRanges(ranges, cursorOffset)) {
+		return true;
+	}
+
+	if (cursorOffset <= 0) {
+		return false;
+	}
+
+	const previousRange = findTextRangeContaining(ranges, cursorOffset - 1);
+	if (!previousRange || previousRange.endOffset !== cursorOffset) {
+		return false;
+	}
+
+	const previousChar = text[cursorOffset - 1];
+	if (previousChar === '|' || previousChar === '\'' || previousChar === '"') {
+		return false;
+	}
+
+	return !(previousChar === ')' && cursorOffset >= 2 && text[cursorOffset - 2] === '$');
+}
+
 export function findTextRangeContaining(ranges: readonly TextRange[], offset: number): TextRange | undefined {
 	let low = 0;
 	let high = ranges.length - 1;

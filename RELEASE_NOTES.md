@@ -5,9 +5,34 @@ This file is the short release snapshot for the current public build. Full histo
 ## In Development
 
 - Added safe Rename support for direct global `!!function(...)` symbols so function definitions and indexed direct calls can be renamed without changing global variables, form member calls, or file-local methods.
-- Kept Rename on `!variable` and `!!global` symbols from accidentally switching to same-name `.method()` rename.
+- Kept Rename on `!variable` and `!!global` symbols from accidentally switching to same-name method, object, or form rename.
 - Resolved `!!Form` symbols correctly inside calls such as `!!Form.show()` for definition lookup, references, and rename.
 - Resolved object constructor symbols such as `object Pump()` on the object path instead of same-name method paths.
+- Improved parser recovery after malformed statements so following lines remain available to diagnostics and navigation.
+- Made Agent Kit npm command execution Windows-safe with quoted arguments, required trusted workspaces before running Agent Kit scripts, and limited auto-discovery to a sibling `e3d-pml-agent-kit` folder.
+- Tightened object and form Rename/References boundaries so longer same-prefix names are not partially edited or reported.
+- Scoped local variable Rename to the containing method/function and rejected same-scope target-name collisions.
+- Made workspace Rename fail safely instead of returning partial edits when an indexed file cannot be read.
+- Tracked npm lockfiles, widened CI push coverage, and pinned local `@vscode/vsce` for reproducible VSIX packaging.
+- Removed a generated Vitest config artifact and documented bundled compile versus TypeScript validation accurately.
+- Refreshed npm lockfiles so root and language-server dependency audits report zero vulnerabilities.
+- Kept local release-check artifacts out of packaged VSIX files and made VSIX validation block them.
+- Prevented Format Document assignment alignment from changing `=` characters inside PML string literals.
+- Prevented Sort Methods from duplicating preceding comments, kept selected-line cleanup commands CRLF-safe, kept Reindex Selected Array working on full-line and multi-line selections without replacing later selected array names, and kept Add to Array from converting comments into elements or reordering selected blocks.
+- Prefer live open-document text over cached index text when building Rename edits, and keep workspace indexing from overwriting open-document symbols with stale disk content.
+- Preserved parser ranges for multiline PML string literals so expression tails after those strings are not dropped.
+- Cleared diagnostics when files close and applied `pml.maxNumberOfProblems` to diagnostics sent by the language server.
+- Reported asynchronous PML Language Server startup failures instead of leaving unhandled client-start rejections.
+- Reduced typo-diagnostic noise by suppressing ambiguous short-word keyword suggestions.
+- Reduced member-completion receiver inference overhead by reusing compiled patterns during each completion request.
+- Re-indexed the workspace when workspace folders change and restored open-document symbols after the refresh.
+- Resolved bundled example files from the active extension context instead of a hardcoded Marketplace extension ID.
+- Shared provider word-range extraction across Hover, Definition, References, and Rename while preserving current symbol boundary behavior.
+- Improved Signature Help for nested method/function calls so active parameters are chosen from the correct call frame.
+- Kept Hover inactive inside comments and string literals without treating comment markers embedded in strings as real comments.
+- Kept Go to Definition from resolving symbols embedded in comments or string literals.
+- Suppressed Completion and Signature Help inside comments and string literals, and ignored string-argument delimiters when locating active calls or choosing the active signature parameter.
+- Kept Find References and Rename from starting on symbols embedded in comments or string literals.
 
 ## Current Release - v0.12.36
 

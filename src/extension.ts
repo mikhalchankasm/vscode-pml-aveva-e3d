@@ -57,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(formatter);
 
     // Register PML Tools commands
-    const toolsProvider = new PMLToolsProvider();
+    const toolsProvider = new PMLToolsProvider(context.extensionPath);
     context.subscriptions.push(toolsProvider);
 
     // Register $P print helpers

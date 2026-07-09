@@ -71,6 +71,10 @@ function findClosestKeyword(word: string): { keyword: string; distance: number }
 
 		// Consider it a potential typo if distance is 1-2 and word is close to keyword
 		if (distance > 0 && distance <= 2) {
+			if (wordLower.length <= 4 && (distance > 1 || wordLower[0] !== keyword[0])) {
+				continue;
+			}
+
 			// Calculate a score: lower is better
 			// Primary: distance (0-2)
 			// Secondary: length difference (0-3)

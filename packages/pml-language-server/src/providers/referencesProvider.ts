@@ -21,6 +21,7 @@ import {
 	TextRange
 } from '../utils/pmlCommentRanges';
 import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
 
 export interface ReferencePreview {
 	location: Location;
@@ -45,6 +46,11 @@ export class ReferencesProvider {
 		if (!wordRange) return null;
 
 		const word = globalSymbol?.text ?? document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
 
 		// Extract method name: handle patterns like !obj.method, !this.method, .method
 		// Take only the part after the last dot
@@ -229,7 +235,7 @@ export class ReferencesProvider {
 			return references;
 		}
 
-		const pattern = new RegExp(`!!${escapeRegex(symbolName)}(?=\\s|\\.|\\(|$)`, 'gi');
+		const pattern = new RegExp(`!!${escapeRegex(symbolName)}(?![A-Za-z0-9_])`, 'gi');
 		let lineOffsets: number[] | null = null;
 		let ignoredRanges: TextRange[] | null = null;
 		const foundOffsets = new Set<number>();
@@ -293,10 +299,11 @@ export class ReferencesProvider {
 			return references;
 		}
 
+		const symbolBoundary = '(?![A-Za-z0-9_])';
 		const patterns = [
-			new RegExp(`(define\\s+object\\s+)${escapeRegex(symbolName)}(?=\\s|$)`, 'gi'),
-			new RegExp(`(OBJECT\\s+)${escapeRegex(symbolName)}(?=\\s*\\()`, 'gi'),
-			new RegExp(`(is\\s+)${escapeRegex(symbolName)}(?=\\s|$)`, 'gi')
+			new RegExp(`(define\\s+object\\s+)${escapeRegex(symbolName)}${symbolBoundary}`, 'gi'),
+			new RegExp(`(OBJECT\\s+)${escapeRegex(symbolName)}${symbolBoundary}(?=\\s*\\()`, 'gi'),
+			new RegExp(`(\\bis\\s+)${escapeRegex(symbolName)}${symbolBoundary}`, 'gi')
 		];
 		let lineOffsets: number[] | null = null;
 		let ignoredRanges: TextRange[] | null = null;
@@ -368,14 +375,14 @@ export class ReferencesProvider {
 	}
 
 	private async getFileText(fileUri: string): Promise<string | undefined> {
-		const cachedText = this.symbolIndex.getDocumentText(fileUri);
-		if (cachedText) {
-			return cachedText;
-		}
-
 		const openDoc = this.documents.get(fileUri);
 		if (openDoc) {
 			return openDoc.getText();
+		}
+
+		const cachedText = this.symbolIndex.getDocumentText(fileUri);
+		if (cachedText) {
+			return cachedText;
 		}
 
 		return this.readFileFromDisk(fileUri);
@@ -491,31 +498,10 @@ export class ReferencesProvider {
 	 * Get word range at position
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }) {
-		const text = document.getText();
-		const offset = document.offsetAt(position);
-
-		let start = offset;
-		let end = offset;
-
-		while (start > 0 && this.isWordChar(text[start - 1])) {
-			start--;
-		}
-
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
-	}
-
-	private isWordChar(char: string): boolean {
-		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
-		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
+		return getProviderWordRangeAtPosition(document, position, {
+			includeVariablePrefixes: true,
+			includeSlash: true
+		});
 	}
 
 	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {

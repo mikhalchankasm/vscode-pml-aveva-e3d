@@ -12,6 +12,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
 import { Lexer } from '../parser/lexer';
 import { TokenType } from '../parser/tokens';
+import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText } from '../utils/pmlCommentRanges';
 
 type LightweightMethod = {
 	name: string;
@@ -39,11 +40,24 @@ type FormFrameCompletionSource = {
 
 type ReceiverType = 'STRING' | 'REAL' | 'ARRAY' | 'DBREF' | 'ELEMENTTYPE' | 'ATTRIBUTE';
 
+type ReceiverTypePatterns = {
+	declaration: RegExp;
+	assignment: RegExp;
+	stringLiteral: RegExp;
+	numberLiteral: RegExp;
+};
+
 export class CompletionProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
 
 	public provide(params: CompletionParams, document: TextDocument): CompletionItem[] {
 		const position = params.position;
+		const text = document.getText();
+		const cursorOffset = document.offsetAt(position);
+		if (isCursorInsidePmlInactiveText(text, collectPmlInactiveTextRanges(text), cursorOffset)) {
+			return [];
+		}
+
 		const textBeforeCursor = document.getText({
 			start: { line: position.line, character: 0 },
 			end: position
@@ -718,15 +732,14 @@ export class CompletionProvider {
 			end: position
 		});
 		const lines = textBeforePosition.split(/\r?\n/);
+		const receiverPatterns = this.createReceiverTypePatterns(receiverName);
 
 		for (const line of lines) {
 			if (line.trim().startsWith('--')) {
 				continue;
 			}
 
-			const declaredType = this.matchDeclaredVariableType(line, receiverName) ??
-				this.matchConstructedVariableType(line, receiverName) ??
-				this.matchLiteralAssignedVariableType(line, receiverName);
+			const declaredType = this.matchReceiverType(line, receiverPatterns);
 			if (declaredType) {
 				return declaredType;
 			}
@@ -760,30 +773,33 @@ export class CompletionProvider {
 		return this.normalizeReceiverType(match?.[1]);
 	}
 
-	private matchDeclaredVariableType(line: string, receiverName: string): ReceiverType | undefined {
-		const escapedName = this.escapeRegex(receiverName);
-		const declarationPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s+is\\s+(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\b`, 'i');
-		const match = line.match(declarationPattern);
-		return this.normalizeReceiverType(match?.[2]);
-	}
-
-	private matchConstructedVariableType(line: string, receiverName: string): ReceiverType | undefined {
-		const escapedName = this.escapeRegex(receiverName);
-		const assignmentPattern = new RegExp(`(^|[\\s(,])${escapedName}\\s*=\\s*(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\s*\\(`, 'i');
-		const match = line.match(assignmentPattern);
-		return this.normalizeReceiverType(match?.[2]);
-	}
-
-	private matchLiteralAssignedVariableType(line: string, receiverName: string): ReceiverType | undefined {
+	private createReceiverTypePatterns(receiverName: string): ReceiverTypePatterns {
 		const escapedName = this.escapeRegex(receiverName);
 		const assignmentPrefix = `(^|[\\s(,])${escapedName}\\s*=\\s*`;
-		const stringPattern = new RegExp(`${assignmentPrefix}(?:\\|[^|]*\\||'[^']*')\\s*$`, 'i');
-		if (stringPattern.test(line)) {
+		return {
+			declaration: new RegExp(`(^|[\\s(,])${escapedName}\\s+is\\s+(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\b`, 'i'),
+			assignment: new RegExp(`${assignmentPrefix}(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\s*\\(`, 'i'),
+			stringLiteral: new RegExp(`${assignmentPrefix}(?:\\|[^|]*\\||'[^']*')\\s*$`, 'i'),
+			numberLiteral: new RegExp(`${assignmentPrefix}[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*$`, 'i')
+		};
+	}
+
+	private matchReceiverType(line: string, patterns: ReceiverTypePatterns): ReceiverType | undefined {
+		const declarationMatch = line.match(patterns.declaration);
+		if (declarationMatch) {
+			return this.normalizeReceiverType(declarationMatch[2]);
+		}
+
+		const assignmentMatch = line.match(patterns.assignment);
+		if (assignmentMatch) {
+			return this.normalizeReceiverType(assignmentMatch[2]);
+		}
+
+		if (patterns.stringLiteral.test(line)) {
 			return 'STRING';
 		}
 
-		const numberPattern = new RegExp(`${assignmentPrefix}[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*$`, 'i');
-		if (numberPattern.test(line)) {
+		if (patterns.numberLiteral.test(line)) {
 			return 'REAL';
 		}
 

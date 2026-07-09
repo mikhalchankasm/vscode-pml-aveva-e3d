@@ -6,6 +6,8 @@ import { Definition, DefinitionParams, Location, TextDocuments } from 'vscode-la
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
 import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
+import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
 
 export class DefinitionProvider {
 	constructor(
@@ -25,6 +27,9 @@ export class DefinitionProvider {
 		const word = globalSymbol?.text ?? document.getText(wordRange);
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
 
 		if (this.isObjectConstructorSymbolAt(document, wordRange)) {
 			const objects = this.symbolIndex.findObject(word);
@@ -129,44 +134,9 @@ export class DefinitionProvider {
 	 * Get word range at position (simple implementation)
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }) {
-		const text = document.getText();
-		const offset = document.offsetAt(position);
-
-		// Find word boundaries
-		let start = offset;
-		let end = offset;
-
-		// Expand backwards - stop at special characters like !, $, operators, etc.
-		while (start > 0 && this.isWordChar(text[start - 1]) && !this.isStopChar(text[start - 1])) {
-			start--;
-		}
-
-		// Expand forwards - include method name with dot
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
-	}
-
-	/**
-	 * Check if character is part of word (including dot for methods)
-	 */
-	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_.]/.test(char);
-	}
-
-	/**
-	 * Check if character should stop backwards word expansion
-	 * Stops at variable prefixes (!, $), operators, delimiters, whitespace
-	 */
-	private isStopChar(char: string): boolean {
-		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
+		return getProviderWordRangeAtPosition(document, position, {
+			stopBackwardAtSpecialCharacters: true
+		});
 	}
 
 	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: { start: { line: number; character: number } }): boolean {

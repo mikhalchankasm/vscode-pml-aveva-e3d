@@ -793,6 +793,40 @@ exit
 			expect(varDecl.initializer?.type).toBe('BinaryExpression');
 		});
 
+		it('should keep expression tails after multiline string literals', () => {
+			const source = '!result = |first\nsecond| + |tail|';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			expect(result.errors).toHaveLength(0);
+
+			const varDecl = result.ast.body[0] as VariableDeclaration;
+			expect(varDecl.initializer?.type).toBe('BinaryExpression');
+
+			const binary = varDecl.initializer as BinaryExpression;
+			expect(binary.left.type).toBe('Literal');
+			expect(binary.left.range.end).toEqual({ line: 1, character: 7 });
+			expect(binary.right.type).toBe('Literal');
+
+			const crlfResult = parser.parse('!result = |first\r\nsecond| + |tail|');
+			const crlfDecl = crlfResult.ast.body[0] as VariableDeclaration;
+			expect(crlfResult.errors).toHaveLength(0);
+			expect(crlfDecl.initializer?.type).toBe('BinaryExpression');
+			expect((crlfDecl.initializer as BinaryExpression).left.range.end).toEqual({ line: 1, character: 7 });
+		});
+
+		it('should preserve unterminated multiline string literal ranges', () => {
+			const source = '!result = |first\nsecond';
+
+			const parser = new Parser();
+			const result = parser.parse(source);
+
+			const varDecl = result.ast.body[0] as VariableDeclaration;
+			expect(varDecl.initializer?.type).toBe('Literal');
+			expect(varDecl.initializer?.range.end).toEqual({ line: 1, character: 6 });
+		});
+
 		it('should parse method call', () => {
 			const source = '!result = .myMethod()';
 
@@ -1267,6 +1301,45 @@ setup command !!brokenController
 
 			expect(parser.parse('!this.values[ = 1').errors.length).toBeGreaterThan(0);
 			expect(parser.parse('!this.owner().clipBox.set(').errors.length).toBeGreaterThan(0);
+		});
+
+		it('should recover at the next physical line after a malformed method statement', () => {
+			const parser = new Parser();
+			const source = `
+define method .recover()
+	!before = 1
+	collect all = 5
+	!after = 2
+	return
+endmethod
+			`.trim();
+
+			const result = parser.parse(source);
+			const method = result.ast.body[0] as MethodDefinition;
+			const assignments = method.body.filter((statement): statement is VariableDeclaration =>
+				statement.type === 'VariableDeclaration'
+			);
+
+			expect(result.errors.length).toBeGreaterThan(0);
+			expect(assignments.map(statement => statement.name)).toEqual(['before', 'after']);
+			expect(method.body.some(statement => statement.type === 'ReturnStatement')).toBe(true);
+		});
+
+		it('should stop object member declaration recovery at the next physical line', () => {
+			const parser = new Parser();
+			const source = `
+define object Broken
+	member .bad is
+	define method .run()
+	endmethod
+endobject
+			`.trim();
+
+			const result = parser.parse(source, { mode: 'object' });
+			const object = result.ast.body[0] as any;
+
+			expect(object.members).toHaveLength(1);
+			expect(object.members[0].name).toBe('run');
 		});
 
 		it('should parse function return types and PML1 wildcard path arguments from real library patterns', () => {

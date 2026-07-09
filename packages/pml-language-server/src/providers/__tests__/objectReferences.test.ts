@@ -112,4 +112,110 @@ describe('Object references', () => {
 		expect(edits.every(change => change.newText === 'Valve')).toBe(true);
 		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 8]);
 	});
+
+	it('renames a local variable without falling through to a same-name object', async () => {
+		const collisionUri = 'file:///objects/Grid.pmlobj';
+		const collisionSource = [
+			'define object grid',
+			'endobject',
+			'',
+			'define method .run()',
+			'	!grid = 1',
+			'	!other = !grid',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(collisionSource);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(collisionUri, parseResult.ast, 1, collisionSource);
+		const document = TextDocument.create(collisionUri, 'pml', 1, collisionSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === collisionUri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri: collisionUri },
+			position: document.positionAt(collisionSource.indexOf('!grid') + 1),
+			newName: '!slot'
+		});
+
+		const edits = edit?.changes?.[collisionUri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.map(change => textInRange(collisionSource, change.range))).toEqual([
+			'!grid',
+			'!grid'
+		]);
+		expect(edits.every(change => change.newText === '!slot')).toBe(true);
+		expect(edits.map(change => change.range.start.line)).toEqual([4, 5]);
+	});
+
+	it('does not partially match object names in longer identifiers or non-is words', async () => {
+		const boundaryUri = 'file:///objects/Boundary.pmlobj';
+		const boundarySource = [
+			'define object Pump',
+			'endobject',
+			'',
+			'define object PumpExtra',
+			'endobject',
+			'',
+			'define method .run()',
+			'	!made = object Pump()',
+			'	!other = object PumpExtra()',
+			'	!typed is Pump',
+			'	!typedExtra is PumpExtra',
+			'	!note = |this Pump should stay text|',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(boundarySource);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(boundaryUri, parseResult.ast, 1, boundarySource);
+		const document = TextDocument.create(boundaryUri, 'pml', 1, boundarySource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === boundaryUri ? document : undefined
+		};
+		const referencesProvider = new ReferencesProvider(symbolIndex, documents as any);
+		const renameProvider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(boundarySource.indexOf('object Pump()') + 'object '.length);
+
+		const references = await referencesProvider.provide({
+			textDocument: { uri: boundaryUri },
+			position,
+			context: { includeDeclaration: false }
+		});
+		const edit = await renameProvider.provide({
+			textDocument: { uri: boundaryUri },
+			position,
+			newName: 'Valve'
+		});
+
+		expect(references?.map(reference => reference.range.start.line)).toEqual([7, 9]);
+		const edits = edit?.changes?.[boundaryUri] ?? [];
+		expect(edits.map(change => textInRange(boundarySource, change.range))).toEqual([
+			'Pump',
+			'Pump',
+			'Pump'
+		]);
+		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 9]);
+	});
+
+	it('does not return a partial workspace edit when an indexed file cannot be read', async () => {
+		const badUri = 'file:///objects/unreadable.pmlobj';
+		const { document, documents, symbolIndex } = createFixture();
+		const badParseResult = new Parser().parse([
+			'define object Other',
+			'endobject'
+		].join('\n'));
+		symbolIndex.indexFile(badUri, badParseResult.ast, 1, 'define object Other\nendobject');
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		(provider as any).getFileText = async (requestedUri: string) =>
+			requestedUri === badUri ? undefined : documents.get(requestedUri)?.getText();
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.indexOf('object Pump()') + 'object '.length),
+			newName: 'Valve'
+		});
+
+		expect(edit).toBeNull();
+	});
 });

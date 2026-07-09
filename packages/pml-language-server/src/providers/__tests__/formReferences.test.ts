@@ -120,4 +120,52 @@ describe('Form references', () => {
 		expect(edits.every(change => change.newText === '!!Next')).toBe(true);
 		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 8, 10]);
 	});
+
+	it('does not partially match form names in longer global identifiers', async () => {
+		const boundaryUri = 'file:///forms/Boundary.pmlfrm';
+		const boundarySource = [
+			'setup form !!Main dialog',
+			'exit',
+			'',
+			'setup form !!MainExtra dialog',
+			'exit',
+			'',
+			'define method .run()',
+			'	!!Main.show()',
+			'	!!MainExtra.show()',
+			'	track |OPEN| call |!!Main.show()|',
+			'	track |OPEN_EXTRA| call |!!MainExtra.show()|',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(boundarySource);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(boundaryUri, parseResult.ast, 1, boundarySource);
+		const document = TextDocument.create(boundaryUri, 'pml', 1, boundarySource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === boundaryUri ? document : undefined
+		};
+		const referencesProvider = new ReferencesProvider(symbolIndex, documents as any);
+		const renameProvider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(boundarySource.indexOf('!!Main.show()') + 2);
+
+		const references = await referencesProvider.provide({
+			textDocument: { uri: boundaryUri },
+			position,
+			context: { includeDeclaration: false }
+		});
+		const edit = await renameProvider.provide({
+			textDocument: { uri: boundaryUri },
+			position,
+			newName: 'Next'
+		});
+
+		expect(references?.map(reference => reference.range.start.line)).toEqual([7, 9]);
+		const edits = edit?.changes?.[boundaryUri] ?? [];
+		expect(edits.map(change => textInRange(boundarySource, change.range))).toEqual([
+			'!!Main',
+			'!!Main',
+			'!!Main'
+		]);
+		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 9]);
+	});
 });

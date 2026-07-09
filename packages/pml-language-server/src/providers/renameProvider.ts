@@ -26,6 +26,13 @@ import {
 	isOffsetInTextRanges,
 	TextRange
 } from '../utils/pmlCommentRanges';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
+
+class RenameFileReadError extends Error {
+	constructor(public readonly uri: string) {
+		super(`Unable to read ${uri} while preparing rename edits`);
+	}
+}
 
 export class RenameProvider {
 	constructor(
@@ -46,6 +53,11 @@ export class RenameProvider {
 		if (!wordRange) return null;
 
 		const word = globalSymbol?.text ?? document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
 
 		// Check if it's a valid symbol to rename
 		const symbolName = this.extractSymbolName(word);
@@ -60,10 +72,10 @@ export class RenameProvider {
 		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
-		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
-		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
 		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const objects = functions.length > 0 || isVariable ? [] : this.symbolIndex.findObject(symbolName);
+		const forms = functions.length > 0 || isVariable ? [] : this.symbolIndex.findForm(symbolName);
 
 		// If not a known symbol and not a variable, can't rename
 		if (methods.length === 0 && functions.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
@@ -88,6 +100,12 @@ export class RenameProvider {
 		if (!wordRange) return null;
 
 		const word = globalSymbol?.text ?? document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
+
 		const newName = params.newName;
 
 		// Validate new name
@@ -109,28 +127,35 @@ export class RenameProvider {
 		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
-		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
-		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
 		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const objects = functions.length > 0 || isVariable ? [] : this.symbolIndex.findObject(symbolName);
+		const forms = functions.length > 0 || isVariable ? [] : this.symbolIndex.findForm(symbolName);
 
-		if (methods.length > 0) {
-			// Renaming a method
-			await this.collectMethodRenames(document.uri, symbolName, newName, changes);
-		} else if (functions.length > 0) {
-			// Renaming a global function
-			await this.collectFunctionRenames(symbolName, newName, changes);
-		} else if (objects.length > 0) {
-			// Renaming an object
-			await this.collectObjectRenames(symbolName, newName, changes);
-		} else if (forms.length > 0) {
-			// Renaming a form
-			await this.collectFormRenames(symbolName, newName, changes);
-		} else if (isVariable) {
-			// Renaming a variable
-			await this.collectVariableRenames(document, word, newName, changes);
-		} else {
-			return null;
+		try {
+			if (methods.length > 0) {
+				// Renaming a method
+				await this.collectMethodRenames(document.uri, symbolName, newName, changes);
+			} else if (functions.length > 0) {
+				// Renaming a global function
+				await this.collectFunctionRenames(symbolName, newName, changes);
+			} else if (objects.length > 0) {
+				// Renaming an object
+				await this.collectObjectRenames(symbolName, newName, changes);
+			} else if (forms.length > 0) {
+				// Renaming a form
+				await this.collectFormRenames(symbolName, newName, changes);
+			} else if (isVariable) {
+				// Renaming a variable
+				await this.collectVariableRenames(document, wordRange, word, newName, changes);
+			} else {
+				return null;
+			}
+		} catch (error) {
+			if (error instanceof RenameFileReadError) {
+				return null;
+			}
+			throw error;
 		}
 
 		return { changes };
@@ -157,8 +182,7 @@ export class RenameProvider {
 				}))
 		);
 
-		const text = await this.getFileText(fileUri);
-		if (!text) return;
+		const text = await this.getRequiredFileText(fileUri);
 
 		const edits = this.deduplicateTextEdits([
 			...(indexedEditsByUri.get(fileUri) ?? []),
@@ -185,10 +209,7 @@ export class RenameProvider {
 		);
 
 		for (const func of this.symbolIndex.findFunction(oldName)) {
-			const text = await this.getFileText(func.uri);
-			if (!text) {
-				continue;
-			}
+			const text = await this.getRequiredFileText(func.uri);
 			const edits = editsByUri.get(func.uri) ?? [];
 			edits.push(...this.findAndReplaceFunctionDefinitions(text, oldName, fullNewName));
 			const uniqueEdits = this.deduplicateTextEdits(edits);
@@ -308,8 +329,7 @@ export class RenameProvider {
 		for (let i = 0; i < allFileUris.length; i += batchSize) {
 			const batch = allFileUris.slice(i, i + batchSize);
 			await Promise.all(batch.map(async (fileUri) => {
-				const text = await this.getFileText(fileUri);
-				if (!text) return;
+				const text = await this.getRequiredFileText(fileUri);
 
 				const edits = this.findAndReplaceObject(text, oldName, newName);
 				if (edits.length > 0) {
@@ -340,10 +360,11 @@ export class RenameProvider {
 		// 1. define object ObjectName
 		// 2. OBJECT ObjectName()
 		// 3. is ObjectName
+		const symbolBoundary = '(?![A-Za-z0-9_])';
 		const patterns = [
-			new RegExp(`(define\\s+object\\s+)${escapeRegex(oldName)}(?=\\s|$)`, 'gi'),
-			new RegExp(`(OBJECT\\s+)${escapeRegex(oldName)}(?=\\s*\\()`, 'gi'),
-			new RegExp(`(is\\s+)${escapeRegex(oldName)}(?=\\s|$)`, 'gi')
+			new RegExp(`(define\\s+object\\s+)${escapeRegex(oldName)}${symbolBoundary}`, 'gi'),
+			new RegExp(`(OBJECT\\s+)${escapeRegex(oldName)}${symbolBoundary}(?=\\s*\\()`, 'gi'),
+			new RegExp(`(\\bis\\s+)${escapeRegex(oldName)}${symbolBoundary}`, 'gi')
 		];
 
 		for (const pattern of patterns) {
@@ -388,8 +409,7 @@ export class RenameProvider {
 		for (let i = 0; i < allFileUris.length; i += batchSize) {
 			const batch = allFileUris.slice(i, i + batchSize);
 			await Promise.all(batch.map(async (fileUri) => {
-				const text = await this.getFileText(fileUri);
-				if (!text) return;
+				const text = await this.getRequiredFileText(fileUri);
 
 				const edits = this.findAndReplaceForm(text, oldName, newName);
 				if (edits.length > 0) {
@@ -418,7 +438,7 @@ export class RenameProvider {
 
 		// Forms are global variables (!!FormName)
 		// Pattern: !!formName (case-insensitive)
-		const pattern = new RegExp(`!!${escapeRegex(oldName)}(?=\\s|\\.|\\(|$)`, 'gi');
+		const pattern = new RegExp(`!!${escapeRegex(oldName)}(?![A-Za-z0-9_])`, 'gi');
 
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
@@ -454,6 +474,7 @@ export class RenameProvider {
 	 */
 	private async collectVariableRenames(
 		document: TextDocument,
+		wordRange: Range,
 		oldName: string,
 		newName: string,
 		changes: { [uri: string]: TextEdit[] }
@@ -479,8 +500,7 @@ export class RenameProvider {
 			for (let i = 0; i < allFileUris.length; i += batchSize) {
 				const batch = allFileUris.slice(i, i + batchSize);
 				await Promise.all(batch.map(async (fileUri) => {
-					const text = await this.getFileText(fileUri);
-					if (!text) return;
+					const text = await this.getRequiredFileText(fileUri);
 
 					const edits = this.findVariableOccurrences(text, pattern, newName);
 					if (edits.length > 0) {
@@ -491,7 +511,14 @@ export class RenameProvider {
 		} else {
 			// Local variables: current document only
 			const text = document.getText();
-			const edits = this.findVariableOccurrences(text, pattern, newName);
+			const cursorOffset = document.offsetAt(wordRange.start);
+			const scope = this.findLocalVariableRenameScope(text, cursorOffset);
+			const normalizedNewName = newName.startsWith('!') ? newName : `!${newName}`;
+			if (this.hasLocalVariableCollision(text, normalizedNewName, oldName, scope.startOffset, scope.endOffset)) {
+				return;
+			}
+
+			const edits = this.findVariableOccurrences(text, pattern, newName, scope.startOffset, scope.endOffset);
 			if (edits.length > 0) {
 				changes[document.uri] = edits;
 			}
@@ -501,10 +528,16 @@ export class RenameProvider {
 	/**
 	 * Find all occurrences of a variable pattern in text
 	 */
-	private findVariableOccurrences(text: string, pattern: RegExp, newName: string): TextEdit[] {
+	private findVariableOccurrences(
+		text: string,
+		pattern: RegExp,
+		newName: string,
+		startBoundary = 0,
+		endBoundary = text.length
+	): TextEdit[] {
 		const edits: TextEdit[] = [];
 		// Reset lastIndex for global regex
-		pattern.lastIndex = 0;
+		pattern.lastIndex = startBoundary;
 
 		// Lazy line offsets: only compute on first match
 		let lineOffsets: number[] | null = null;
@@ -513,6 +546,9 @@ export class RenameProvider {
 		let match;
 		while ((match = pattern.exec(text)) !== null) {
 			const startOffset = match.index;
+			if (startOffset >= endBoundary) {
+				break;
+			}
 			if (!ignoredRanges) {
 				ignoredRanges = collectPmlInactiveTextRanges(text);
 			}
@@ -532,6 +568,60 @@ export class RenameProvider {
 		}
 
 		return edits;
+	}
+
+	private findLocalVariableRenameScope(text: string, cursorOffset: number): { startOffset: number; endOffset: number } {
+		const blockPattern = /^\s*define\s+(method|function)\b.*$|^\s*end(method|function)\b.*$/gmi;
+		let currentBlockStart = 0;
+		let currentBlockEnd = text.length;
+		let match: RegExpExecArray | null;
+
+		while ((match = blockPattern.exec(text)) !== null) {
+			const lineStart = match.index;
+			const lineEnd = this.findLineEndOffset(text, lineStart);
+			const matchedLine = match[0];
+
+			if (/^\s*define\s+(method|function)\b/i.test(matchedLine)) {
+				if (lineStart <= cursorOffset) {
+					currentBlockStart = lineStart;
+					currentBlockEnd = text.length;
+				} else {
+					break;
+				}
+			} else if (/^\s*end(method|function)\b/i.test(matchedLine)) {
+				if (lineStart < cursorOffset) {
+					currentBlockStart = 0;
+					currentBlockEnd = text.length;
+				} else {
+					currentBlockEnd = lineEnd;
+					break;
+				}
+			}
+		}
+
+		return { startOffset: currentBlockStart, endOffset: currentBlockEnd };
+	}
+
+	private hasLocalVariableCollision(
+		text: string,
+		newName: string,
+		oldName: string,
+		startBoundary: number,
+		endBoundary: number
+	): boolean {
+		const normalizedNewName = newName.startsWith('!') ? newName.substring(1) : newName;
+		const normalizedOldName = oldName.startsWith('!') ? oldName.substring(1) : oldName;
+		if (normalizedNewName.toLowerCase() === normalizedOldName.toLowerCase()) {
+			return false;
+		}
+
+		const collisionPattern = new RegExp(`(?<![!])!${escapeRegex(normalizedNewName)}(?![A-Za-z0-9_])`, 'gi');
+		return this.findVariableOccurrences(text, collisionPattern, newName, startBoundary, endBoundary).length > 0;
+	}
+
+	private findLineEndOffset(text: string, lineStartOffset: number): number {
+		const newlineOffset = text.indexOf('\n', lineStartOffset);
+		return newlineOffset === -1 ? text.length : newlineOffset;
 	}
 
 	private isPipeFormCallbackReference(text: string, startOffset: number, endOffset: number, range: TextRange): boolean {
@@ -649,13 +739,13 @@ export class RenameProvider {
 	 * Get file text from cache, open document, or disk (async)
 	 */
 	private async getFileText(fileUri: string): Promise<string | undefined> {
-		// Try cached text first
-		const cached = this.symbolIndex.getDocumentText(fileUri);
-		if (cached) return cached;
-
 		// Try open document
 		const openDoc = this.documents.get(fileUri);
 		if (openDoc) return openDoc.getText();
+
+		// Try cached text
+		const cached = this.symbolIndex.getDocumentText(fileUri);
+		if (cached) return cached;
 
 		// Read from disk asynchronously
 		try {
@@ -664,6 +754,14 @@ export class RenameProvider {
 		} catch {
 			return undefined;
 		}
+	}
+
+	private async getRequiredFileText(fileUri: string): Promise<string> {
+		const text = await this.getFileText(fileUri);
+		if (text === undefined) {
+			throw new RenameFileReadError(fileUri);
+		}
+		return text;
 	}
 
 	/**
@@ -719,31 +817,10 @@ export class RenameProvider {
 	 * Get word range at position
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }): Range | null {
-		const text = document.getText();
-		const offset = document.offsetAt(position);
-
-		let start = offset;
-		let end = offset;
-
-		while (start > 0 && this.isWordChar(text[start - 1])) {
-			start--;
-		}
-
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
-	}
-
-	private isWordChar(char: string): boolean {
-		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
-		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
+		return getProviderWordRangeAtPosition(document, position, {
+			includeVariablePrefixes: true,
+			includeSlash: true
+		});
 	}
 
 }

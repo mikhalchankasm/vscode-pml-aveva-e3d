@@ -2,6 +2,7 @@ import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { canRunAgentKit, createNpmExecutionOptions, getAgentKitDiscoveryCandidates } from './agentKitCore';
 
 const HELP_BY_CODE: Record<string, string> = {
     PML_FORM_CALLBACK_TARGET_MISSING: 'docs/pml-help/callbacks.md',
@@ -80,6 +81,9 @@ async function reviewCurrentFile(): Promise<void> {
         vscode.window.showWarningMessage('PML Agent Kit integration is disabled.');
         return;
     }
+    if (!ensureTrustedAgentKitWorkspace('review')) {
+        return;
+    }
 
     await editor.document.save();
 
@@ -114,6 +118,10 @@ async function reviewCurrentFile(): Promise<void> {
 }
 
 async function checkHealth(): Promise<void> {
+    if (!ensureTrustedAgentKitWorkspace('health check')) {
+        return;
+    }
+
     const config = vscode.workspace.getConfiguration('pml.agentKit');
     const agentKitPath = getAgentKitPath(config);
     if (!agentKitPath) {
@@ -135,6 +143,10 @@ async function checkHealth(): Promise<void> {
 }
 
 async function checkLiveE3dAvoxStatus(): Promise<void> {
+    if (!ensureTrustedAgentKitWorkspace('live E3D/Avox status check')) {
+        return;
+    }
+
     const config = vscode.workspace.getConfiguration('pml.agentKit');
     const agentKitPath = getAgentKitPath(config);
     if (!agentKitPath) {
@@ -174,10 +186,7 @@ function getAgentKitPath(config: vscode.WorkspaceConfiguration): string | undefi
 function discoverAgentKitPath(): string | undefined {
     for (const folder of vscode.workspace.workspaceFolders ?? []) {
         const folderPath = folder.uri.fsPath;
-        const candidates = [
-            folderPath,
-            path.join(path.dirname(folderPath), 'e3d-pml-agent-kit')
-        ];
+        const candidates = getAgentKitDiscoveryCandidates(folderPath);
 
         for (const candidate of candidates) {
             if (isAgentKitRoot(candidate)) {
@@ -187,6 +196,19 @@ function discoverAgentKitPath(): string | undefined {
     }
 
     return undefined;
+}
+
+function ensureTrustedAgentKitWorkspace(action: string): boolean {
+    if (canRunAgentKit(vscode.workspace.isTrusted)) {
+        return true;
+    }
+
+    const message = 'PML Agent Kit runs npm scripts and requires a trusted workspace.';
+    appendLine(`Agent Kit ${action} skipped: ${message}`);
+    appendLine('Status: MISCONFIGURED');
+    outputChannel?.show(true);
+    vscode.window.showErrorMessage(message);
+    return false;
 }
 
 function isAgentKitRoot(candidate: string): boolean {
@@ -209,8 +231,8 @@ function showAgentKitSetupError(action: string): void {
 
 function runNpm(args: string[], cwd: string): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
-        const command = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-        cp.execFile(command, args, { cwd, maxBuffer: 20 * 1024 * 1024 }, (error, stdout, stderr) => {
+        const { command, args: executionArgs, options } = createNpmExecutionOptions(process.platform, cwd, args);
+        cp.execFile(command, executionArgs, options, (error, stdout, stderr) => {
             if (error) {
                 if (stdout.trim().length > 0) {
                     resolve({ stdout, stderr });

@@ -126,34 +126,24 @@ describe('Typo Detector', () => {
 	});
 
 	describe('Operator typo detection', () => {
-		// NOTE: "adn" has edit distance 2 to multiple keywords: "and", "any", "all".
-		// The scoring algorithm considers both edit distance and length difference.
-		// Any of these matches is acceptable - this test validates detection occurs.
-		it('should detect "adn" typo', () => {
+		it('should not report ambiguous short-word typo candidates like "adn"', () => {
 			const source = 'if (!x eq 1 adn !y eq 2) then\nendif';
 			const document = createDocument(source);
 			const parseErrors = [createParseError("Unexpected identifier 'adn'", 1)];
 
 			const diagnostics = detectTypos(document, parseErrors);
 
-			expect(diagnostics).toHaveLength(1);
-			expect(diagnostics[0].message).toContain('adn');
-			// "and", "any", or "all" are all acceptable with edit distance 2
-			expect(diagnostics[0].message).toMatch(/and|any|all/);
+			expect(diagnostics).toHaveLength(0);
 		});
 
-		// NOTE: "nto" has edit distance 1 to "to" vs distance 2 to "not", so "to" is preferred.
-		// This is correct behavior based on Levenshtein distance.
-		it('should detect "nto" typo and suggest "to"', () => {
+		it('should not report short-word typo candidates when the first letter differs', () => {
 			const source = 'if nto (!x) then\nendif';
 			const document = createDocument(source);
 			const parseErrors = [createParseError("Unexpected identifier 'nto'", 1)];
 
 			const diagnostics = detectTypos(document, parseErrors);
 
-			expect(diagnostics).toHaveLength(1);
-			expect(diagnostics[0].message).toContain('nto');
-			expect(diagnostics[0].message).toContain('to');
+			expect(diagnostics).toHaveLength(0);
 		});
 	});
 

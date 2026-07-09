@@ -1,11 +1,24 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import { addToArrayText, reindexArrayText } from './arrayCommandsCore';
+import {
+    leadingSpacesToTabsText,
+    removeConsecutiveDuplicateLinesText,
+    removeDuplicateLinesText,
+    removeEmptyLinesText,
+    removeWhitespaceOnlyLinesText,
+    sortLinesAscText,
+    sortLinesByLengthText,
+    sortLinesDescText,
+    sortLinesSmartText,
+    trimTrailingWhitespaceText
+} from './lineCommandsCore';
 
 export class PMLToolsProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
 
-    constructor() {
+    constructor(private readonly extensionPath: string) {
         this.registerCommands();
     }
 
@@ -122,9 +135,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const sortedLines = [...lines].sort((a, b) => a.localeCompare(b));
-        const newText = sortedLines.join('\n');
+        const newText = sortLinesAscText(selected.text);
         
         this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines A-Z');
     };
@@ -136,9 +147,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const sortedLines = [...lines].sort((a, b) => b.localeCompare(a));
-        const newText = sortedLines.join('\n');
+        const newText = sortLinesDescText(selected.text);
         
         this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines Z-A');
     };
@@ -150,9 +159,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const sortedLines = [...lines].sort((a, b) => a.length - b.length);
-        const newText = sortedLines.join('\n');
+        const newText = sortLinesByLengthText(selected.text);
         
         this.applyChangesToSelection(editor, selected.range, newText, 'Sorted lines by length');
     };
@@ -164,9 +171,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const sorted = [...lines].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-        this.applyChangesToSelection(editor, selected.range, sorted.join('\n'), 'Smart sorted lines');
+        this.applyChangesToSelection(editor, selected.range, sortLinesSmartText(selected.text), 'Smart sorted lines');
     };
 
     // Duplicates & whitespace
@@ -177,10 +182,8 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const seen = new Set<string>();
-        const filtered = lines.filter(l => (seen.has(l) ? false : (seen.add(l), true)));
-        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} duplicate lines`);
+        const result = removeDuplicateLinesText(selected.text);
+        this.applyChangesToSelection(editor, selected.range, result.text, `Removed ${result.removed} duplicate lines`);
     };
 
     private removeConsecutiveDuplicates = () => {
@@ -190,14 +193,8 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const filtered: string[] = [];
-        for (const line of lines) {
-            if (filtered.length === 0 || filtered[filtered.length - 1] !== line) {
-                filtered.push(line);
-            }
-        }
-        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} consecutive duplicates`);
+        const result = removeConsecutiveDuplicateLinesText(selected.text);
+        this.applyChangesToSelection(editor, selected.range, result.text, `Removed ${result.removed} consecutive duplicates`);
     };
 
     private removeEmptyLines = () => {
@@ -207,9 +204,8 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const filtered = lines.filter(line => line.length > 0);
-        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} empty lines`);
+        const result = removeEmptyLinesText(selected.text);
+        this.applyChangesToSelection(editor, selected.range, result.text, `Removed ${result.removed} empty lines`);
     };
 
     private removeWhitespaceLines = () => {
@@ -219,9 +215,8 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const filtered = lines.filter(line => !/^\s+$/.test(line));
-        this.applyChangesToSelection(editor, selected.range, filtered.join('\n'), `Removed ${lines.length - filtered.length} whitespace-only lines`);
+        const result = removeWhitespaceOnlyLinesText(selected.text);
+        this.applyChangesToSelection(editor, selected.range, result.text, `Removed ${result.removed} whitespace-only lines`);
     };
 
     private trimWhitespace = () => {
@@ -231,9 +226,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
-        const trimmed = lines.map(line => line.replace(/[ \t]+$/g, ''));
-        this.applyChangesToSelection(editor, selected.range, trimmed.join('\n'), 'Trimmed trailing whitespace');
+        this.applyChangesToSelection(editor, selected.range, trimTrailingWhitespaceText(selected.text), 'Trimmed trailing whitespace');
     };
 
     private tabsToSpaces = () => {
@@ -256,17 +249,8 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
         const indentSize = vscode.workspace.getConfiguration('pml.formatter').get<number>('indentSize', 4);
-        const converted = lines.map(line => {
-            const m = line.match(/^( +)/);
-            if (!m) return line;
-            const len = m[1].length;
-            const tabs = '\t'.repeat(Math.floor(len / indentSize));
-            const rest = ' '.repeat(len % indentSize);
-            return tabs + rest + line.slice(len);
-        });
-        this.applyChangesToSelection(editor, selected.range, converted.join('\n'), 'Converted spaces to tabs');
+        this.applyChangesToSelection(editor, selected.range, leadingSpacesToTabsText(selected.text, indentSize), 'Converted spaces to tabs');
     };
 
     // PML helpers
@@ -724,83 +708,20 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        // Удаляем \r (carriage return) и разбиваем на строки
-        const lines = selected.text.replace(/\r/g, '').split('\n');
+        const textAbove = editor.document.getText(
+            new vscode.Range(
+                new vscode.Position(Math.max(0, selected.range.start.line - 50), 0),
+                selected.range.start
+            )
+        );
 
-        // Убираем пустые строки в начале и конце выделения
-        while (lines.length > 0 && lines[0].trim() === '') {
-            lines.shift();
-        }
-        while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
-            lines.pop();
-        }
-
-        // Находим все строки с массивами и определяем максимальный индекс
-        const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
-        let maxIndex = 0;
-        let arrayVarName = '';
-        let indentSize = '';
-
-        // Сначала проходим по всем строкам и находим максимальный индекс
-        for (const line of lines) {
-            const match = line.match(arrayPattern);
-            if (match) {
-                const index = parseInt(match[3], 10);
-                if (index > maxIndex) {
-                    maxIndex = index;
-                }
-                if (!arrayVarName) {
-                    arrayVarName = match[2];
-                    indentSize = match[1];
-                }
-            }
-        }
-
-        // Если массивов не найдено, пробуем найти в контексте выше выделения
-        if (!arrayVarName) {
-            const textAbove = editor.document.getText(
-                new vscode.Range(
-                    new vscode.Position(Math.max(0, selected.range.start.line - 50), 0),
-                    selected.range.start
-                )
-            );
-            const aboveLines = textAbove.split('\n').reverse();
-            for (const line of aboveLines) {
-                const match = line.match(arrayPattern);
-                if (match) {
-                    maxIndex = parseInt(match[3], 10);
-                    arrayVarName = match[2];
-                    indentSize = match[1];
-                    break;
-                }
-            }
-        }
-
-        if (!arrayVarName) {
+        const result = reindexArrayText(selected.text, textAbove);
+        if (result === null) {
             vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте или выше');
             return;
         }
 
-        // Reindex selected array assignment lines from 1.
-        let currentIndex = 1;
-
-        // Подсчитываем количество строк массива для определения длины индекса
-        const arrayLinesCount = lines.filter(line => line.match(arrayPattern)).length;
-        const maxIndexLength = arrayLinesCount.toString().length;
-
-        const result = lines.map(line => {
-            const match = line.match(arrayPattern);
-            if (match) {
-                const idx = currentIndex.toString().padStart(maxIndexLength);
-                // Preserve formatting: match[4] contains spaces around =, match[5] contains value
-                const newLine = `${indentSize}${arrayVarName}[${idx}]${match[4]}${match[5]}`;
-                currentIndex++;
-                return newLine;
-            }
-            return line;
-        });
-
-        await this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Array indices reindexed');
+        await this.applyChangesToSelection(editor, selected.range, result, 'Array indices reindexed');
     };
 
     /**
@@ -813,89 +734,19 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        // Удаляем \r (carriage return) и разбиваем на строки
-        const lines = selected.text.replace(/\r/g, '').split('\n');
-
-        // Убираем пустые строки в начале и конце выделения
-        while (lines.length > 0 && lines[0].trim() === '') {
-            lines.shift();
-        }
-        while (lines.length > 0 && lines[lines.length - 1].trim() === '') {
-            lines.pop();
-        }
-
-        // Находим существующие массивы и определяем параметры
-        const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
-        let maxIndex = 0;
-        let arrayVarName = '';
-        let indentSize = '';
-        let hasPath = false;
-        let hasString = false;
-
-        const arrayLines: string[] = [];
-        const nonArrayLines: string[] = [];
-
-        // Разделяем строки на массивы и не-массивы
-        for (const line of lines) {
-            const match = line.match(arrayPattern);
-            if (match) {
-                arrayLines.push(line);
-                const index = parseInt(match[3], 10);
-                if (index > maxIndex) {
-                    maxIndex = index;
-                }
-                if (!arrayVarName) {
-                    arrayVarName = match[2];
-                    indentSize = match[1];
-                    // Определяем формат по значению
-                    const value = match[5].trim();
-                    hasPath = value.startsWith('/') || value.startsWith("'/");
-                    hasString = value.startsWith("'") || value.startsWith('|');
-                }
-            } else if (line.trim().length > 0) {
-                nonArrayLines.push(line);
-            }
-        }
-
-        if (!arrayVarName) {
+        const result = addToArrayText(selected.text);
+        if (result === null) {
             vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте');
             return;
         }
 
-        if (nonArrayLines.length === 0) {
+        if (result.added === 0) {
             vscode.window.showInformationMessage('Нет строк для добавления в массив');
             return;
         }
 
-        // Создаем новые элементы массива
-        const maxIndexLength = (maxIndex + nonArrayLines.length).toString().length;
-        let currentIndex = maxIndex + 1;
-
-        const newArrayElements = nonArrayLines.map(line => {
-            const trimmedLine = line.trim();
-            const idx = currentIndex.toString().padStart(maxIndexLength);
-
-            // Определяем формат значения
-            let value: string;
-            if (hasPath && hasString) {
-                value = `'/${trimmedLine}'`;
-            } else if (hasPath) {
-                value = `/${trimmedLine}`;
-            } else if (hasString) {
-                value = `'${trimmedLine}'`;
-            } else {
-                value = trimmedLine;
-            }
-
-            currentIndex++;
-            return `${indentSize}${arrayVarName}[${idx}] = ${value}`;
-        });
-
-        // Объединяем существующие массивы и новые элементы
-        const result = [...arrayLines, ...newArrayElements];
-
-        await this.applyChangesToSelection(editor, selected.range, result.join('\n'),
-            `Added ${nonArrayLines.length} items to array`);
+        await this.applyChangesToSelection(editor, selected.range, result.text,
+            `Added ${result.added} items to array`);
     };
 
     // Form documentation helpers
@@ -1149,15 +1000,8 @@ export class PMLToolsProvider implements vscode.Disposable {
      */
     private openButtonExample = async () => {
         try {
-            // Find the extension path
-            const extensionPath = vscode.extensions.getExtension('mikhalchankasm.pml-aveva-e3d')?.extensionPath;
-            if (!extensionPath) {
-                vscode.window.showErrorMessage('Could not locate extension path');
-                return;
-            }
-
             // Load tutorial content from file
-            const tutorialPath = path.join(extensionPath, 'examples', 'gadgets', 'ButtonGadgets_Tutorial.md');
+            const tutorialPath = path.join(this.extensionPath, 'examples', 'gadgets', 'ButtonGadgets_Tutorial.md');
 
             const content = await fs.readFile(tutorialPath, 'utf8');
 
@@ -1179,15 +1023,8 @@ export class PMLToolsProvider implements vscode.Disposable {
      */
     private openFrameExample = async () => {
         try {
-            // Find the extension path
-            const extensionPath = vscode.extensions.getExtension('mikhalchankasm.pml-aveva-e3d')?.extensionPath;
-            if (!extensionPath) {
-                vscode.window.showErrorMessage('Could not locate extension path');
-                return;
-            }
-
             // Load tutorial content from file
-            const tutorialPath = path.join(extensionPath, 'examples', 'gadgets', 'FrameGadgets_Tutorial.md');
+            const tutorialPath = path.join(this.extensionPath, 'examples', 'gadgets', 'FrameGadgets_Tutorial.md');
 
             const content = await fs.readFile(tutorialPath, 'utf8');
 

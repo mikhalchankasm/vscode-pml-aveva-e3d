@@ -164,6 +164,6 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publishMarketplace == 'true' && steps.vsce.outputs.pat != '' }}
         env:
           VSCE_PAT: ${{ steps.vsce.outputs.pat }}
-        run: npx @vscode/vsce publish --packagePath *.vsix --no-yarn
+        run: npx --no-install vsce publish --packagePath *.vsix --no-yarn
 
 

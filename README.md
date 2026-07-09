@@ -44,6 +44,7 @@ git clone https://github.com/mikhalchankasm/vscode-pml-aveva-e3d.git
 cd vscode-pml-aveva-e3d
 npm install
 npm run compile
+npm run compile:tsc
 # Press F5 in VS Code to launch Extension Development Host
 ```
 
@@ -125,7 +126,8 @@ vscode-pml-extension/
 ```
 
 **Commands:**
-- `npm run compile` - Compile TypeScript
+- `npm run compile` - Build the extension bundle
+- `npm run compile:tsc` - Run TypeScript checks for the extension and language server
 - `npm run watch` - Watch mode (auto-compile)
 - `npm run pack` - Build VSIX package
 - `npm test` - Run tests
@@ -235,7 +237,8 @@ vscode-pml-extension/
 ```
 
 **Команды:**
-- `npm run compile` - Компиляция TypeScript
+- `npm run compile` - Build the extension bundle
+- `npm run compile:tsc` - Run TypeScript checks for the extension and language server
 - `npm run watch` - Режим наблюдения (авто-компиляция)
 - `npm run pack` - Сборка VSIX пакета
 - `npm test` - Запуск тестов
