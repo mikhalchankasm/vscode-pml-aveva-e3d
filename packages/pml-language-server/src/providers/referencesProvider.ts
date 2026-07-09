@@ -21,6 +21,7 @@ import {
 	TextRange
 } from '../utils/pmlCommentRanges';
 import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
+import { isObjectSymbolSyntaxAt } from './providerSymbolContext';
 import { getProviderWordRangeAtPosition } from './providerWordRange';
 
 export interface ReferencePreview {
@@ -65,13 +66,16 @@ export class ReferencesProvider {
 
 		const references: Location[] = [];
 		const isGlobalFunctionCall = word.startsWith('!!') && !word.includes('.') && !globalSymbol?.hasMemberAccess;
-		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
+		const isObjectSyntax = isObjectSymbolSyntaxAt(document, wordRange);
 
 		// Find definition
 		const functions = isGlobalFunctionCall ? this.symbolIndex.findFunction(symbolName) : [];
-		const methods = functions.length > 0 || globalSymbol || isObjectConstructorSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
-		const objects = methods.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
-		const forms = methods.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
+		const methods = functions.length > 0 || globalSymbol || isObjectSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const canResolveObjectOrForm = functions.length === 0 && methods.length === 0;
+		const objectCandidates = canResolveObjectOrForm ? this.symbolIndex.findObject(symbolName) : [];
+		const formCandidates = canResolveObjectOrForm ? this.symbolIndex.findForm(symbolName) : [];
+		const objects = isObjectSyntax || formCandidates.length === 0 ? objectCandidates : [];
+		const forms = isObjectSyntax ? [] : formCandidates;
 
 		// Add definitions to references (if includeDeclaration is true)
 		if (params.context.includeDeclaration) {
@@ -502,15 +506,6 @@ export class ReferencesProvider {
 			includeVariablePrefixes: true,
 			includeSlash: true
 		});
-	}
-
-	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {
-		const text = document.getText();
-		const startOffset = document.offsetAt(wordRange.start);
-		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
-		const linePrefix = text.slice(lineStart, startOffset);
-
-		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
 	private deduplicateLocations(locations: Location[]): Location[] {

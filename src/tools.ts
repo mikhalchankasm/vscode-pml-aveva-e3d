@@ -12,8 +12,13 @@ import {
     sortLinesByLengthText,
     sortLinesDescText,
     sortLinesSmartText,
+    splitTextLines,
     trimTrailingWhitespaceText
 } from './lineCommandsCore';
+
+function getDocumentEol(document: vscode.TextDocument): string {
+    return document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+}
 
 export class PMLToolsProvider implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
@@ -97,22 +102,6 @@ export class PMLToolsProvider implements vscode.Disposable {
         }
         const text = editor.document.getText(selection);
         return { text, range: selection };
-    }
-
-    private async applyChanges(editor: vscode.TextEditor, newText: string, message: string) {
-        const edit = new vscode.WorkspaceEdit();
-        const fullRange = new vscode.Range(
-            editor.document.positionAt(0),
-            editor.document.positionAt(editor.document.getText().length)
-        );
-        edit.replace(editor.document.uri, fullRange, newText);
-        
-        const success = await vscode.workspace.applyEdit(edit);
-        if (success) {
-            vscode.window.showInformationMessage(message);
-        } else {
-            vscode.window.showErrorMessage('Failed to apply changes');
-        }
     }
 
     private async applyChangesToSelection(editor: vscode.TextEditor, range: vscode.Range, newText: string, message: string) {
@@ -272,7 +261,8 @@ export class PMLToolsProvider implements vscode.Disposable {
             vscode.window.showInformationMessage('No variables found');
             return;
         }
-        const varText = `-- Extracted variables (${varList.length}):\n${varList.join('\n')}`;
+        const eol = getDocumentEol(editor.document);
+        const varText = `-- Extracted variables (${varList.length}):${eol}${varList.join(eol)}`;
         vscode.workspace.openTextDocument({ content: varText, language: 'pml' }).then(doc => {
             vscode.window.showTextDocument(doc);
         });
@@ -297,7 +287,8 @@ export class PMLToolsProvider implements vscode.Disposable {
             vscode.window.showInformationMessage('No methods found');
             return;
         }
-        const outText = `-- Extracted methods (${list.length}):\n${list.join('\n')}`;
+        const eol = getDocumentEol(editor.document);
+        const outText = `-- Extracted methods (${list.length}):${eol}${list.join(eol)}`;
         vscode.workspace.openTextDocument({ content: outText, language: 'pml' }).then(doc => {
             vscode.window.showTextDocument(doc);
         });
@@ -339,7 +330,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return `${indent}-- ${rest}`;
         });
 
-        this.applyChangesToSelection(editor, range, commented.join('\n'), 'Added comments');
+        this.applyChangesToSelection(editor, range, commented.join(getDocumentEol(editor.document)), 'Added comments');
     };
 
     private removeComments = () => {
@@ -376,7 +367,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return result;
         });
 
-        this.applyChangesToSelection(editor, range, uncommented.join('\n'), 'Removed comments');
+        this.applyChangesToSelection(editor, range, uncommented.join(getDocumentEol(editor.document)), 'Removed comments');
     };
 
     private alignPML = () => {
@@ -386,7 +377,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const lines = selected.text.split('\n');
+        const { lines } = splitTextLines(selected.text);
 
         // Smart multi-column alignment
         // Detects multiple alignment points: =, is, --, $*, etc.
@@ -412,7 +403,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             }
         }
 
-        this.applyChangesToSelection(editor, selected.range, aligned.join('\n'), 'Aligned PML');
+        this.applyChangesToSelection(editor, selected.range, aligned.join(getDocumentEol(editor.document)), 'Aligned PML');
     };
 
     private alignByOperator(lines: string[], operator: string): string[] {
@@ -664,7 +655,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         }
 
         // Обработка строк
-        const lines = selected.text.split('\n')
+        const lines = splitTextLines(selected.text).lines
             .map(line => line.trim())
             .filter(line => line.length > 0); // Убираем пустые строки
 
@@ -695,7 +686,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return `!${varName}[${idx}] = ${value}`;
         });
 
-        this.applyChangesToSelection(editor, selected.range, result.join('\n'), 'Created array list');
+        this.applyChangesToSelection(editor, selected.range, result.join(getDocumentEol(editor.document)), 'Created array list');
     };
 
     /**
@@ -708,16 +699,9 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        const textAbove = editor.document.getText(
-            new vscode.Range(
-                new vscode.Position(Math.max(0, selected.range.start.line - 50), 0),
-                selected.range.start
-            )
-        );
-
-        const result = reindexArrayText(selected.text, textAbove);
+        const result = reindexArrayText(selected.text);
         if (result === null) {
-            vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте или выше');
+            vscode.window.showErrorMessage('No array assignments found in the selection');
             return;
         }
 
@@ -769,7 +753,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return;
         }
 
-        const summary = this.formatMethodsSummary(methods);
+        const summary = this.formatMethodsSummary(methods, getDocumentEol(document));
 
         // Insert at cursor position
         const position = editor.selection.active;
@@ -812,7 +796,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             return;
         }
 
-        const newSummary = this.formatMethodsSummary(methods);
+        const newSummary = this.formatMethodsSummary(methods, getDocumentEol(document));
         const startIdx = match.index!;
         const endIdx = startIdx + match[0].length;
 
@@ -846,7 +830,7 @@ export class PMLToolsProvider implements vscode.Disposable {
 
             // Look for documentation comment before the method (within 5 lines)
             const beforeText = text.substring(Math.max(0, methodStartIdx - 500), methodStartIdx);
-            const lines = beforeText.split('\n');
+            const { lines } = splitTextLines(beforeText);
 
             let description = '-';
 
@@ -879,7 +863,10 @@ export class PMLToolsProvider implements vscode.Disposable {
         return methods;
     }
 
-    private formatMethodsSummary(methods: Array<{name: string, params: string, description: string}>): string {
+    private formatMethodsSummary(
+        methods: Array<{name: string, params: string, description: string}>,
+        eol: string
+    ): string {
         const lines: string[] = [];
 
         lines.push('--');
@@ -910,7 +897,7 @@ export class PMLToolsProvider implements vscode.Disposable {
         lines.push('------------------------------------------------------------------------');
         lines.push('');
 
-        return lines.join('\n');
+        return lines.join(eol);
     }
 
     /**
@@ -967,7 +954,7 @@ export class PMLToolsProvider implements vscode.Disposable {
             `${indent}--`,
             `${indent}------------------------------------------------------------------------`,
             ''
-        ].join('\n');
+        ].join(getDocumentEol(document));
 
         // Insert documentation block above method definition
         await editor.edit(editBuilder => {

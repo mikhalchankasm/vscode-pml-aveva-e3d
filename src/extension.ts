@@ -19,8 +19,12 @@ export function activate(context: vscode.ExtensionContext) {
         console.log('✅ PML Language Server client started');
 
         // Monitor client state for unexpected shutdowns
+        let hasReachedRunningState = false;
         client.onDidChangeState((event) => {
-            if (event.newState === ClientState.Stopped) {
+            if (event.newState === ClientState.Running) {
+                hasReachedRunningState = true;
+            } else if (event.newState === ClientState.Stopped && hasReachedRunningState) {
+                hasReachedRunningState = false;
                 console.error('Language Server stopped unexpectedly');
                 vscode.window.showWarningMessage(
                     'PML Language Server stopped. Some features may be unavailable.',

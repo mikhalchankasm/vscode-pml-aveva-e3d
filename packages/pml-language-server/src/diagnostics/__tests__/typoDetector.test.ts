@@ -216,6 +216,16 @@ describe('Typo Detector', () => {
 			// Should not find any close matches for a completely different word
 			expect(diagnostics).toHaveLength(0);
 		});
+
+		it('should not suggest keyword typos for one-character quoted parser tokens', () => {
+			const source = "'i'";
+			const document = createDocument(source);
+			const parseErrors = [createParseError("Unexpected identifier 'i'", 1)];
+
+			const diagnostics = detectTypos(document, parseErrors);
+
+			expect(diagnostics).toHaveLength(0);
+		});
 	});
 
 	describe('Windows line ending handling', () => {

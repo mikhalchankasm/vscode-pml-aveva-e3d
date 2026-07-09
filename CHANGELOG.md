@@ -6,6 +6,24 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Align internal release commands and checklist with the releases-only VSIX policy, SHA-256 checksums, and the canonical `RELEASE_NOTES.md` file.
+- Make workspace-index progress state clearer by reporting discovered PML file counts and indexing duration.
+- Install the freshly packaged VSIX into a disposable VS Code profile in CI and release validation, then verify the extension ID and version reported by the isolated profile.
+- Treat invalid configured Agent Kit paths as a setup problem and smoke-test the actionable setup guidance in the extension host.
+- Run Agent Kit npm scripts through `npm-cli.js` without `cmd.exe` shell parsing, preserving Windows paths that contain `%`, `&`, `!`, spaces, or parentheses.
+- Run client transform, print-command, and Agent Kit helper tests from a root Vitest project, keep language-server tests inside their package, and make both suites explicit CI/release gates.
+- Make `compile:tsc` a no-emit validation gate so TypeScript checks do not mix intermediate files with esbuild bundles; package-local language-server compilation remains available when emitted output is needed.
+- Make Reindex Selected Array report no-op selections accurately instead of returning unchanged text as a successful edit, and remove its dead full-document edit path.
+- Suppress typo suggestions for one- and two-character tokens quoted in parser errors, avoiding noise such as suggesting `if` for `'i'`.
+- Use shared syntax-aware object/form classification so References and Rename agree when an object and form have the same name.
+- Include bare method references followed directly by `)` or `,` in Rename fallback scanning without matching longer identifiers.
+- Preserve CRLF line endings across remaining comment, alignment, array-list, method-summary, documentation-block, and method-sort editing commands.
+- Make packaged CLI smoke execution explicitly run Electron as Node, and keep local reinstall packaging pinned to the installed `vsce` binary.
+- Keep language-server startup failures to one actionable notification and continue initialization when dynamic configuration registration is unavailable.
+- Limit release-note checksum injection to the current release entry so historical SHA256 values remain unchanged.
+- Preserve Agent Kit file-path arguments containing Windows shell characters such as `&` and parentheses instead of inserting literal caret characters into the path.
+- Prevent Rename on slash expressions such as `!total/100` from replacing the full expression, and preserve local/global variable sigils when users enter an unprefixed new name.
+- Keep top-level local-variable Rename out of method and function bodies while still updating top-level references across the file.
 - Add safe Rename support for direct global `!!function(...)` symbols, updating function definitions and indexed direct calls without touching global variables, form member calls, or file-local methods.
 - Keep Rename on `!variable` and `!!global` symbols on the variable path when a same-name `.method()` exists in the file.
 - Keep Rename on `!variable` symbols on the variable path when a same-name object or form exists in the workspace.

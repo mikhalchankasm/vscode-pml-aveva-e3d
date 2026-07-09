@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { addToArrayText, reindexArrayText } from '../../../../../src/arrayCommandsCore';
-import { extractMethodBlocksFromText } from '../../../../../src/commands/sortMethodsCore';
-import { alignAssignmentsText } from '../../../../../src/formatterCore';
+import { addToArrayText, reindexArrayText } from '../arrayCommandsCore';
+import { extractMethodBlocksFromText } from '../commands/sortMethodsCore';
+import { alignAssignmentsText } from '../formatterCore';
 import {
 	leadingSpacesToTabsText,
 	removeDuplicateLinesText,
 	removeEmptyLinesText,
 	sortLinesAscText,
 	trimTrailingWhitespaceText
-} from '../../../../../src/lineCommandsCore';
+} from '../lineCommandsCore';
 
 describe('client text transform utilities', () => {
 	it('does not treat equals signs inside PML string literals as assignments', () => {
@@ -72,6 +72,10 @@ describe('client text transform utilities', () => {
 		const text = '!first[10] = |a|\r\n!second[20] = |b|';
 
 		expect(reindexArrayText(text)).toBe('!first[1] = |a|\r\n!second[2] = |b|');
+	});
+
+	it('does not report a reindex result when the selection has no array assignments', () => {
+		expect(reindexArrayText('first value\nsecond value')).toBeNull();
 	});
 
 	it('adds array items in place without converting comments into elements', () => {

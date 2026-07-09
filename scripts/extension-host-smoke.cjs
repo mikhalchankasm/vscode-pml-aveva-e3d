@@ -32,6 +32,7 @@ async function run() {
     }
 
     await assertFormCallbackQuickFix();
+    await assertAgentKitSetupError();
     await assertPackagedCliAvailability(extension.extensionPath);
 }
 
@@ -78,6 +79,27 @@ async function assertFormCallbackQuickFix() {
     fs.rmSync(tempDir, { recursive: true, force: true });
 }
 
+async function assertAgentKitSetupError() {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pml-agent-kit-smoke-'));
+    const configuration = vscode.workspace.getConfiguration('pml.agentKit');
+    const originalPath = configuration.inspect('path')?.globalValue;
+    const invalidPath = path.join(tempDir, 'missing-agent-kit');
+
+    try {
+        await configuration.update('path', invalidPath, vscode.ConfigurationTarget.Global);
+        const result = await vscode.commands.executeCommand('pml.agentKit.checkHealth');
+
+        assert.strictEqual(
+            result,
+            'PML Agent Kit is not configured. Set pml.agentKit.path to the e3d-pml-agent-kit repository, or open this workspace next to it.',
+            'Agent Kit setup errors should explain how to configure a valid repository path.'
+        );
+    } finally {
+        await configuration.update('path', originalPath, vscode.ConfigurationTarget.Global);
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+}
+
 async function assertPackagedCliAvailability(extensionPath) {
     const cliPath = path.join(extensionPath, 'packages', 'pml-language-server', 'out', 'cli.js');
     assert(fs.existsSync(cliPath), `Packaged PML Assistant CLI was not found at ${cliPath}.`);
@@ -97,7 +119,12 @@ async function assertPackagedCliAvailability(extensionPath) {
         const stdout = cp.execFileSync(
             process.execPath,
             [cliPath, 'parse', filePath, '--json'],
-            { cwd: extensionPath, encoding: 'utf8', maxBuffer: 5 * 1024 * 1024 }
+            {
+                cwd: extensionPath,
+                encoding: 'utf8',
+                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+                maxBuffer: 5 * 1024 * 1024
+            }
         );
         const result = JSON.parse(stdout);
 

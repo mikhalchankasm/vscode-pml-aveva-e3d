@@ -1,4 +1,4 @@
-function splitTextLines(text: string): { lines: string[]; eol: string } {
+export function splitTextLines(text: string): { lines: string[]; eol: string } {
     return {
         lines: text.split(/\r?\n/),
         eol: text.includes('\r\n') ? '\r\n' : '\n'

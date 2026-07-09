@@ -57,7 +57,7 @@ coverage/
 *.tmp
 *.bak
 
-# Hidden examples (local testing only)
+# Hidden examples (tracked baselines plus local-only reference extraction files)
 hide_examples/
 
 # Local reference manuals

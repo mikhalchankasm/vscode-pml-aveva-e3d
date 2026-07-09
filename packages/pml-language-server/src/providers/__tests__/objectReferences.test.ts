@@ -113,6 +113,37 @@ describe('Object references', () => {
 		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 8]);
 	});
 
+	it('prefers object references over a same-name form in object syntax', async () => {
+		const formUri = 'file:///forms/Pump.pmlfrm';
+		const formSource = [
+			'setup form !!Pump dialog',
+			'exit',
+			'define method .open()',
+			'\t!!Pump.show()',
+			'endmethod'
+		].join('\n');
+		const { document, documents, symbolIndex } = createFixture();
+		const formParseResult = new Parser().parse(formSource);
+		symbolIndex.indexFile(formUri, formParseResult.ast, 1, formSource);
+		const provider = new ReferencesProvider(symbolIndex, documents as any);
+
+		const references = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.indexOf('object Pump()') + 'object '.length),
+			context: { includeDeclaration: false }
+		});
+		const typedReferences = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.indexOf('is Pump') + 'is '.length),
+			context: { includeDeclaration: false }
+		});
+
+		expect(references).toHaveLength(2);
+		expect(references?.every(reference => reference.uri === uri)).toBe(true);
+		expect(references?.map(reference => reference.range.start.line)).toEqual([7, 8]);
+		expect(typedReferences).toEqual(references);
+	});
+
 	it('renames a local variable without falling through to a same-name object', async () => {
 		const collisionUri = 'file:///objects/Grid.pmlobj';
 		const collisionSource = [

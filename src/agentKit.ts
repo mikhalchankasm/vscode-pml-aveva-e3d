@@ -117,7 +117,7 @@ async function reviewCurrentFile(): Promise<void> {
     }
 }
 
-async function checkHealth(): Promise<void> {
+async function checkHealth(): Promise<string | void> {
     if (!ensureTrustedAgentKitWorkspace('health check')) {
         return;
     }
@@ -125,8 +125,7 @@ async function checkHealth(): Promise<void> {
     const config = vscode.workspace.getConfiguration('pml.agentKit');
     const agentKitPath = getAgentKitPath(config);
     if (!agentKitPath) {
-        showAgentKitSetupError('health check');
-        return;
+        return showAgentKitSetupError('health check');
     }
 
     appendLine(`Checking Agent Kit health: ${agentKitPath}`);
@@ -177,7 +176,7 @@ async function checkLiveE3dAvoxStatus(): Promise<void> {
 function getAgentKitPath(config: vscode.WorkspaceConfiguration): string | undefined {
     const configuredPath = config.get<string>('path', '').trim();
     if (configuredPath.length > 0) {
-        return configuredPath;
+        return isAgentKitRoot(configuredPath) ? configuredPath : undefined;
     }
 
     return discoverAgentKitPath();
@@ -221,12 +220,14 @@ function isAgentKitRoot(candidate: string): boolean {
     }
 }
 
-function showAgentKitSetupError(action: string): void {
+function showAgentKitSetupError(action: string): string {
     const message = 'Set pml.agentKit.path to the e3d-pml-agent-kit repository, or open this workspace next to it.';
+    const errorMessage = `PML Agent Kit is not configured. ${message}`;
     appendLine(`Agent Kit ${action} skipped: ${message}`);
     appendLine('Status: MISCONFIGURED');
     outputChannel?.show(true);
-    vscode.window.showErrorMessage(`PML Agent Kit is not configured. ${message}`);
+    vscode.window.showErrorMessage(errorMessage);
+    return errorMessage;
 }
 
 function runNpm(args: string[], cwd: string): Promise<{ stdout: string; stderr: string }> {

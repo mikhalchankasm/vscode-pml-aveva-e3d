@@ -14,5 +14,5 @@
     "noImplicitOverride": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", ".vscode-test", "packages/**/*", "out/**/*"]
+  "exclude": ["node_modules", ".vscode-test", "packages/**/*", "out/**/*", "src/**/*.test.ts", "src/**/__tests__/**"]
 }

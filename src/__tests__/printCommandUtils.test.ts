@@ -4,7 +4,7 @@ import {
 	scanCommentedPMLPrintLines,
 	scanPMLPrintLines,
 	uncommentPrintText
-} from '../../../../../src/printCommandUtils';
+} from '../printCommandUtils';
 
 describe('PML print command utilities', () => {
 	it('should find active print lines and ignore block comments', () => {
