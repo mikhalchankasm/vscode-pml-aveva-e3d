@@ -54,7 +54,9 @@ export class RenameProvider {
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = isGlobalFunctionSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = !isGlobalFunctionSyntax && this.isMethodSymbolAt(document, wordRange, word)
+			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
+			: [];
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
@@ -99,7 +101,9 @@ export class RenameProvider {
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = isGlobalFunctionSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = !isGlobalFunctionSyntax && this.isMethodSymbolAt(document, wordRange, word)
+			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
+			: [];
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
@@ -565,6 +569,19 @@ export class RenameProvider {
 		}
 
 		return text[nextOffset] === '(';
+	}
+
+	private isMethodSymbolAt(document: TextDocument, wordRange: Range, word: string): boolean {
+		if (word.startsWith('.') || word.includes('.')) {
+			return true;
+		}
+
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+
+		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
 	private normalizeGlobalFunctionName(name: string): string {

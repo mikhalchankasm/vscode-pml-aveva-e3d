@@ -598,6 +598,43 @@ describe('Method reference scanning', () => {
 		]);
 	});
 
+	it('should prefer global variable rename over same-name methods when cursor is on a !!variable', async () => {
+		const variableSource = [
+			'define method .value()',
+			'endmethod',
+			'',
+			'define method .run()',
+			'	!!value = 1',
+			'	!next = !!value',
+			'	.value()',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!!value =') + 2),
+			newName: '!!nextValue'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.map(change => textInRange(variableSource, change.range))).toEqual([
+			'!!value',
+			'!!value'
+		]);
+		expect(edits.every(change => change.newText === '!!nextValue')).toBe(true);
+	});
+
 	it('should rename method references in callback strings and indexed expressions', () => {
 		const provider = new RenameProvider(undefined as any, undefined as any);
 		const edits = (provider as any).findAndReplaceMethod(source, 'refresh', 'reload');

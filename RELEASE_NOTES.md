@@ -5,6 +5,7 @@ This file is the short release snapshot for the current public build. Full histo
 ## In Development
 
 - Added safe Rename support for direct global `!!function(...)` symbols so function definitions and indexed direct calls can be renamed without changing global variables, form member calls, or file-local methods.
+- Kept Rename on `!variable` and `!!global` symbols from accidentally switching to same-name `.method()` rename.
 
 ## Current Release - v0.12.36
 
