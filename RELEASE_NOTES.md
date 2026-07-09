@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Keep member completions focused when a local variable is a direct alias of a typed receiver.
 - Align release guidance with GitHub Releases-only VSIX storage, SHA-256 checksums, and the canonical release notes file.
 - Show how many PML files were found and how long indexing took in workspace-index progress.
 - Verify that a freshly packaged VSIX installs into an isolated VS Code profile before CI and release validation accept it.
