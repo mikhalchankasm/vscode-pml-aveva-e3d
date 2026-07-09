@@ -50,10 +50,10 @@ export class RenameProvider {
 		if (!symbolName) return null;
 
 		// Check if symbol exists in index (method, function, object, form, or variable)
-		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
+		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
@@ -94,10 +94,10 @@ export class RenameProvider {
 		const changes: { [uri: string]: TextEdit[] } = {};
 
 		// Check what kind of symbol we're renaming
-		const methods = this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
+		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)

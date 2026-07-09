@@ -116,6 +116,9 @@ describe('Global function references', () => {
 			'	return !target',
 			'endfunction',
 			'',
+			'define method .Process()',
+			'endmethod',
+			'',
 			'define method .run()',
 			'	!value = !!Process(!target)',
 			'	!!Process(!value)',
@@ -155,6 +158,63 @@ describe('Global function references', () => {
 			'!!Process',
 			'!!Process'
 		]);
-		expect(edits.map(change => change.range.start.line).sort((left, right) => left - right)).toEqual([0, 5, 6]);
+		expect(edits.map(change => change.range.start.line).sort((left, right) => left - right)).toEqual([0, 8, 9]);
+	});
+
+	it('renames global functions across files when triggered from the definition', async () => {
+		const functionUri = 'file:///process.pmlfnc';
+		const callerUri = 'file:///caller.pmlfrm';
+		const functionSource = [
+			'define function !!Process(!target is STRING)',
+			'	return !target',
+			'endfunction',
+			'',
+			'define method .run()',
+			'	!!Process(!target)',
+			'endmethod'
+		].join('\n');
+		const callerSource = [
+			'define method .call()',
+			'	!!Process(!target)',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const functionParseResult = parser.parse(functionSource);
+		const callerParseResult = parser.parse(callerSource);
+		expect(functionParseResult.errors).toHaveLength(0);
+		expect(callerParseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(functionUri, functionParseResult.ast, 1, functionSource);
+		symbolIndex.indexFile(callerUri, callerParseResult.ast, 1, callerSource);
+		const functionDocument = TextDocument.create(functionUri, 'pml', 1, functionSource);
+		const callerDocument = TextDocument.create(callerUri, 'pml', 1, callerSource);
+		const documents = {
+			get: (requestedUri: string) => {
+				if (requestedUri === functionUri) return functionDocument;
+				if (requestedUri === callerUri) return callerDocument;
+				return undefined;
+			}
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri: functionUri },
+			position: functionDocument.positionAt(functionSource.indexOf('!!Process') + 2),
+			newName: 'Build'
+		});
+
+		const functionEdits = edit?.changes?.[functionUri] ?? [];
+		const callerEdits = edit?.changes?.[callerUri] ?? [];
+		expect(functionEdits).toHaveLength(2);
+		expect(callerEdits).toHaveLength(1);
+		expect(functionEdits.map(change => textInRange(functionSource, change.range))).toEqual([
+			'!!Process',
+			'!!Process'
+		]);
+		expect(callerEdits.map(change => textInRange(callerSource, change.range))).toEqual([
+			'!!Process'
+		]);
+		expect([...functionEdits, ...callerEdits].every(change => change.newText === '!!Build')).toBe(true);
 	});
 });
