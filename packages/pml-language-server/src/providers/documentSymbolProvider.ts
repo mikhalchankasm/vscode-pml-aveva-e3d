@@ -4,6 +4,7 @@
 
 import { DocumentSymbol, DocumentSymbolParams, SymbolKind as LSPSymbolKind } from 'vscode-languageserver/node';
 import { FrameInfo, GadgetInfo, SymbolIndex } from '../index/symbolIndex';
+import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
 
 export class DocumentSymbolProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
@@ -139,9 +140,14 @@ export class DocumentSymbolProvider {
 		const fallbackSymbols: DocumentSymbol[] = [];
 		const lowerText = text.toLowerCase();
 		const lineOffsets = this.buildLineOffsets(text);
+		const inactiveRanges = collectPmlInactiveTextRanges(text);
 
 		let match: RegExpExecArray | null;
 		while ((match = methodRegex.exec(text)) !== null) {
+			if (isOffsetInTextRanges(inactiveRanges, match.index)) {
+				continue;
+			}
+
 			const methodName = match[1];
 			const key = methodName.toLowerCase();
 
@@ -159,8 +165,7 @@ export class DocumentSymbolProvider {
 				});
 
 			const startOffset = match.index;
-			const endmethodIndex = lowerText.indexOf('endmethod', match.index);
-			const endOffset = endmethodIndex !== -1 ? endmethodIndex + 'endmethod'.length : startOffset + match[0].length;
+			const endOffset = this.findActiveMethodEndOffset(lowerText, match.index, inactiveRanges) ?? (startOffset + match[0].length);
 
 			const startPos = this.offsetToPosition(startOffset, lineOffsets);
 			const endPos = this.offsetToPosition(endOffset, lineOffsets);
@@ -179,6 +184,18 @@ export class DocumentSymbolProvider {
 		}
 
 		return fallbackSymbols;
+	}
+
+	private findActiveMethodEndOffset(text: string, startOffset: number, inactiveRanges: ReturnType<typeof collectPmlInactiveTextRanges>): number | undefined {
+		let endmethodIndex = text.indexOf('endmethod', startOffset);
+		while (endmethodIndex !== -1) {
+			if (!isOffsetInTextRanges(inactiveRanges, endmethodIndex)) {
+				return endmethodIndex + 'endmethod'.length;
+			}
+			endmethodIndex = text.indexOf('endmethod', endmethodIndex + 'endmethod'.length);
+		}
+
+		return undefined;
 	}
 
 	private buildLineOffsets(text: string): number[] {

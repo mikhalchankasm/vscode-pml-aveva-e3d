@@ -136,4 +136,26 @@ endfunction
 			}
 		]);
 	});
+
+	it('does not extract fallback methods from inactive text', () => {
+		const source = [
+			'$( define method .commented()',
+			'endmethod',
+			'$)',
+			'!description = |',
+			'define method .stringOnly()',
+			'endmethod',
+			'|',
+			'define method .live()',
+			'endmethod'
+		].join('\n');
+		const uri = 'file:///fallback-inactive.pmlfrm';
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, { body: [] } as any, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const symbols = provider.provide({ textDocument: { uri } });
+
+		expect(symbols.map(symbol => symbol.name)).toEqual(['.live()']);
+	});
 });
