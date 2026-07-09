@@ -187,12 +187,14 @@ export class DocumentSymbolProvider {
 	}
 
 	private findActiveMethodEndOffset(text: string, startOffset: number, inactiveRanges: ReturnType<typeof collectPmlInactiveTextRanges>): number | undefined {
-		let endmethodIndex = text.indexOf('endmethod', startOffset);
-		while (endmethodIndex !== -1) {
-			if (!isOffsetInTextRanges(inactiveRanges, endmethodIndex)) {
-				return endmethodIndex + 'endmethod'.length;
+		const endmethodPattern = /\bendmethod\b/gi;
+		endmethodPattern.lastIndex = startOffset;
+
+		let match: RegExpExecArray | null;
+		while ((match = endmethodPattern.exec(text)) !== null) {
+			if (!isOffsetInTextRanges(inactiveRanges, match.index)) {
+				return match.index + match[0].length;
 			}
-			endmethodIndex = text.indexOf('endmethod', endmethodIndex + 'endmethod'.length);
 		}
 
 		return undefined;

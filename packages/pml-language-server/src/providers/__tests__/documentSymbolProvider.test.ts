@@ -158,4 +158,21 @@ endfunction
 
 		expect(symbols.map(symbol => symbol.name)).toEqual(['.live()']);
 	});
+
+	it('keeps fallback method ranges open past identifiers containing endmethod', () => {
+		const source = [
+			'define method .live()',
+			'\t!endmethodology = 1',
+			'endmethod'
+		].join('\n');
+		const uri = 'file:///fallback-endmethod-boundary.pmlfrm';
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, { body: [] } as any, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const [symbol] = provider.provide({ textDocument: { uri } });
+
+		expect(symbol.name).toBe('.live()');
+		expect(symbol.range.end.line).toBeGreaterThan(1);
+	});
 });
