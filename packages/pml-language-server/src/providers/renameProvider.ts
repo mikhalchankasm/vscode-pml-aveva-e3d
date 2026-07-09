@@ -18,6 +18,7 @@ import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 import { computeLineOffsets, offsetToRange } from '../utils/offsetUtils';
 import { createMethodRenamePatterns, escapeRegex } from '../utils/methodReferencePatterns';
+import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
 import {
 	collectPmlInactiveTextRanges,
 	collectPmlMethodReferenceIgnoredRanges,
@@ -40,10 +41,11 @@ export class RenameProvider {
 		const document = this.documents.get(params.textDocument.uri);
 		if (!document) return null;
 
-		const wordRange = this.getWordRangeAtPosition(document, params.position);
+		const globalSymbol = getPmlGlobalSymbolAtPosition(document, params.position);
+		const wordRange = globalSymbol?.range ?? this.getWordRangeAtPosition(document, params.position);
 		if (!wordRange) return null;
 
-		const word = document.getText(wordRange);
+		const word = globalSymbol?.text ?? document.getText(wordRange);
 
 		// Check if it's a valid symbol to rename
 		const symbolName = this.extractSymbolName(word);
@@ -60,7 +62,7 @@ export class RenameProvider {
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = !isGlobalFunctionSyntax && functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		// If not a known symbol and not a variable, can't rename
 		if (methods.length === 0 && functions.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
@@ -80,10 +82,11 @@ export class RenameProvider {
 		const document = this.documents.get(params.textDocument.uri);
 		if (!document) return null;
 
-		const wordRange = this.getWordRangeAtPosition(document, params.position);
+		const globalSymbol = getPmlGlobalSymbolAtPosition(document, params.position);
+		const wordRange = globalSymbol?.range ?? this.getWordRangeAtPosition(document, params.position);
 		if (!wordRange) return null;
 
-		const word = document.getText(wordRange);
+		const word = globalSymbol?.text ?? document.getText(wordRange);
 		const newName = params.newName;
 
 		// Validate new name
@@ -107,7 +110,7 @@ export class RenameProvider {
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = !isGlobalFunctionSyntax && functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		if (methods.length > 0) {
 			// Renaming a method

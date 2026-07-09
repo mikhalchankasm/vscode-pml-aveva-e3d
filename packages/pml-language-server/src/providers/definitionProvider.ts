@@ -5,6 +5,7 @@
 import { Definition, DefinitionParams, Location, TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
+import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
 
 export class DefinitionProvider {
 	constructor(
@@ -17,12 +18,27 @@ export class DefinitionProvider {
 		if (!document) return null;
 
 		// Get word at position
-		const wordRange = this.getWordRangeAtPosition(document, params.position);
+		const globalSymbol = getPmlGlobalSymbolAtPosition(document, params.position);
+		const wordRange = globalSymbol?.range ?? this.getWordRangeAtPosition(document, params.position);
 		if (!wordRange) return null;
 
-		const word = document.getText(wordRange);
+		const word = globalSymbol?.text ?? document.getText(wordRange);
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
+
+		if (globalSymbol) {
+			const globalName = word.substring(2);
+			if (!globalSymbol.hasMemberAccess) {
+				const functionDefinition = this.findFunctionDefinition(globalName);
+				if (functionDefinition) {
+					return functionDefinition;
+				}
+			}
+			const forms = this.symbolIndex.findForm(globalName);
+			if (forms.length > 0) {
+				return Location.create(forms[0].uri, forms[0].range);
+			}
+		}
 
 		if (!word.includes('.') && wordStartOffset >= 2 && text.slice(wordStartOffset - 2, wordStartOffset) === '!!') {
 			return this.findFunctionDefinition(word);
@@ -145,4 +161,5 @@ export class DefinitionProvider {
 	private isStopChar(char: string): boolean {
 		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
 	}
+
 }
