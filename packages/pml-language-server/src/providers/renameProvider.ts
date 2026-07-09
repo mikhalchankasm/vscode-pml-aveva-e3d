@@ -50,14 +50,15 @@ export class RenameProvider {
 		if (!symbolName) return null;
 
 		// Check if symbol exists in index (method, function, object, form, or variable)
-		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
+		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
+		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = isGlobalFunctionSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const isVariable = !isGlobalFunctionSyntax && functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		// If not a known symbol and not a variable, can't rename
 		if (methods.length === 0 && functions.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
@@ -94,14 +95,15 @@ export class RenameProvider {
 		const changes: { [uri: string]: TextEdit[] } = {};
 
 		// Check what kind of symbol we're renaming
-		const functions = this.isGlobalFunctionSymbolAt(document, wordRange, symbolName)
+		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
+		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = isGlobalFunctionSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = functions.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
-		const isVariable = functions.length === 0 && word.startsWith('!') && !word.includes('.');
+		const isVariable = !isGlobalFunctionSyntax && functions.length === 0 && word.startsWith('!') && !word.includes('.');
 
 		if (methods.length > 0) {
 			// Renaming a method
@@ -541,13 +543,13 @@ export class RenameProvider {
 		return text[nextOffset] === '.' || text[nextOffset] === '(';
 	}
 
-	private isGlobalFunctionSymbolAt(document: TextDocument, wordRange: Range, symbolName: string): boolean {
+	private isGlobalFunctionSyntaxAt(document: TextDocument, wordRange: Range): boolean {
 		const text = document.getText();
 		const startOffset = document.offsetAt(wordRange.start);
 		const endOffset = document.offsetAt(wordRange.end);
 		const word = text.slice(startOffset, endOffset);
 
-		if (!word.startsWith('!!') || word.includes('.') || this.symbolIndex.findFunction(symbolName).length === 0) {
+		if (!word.startsWith('!!') || word.includes('.')) {
 			return false;
 		}
 

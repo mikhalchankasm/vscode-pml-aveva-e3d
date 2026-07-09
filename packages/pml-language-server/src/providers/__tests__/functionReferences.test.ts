@@ -217,4 +217,35 @@ describe('Global function references', () => {
 		]);
 		expect([...functionEdits, ...callerEdits].every(change => change.newText === '!!Build')).toBe(true);
 	});
+
+	it('does not fall back to variable or method rename for unindexed !!function-call syntax', async () => {
+		const unindexedSource = [
+			'define method .Process()',
+			'endmethod',
+			'',
+			'define method .run()',
+			'	!!Process(!target)',
+			'	!!Process = !!GlobalVar',
+			'	!!GlobalVar = !!Process',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(unindexedSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, unindexedSource);
+		const document = TextDocument.create(uri, 'pml', 1, unindexedSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(unindexedSource.indexOf('!!Process(!target)') + 2);
+
+		expect(provider.prepareRename({ textDocument: { uri }, position })).toBeNull();
+		await expect(provider.provide({
+			textDocument: { uri },
+			position,
+			newName: 'Build'
+		})).resolves.toBeNull();
+	});
 });
