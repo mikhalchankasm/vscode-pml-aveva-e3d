@@ -372,6 +372,21 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 
+	it('does not suggest keywords or statement snippets after a member receiver', () => {
+		const source = '!value.';
+		const document = TextDocument.create('file:///member-context.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'define')).toBe(false);
+		expect(completions.some(item => item.label === 'if')).toBe(false);
+		expect(completions.some(item => item.kind === CompletionItemKind.Snippet)).toBe(false);
+	});
+
 	it('filters built-in member completions for obvious ARRAY constructors', () => {
 		const source = [
 			'!items = object ARRAY()',
