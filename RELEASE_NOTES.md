@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Report an invalid Agent Kit repository setting as a clear setup error and cover the guidance in extension-host smoke tests.
 - Run Agent Kit through npm's JavaScript CLI instead of `cmd.exe`, so Windows file paths are passed literally even when they contain shell characters.
 - Separated client transform, print-command, and Agent Kit helper tests from the language-server package and made both suites explicit CI/release checks.
 - Made `compile:tsc` validate both projects without emitting intermediate files into bundle output directories.

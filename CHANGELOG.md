@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Treat invalid configured Agent Kit paths as a setup problem and smoke-test the actionable setup guidance in the extension host.
 - Run Agent Kit npm scripts through `npm-cli.js` without `cmd.exe` shell parsing, preserving Windows paths that contain `%`, `&`, `!`, spaces, or parentheses.
 - Run client transform, print-command, and Agent Kit helper tests from a root Vitest project, keep language-server tests inside their package, and make both suites explicit CI/release gates.
 - Make `compile:tsc` a no-emit validation gate so TypeScript checks do not mix intermediate files with esbuild bundles; package-local language-server compilation remains available when emitted output is needed.
