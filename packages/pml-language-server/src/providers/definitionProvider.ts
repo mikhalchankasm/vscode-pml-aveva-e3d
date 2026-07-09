@@ -26,6 +26,13 @@ export class DefinitionProvider {
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
 
+		if (this.isObjectConstructorSymbolAt(document, wordRange)) {
+			const objects = this.symbolIndex.findObject(word);
+			if (objects.length > 0) {
+				return Location.create(objects[0].uri, objects[0].range);
+			}
+		}
+
 		if (globalSymbol) {
 			const globalName = word.substring(2);
 			if (!globalSymbol.hasMemberAccess) {
@@ -160,6 +167,15 @@ export class DefinitionProvider {
 	 */
 	private isStopChar(char: string): boolean {
 		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
+	}
+
+	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: { start: { line: number; character: number } }): boolean {
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+
+		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
 }

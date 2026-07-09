@@ -59,10 +59,11 @@ export class ReferencesProvider {
 
 		const references: Location[] = [];
 		const isGlobalFunctionCall = word.startsWith('!!') && !word.includes('.') && !globalSymbol?.hasMemberAccess;
+		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
 
 		// Find definition
 		const functions = isGlobalFunctionCall ? this.symbolIndex.findFunction(symbolName) : [];
-		const methods = functions.length > 0 || globalSymbol ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = functions.length > 0 || globalSymbol || isObjectConstructorSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = methods.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = methods.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 
@@ -89,6 +90,8 @@ export class ReferencesProvider {
 			references.push(...this.findFunctionReferencesInWorkspace(symbolName));
 		} else if (forms.length > 0) {
 			references.push(...await this.findFormReferencesInWorkspace(symbolName, false));
+		} else if (objects.length > 0) {
+			references.push(...await this.findObjectReferencesInWorkspace(symbolName, false));
 		} else if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
 			// Indexed definitions are added above, so text scanning must not add declaration matches again.
 			const workspaceRefs = methods.length > 0 && objects.length === 0 && forms.length === 0
@@ -262,6 +265,75 @@ export class ReferencesProvider {
 		return references;
 	}
 
+	private async findObjectReferencesInWorkspace(symbolName: string, includeDeclaration = true): Promise<Location[]> {
+		const references: Location[] = [];
+		const allFileUris = this.symbolIndex.getAllFileUris();
+
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			const batchResults = await Promise.all(
+				batch.map(async fileUri => {
+					const text = await this.getFileText(fileUri);
+					return text ? this.findObjectReferencesInText(text, fileUri, symbolName, includeDeclaration) : [];
+				})
+			);
+			for (const fileRefs of batchResults) {
+				references.push(...fileRefs);
+			}
+		}
+
+		return this.deduplicateLocations(references);
+	}
+
+	private findObjectReferencesInText(text: string, fileUri: string, symbolName: string, includeDeclaration = true): Location[] {
+		const references: Location[] = [];
+		const preFilterPattern = new RegExp(escapeRegex(symbolName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return references;
+		}
+
+		const patterns = [
+			new RegExp(`(define\\s+object\\s+)${escapeRegex(symbolName)}(?=\\s|$)`, 'gi'),
+			new RegExp(`(OBJECT\\s+)${escapeRegex(symbolName)}(?=\\s*\\()`, 'gi'),
+			new RegExp(`(is\\s+)${escapeRegex(symbolName)}(?=\\s|$)`, 'gi')
+		];
+		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
+		const foundOffsets = new Set<number>();
+
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(text)) !== null) {
+				const startOffset = match.index + match[1].length;
+				const endOffset = startOffset + symbolName.length;
+				if (!includeDeclaration && this.isObjectDeclarationReference(text, startOffset)) {
+					continue;
+				}
+				if (!ignoredRanges) {
+					ignoredRanges = collectPmlInactiveTextRanges(text);
+				}
+				if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+					continue;
+				}
+				if (foundOffsets.has(startOffset)) {
+					continue;
+				}
+				foundOffsets.add(startOffset);
+
+				if (!lineOffsets) {
+					lineOffsets = computeLineOffsets(text);
+				}
+				references.push(Location.create(fileUri, {
+					start: offsetToPosition(lineOffsets, startOffset),
+					end: offsetToPosition(lineOffsets, endOffset)
+				}));
+			}
+		}
+
+		return references;
+	}
+
 	private findIndexedReferences(symbolName: string, fileUri?: string): Location[] {
 		const references = fileUri
 			? this.symbolIndex.findMethodReferencesInFile(fileUri, symbolName)
@@ -391,6 +463,12 @@ export class ReferencesProvider {
 		return /^\s*(?:setup|layout)\s+form\s+$/i.test(prefix);
 	}
 
+	private isObjectDeclarationReference(text: string, startOffset: number): boolean {
+		const lineStart = text.lastIndexOf('\n', startOffset - 1) + 1;
+		const prefix = text.slice(lineStart, startOffset);
+		return /^\s*define\s+object\s+$/i.test(prefix);
+	}
+
 	private isPipeFormCallbackReference(text: string, startOffset: number, endOffset: number, range: TextRange): boolean {
 		if (text[range.startOffset] !== '|') {
 			return false;
@@ -438,6 +516,15 @@ export class ReferencesProvider {
 	private isWordChar(char: string): boolean {
 		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
 		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
+	}
+
+	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+
+		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
 	private deduplicateLocations(locations: Location[]): Location[] {

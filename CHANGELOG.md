@@ -9,6 +9,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 - Add safe Rename support for direct global `!!function(...)` symbols, updating function definitions and indexed direct calls without touching global variables, form member calls, or file-local methods.
 - Keep Rename on `!variable` and `!!global` symbols on the variable path when a same-name `.method()` exists in the file.
 - Resolve `!!Form` symbols correctly inside member calls such as `!!Form.show()` for Go to Definition, Find References, and Rename.
+- Resolve object constructor symbols such as `object Pump()` on the object path instead of same-name method paths for Go to Definition, Find References, and Rename.
 
 ## [0.12.36] - 2026-06-15
 

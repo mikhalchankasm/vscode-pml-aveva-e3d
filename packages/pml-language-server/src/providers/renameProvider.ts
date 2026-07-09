@@ -53,10 +53,11 @@ export class RenameProvider {
 
 		// Check if symbol exists in index (method, function, object, form, or variable)
 		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
+		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = !isGlobalFunctionSyntax && this.isMethodSymbolAt(document, wordRange, word)
+		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
@@ -101,10 +102,11 @@ export class RenameProvider {
 
 		// Check what kind of symbol we're renaming
 		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
+		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = !isGlobalFunctionSyntax && this.isMethodSymbolAt(document, wordRange, word)
+		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
 		const objects = functions.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
@@ -579,6 +581,15 @@ export class RenameProvider {
 			return true;
 		}
 
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+
+		return /\bOBJECT\s+$/i.test(linePrefix);
+	}
+
+	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {
 		const text = document.getText();
 		const startOffset = document.offsetAt(wordRange.start);
 		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
