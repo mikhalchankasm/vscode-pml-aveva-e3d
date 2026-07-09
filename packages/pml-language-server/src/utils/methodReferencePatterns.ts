@@ -70,7 +70,7 @@ export class MethodReferencePatternCache {
 export function createMethodRenamePatterns(oldName: string): RegExp[] {
 	const escapedOldName = escapeRegex(oldName);
 	return [
-		new RegExp(`\\.${escapedOldName}(?=\\s*\\(|\\s+|[),]|$)`, 'gi'),
+		new RegExp(`\\.${escapedOldName}(?=\\s*\\(|\\s+|[),.\\]]|$)`, 'gi'),
 		new RegExp(`\\|\\.${escapedOldName}\\|`, 'gi'),
 		new RegExp(`\\|(?:${EXPR_PREFIX})\\.${escapedOldName}\\|`, 'gi')
 	];
