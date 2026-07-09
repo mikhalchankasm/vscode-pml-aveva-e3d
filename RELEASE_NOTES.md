@@ -4,6 +4,19 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Separated client transform, print-command, and Agent Kit helper tests from the language-server package and made both suites explicit CI/release checks.
+- Made `compile:tsc` validate both projects without emitting intermediate files into bundle output directories.
+- Made Reindex Selected Array reject selections without array assignments instead of displaying a false success message.
+- Suppressed ambiguous typo diagnostics for one- and two-character tokens quoted by parser errors.
+- Aligned References and Rename for same-name objects and forms by preferring objects in object/type syntax and forms in global form syntax.
+- Extended method Rename fallback coverage to bare method references used directly before closing parentheses or commas.
+- Preserved Windows CRLF endings across the remaining line-oriented editing and method documentation commands.
+- Made packaged CLI smoke execution independent of inherited Electron environment state and prevented local reinstall packaging from fetching an unpinned `vsce`.
+- Reduced language-server startup noise to one failure notification and made unsupported dynamic configuration registration non-fatal.
+- Kept automated release checksum injection from overwriting SHA256 values recorded for earlier releases.
+- Preserved Agent Kit file paths containing Windows shell characters instead of inserting caret characters that point npm scripts at a different path.
+- Hardened variable Rename so slash expressions keep their operators and numeric operands, while unprefixed replacement names retain the required `!` or `!!` sigil.
+- Prevented top-level local-variable Rename from changing independent variables inside method and function bodies.
 - Added safe Rename support for direct global `!!function(...)` symbols so function definitions and indexed direct calls can be renamed without changing global variables, form member calls, or file-local methods.
 - Kept Rename on `!variable` and `!!global` symbols from accidentally switching to same-name method, object, or form rename.
 - Resolved `!!Form` symbols correctly inside calls such as `!!Form.show()` for definition lookup, references, and rename.

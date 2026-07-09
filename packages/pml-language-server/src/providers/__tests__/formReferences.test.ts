@@ -121,6 +121,39 @@ describe('Form references', () => {
 		expect(edits.map(change => change.range.start.line)).toEqual([0, 7, 8, 10]);
 	});
 
+	it('prefers form references over a same-name object outside object syntax', async () => {
+		const objectUri = 'file:///objects/Main.pmlobj';
+		const objectSource = [
+			'define object Main',
+			'endobject',
+			'define method .make()',
+			'\t!made = object Main()',
+			'endmethod'
+		].join('\n');
+		const { document, documents, symbolIndex } = createFixture();
+		const objectParseResult = new Parser().parse(objectSource);
+		symbolIndex.indexFile(objectUri, objectParseResult.ast, 1, objectSource);
+		const referencesProvider = new ReferencesProvider(symbolIndex, documents as any);
+		const renameProvider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(source.indexOf('!!Main.show()') + 2);
+
+		const references = await referencesProvider.provide({
+			textDocument: { uri },
+			position,
+			context: { includeDeclaration: false }
+		});
+		const edit = await renameProvider.provide({
+			textDocument: { uri },
+			position,
+			newName: 'Next'
+		});
+
+		expect(references).toHaveLength(3);
+		expect(references?.every(reference => reference.uri === uri)).toBe(true);
+		expect(edit?.changes?.[uri]).toHaveLength(4);
+		expect(edit?.changes?.[objectUri]).toBeUndefined();
+	});
+
 	it('does not partially match form names in longer global identifiers', async () => {
 		const boundaryUri = 'file:///forms/Boundary.pmlfrm';
 		const boundarySource = [

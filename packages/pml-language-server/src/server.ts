@@ -131,7 +131,12 @@ connection.onInitialize((params: InitializeParams) => {
 connection.onInitialized(async () => {
 	if (hasConfigurationCapability) {
 		// Register for all configuration changes
-		connection.client.register(DidChangeConfigurationNotification.type, undefined);
+		try {
+			await connection.client.register(DidChangeConfigurationNotification.type, undefined);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error);
+			connection.console.warn(`Unable to register configuration-change notifications: ${message}`);
+		}
 	}
 
 	if (hasWorkspaceFolderCapability) {

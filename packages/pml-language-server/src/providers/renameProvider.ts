@@ -27,6 +27,7 @@ import {
 	TextRange
 } from '../utils/pmlCommentRanges';
 import { getProviderWordRangeAtPosition } from './providerWordRange';
+import { isObjectSymbolSyntaxAt } from './providerSymbolContext';
 
 class RenameFileReadError extends Error {
 	constructor(public readonly uri: string) {
@@ -65,17 +66,20 @@ export class RenameProvider {
 
 		// Check if symbol exists in index (method, function, object, form, or variable)
 		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
-		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
+		const isObjectSyntax = isObjectSymbolSyntaxAt(document, wordRange);
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
+		const methods = !isGlobalFunctionSyntax && !isObjectSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
 		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
-		const objects = functions.length > 0 || isVariable ? [] : this.symbolIndex.findObject(symbolName);
-		const forms = functions.length > 0 || isVariable ? [] : this.symbolIndex.findForm(symbolName);
+		const canResolveObjectOrForm = functions.length === 0 && methods.length === 0 && !isVariable;
+		const objectCandidates = canResolveObjectOrForm ? this.symbolIndex.findObject(symbolName) : [];
+		const formCandidates = canResolveObjectOrForm ? this.symbolIndex.findForm(symbolName) : [];
+		const objects = isObjectSyntax || formCandidates.length === 0 ? objectCandidates : [];
+		const forms = isObjectSyntax ? [] : formCandidates;
 
 		// If not a known symbol and not a variable, can't rename
 		if (methods.length === 0 && functions.length === 0 && objects.length === 0 && forms.length === 0 && !isVariable) {
@@ -120,17 +124,20 @@ export class RenameProvider {
 
 		// Check what kind of symbol we're renaming
 		const isGlobalFunctionSyntax = this.isGlobalFunctionSyntaxAt(document, wordRange);
-		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
+		const isObjectSyntax = isObjectSymbolSyntaxAt(document, wordRange);
 		const functions = isGlobalFunctionSyntax
 			? this.symbolIndex.findFunction(symbolName)
 			: [];
-		const methods = !isGlobalFunctionSyntax && !isObjectConstructorSyntax && this.isMethodSymbolAt(document, wordRange, word)
+		const methods = !isGlobalFunctionSyntax && !isObjectSyntax && this.isMethodSymbolAt(document, wordRange, word)
 			? this.symbolIndex.findMethodsInFile(document.uri, symbolName)
 			: [];
 		// Only treat as variable if it's !var without a method call (!obj.method is a method call)
 		const isVariable = !isGlobalFunctionSyntax && !globalSymbol?.hasMemberAccess && functions.length === 0 && word.startsWith('!') && !word.includes('.');
-		const objects = functions.length > 0 || isVariable ? [] : this.symbolIndex.findObject(symbolName);
-		const forms = functions.length > 0 || isVariable ? [] : this.symbolIndex.findForm(symbolName);
+		const canResolveObjectOrForm = functions.length === 0 && methods.length === 0 && !isVariable;
+		const objectCandidates = canResolveObjectOrForm ? this.symbolIndex.findObject(symbolName) : [];
+		const formCandidates = canResolveObjectOrForm ? this.symbolIndex.findForm(symbolName) : [];
+		const objects = isObjectSyntax || formCandidates.length === 0 ? objectCandidates : [];
+		const forms = isObjectSyntax ? [] : formCandidates;
 
 		try {
 			if (methods.length > 0) {
@@ -490,6 +497,7 @@ export class RenameProvider {
 		const pattern = isGlobal
 			? new RegExp(`!!${escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi')
 			: new RegExp(`(?<![!])!${escapeRegex(varName)}(?![A-Za-z0-9_])`, 'gi');
+		const normalizedNewName = this.normalizeVariableName(newName, isGlobal);
 
 		if (isGlobal) {
 			// Global variables: search across entire workspace
@@ -502,7 +510,7 @@ export class RenameProvider {
 				await Promise.all(batch.map(async (fileUri) => {
 					const text = await this.getRequiredFileText(fileUri);
 
-					const edits = this.findVariableOccurrences(text, pattern, newName);
+					const edits = this.findVariableOccurrences(text, pattern, normalizedNewName);
 					if (edits.length > 0) {
 						changes[fileUri] = edits;
 					}
@@ -512,13 +520,24 @@ export class RenameProvider {
 			// Local variables: current document only
 			const text = document.getText();
 			const cursorOffset = document.offsetAt(wordRange.start);
-			const scope = this.findLocalVariableRenameScope(text, cursorOffset);
-			const normalizedNewName = newName.startsWith('!') ? newName : `!${newName}`;
-			if (this.hasLocalVariableCollision(text, normalizedNewName, oldName, scope.startOffset, scope.endOffset)) {
+			const scopes = this.findLocalVariableRenameScopes(text, cursorOffset);
+			if (scopes.some(scope => this.hasLocalVariableCollision(
+				text,
+				normalizedNewName,
+				oldName,
+				scope.startOffset,
+				scope.endOffset
+			))) {
 				return;
 			}
 
-			const edits = this.findVariableOccurrences(text, pattern, newName, scope.startOffset, scope.endOffset);
+			const edits = scopes.flatMap(scope => this.findVariableOccurrences(
+				text,
+				pattern,
+				normalizedNewName,
+				scope.startOffset,
+				scope.endOffset
+			));
 			if (edits.length > 0) {
 				changes[document.uri] = edits;
 			}
@@ -570,36 +589,51 @@ export class RenameProvider {
 		return edits;
 	}
 
-	private findLocalVariableRenameScope(text: string, cursorOffset: number): { startOffset: number; endOffset: number } {
+	private findLocalVariableRenameScopes(text: string, cursorOffset: number): Array<{ startOffset: number; endOffset: number }> {
 		const blockPattern = /^\s*define\s+(method|function)\b.*$|^\s*end(method|function)\b.*$/gmi;
-		let currentBlockStart = 0;
-		let currentBlockEnd = text.length;
+		const blockScopes: Array<{ startOffset: number; endOffset: number }> = [];
+		let blockStart: number | null = null;
 		let match: RegExpExecArray | null;
 
 		while ((match = blockPattern.exec(text)) !== null) {
 			const lineStart = match.index;
-			const lineEnd = this.findLineEndOffset(text, lineStart);
 			const matchedLine = match[0];
 
 			if (/^\s*define\s+(method|function)\b/i.test(matchedLine)) {
-				if (lineStart <= cursorOffset) {
-					currentBlockStart = lineStart;
-					currentBlockEnd = text.length;
-				} else {
-					break;
-				}
-			} else if (/^\s*end(method|function)\b/i.test(matchedLine)) {
-				if (lineStart < cursorOffset) {
-					currentBlockStart = 0;
-					currentBlockEnd = text.length;
-				} else {
-					currentBlockEnd = lineEnd;
-					break;
-				}
+				blockStart ??= lineStart;
+			} else if (blockStart !== null) {
+				blockScopes.push({
+					startOffset: blockStart,
+					endOffset: this.findLineEndOffset(text, lineStart)
+				});
+				blockStart = null;
 			}
 		}
 
-		return { startOffset: currentBlockStart, endOffset: currentBlockEnd };
+		if (blockStart !== null) {
+			blockScopes.push({ startOffset: blockStart, endOffset: text.length });
+		}
+
+		const containingBlock = blockScopes.find(scope =>
+			scope.startOffset <= cursorOffset && cursorOffset < scope.endOffset
+		);
+		if (containingBlock) {
+			return [containingBlock];
+		}
+
+		const topLevelScopes: Array<{ startOffset: number; endOffset: number }> = [];
+		let topLevelStart = 0;
+		for (const scope of blockScopes) {
+			if (topLevelStart < scope.startOffset) {
+				topLevelScopes.push({ startOffset: topLevelStart, endOffset: scope.startOffset });
+			}
+			topLevelStart = scope.endOffset;
+		}
+		if (topLevelStart < text.length) {
+			topLevelScopes.push({ startOffset: topLevelStart, endOffset: text.length });
+		}
+
+		return topLevelScopes;
 	}
 
 	private hasLocalVariableCollision(
@@ -679,15 +713,6 @@ export class RenameProvider {
 		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
-	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {
-		const text = document.getText();
-		const startOffset = document.offsetAt(wordRange.start);
-		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
-		const linePrefix = text.slice(lineStart, startOffset);
-
-		return /\bOBJECT\s+$/i.test(linePrefix);
-	}
-
 	private normalizeGlobalFunctionName(name: string): string {
 		if (name.startsWith('!!')) {
 			return name;
@@ -696,6 +721,11 @@ export class RenameProvider {
 			return '!!' + name.substring(1);
 		}
 		return '!!' + name;
+	}
+
+	private normalizeVariableName(name: string, isGlobal: boolean): string {
+		const unprefixedName = name.replace(/^!{1,2}/, '');
+		return `${isGlobal ? '!!' : '!'}${unprefixedName}`;
 	}
 
 	private deduplicateTextEdits(edits: TextEdit[]): TextEdit[] {
@@ -818,8 +848,7 @@ export class RenameProvider {
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }): Range | null {
 		return getProviderWordRangeAtPosition(document, position, {
-			includeVariablePrefixes: true,
-			includeSlash: true
+			includeVariablePrefixes: true
 		});
 	}
 

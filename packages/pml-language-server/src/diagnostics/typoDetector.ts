@@ -99,7 +99,7 @@ function extractPotentialTypos(errorMessage: string, line: string): string[] {
 
 	// Try to find quoted word in error message (this is what parser found)
 	const quotedMatch = errorMessage.match(/'([a-zA-Z_][a-zA-Z0-9_]*)'/);
-	if (quotedMatch) {
+	if (quotedMatch && quotedMatch[1].length >= 3) {
 		potentialTypos.push(quotedMatch[1]);
 	}
 

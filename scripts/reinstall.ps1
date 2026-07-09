@@ -17,7 +17,14 @@ function Find-Vsix {
 if ($Pack) {
   Write-Host 'Packing VSIX...'
   Remove-Item -ErrorAction SilentlyContinue pml-aveva-e3d-*.vsix
-  npx @vscode/vsce package --no-yarn | Out-Host
+  $vscePath = Join-Path $PSScriptRoot '..\node_modules\.bin\vsce.cmd'
+  if (-not (Test-Path -LiteralPath $vscePath)) {
+    throw 'Local @vscode/vsce is not installed. Run npm install before packing.'
+  }
+  & $vscePath package --no-yarn | Out-Host
+  if ($LASTEXITCODE -ne 0) {
+    throw "vsce package failed with exit code $LASTEXITCODE"
+  }
 }
 
 $vsixPath = Find-Vsix -Version $Version

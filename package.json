@@ -8,7 +8,8 @@
     "name": "MIKHALCHANKA SIARHEI"
   },
   "engines": {
-    "vscode": "^1.80.0"
+    "vscode": "^1.80.0",
+    "node": ">=20.19.0"
   },
   "categories": [
     "Programming Languages",
@@ -922,7 +923,7 @@
   "scripts": {
     "vscode:prepublish": "npm run esbuild-base -- --production",
     "compile": "npm run esbuild-base",
-    "compile:tsc": "tsc -p ./ && cd packages/pml-language-server && tsc -p ./",
+    "compile:tsc": "tsc -p ./ --noEmit && cd packages/pml-language-server && tsc -p ./ --noEmit",
     "validate:extension-smoke": "node scripts/validate-extension-smoke.cjs",
     "test:extension-smoke": "node scripts/run-extension-host-smoke.cjs",
     "validate:quick-actions": "node scripts/validate-quick-actions.cjs",
@@ -930,7 +931,9 @@
     "watch:tsc": "tsc -watch -p ./",
     "esbuild-base": "node esbuild.js",
     "esbuild": "npm run esbuild-base -- --production",
-    "test": "npm --prefix packages/pml-language-server test",
+    "test": "npm run test:client && npm run test:server",
+    "test:client": "vitest --run",
+    "test:server": "npm --prefix packages/pml-language-server run test -- --run",
     "pml:parse": "node packages/pml-language-server/out/cli.js parse",
     "pml:diagnose": "node packages/pml-language-server/out/cli.js diagnose",
     "pml:symbols": "node packages/pml-language-server/out/cli.js symbols",
@@ -949,7 +952,7 @@
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
-    "@types/node": "^18.0.0",
+    "@types/node": "^20.19.43",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
@@ -959,7 +962,8 @@
     "eslint": "^8.57.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "^4.1.10"
   },
   "repository": {
     "type": "git",

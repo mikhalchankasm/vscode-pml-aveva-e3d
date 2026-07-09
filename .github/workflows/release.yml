@@ -52,6 +52,7 @@ jobs:
       - run: npm run validate:extension-smoke
       - run: npm run validate:quick-actions
       - run: xvfb-run -a npm run test:extension-smoke
+      - run: npm run test:client
       - run: npm --prefix packages/pml-language-server run test
       - name: Compute release tag
         id: vars
@@ -94,18 +95,30 @@ jobs:
           RELEASE_SHA: ${{ steps.checksum.outputs.sha }}
         run: |
           python3 - <<'PY'
+          import json
           import os
           import re
           from pathlib import Path
 
           body = Path("RELEASE_NOTES.md").read_text(encoding="utf-8")
-          new_body, replacements = re.subn(
+          version = json.loads(Path("package.json").read_text(encoding="utf-8"))["version"]
+          section_pattern = re.compile(
+              rf"(^## Current Release - v{re.escape(version)}\s*$.*?)(?=^## |\Z)",
+              re.MULTILINE | re.DOTALL,
+          )
+          section_match = section_pattern.search(body)
+          if section_match is None:
+              raise SystemExit(f"Current release section for v{version} not found in RELEASE_NOTES.md")
+
+          updated_section, replacements = re.subn(
               r"SHA256: `[^`]+`",
               f"SHA256: `{os.environ['RELEASE_SHA']}`",
-              body,
+              section_match.group(1),
+              count=1,
           )
-          if replacements == 0:
-              raise SystemExit("SHA256 placeholder not found in RELEASE_NOTES.md")
+          if replacements != 1:
+              raise SystemExit(f"Expected one SHA256 entry in current release section, found {replacements}")
+          new_body = body[:section_match.start(1)] + updated_section + body[section_match.end(1):]
           Path("release-body.md").write_text(new_body, encoding="utf-8")
           PY
       - name: Ensure tag exists on origin

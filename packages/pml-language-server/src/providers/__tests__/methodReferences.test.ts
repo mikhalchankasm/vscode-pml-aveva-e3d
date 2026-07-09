@@ -526,6 +526,21 @@ describe('Method reference scanning', () => {
 		expect(edits.length).toBeGreaterThanOrEqual(references.length);
 	});
 
+	it('should rename bare method references before argument delimiters', () => {
+		const text = [
+			'!callbacks = object ARRAY(.refresh,.other)',
+			'!handler = object HANDLER(.refresh)',
+			'!unrelated = .refreshLater)'
+		].join('\n');
+		const provider = new RenameProvider(undefined as any, undefined as any);
+
+		const edits = (provider as any).findAndReplaceMethod(text, 'refresh', 'reload');
+
+		expect(edits).toHaveLength(2);
+		expect(edits.map((edit: any) => textInRange(text, edit.range))).toEqual(['refresh', 'refresh']);
+		expect(edits.every((edit: any) => edit.newText === 'reload')).toBe(true);
+	});
+
 	it('should not rename method references inside comments', () => {
 		const provider = new RenameProvider(undefined as any, undefined as any);
 		const text = [
@@ -672,7 +687,7 @@ describe('Method reference scanning', () => {
 		const edit = await provider.provide({
 			textDocument: { uri },
 			position: document.positionAt(variableSource.indexOf('!!value =') + 2),
-			newName: '!!nextValue'
+			newName: 'nextValue'
 		});
 
 		const edits = edit?.changes?.[uri] ?? [];
@@ -721,6 +736,96 @@ describe('Method reference scanning', () => {
 		]);
 		expect(edits.every(change => change.newText === '!renamed')).toBe(true);
 		expect(edits.map(change => change.range.start.line)).toEqual([1, 2]);
+	});
+
+	it('should preserve the local variable sigil when the new name omits it', async () => {
+		const variableSource = [
+			'define method .run()',
+			'\t!value = 1',
+			'\t!next = !value',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!value = 1') + 1),
+			newName: 'renamed'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.every(change => change.newText === '!renamed')).toBe(true);
+	});
+
+	it('should rename only the variable in a slash expression', async () => {
+		const variableSource = [
+			'define method .run()',
+			'\t!result = !total/100',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(variableSource.indexOf('!total') + 1);
+
+		const prepared = provider.prepareRename({ textDocument: { uri }, position });
+		expect(prepared && textInRange(variableSource, prepared.range)).toBe('!total');
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position,
+			newName: 'subtotal'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(1);
+		expect(textInRange(variableSource, edits[0].range)).toBe('!total');
+		expect(edits[0].newText).toBe('!subtotal');
+	});
+
+	it('should keep top-level local variable rename out of method bodies', async () => {
+		const variableSource = [
+			'!value = 1',
+			'define method .run()',
+			'\t!value = 2',
+			'\t!other = !value',
+			'endmethod',
+			'!result = !value'
+		].join('\n');
+		const symbolIndex = new SymbolIndex();
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!value') + 1),
+			newName: 'other'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.map(change => change.range.start.line)).toEqual([0, 5]);
+		expect(edits.every(change => change.newText === '!other')).toBe(true);
 	});
 
 	it('should reject local variable rename when the target name already exists in the same method', async () => {

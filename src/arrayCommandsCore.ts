@@ -1,4 +1,4 @@
-export function reindexArrayText(selectedText: string, contextAbove: string = ''): string | null {
+export function reindexArrayText(selectedText: string): string | null {
     const eol = selectedText.includes('\r\n') ? '\r\n' : '\n';
     const lines = selectedText.replace(/\r/g, '').split('\n');
 
@@ -10,18 +10,8 @@ export function reindexArrayText(selectedText: string, contextAbove: string = ''
     }
 
     const arrayPattern = /^(\s*)(![\w.]+)\[\s*(\d+)\s*\](\s*=\s*)(.*)$/;
-    let fallbackArrayName = '';
-
-    for (const line of contextAbove.split(/\r?\n/).reverse()) {
-        const match = line.match(arrayPattern);
-        if (match) {
-            fallbackArrayName = match[2];
-            break;
-        }
-    }
-
     const arrayLinesCount = lines.filter(line => line.match(arrayPattern)).length;
-    if (arrayLinesCount === 0 && !fallbackArrayName) {
+    if (arrayLinesCount === 0) {
         return null;
     }
 
@@ -36,7 +26,7 @@ export function reindexArrayText(selectedText: string, contextAbove: string = ''
 
         const idx = currentIndex.toString().padStart(maxIndexLength);
         currentIndex++;
-        return `${match[1]}${match[2] || fallbackArrayName}[${idx}]${match[4]}${match[5]}`;
+        return `${match[1]}${match[2]}[${idx}]${match[4]}${match[5]}`;
     });
 
     return result.join(eol);

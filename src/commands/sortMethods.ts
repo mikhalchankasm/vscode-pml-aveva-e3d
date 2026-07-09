@@ -120,9 +120,10 @@ async function applyMethodSort(
 			);
 
 			// Build replacement text (comments + method)
+			const eol = editor.document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
 			let replacementText = '';
 			if (sorted.precedingComments) {
-				replacementText = sorted.precedingComments + '\n';
+				replacementText = sorted.precedingComments + eol;
 			}
 			replacementText += sorted.text;
 

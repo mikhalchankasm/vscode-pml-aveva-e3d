@@ -31,7 +31,8 @@ export function quoteCmdArgument(argument: string): string {
         return '""';
     }
 
-    return `"${argument.replace(/(["^&|<>()%!])/g, '^$1')}"`;
+    // cmd.exe expands %NAME% even inside quotes, but removes a caret used to escape each percent sign.
+    return `"${argument.replace(/%/g, '^%')}"`;
 }
 
 export function getAgentKitDiscoveryCandidates(workspaceFolderPath: string): string[] {

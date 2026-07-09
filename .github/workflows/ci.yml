@@ -38,6 +38,7 @@ jobs:
       - run: npm run validate:quick-actions
       - run: npm run lint
       - run: npx eslint packages/pml-language-server/src --ext ts
+      - run: npm run test:client
       - run: npm --prefix packages/pml-language-server run test -- --run
       - run: npm run compile
       - run: xvfb-run -a npm run test:extension-smoke

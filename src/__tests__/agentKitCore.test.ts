@@ -5,18 +5,23 @@ import {
 	createNpmExecutionOptions,
 	getAgentKitDiscoveryCandidates,
 	quoteCmdArgument
-} from '../../../../../src/agentKitCore';
+} from '../agentKitCore';
 
 describe('Agent Kit core helpers', () => {
 	it('runs npm.cmd through a shell on Windows', () => {
-		const execution = createNpmExecutionOptions('win32', 'C:\\agent-kit', ['run', 'pml:review', '--', 'C:\\Users\\First Last\\file & name.pml']);
+		const execution = createNpmExecutionOptions('win32', 'C:\\agent-kit', [
+			'run',
+			'pml:review',
+			'--',
+			'C:\\Users\\First Last\\file & name.pml'
+		]);
 
 		expect(execution.command).toBe('npm.cmd');
 		expect(execution.args).toEqual([
 			'"run"',
 			'"pml:review"',
 			'"--"',
-			'"C:\\Users\\First Last\\file ^& name.pml"'
+			'"C:\\Users\\First Last\\file & name.pml"'
 		]);
 		expect(execution.options).toMatchObject({
 			cwd: 'C:\\agent-kit',
@@ -25,7 +30,12 @@ describe('Agent Kit core helpers', () => {
 	});
 
 	it('does not use a shell for npm on non-Windows platforms', () => {
-		const execution = createNpmExecutionOptions('linux', '/agent-kit', ['run', 'pml:review', '--', '/tmp/file name.pml']);
+		const execution = createNpmExecutionOptions('linux', '/agent-kit', [
+			'run',
+			'pml:review',
+			'--',
+			'/tmp/file name.pml'
+		]);
 
 		expect(execution.command).toBe('npm');
 		expect(execution.args).toEqual(['run', 'pml:review', '--', '/tmp/file name.pml']);
@@ -50,8 +60,9 @@ describe('Agent Kit core helpers', () => {
 		expect(candidates).not.toContain(workspace);
 	});
 
-	it('quotes empty and shell-sensitive Windows npm arguments', () => {
+	it('quotes empty and shell-sensitive Windows npm arguments without changing their child values', () => {
 		expect(quoteCmdArgument('')).toBe('""');
-		expect(quoteCmdArgument('a^b&c|d<e>f(g)h%!')).toBe('"a^^b^&c^|d^<e^>f^(g^)h^%^!"');
+		expect(quoteCmdArgument('file & name (x86) 100%!.pml')).toBe('"file & name (x86) 100^%!.pml"');
+		expect(quoteCmdArgument('file %TEMP%.pml')).toBe('"file ^%TEMP^%.pml"');
 	});
 });

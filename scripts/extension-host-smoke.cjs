@@ -97,7 +97,12 @@ async function assertPackagedCliAvailability(extensionPath) {
         const stdout = cp.execFileSync(
             process.execPath,
             [cliPath, 'parse', filePath, '--json'],
-            { cwd: extensionPath, encoding: 'utf8', maxBuffer: 5 * 1024 * 1024 }
+            {
+                cwd: extensionPath,
+                encoding: 'utf8',
+                env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+                maxBuffer: 5 * 1024 * 1024
+            }
         );
         const result = JSON.parse(stdout);
 
