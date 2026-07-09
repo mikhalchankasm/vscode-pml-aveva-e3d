@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Extend Rename fallback coverage for bare method references immediately before brackets or chained member delimiters.
 - Infer member-completion receiver types through prior direct variable aliases, so aliases of typed arrays and values avoid unrelated built-in methods.
 - Align internal release commands and checklist with the releases-only VSIX policy, SHA-256 checksums, and the canonical `RELEASE_NOTES.md` file.
 - Make workspace-index progress state clearer by reporting discovered PML file counts and indexing duration.

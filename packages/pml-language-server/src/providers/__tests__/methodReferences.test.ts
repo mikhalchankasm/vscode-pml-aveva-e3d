@@ -541,6 +541,21 @@ describe('Method reference scanning', () => {
 		expect(edits.every((edit: any) => edit.newText === 'reload')).toBe(true);
 	});
 
+	it('should rename bare method references before bracket and member delimiters', () => {
+		const text = [
+			'!callbacks = [.refresh]',
+			'!next = .refresh.next',
+			'!unrelated = .refreshLater]'
+		].join('\n');
+		const provider = new RenameProvider(undefined as any, undefined as any);
+
+		const edits = (provider as any).findAndReplaceMethod(text, 'refresh', 'reload');
+
+		expect(edits).toHaveLength(2);
+		expect(edits.map((edit: any) => textInRange(text, edit.range))).toEqual(['refresh', 'refresh']);
+		expect(edits.every((edit: any) => edit.newText === 'reload')).toBe(true);
+	});
+
 	it('should not rename method references inside comments', () => {
 		const provider = new RenameProvider(undefined as any, undefined as any);
 		const text = [
