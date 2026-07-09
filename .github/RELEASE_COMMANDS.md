@@ -13,17 +13,16 @@ npm run pack
 npm run pack:install
 # Then manually: Ctrl+Shift+P -> Reload Window in VS Code/Cursor
 
-# 3. After testing - remove old VSIX, add new one
-git rm pml-aveva-e3d-*.vsix
-git add pml-aveva-e3d-0.9.X.vsix
+# 3. Keep the generated VSIX out of Git
+# VSIX files are ignored and are uploaded only to the GitHub Release.
 
 # 4. Commit and push
 git add -A
-git commit -m "release: v0.9.X - description"
+git commit -m "release: vX.Y.Z - description"
 git push
 
-# 5. Create GitHub release
-gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
+# 5. Create GitHub release only after explicit publish confirmation
+gh release create vX.Y.Z pml-aveva-e3d-X.Y.Z.vsix --title "vX.Y.Z - Title" --notes-file RELEASE_NOTES.md
 ```
 
 ---
@@ -47,42 +46,30 @@ npm run pack:install
 
 ### Install in VS Code only (manual)
 ```bash
-code --install-extension pml-aveva-e3d-0.9.X.vsix --force
+code --install-extension pml-aveva-e3d-X.Y.Z.vsix --force
 ```
 
 ### Install in Cursor only (manual)
 ```bash
-cursor --install-extension pml-aveva-e3d-0.9.X.vsix --force
+cursor --install-extension pml-aveva-e3d-X.Y.Z.vsix --force
 ```
 
-### Calculate MD5 checksum
+### Calculate SHA-256 checksum
 ```bash
-md5sum pml-aveva-e3d-0.9.X.vsix
+sha256sum pml-aveva-e3d-X.Y.Z.vsix
 ```
 
 ---
 
 ## 🗑️ Cleanup Old VSIX Files
 
-### Remove all VSIX except latest from repository
-```bash
-# List all VSIX in git
-git ls-files "*.vsix"
-
-# Remove all VSIX (prepare to add only the latest)
-git rm pml-aveva-e3d-*.vsix
-
-# Add back only the latest
-git add pml-aveva-e3d-0.9.X.vsix
-```
-
 ### Delete local VSIX files (PowerShell)
 ```powershell
-# List all VSIX in folder
+# VSIX files are release artifacts and remain untracked.
 Get-ChildItem pml-aveva-e3d-*.vsix
 
-# Keep only latest
-Get-ChildItem pml-aveva-e3d-*.vsix | Where-Object { $_.Name -ne "pml-aveva-e3d-0.9.8.vsix" } | Remove-Item
+# Delete local build artifacts after upload or validation
+Get-ChildItem pml-aveva-e3d-*.vsix | Remove-Item
 ```
 
 ---
@@ -131,11 +118,11 @@ gh auth login
 
 ### Create release
 ```bash
-# Basic command
-gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes "Description"
+# Basic command (only after explicit publish approval)
+gh release create vX.Y.Z pml-aveva-e3d-X.Y.Z.vsix --title "vX.Y.Z - Title" --notes "Description"
 
 # With release notes file
-gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
+gh release create vX.Y.Z pml-aveva-e3d-X.Y.Z.vsix --title "vX.Y.Z - Title" --notes-file RELEASE_NOTES.md
 
 # With multiple files
 gh release create v0.9.X file1.vsix file2.zip --title "Title" --notes "Notes"
@@ -288,11 +275,11 @@ This ensures language server restarts fresh
 
 ## 📌 VSIX Storage Policy
 
-**Important**: Only ONE VSIX file is stored in the repository.
+**Important**: VSIX files are never stored in the repository.
 
-- **Repository**: Contains only `pml-aveva-e3d-0.9.X.vsix` (latest)
-- **GitHub Releases**: Contains all historical versions
-- **Old versions**: Download from GitHub Releases page
+- **Repository**: `.gitignore` excludes `*.vsix` and `*.vsix.sha256`
+- **GitHub Releases**: Store the published VSIX, checksum, and canonical release notes
+- **Local builds**: Use only for validation or local installation; delete when no longer needed
 
 ---
 

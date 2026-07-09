@@ -27,7 +27,7 @@ Mandatory checklist for publishing a new extension version.
 - [ ] Executed command: `npm run pack`
 - [ ] Created file `pml-aveva-e3d-X.X.X.vsix`
 - [ ] Verified file size (~2.09 MB)
-- [ ] Calculated MD5 checksum: `md5sum pml-aveva-e3d-X.X.X.vsix`
+- [ ] Calculated SHA-256 checksum: `sha256sum pml-aveva-e3d-X.Y.Z.vsix`
 
 ## 🔧 Local Testing
 
@@ -48,18 +48,14 @@ Mandatory checklist for publishing a new extension version.
 ## 📤 Git Publication
 
 ### 5. Commit & Push
-- [ ] Removed old VSIX from repository (keep only latest):
-  ```bash
-  git rm pml-aveva-e3d-*.vsix
-  git add pml-aveva-e3d-0.9.X.vsix
-  ```
+- [ ] Confirmed the generated VSIX and checksum remain untracked (they are GitHub Release artifacts only).
 - [ ] Added all changes:
   ```bash
   git add -A
   ```
 - [ ] Created descriptive commit:
   ```bash
-  git commit -m "release: v0.9.X - description"
+  git commit -m "release: vX.Y.Z - description"
   ```
 - [ ] Pushed changes:
   ```bash
@@ -72,20 +68,20 @@ Mandatory checklist for publishing a new extension version.
 ### 6. Create Release
 
 #### Option A: GitHub CLI (recommended)
-- [ ] Created file `RELEASE_NOTES_v0.9.X.md` with change description
+- [ ] Confirmed explicit publish approval and updated the canonical `RELEASE_NOTES.md`.
 - [ ] Executed command:
   ```bash
-  gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Release Title" --notes-file RELEASE_NOTES_v0.9.X.md
+  gh release create vX.Y.Z pml-aveva-e3d-X.Y.Z.vsix --title "vX.Y.Z - Release Title" --notes-file RELEASE_NOTES.md
   ```
 - [ ] Received release URL
 
 #### Option B: Web Interface
 - [ ] Opened https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/new
 - [ ] Filled fields:
-  - [ ] **Tag version**: `v0.9.X`
-  - [ ] **Release title**: `v0.9.X - Release Title`
-  - [ ] **Description**: Copied from `RELEASE_NOTES_v0.9.X.md`
-- [ ] Uploaded file `pml-aveva-e3d-0.9.X.vsix`
+  - [ ] **Tag version**: `vX.Y.Z`
+  - [ ] **Release title**: `vX.Y.Z - Release Title`
+  - [ ] **Description**: Copied from `RELEASE_NOTES.md`
+- [ ] Uploaded file `pml-aveva-e3d-X.Y.Z.vsix` and its SHA-256 checksum.
 - [ ] Clicked **Publish release**
 
 ### 7. Verify Release
@@ -103,12 +99,11 @@ Mandatory checklist for publishing a new extension version.
 - [ ] Updated project tracker (optional)
 
 ### 9. Cleanup
-- [ ] Deleted local VSIX files (keep only latest):
+- [ ] Deleted local VSIX files after validation or upload:
   ```bash
-  # Optional - to save space
-  rm pml-aveva-e3d-0.9.[0-6].vsix
+  rm pml-aveva-e3d-*.vsix
   ```
-- [ ] Verified `.gitignore` (VSIX files should NOT be ignored - we keep one in repo)
+- [ ] Verified `.gitignore` excludes `*.vsix` and `*.vsix.sha256`.
 
 ## 📝 Notes
 
@@ -129,25 +124,23 @@ npm run pack:install
 
 # 6. Test the extension...
 
-# 7. Remove old VSIX and commit
-git rm pml-aveva-e3d-*.vsix
-git add pml-aveva-e3d-0.9.X.vsix
+# 7. Commit source and release metadata only; VSIX stays untracked
 git add -A
-git commit -m "release: v0.9.X - description"
+git commit -m "release: vX.Y.Z - description"
 git push
 
-# 8. Create GitHub release
-gh release create v0.9.X pml-aveva-e3d-0.9.X.vsix --title "v0.9.X - Title" --notes-file RELEASE_NOTES_v0.9.X.md
+# 8. Create GitHub release only after explicit publish confirmation
+gh release create vX.Y.Z pml-aveva-e3d-X.Y.Z.vsix --title "vX.Y.Z - Title" --notes-file RELEASE_NOTES.md
 ```
 
 ### VSIX Storage Policy
 
-**Important**: Only ONE VSIX file is stored in the repository (latest version).
+**Important**: VSIX files are never stored in the repository.
 
-- **Repository**: Contains only the latest `pml-aveva-e3d-0.9.X.vsix`
-- **GitHub Releases**: Contains all historical versions with release notes
-- **When upgrading**: Remove old VSIX from repository, add new one
-- **To download old versions**: Use GitHub Releases page
+- **Repository**: `.gitignore` excludes VSIX packages and checksums
+- **GitHub Releases**: Store published VSIX packages, checksums, and release notes
+- **Local builds**: Are only for validation or local installation
+- **To download releases**: Use the GitHub Releases page
 
 ### Semantic Versioning
 

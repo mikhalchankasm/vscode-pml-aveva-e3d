@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Align release guidance with GitHub Releases-only VSIX storage, SHA-256 checksums, and the canonical release notes file.
 - Show how many PML files were found and how long indexing took in workspace-index progress.
 - Verify that a freshly packaged VSIX installs into an isolated VS Code profile before CI and release validation accept it.
 - Report an invalid Agent Kit repository setting as a clear setup error and cover the guidance in extension-host smoke tests.
