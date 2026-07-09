@@ -732,10 +732,15 @@ export class CompletionProvider {
 			end: position
 		});
 		const lines = textBeforePosition.split(/\r?\n/);
-		return this.inferReceiverTypeFromLines(receiverName, lines);
+		return this.inferReceiverTypeFromLines(receiverName, lines, document);
 	}
 
-	private inferReceiverTypeFromLines(receiverName: string, lines: string[], visited = new Set<string>()): ReceiverType | undefined {
+	private inferReceiverTypeFromLines(
+		receiverName: string,
+		lines: string[],
+		document: TextDocument,
+		visited = new Set<string>()
+	): ReceiverType | undefined {
 		if (visited.has(receiverName)) {
 			return undefined;
 		}
@@ -755,7 +760,7 @@ export class CompletionProvider {
 		}
 
 		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=\\s*`;
-		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*)\\s*$`, 'i');
+		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?)\\s*$`, 'i');
 		for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
 			const line = lines[lineIndex];
 			if (line.trim().startsWith('--')) {
@@ -764,7 +769,15 @@ export class CompletionProvider {
 
 			const match = line.match(aliasAssignment);
 			if (match) {
-				return this.inferReceiverTypeFromLines(match[2].toLowerCase(), lines.slice(0, lineIndex), visited);
+				const sourceName = match[2].toLowerCase();
+				if (sourceName.startsWith('!this.')) {
+					const thisMemberType = this.inferThisMemberReceiverType(document, `${sourceName}.`);
+					if (thisMemberType) {
+						return thisMemberType;
+					}
+				}
+
+				return this.inferReceiverTypeFromLines(sourceName, lines.slice(0, lineIndex), document, visited);
 			}
 		}
 

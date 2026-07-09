@@ -426,6 +426,29 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 
+	it('filters built-in member completions through a typed form member alias', () => {
+		const source = [
+			'setup form !!TestForm dialog',
+			'\tmember .items is ARRAY',
+			'exit',
+			'',
+			'!working = !this.items',
+			'!working.'
+		].join('\n');
+		const document = TextDocument.create('file:///form-member-alias-completion.pmlfrm', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'size')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
 	it('filters built-in member completions for obvious string literal assignments', () => {
 		const source = [
 			'!label = |Pump A|',
