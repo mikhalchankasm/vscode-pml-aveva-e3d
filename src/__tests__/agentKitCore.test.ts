@@ -4,28 +4,34 @@ import {
 	canRunAgentKit,
 	createNpmExecutionOptions,
 	getAgentKitDiscoveryCandidates,
-	quoteCmdArgument
+	resolveWindowsNpmCliPath
 } from '../agentKitCore';
 
 describe('Agent Kit core helpers', () => {
-	it('runs npm.cmd through a shell on Windows', () => {
+	it('runs npm through npm-cli.js without a shell on Windows', () => {
+		const npmCliPath = 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js';
 		const execution = createNpmExecutionOptions('win32', 'C:\\agent-kit', [
 			'run',
 			'pml:review',
 			'--',
-			'C:\\Users\\First Last\\file & name.pml'
-		]);
+			'C:\\Users\\First Last\\file & name 100%!.pml'
+		], {
+			executablePath: 'C:\\Program Files\\Microsoft VS Code\\Code.exe',
+			npmCliPath
+		});
 
-		expect(execution.command).toBe('npm.cmd');
+		expect(execution.command).toBe('C:\\Program Files\\Microsoft VS Code\\Code.exe');
 		expect(execution.args).toEqual([
-			'"run"',
-			'"pml:review"',
-			'"--"',
-			'"C:\\Users\\First Last\\file & name.pml"'
+			npmCliPath,
+			'run',
+			'pml:review',
+			'--',
+			'C:\\Users\\First Last\\file & name 100%!.pml'
 		]);
 		expect(execution.options).toMatchObject({
 			cwd: 'C:\\agent-kit',
-			shell: true
+			shell: false,
+			env: expect.objectContaining({ ELECTRON_RUN_AS_NODE: '1' })
 		});
 	});
 
@@ -60,9 +66,19 @@ describe('Agent Kit core helpers', () => {
 		expect(candidates).not.toContain(workspace);
 	});
 
-	it('quotes empty and shell-sensitive Windows npm arguments without changing their child values', () => {
-		expect(quoteCmdArgument('')).toBe('""');
-		expect(quoteCmdArgument('file & name (x86) 100%!.pml')).toBe('"file & name (x86) 100^%!.pml"');
-		expect(quoteCmdArgument('file %TEMP%.pml')).toBe('"file ^%TEMP^%.pml"');
+	it('locates npm-cli.js next to an npm command directory on Windows', () => {
+		const npmCliPath = 'C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js';
+
+		expect(resolveWindowsNpmCliPath(
+			'C:\\Other;C:\\Program Files\\nodejs',
+			undefined,
+			candidate => candidate === npmCliPath
+		)).toBe(npmCliPath);
+	});
+
+	it('does not fall back to shell execution when npm-cli.js is unavailable', () => {
+		expect(() => createNpmExecutionOptions('win32', 'C:\\agent-kit', [], {
+			npmCliPath: ''
+		})).toThrow('Unable to locate npm-cli.js');
 	});
 });

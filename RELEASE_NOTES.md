@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Run Agent Kit through npm's JavaScript CLI instead of `cmd.exe`, so Windows file paths are passed literally even when they contain shell characters.
 - Separated client transform, print-command, and Agent Kit helper tests from the language-server package and made both suites explicit CI/release checks.
 - Made `compile:tsc` validate both projects without emitting intermediate files into bundle output directories.
 - Made Reindex Selected Array reject selections without array assignments instead of displaying a false success message.
