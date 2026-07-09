@@ -465,8 +465,9 @@
         },
         "pml.agentKit.path": {
           "type": "string",
+          "scope": "machine-overridable",
           "default": "",
-          "description": "Path to the e3d-pml-agent-kit repository used for PML review commands. Leave empty to auto-discover a sibling workspace folder."
+          "description": "Path to the e3d-pml-agent-kit repository used for PML review commands. Leave empty to auto-discover a sibling e3d-pml-agent-kit folder in trusted workspaces."
         },
         "pml.agentKit.showRawReport": {
           "type": "boolean",
@@ -934,7 +935,7 @@
     "pml:diagnose": "node packages/pml-language-server/out/cli.js diagnose",
     "pml:symbols": "node packages/pml-language-server/out/cli.js symbols",
     "pml:scope": "node packages/pml-language-server/out/cli.js scope",
-    "pretest": "npm run compile",
+    "pretest": "npm run compile:tsc",
     "lint": "eslint src --ext ts",
     "pack": "node scripts/pack.cjs",
     "install:local": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/reinstall.ps1",
@@ -953,6 +954,7 @@
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "3.9.2",
     "esbuild": "^0.25.11",
     "eslint": "^8.57.1",
     "husky": "^9.1.7",

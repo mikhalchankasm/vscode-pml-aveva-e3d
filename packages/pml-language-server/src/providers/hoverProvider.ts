@@ -7,6 +7,8 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { getPdmsCommand } from '../data/pdmsCommands';
 import { SymbolIndex } from '../index/symbolIndex';
 import { isMethodDeclarationReference } from '../utils/methodReferencePatterns';
+import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
 import { ReferencePreview, ReferencesProvider } from './referencesProvider';
 
 export class HoverProvider {
@@ -98,6 +100,9 @@ export class HoverProvider {
 		const word = document.getText(wordRange);
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
 
 		const pdmsCommandHover = this.getPdmsCommandHover(word, document, wordRange);
 		if (pdmsCommandHover) {
@@ -178,8 +183,7 @@ export class HoverProvider {
 
 		if (
 			!command ||
-			!this.isFirstTokenOnLine(document, commandRange.start.line, commandRange.start.character) ||
-			this.isPositionInComment(document, commandRange.start.line, commandRange.start.character)
+			!this.isFirstTokenOnLine(document, commandRange.start.line, commandRange.start.character)
 		) {
 			return null;
 		}
@@ -216,10 +220,7 @@ export class HoverProvider {
 			start: { line: wordRange.start.line, character: wordRange.start.character - 2 },
 			end: wordRange.start
 		};
-		if (
-			document.getText(prefixRange) !== '!!' ||
-			this.isPositionInComment(document, wordRange.start.line, wordRange.start.character)
-		) {
+		if (document.getText(prefixRange) !== '!!') {
 			return null;
 		}
 
@@ -265,67 +266,6 @@ export class HoverProvider {
 		});
 
 		return lineText.trim().length === 0;
-	}
-
-	private isPositionInComment(document: TextDocument, targetLine: number, targetCharacter: number): boolean {
-		const lines = document.getText().split(/\r?\n/);
-		let inBlockComment = false;
-
-		for (let lineIndex = 0; lineIndex <= targetLine; lineIndex++) {
-			const line = lines[lineIndex] ?? '';
-			let pos = 0;
-
-			while (pos < line.length) {
-				if (inBlockComment) {
-					const endPos = line.indexOf('$)', pos);
-					if (lineIndex === targetLine && (endPos === -1 || targetCharacter < endPos + 2)) {
-						return true;
-					}
-					if (endPos === -1) {
-						break;
-					}
-					pos = endPos + 2;
-					inBlockComment = false;
-					continue;
-				}
-
-				const dashCommentPos = line.indexOf('--', pos);
-				const dollarCommentPos = line.indexOf('$*', pos);
-				const blockStartPos = line.indexOf('$(', pos);
-				const commentPos = this.minNonNegative(dashCommentPos, dollarCommentPos, blockStartPos);
-
-				if (commentPos === -1) {
-					break;
-				}
-
-				if (commentPos === dashCommentPos || commentPos === dollarCommentPos) {
-					if (lineIndex === targetLine && targetCharacter >= commentPos) {
-						return true;
-					}
-					break;
-				}
-
-				const blockEndPos = line.indexOf('$)', commentPos + 2);
-				if (lineIndex === targetLine && targetCharacter >= commentPos &&
-					(blockEndPos === -1 || targetCharacter < blockEndPos + 2)) {
-					return true;
-				}
-
-				if (blockEndPos === -1) {
-					inBlockComment = true;
-					break;
-				}
-
-				pos = blockEndPos + 2;
-			}
-		}
-
-		return false;
-	}
-
-	private minNonNegative(...values: number[]): number {
-		const candidates = values.filter(value => value >= 0);
-		return candidates.length === 0 ? -1 : Math.min(...candidates);
 	}
 
 	/**
@@ -633,43 +573,8 @@ export class HoverProvider {
 	 * Get word range at position
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }) {
-		const text = document.getText();
-		const offset = document.offsetAt(position);
-
-		// Find word boundaries
-		let start = offset;
-		let end = offset;
-
-		// Expand backwards - stop at special characters like !, $, operators, etc.
-		while (start > 0 && this.isWordChar(text[start - 1]) && !this.isStopChar(text[start - 1])) {
-			start--;
-		}
-
-		// Expand forwards - include method name with dot
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
-	}
-
-	/**
-	 * Check if character is part of word (including dot for methods)
-	 */
-	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_.]/.test(char);
-	}
-
-	/**
-	 * Check if character should stop backwards word expansion
-	 * Stops at variable prefixes (!, $), operators, delimiters, whitespace
-	 */
-	private isStopChar(char: string): boolean {
-		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
+		return getProviderWordRangeAtPosition(document, position, {
+			stopBackwardAtSpecialCharacters: true
+		});
 	}
 }

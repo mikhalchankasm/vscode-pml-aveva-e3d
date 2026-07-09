@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { alignAssignmentsText } from './formatterCore';
 
 export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
     provideDocumentFormattingEdits(
@@ -246,110 +247,7 @@ export class PMLFormatter implements vscode.DocumentFormattingEditProvider {
      * Find groups of consecutive lines with = and align them
      */
     private alignAssignments(text: string, eol: string = '\n'): string {
-        const lines = text.split(/\r?\n/);
-        const result: string[] = [];
-        
-        let assignmentGroup: Array<{ index: number; line: string; indent: string; before: string; after: string }> = [];
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const trimmed = line.trim();
-            
-            // Пропускаем комментарии и пустые строки
-            if (trimmed === '' || trimmed.startsWith('--') || trimmed.startsWith('$*')) {
-                // Если была группа присваиваний - обработать её
-                if (assignmentGroup.length >= 2) {
-                    result.push(...this.processAssignmentGroup(assignmentGroup));
-                } else if (assignmentGroup.length > 0) {
-                    // Если группа меньше 2 - добавить строки как есть
-                    result.push(...assignmentGroup.map(g => g.line));
-                }
-                assignmentGroup = [];
-                result.push(line);
-                continue;
-            }
-            
-            // Проверяем есть ли присваивание (только один знак =)
-            // Исключаем операторы сравнения (==, !=, >=, <=)
-            const assignmentMatch = line.match(/^(\s*)([^=]*?)(\s*)(=)(\s*)(.*)$/);
-            
-            if (assignmentMatch) {
-                const [, indent, before, , , , after] = assignmentMatch;
-                
-                // Проверяем что это не оператор сравнения
-                const beforeTrimmed = before.trim();
-                const afterTrimmed = after.trim();
-                
-                // Если после = идет еще =, то это == (пропускаем)
-                if (afterTrimmed.startsWith('=')) {
-                    if (assignmentGroup.length >= 2) {
-                        result.push(...this.processAssignmentGroup(assignmentGroup));
-                    } else if (assignmentGroup.length > 0) {
-                        result.push(...assignmentGroup.map(g => g.line));
-                    }
-                    assignmentGroup = [];
-                    result.push(line);
-                    continue;
-                }
-                
-                // Если перед = был >, <, ! то это оператор сравнения (пропускаем)
-                if (beforeTrimmed.endsWith('>') || beforeTrimmed.endsWith('<') || beforeTrimmed.endsWith('!')) {
-                    if (assignmentGroup.length >= 2) {
-                        result.push(...this.processAssignmentGroup(assignmentGroup));
-                    } else if (assignmentGroup.length > 0) {
-                        result.push(...assignmentGroup.map(g => g.line));
-                    }
-                    assignmentGroup = [];
-                    result.push(line);
-                    continue;
-                }
-                
-                // Это присваивание - добавляем в группу
-                assignmentGroup.push({
-                    index: i,
-                    line: line,
-                    indent: indent,
-                    before: before.trimEnd(),
-                    after: after
-                });
-            } else {
-                // Не присваивание - обработать накопленную группу
-                if (assignmentGroup.length >= 2) {
-                    result.push(...this.processAssignmentGroup(assignmentGroup));
-                } else if (assignmentGroup.length > 0) {
-                    result.push(...assignmentGroup.map(g => g.line));
-                }
-                assignmentGroup = [];
-                result.push(line);
-            }
-        }
-        
-        // Process last group if exists
-        if (assignmentGroup.length >= 2) {
-            result.push(...this.processAssignmentGroup(assignmentGroup));
-        } else if (assignmentGroup.length > 0) {
-            // If group is less than 2 - add lines as is
-            result.push(...assignmentGroup.map(g => g.line));
-        }
-
-        return result.join(eol);
-    }
-    
-    /**
-     * Обработка группы присваиваний - выравнивание по =
-     */
-    private processAssignmentGroup(
-        group: Array<{ index: number; line: string; indent: string; before: string; after: string }>
-    ): string[] {
-        // Найти максимальную длину части до =
-        const maxBeforeLength = Math.max(...group.map(g => g.before.length));
-        
-        // Выровнять все строки
-        return group.map(g => {
-            const spacesNeeded = maxBeforeLength - g.before.length;
-            const padding = ' '.repeat(spacesNeeded);
-            return `${g.indent}${g.before}${padding} = ${g.after}`;
-        });
+        return alignAssignmentsText(text, eol);
     }
 }
 

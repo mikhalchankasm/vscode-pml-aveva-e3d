@@ -4,6 +4,44 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## Unreleased
 
+### Improved
+
+- Add safe Rename support for direct global `!!function(...)` symbols, updating function definitions and indexed direct calls without touching global variables, form member calls, or file-local methods.
+- Keep Rename on `!variable` and `!!global` symbols on the variable path when a same-name `.method()` exists in the file.
+- Keep Rename on `!variable` symbols on the variable path when a same-name object or form exists in the workspace.
+- Resolve `!!Form` symbols correctly inside member calls such as `!!Form.show()` for Go to Definition, Find References, and Rename.
+- Resolve object constructor symbols such as `object Pump()` on the object path instead of same-name method paths for Go to Definition, Find References, and Rename.
+- Prefer live open-document text over cached index text when building Rename edits.
+- Keep workspace indexing from overwriting open-document symbols with stale disk content.
+- Recover parser state at physical line boundaries after malformed statements so later method/object statements remain visible to diagnostics and navigation.
+- Make Agent Kit npm command execution work on current Windows Node runtimes, quote Windows npm arguments safely, and require trusted workspaces before running Agent Kit scripts.
+- Restrict Agent Kit auto-discovery to a sibling `e3d-pml-agent-kit` folder unless `pml.agentKit.path` is configured explicitly.
+- Tighten object and form Rename/References boundaries so longer same-prefix names are not partially edited or reported.
+- Scope local variable Rename to the containing method/function and reject same-scope target-name collisions.
+- Fail workspace Rename safely instead of returning partial edits when an indexed file cannot be read.
+- Track npm lockfiles, run CI on all push branches, and package with pinned local `@vscode/vsce` for reproducible VSIX builds.
+- Remove the generated language-server Vitest config artifact and document `compile` versus `compile:tsc` validation correctly.
+- Refresh npm lockfiles to clear root and language-server audit findings.
+- Keep local release-check artifacts out of VSIX packages and fail VSIX validation if they appear.
+- Prevent Format Document assignment alignment from changing `=` characters inside PML string literals.
+- Prevent Sort Methods from duplicating preceding method comments.
+- Preserve CRLF line endings in selected-line cleanup commands such as sorting, duplicate removal, empty-line removal, trimming, and spaces-to-tabs conversion.
+- Keep Reindex Selected Array working on full-line and multi-line selections, and keep it from replacing later selected array names with the first selected array name.
+- Keep Add to Array from converting comments into array elements and preserve the selected block order while adding new items.
+- Preserve AST ranges for multiline PML string literals so following expression operators remain part of the parsed expression.
+- Clear published diagnostics when files close and respect `pml.maxNumberOfProblems` before sending diagnostics to the editor.
+- Report asynchronous PML Language Server startup failures instead of leaving unhandled client-start rejections.
+- Reduce typo-diagnostic noise by suppressing ambiguous short-word suggestions such as three-letter operator typos with multiple plausible keyword matches.
+- Reduce member-completion receiver type inference overhead by compiling receiver regex patterns once per completion request instead of once per scanned line.
+- Re-index the workspace when workspace folders change instead of only logging the event, while preserving open-document symbols after the refresh.
+- Resolve bundled example files from the active extension context instead of a hardcoded Marketplace extension ID.
+- Share provider word-range extraction across Hover, Definition, References, and Rename while preserving each provider's existing PML symbol boundary rules.
+- Keep Signature Help focused on the innermost active call and ignore nested-call commas when selecting the active parameter.
+- Keep Hover inactive inside PML comments and string literals while preserving hover for active code after string text that contains comment markers.
+- Keep Go to Definition from resolving symbols inside PML comments and string literals.
+- Suppress Completion and Signature Help inside PML comments and string literals, and keep Signature Help call detection and parameter selection from counting delimiters inside string arguments.
+- Keep Find References and Rename from starting on symbols embedded inside PML comments or string literals.
+
 ## [0.12.36] - 2026-06-15
 
 ### Improved

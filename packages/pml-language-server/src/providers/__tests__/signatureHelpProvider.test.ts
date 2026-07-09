@@ -181,6 +181,166 @@ describe('SignatureHelpProvider', () => {
 		expect(help?.activeParameter).toBe(1);
 	});
 
+	it('ignores commas inside nested calls when choosing the outer active parameter', () => {
+		const uri = 'file:///signature-nested-outer.pml';
+		const definitions = [
+			'define method .outer(!first is REAL, !second is REAL)',
+			'endmethod',
+			'define method .inner(!left is REAL, !right is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.outer(.inner(1, 2), `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures[0].label).toBe('.outer(!first, !second)');
+		expect(help?.activeParameter).toBe(1);
+	});
+
+	it('ignores commas inside string arguments when choosing the active parameter', () => {
+		const uri = 'file:///signature-string-argument.pml';
+		const definitions = [
+			'define method .resize(!width is STRING, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.resize(|left,right|, `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.activeParameter).toBe(1);
+	});
+
+	it('shows signature help after closed string arguments', () => {
+		const uri = 'file:///signature-closed-string-argument.pml';
+		const definitions = [
+			'define method .resize(!width is STRING, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.resize("left", `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.activeParameter).toBe(1);
+	});
+
+	it('ignores parentheses inside closed string arguments when locating the active call', () => {
+		const uri = 'file:///signature-string-parens.pml';
+		const definitions = [
+			'define method .resize(!width is STRING, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.resize(|left)x|, `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.activeParameter).toBe(1);
+	});
+
+	it('does not show signature help inside comments or string literals', () => {
+		const uri = 'file:///signature-inactive-text.pml';
+		const definitions = [
+			'define method .resize(!width is REAL, !height is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+		const provider = new SignatureHelpProvider(symbolIndex);
+		const sources = [
+			`${definitions}\n\n!text = ".resize(`,
+			`${definitions}\n\n!pipe = |.resize(`,
+			`${definitions}\n\n-- .resize(`,
+			`${definitions}\n\n$* .resize(`,
+			`${definitions}\n\n$( .resize(`
+		];
+
+		for (const source of sources) {
+			const document = TextDocument.create(uri, 'pml', 1, source);
+			const help = provider.provide({
+				textDocument: { uri },
+				position: document.positionAt(source.length)
+			}, document);
+
+			expect(help, source).toBeNull();
+		}
+	});
+
+	it('uses the innermost call when the cursor is inside nested arguments', () => {
+		const uri = 'file:///signature-nested-inner.pml';
+		const definitions = [
+			'define method .outer(!first is REAL, !second is REAL)',
+			'endmethod',
+			'define method .inner(!left is REAL, !right is REAL)',
+			'endmethod'
+		].join('\n');
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+
+		const source = `${definitions}\n\n!this.outer(.inner(1, `;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SignatureHelpProvider(symbolIndex);
+
+		const help = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(help?.signatures[0].label).toBe('.inner(!left, !right)');
+		expect(help?.activeParameter).toBe(1);
+	});
+
 	it('keeps zero-parameter signatures selectable at the opening parenthesis', () => {
 		const uri = 'file:///signature-zero-param.pml';
 		const definitions = [

@@ -564,4 +564,44 @@ describe('CompletionProvider', () => {
 			expect(completions, source).toEqual([]);
 		}
 	});
+
+	it('does not provide completions inside comments or string literals', () => {
+		const provider = new CompletionProvider(new SymbolIndex());
+		const sources = [
+			'!text = "def',
+			'!pipe = |def',
+			'-- def',
+			'$* def',
+			'$( def'
+		];
+
+		for (const source of sources) {
+			const document = TextDocument.create('file:///inactive-completion.pml', 'pml', 1, source);
+			const completions = provider.provide({
+				textDocument: { uri: document.uri },
+				position: document.positionAt(source.length)
+			}, document);
+
+			expect(completions, source).toEqual([]);
+		}
+	});
+
+	it('provides completions after closed string and block comment delimiters', () => {
+		const provider = new CompletionProvider(new SymbolIndex());
+		const sources = [
+			'!text = "closed" def',
+			'!pipe = |closed| def',
+			'$( closed $) def'
+		];
+
+		for (const source of sources) {
+			const document = TextDocument.create('file:///post-inactive-completion.pml', 'pml', 1, source);
+			const completions = provider.provide({
+				textDocument: { uri: document.uri },
+				position: document.positionAt(source.length)
+			}, document);
+
+			expect(completions.some(item => item.label === 'define'), source).toBe(true);
+		}
+	});
 });

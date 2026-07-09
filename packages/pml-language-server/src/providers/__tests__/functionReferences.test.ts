@@ -5,6 +5,7 @@ import { Parser } from '../../parser/parser';
 import { SymbolIndex } from '../../index/symbolIndex';
 import { DefinitionProvider } from '../definitionProvider';
 import { ReferencesProvider } from '../referencesProvider';
+import { RenameProvider } from '../renameProvider';
 
 function textInRange(text: string, range: Range): string {
 	const lines = text.split(/\r?\n/);
@@ -107,5 +108,144 @@ describe('Global function references', () => {
 		expect(definitions).toHaveLength(1);
 		expect(definitions[0].uri).toBe(uri);
 		expect(definitions[0].range.start.line).toBe(0);
+	});
+
+	it('renames direct !!function definitions and calls without touching globals or methods', async () => {
+		const renameSource = [
+			'define function !!Process(!target is STRING)',
+			'	return !target',
+			'endfunction',
+			'',
+			'define method .Process()',
+			'endmethod',
+			'',
+			'define method .run()',
+			'	!value = !!Process(!target)',
+			'	!!Process(!value)',
+			'	!!Process = !!GlobalVar',
+			'	!!GlobalVar = !!Process',
+			'	!!Main.Process()',
+			'	!this.Process()',
+			'	.Process()',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(renameSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, renameSource);
+		const document = TextDocument.create(uri, 'pml', 1, renameSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(renameSource.indexOf('!!Process(!target)') + 2),
+			newName: 'Build'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(3);
+		expect(edits.map(change => change.newText)).toEqual([
+			'!!Build',
+			'!!Build',
+			'!!Build'
+		]);
+		expect(edits.map(change => textInRange(renameSource, change.range))).toEqual([
+			'!!Process',
+			'!!Process',
+			'!!Process'
+		]);
+		expect(edits.map(change => change.range.start.line).sort((left, right) => left - right)).toEqual([0, 8, 9]);
+	});
+
+	it('renames global functions across files when triggered from the definition', async () => {
+		const functionUri = 'file:///process.pmlfnc';
+		const callerUri = 'file:///caller.pmlfrm';
+		const functionSource = [
+			'define function !!Process(!target is STRING)',
+			'	return !target',
+			'endfunction',
+			'',
+			'define method .run()',
+			'	!!Process(!target)',
+			'endmethod'
+		].join('\n');
+		const callerSource = [
+			'define method .call()',
+			'	!!Process(!target)',
+			'endmethod'
+		].join('\n');
+		const parser = new Parser();
+		const functionParseResult = parser.parse(functionSource);
+		const callerParseResult = parser.parse(callerSource);
+		expect(functionParseResult.errors).toHaveLength(0);
+		expect(callerParseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(functionUri, functionParseResult.ast, 1, functionSource);
+		symbolIndex.indexFile(callerUri, callerParseResult.ast, 1, callerSource);
+		const functionDocument = TextDocument.create(functionUri, 'pml', 1, functionSource);
+		const callerDocument = TextDocument.create(callerUri, 'pml', 1, callerSource);
+		const documents = {
+			get: (requestedUri: string) => {
+				if (requestedUri === functionUri) return functionDocument;
+				if (requestedUri === callerUri) return callerDocument;
+				return undefined;
+			}
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri: functionUri },
+			position: functionDocument.positionAt(functionSource.indexOf('!!Process') + 2),
+			newName: 'Build'
+		});
+
+		const functionEdits = edit?.changes?.[functionUri] ?? [];
+		const callerEdits = edit?.changes?.[callerUri] ?? [];
+		expect(functionEdits).toHaveLength(2);
+		expect(callerEdits).toHaveLength(1);
+		expect(functionEdits.map(change => textInRange(functionSource, change.range))).toEqual([
+			'!!Process',
+			'!!Process'
+		]);
+		expect(callerEdits.map(change => textInRange(callerSource, change.range))).toEqual([
+			'!!Process'
+		]);
+		expect([...functionEdits, ...callerEdits].every(change => change.newText === '!!Build')).toBe(true);
+	});
+
+	it('does not fall back to variable or method rename for unindexed !!function-call syntax', async () => {
+		const unindexedSource = [
+			'define method .Process()',
+			'endmethod',
+			'',
+			'define method .run()',
+			'	!!Process(!target)',
+			'	!!Process = !!GlobalVar',
+			'	!!GlobalVar = !!Process',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(unindexedSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, unindexedSource);
+		const document = TextDocument.create(uri, 'pml', 1, unindexedSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+		const position = document.positionAt(unindexedSource.indexOf('!!Process(!target)') + 2);
+
+		expect(provider.prepareRename({ textDocument: { uri }, position })).toBeNull();
+		await expect(provider.provide({
+			textDocument: { uri },
+			position,
+			newName: 'Build'
+		})).resolves.toBeNull();
 	});
 });

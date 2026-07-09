@@ -21,7 +21,8 @@
 - Keep diffs focused: group related changes, avoid drive-by refactors.
 
 ## Testing & Validation
-- Baseline compile: `npm run compile` (runs root & language-server TypeScript builds).
+- Bundled compile: `npm run compile` (builds the extension bundle).
+- TypeScript baseline: `npm run compile:tsc` (runs root and language-server TypeScript builds).
 - Language server tests: `npm --prefix packages/pml-language-server run test` (Vitest).
 - Packaging smoke test (when functionality changes): `npm run pack` and install the generated VSIX in a disposable VS Code profile.
 - Record test commands and outcomes in the task notes; surface failures instead of hiding them.

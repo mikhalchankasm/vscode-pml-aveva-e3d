@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Connection } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import * as fs from 'fs/promises';
+import * as os from 'os';
+import * as path from 'path';
+import { URI } from 'vscode-uri';
 import { SymbolIndex } from '../symbolIndex';
 import { WorkspaceIndexer } from '../workspaceIndexer';
 
@@ -40,5 +44,34 @@ describe('WorkspaceIndexer', () => {
 
 		expect(indexFileSpy).toHaveBeenCalledTimes(2);
 		expect(symbolIndex.isFileVersionIndexed(uri, 2)).toBe(true);
+	});
+
+	it('does not overwrite an open document with disk content during workspace indexing', async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pml-workspace-indexer-'));
+		const filePath = path.join(tempDir, 'main.pml');
+		const uri = URI.file(filePath).toString();
+		const diskSource = [
+			'define method .diskVersion()',
+			'endmethod'
+		].join('\n');
+		const openSource = [
+			'define method .openVersion()',
+			'endmethod'
+		].join('\n');
+		await fs.writeFile(filePath, diskSource, 'utf-8');
+
+		const symbolIndex = new SymbolIndex();
+		const indexer = new WorkspaceIndexer(symbolIndex, createConnectionStub(), openUri => openUri === uri);
+		const openDocument = TextDocument.create(uri, 'pml', 7, openSource);
+
+		try {
+			indexer.indexDocument(openDocument);
+			await indexer.indexWorkspace([tempDir]);
+
+			expect(symbolIndex.findMethodsInFile(uri, 'openVersion')).toHaveLength(1);
+			expect(symbolIndex.findMethodsInFile(uri, 'diskVersion')).toHaveLength(0);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
 	});
 });

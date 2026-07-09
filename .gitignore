@@ -2,7 +2,6 @@
 node_modules/
 npm-debug.log*
 npm-error.log
-package-lock.json
 .yarn-integrity
 
 # Build output

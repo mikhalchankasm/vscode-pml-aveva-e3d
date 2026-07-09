@@ -1312,24 +1312,44 @@ Development plans and progress tracking.
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 16 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval and release automation runs TypeScript, language-server tests, extension smoke, extension-host smoke, and VSIX validation before release publication.
+- ✅ **Reproducible Build Inputs** - npm lockfiles are tracked, CI runs on all push branches, and VSIX packaging uses pinned local `@vscode/vsce`.
+- ✅ **Dependency Audit Hygiene** - Root and language-server npm audits are clean after lockfile refresh.
+- ✅ **Validation Documentation Hygiene** - Generated Vitest config output was removed and docs distinguish bundled compile from TypeScript validation.
+- ✅ **VSIX Package Hygiene** - Local release-check artifacts are excluded from packaged VSIX files and blocked by VSIX validation.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 - ✅ **Quick UX Presets** - A single discoverable launcher now groups common cleanup actions, debug-print actions, documentation helpers, and practical starter blocks.
 - ✅ **DBREF and ATTRIBUTE Method Assistance** - Selected DBREF and ATTRIBUTE object method completions and hover docs are available from reviewed AVEVA help slices while avoiding generic method noise.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
+- ✅ **Agent Kit Execution Safety** - Agent Kit commands require trusted workspaces, use Windows-safe npm execution, and only auto-discover a sibling `e3d-pml-agent-kit` folder unless configured explicitly.
 - ✅ **Indexed Method Navigation** - Workspace method References and Rename now use indexed AST call sites first, with text scanning retained for callback-string fallback cases.
 - ✅ **File-Scoped User Methods** - User-defined method completions, hover usages, Go to Definition, Find References, Rename, and Signature Help stay inside the current file to avoid collisions between forms with the same method names.
 - ✅ **Global Function Navigation** - `!!function(...)` calls are indexed separately from methods and exposed through References, Go to Definition, hover usages, Signature Help, completions, symbols, and CLI output.
+- ✅ **Global Function Rename** - Rename for direct `!!function(...)` symbols updates function definitions and indexed direct calls without rewriting global variables, form member calls, or file-local methods.
+- ✅ **Form Symbol Navigation** - `!!Form` symbols inside member calls such as `!!Form.show()` resolve to the form for Go to Definition, Find References, and Rename while keeping the member method target distinct.
+- ✅ **Object Constructor Navigation** - Object constructor symbols such as `object Pump()` resolve to object definitions/references/renames without colliding with same-name methods.
+- ✅ **Rename/References Boundaries** - Object and form Rename/References avoid partial matches in longer same-prefix identifiers.
+- ✅ **Code-Editing Safety** - Rename keeps same-name variables on the variable path, scopes local variables to the containing method/function, rejects same-scope variable rename collisions, fails workspace Rename safely on unreadable indexed files, Format Document ignores `=` inside PML string literals, Sort Methods preserves comments without duplication, Reindex Selected Array keeps each selected array name intact, and Add to Array skips comments without reordering selected blocks.
+- ✅ **Parser Recovery Safety** - Malformed statements recover at physical line boundaries so later method/object statements remain available to diagnostics, symbols, and navigation; multiline PML string literal ranges now preserve following expression tails.
+- ✅ **Diagnostics Lifecycle** - Closed documents clear their published diagnostics, and `pml.maxNumberOfProblems` now limits diagnostics sent to the editor.
+- ✅ **Diagnostic Noise Reduction** - Typo diagnostics now suppress ambiguous short-word keyword suggestions while preserving clearer keyword typo hints.
+- ✅ **Language Server Startup Safety** - Asynchronous client startup failures are logged and surfaced to the user instead of becoming unhandled rejections.
+- ✅ **Extension Context Hygiene** - Bundled examples are loaded from the active extension context rather than a hardcoded Marketplace extension ID.
+- ✅ **Provider Word Extraction** - Hover, Definition, References, and Rename now share a configurable word-range helper instead of maintaining four separate implementations.
+- ✅ **Signature Help Accuracy** - Nested method/function calls use the innermost active call frame and ignore nested commas when selecting active parameters.
+- ✅ **Provider Inactive-Text Accuracy** - Hover, Go to Definition, Find References, Rename, Completion, and Signature Help ignore comments and string literals through shared inactive-text ranges, while Hover still works for active code after strings that contain comment markers.
+- ✅ **Signature Help Argument Parsing** - Signature Help ignores commas inside string arguments when selecting the active parameter.
 - ✅ **Form Completion UX** - `.pmlfrm` `!this.` completions include form members, frames, and gadgets, with first-pass receiver-aware method filtering for typed members.
 - ✅ **Completion Noise Reduction** - Constructed `ATTRIBUTE` receivers now get focused ATTRIBUTE metadata completions instead of the full built-in method list.
-- ✅ **Workspace Indexing Stability** - Open-document conflicts, repeated unchanged document indexing, and external file watcher bursts are covered with debounced, tested indexing paths.
+- ✅ **Completion Performance** - Receiver type inference reuses compiled patterns during each completion request instead of rebuilding them for every scanned line.
+- ✅ **Workspace Indexing Stability** - Open-document conflicts, repeated unchanged document indexing, workspace-folder changes, and external file watcher bursts are covered with debounced, tested indexing paths.
 - ✅ **Dynamic Callback Navigation** - References and Rename cover dynamic substitute callback paths such as `!this.$!<gadget>.method` without crossing malformed multiline segments.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
 - **Workspace indexing:** next expose clearer indexing status when a workspace is large and consider measured hot-spot tuning from the existing performance budgets.
 - **Completions:** broaden receiver inference from obvious local declarations/constructors to additional safe AST-backed cases, reduce noisy keyword/snippet suggestions in member contexts, and add curated AVEVA/E3D command presets.
-- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, global `!!function(...)` calls have their own index, and References/Rename use indexed AST call sites first with text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
+- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
 - **Diagnostics:** keep default `.pmlfrm` noise low, add explicit false-positive/false-negative fixtures, and make opt-in diagnostics explain why a warning is actionable.
 - **Preset packs:** continue splitting snippets into practical groups such as forms, callbacks, arrays, file IO, EDG, and PML.NET so users can discover patterns without flooding completion lists.
 - **Smoke validation:** expand extension-host smoke coverage for packaged CLI availability, Agent Kit setup errors, and disposable-profile install checks.

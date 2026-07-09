@@ -8,7 +8,7 @@ for (const entry of readdirSync(process.cwd())) {
 	}
 }
 
-const result = spawnSync('npx', ['@vscode/vsce', 'package', '--no-yarn'], {
+const result = spawnSync('npx', ['--no-install', 'vsce', 'package', '--no-yarn'], {
 	stdio: 'inherit',
 	shell: process.platform === 'win32'
 });

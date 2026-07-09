@@ -92,6 +92,55 @@ describe('Method reference scanning', () => {
 		]);
 	});
 
+	it('should not start references or rename from inactive text', async () => {
+		const inactiveUri = 'file:///inactive-trigger.pmlfrm';
+		const inactiveSource = [
+			'define method .refresh()',
+			'endmethod',
+			'define method .run()',
+			'	!this.refresh()',
+			'	!text = "!this.refresh()"',
+			'	-- !this.refresh()',
+			'	$( !this.refresh()',
+			'	$)',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(inactiveSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(inactiveUri, parseResult.ast, 1, inactiveSource);
+		const document = TextDocument.create(inactiveUri, 'pml', 1, inactiveSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === inactiveUri ? document : undefined
+		};
+		const referencesProvider = new ReferencesProvider(symbolIndex, documents as any);
+		const renameProvider = new RenameProvider(symbolIndex, documents as any);
+		const inactiveOffsets = [
+			inactiveSource.indexOf('"!this.refresh()"') + '"!this.'.length,
+			inactiveSource.indexOf('-- !this.refresh()') + '-- !this.'.length,
+			inactiveSource.indexOf('$( !this.refresh()') + '$( !this.'.length
+		];
+
+		for (const offset of inactiveOffsets) {
+			const position = document.positionAt(offset);
+			await expect(referencesProvider.provide({
+				textDocument: { uri: inactiveUri },
+				position,
+				context: { includeDeclaration: false }
+			})).resolves.toBeNull();
+			expect(renameProvider.prepareRename({
+				textDocument: { uri: inactiveUri },
+				position
+			})).toBeNull();
+			await expect(renameProvider.provide({
+				textDocument: { uri: inactiveUri },
+				position,
+				newName: 'reload'
+			})).resolves.toBeNull();
+		}
+	});
+
 	it('should scope method references to the current file when another file defines the same method', async () => {
 		const { document, documents, otherUri, symbolIndex } = createTwoFileFixture();
 		const provider = new ReferencesProvider(symbolIndex, documents as any);
@@ -596,6 +645,114 @@ describe('Method reference scanning', () => {
 			'!value',
 			'!value'
 		]);
+	});
+
+	it('should prefer global variable rename over same-name methods when cursor is on a !!variable', async () => {
+		const variableSource = [
+			'define method .value()',
+			'endmethod',
+			'',
+			'define method .run()',
+			'	!!value = 1',
+			'	!next = !!value',
+			'	.value()',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!!value =') + 2),
+			newName: '!!nextValue'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.map(change => textInRange(variableSource, change.range))).toEqual([
+			'!!value',
+			'!!value'
+		]);
+		expect(edits.every(change => change.newText === '!!nextValue')).toBe(true);
+	});
+
+	it('should scope local variable rename edits to the containing method', async () => {
+		const variableSource = [
+			'define method .first()',
+			'	!value = 1',
+			'	!next = !value',
+			'endmethod',
+			'',
+			'define method .second()',
+			'	!value = 2',
+			'	!next = !value',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!value = 1') + 1),
+			newName: '!renamed'
+		});
+
+		const edits = edit?.changes?.[uri] ?? [];
+		expect(edits).toHaveLength(2);
+		expect(edits.map(change => textInRange(variableSource, change.range))).toEqual([
+			'!value',
+			'!value'
+		]);
+		expect(edits.every(change => change.newText === '!renamed')).toBe(true);
+		expect(edits.map(change => change.range.start.line)).toEqual([1, 2]);
+	});
+
+	it('should reject local variable rename when the target name already exists in the same method', async () => {
+		const variableSource = [
+			'define method .first()',
+			'	!value = 1',
+			'	!other = 2',
+			'	!next = !value',
+			'endmethod',
+			'',
+			'define method .second()',
+			'	!other = 3',
+			'endmethod'
+		].join('\n');
+		const parseResult = new Parser().parse(variableSource);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parseResult.ast, 1, variableSource);
+		const document = TextDocument.create(uri, 'pml', 1, variableSource);
+		const documents = {
+			get: (requestedUri: string) => requestedUri === uri ? document : undefined
+		};
+		const provider = new RenameProvider(symbolIndex, documents as any);
+
+		const edit = await provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(variableSource.indexOf('!value = 1') + 1),
+			newName: '!other'
+		});
+
+		expect(edit?.changes?.[uri] ?? []).toHaveLength(0);
 	});
 
 	it('should rename method references in callback strings and indexed expressions', () => {

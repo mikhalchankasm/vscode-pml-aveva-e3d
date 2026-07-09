@@ -17,10 +17,12 @@ export class WorkspaceIndexer {
 	private parser: Parser = new Parser();
 	private indexingInProgress: boolean = false;
 	private excludePatterns: string[] = [];
+	private isDocumentOpen: (uri: string) => boolean;
 
-	constructor(symbolIndex: SymbolIndex, connection: Connection) {
+	constructor(symbolIndex: SymbolIndex, connection: Connection, isDocumentOpen: (uri: string) => boolean = () => false) {
 		this.symbolIndex = symbolIndex;
 		this.connection = connection;
+		this.isDocumentOpen = isDocumentOpen;
 	}
 
 	/**
@@ -251,8 +253,12 @@ export class WorkspaceIndexer {
 	 */
 	private async indexFile(filePath: string): Promise<void> {
 		try {
-			const content = await fs.readFile(filePath, 'utf-8');
 			const uri = URI.file(filePath).toString();
+			if (this.isDocumentOpen(uri)) {
+				return;
+			}
+
+			const content = await fs.readFile(filePath, 'utf-8');
 
 			const parseResult = this.parser.parse(content, { mode: parserModeFromUri(uri) });
 			if (parseResult.ast) {

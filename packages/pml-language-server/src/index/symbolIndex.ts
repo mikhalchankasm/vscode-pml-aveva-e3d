@@ -306,7 +306,11 @@ export class SymbolIndex {
 	 * Find form by name
 	 */
 	public findForm(name: string): FormInfo[] {
-		return this.formIndex.get(name.toLowerCase()) || [];
+		const lowerName = name.toLowerCase();
+		return this.formIndex.get(lowerName) ||
+			(!lowerName.startsWith('!!') ? this.formIndex.get(`!!${lowerName}`) : undefined) ||
+			(lowerName.startsWith('!!') ? this.formIndex.get(lowerName.substring(2)) : undefined) ||
+			[];
 	}
 
 	/**

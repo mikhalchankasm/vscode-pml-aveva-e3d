@@ -117,7 +117,7 @@ This is the core language server that powers IntelliSense features for the PML V
 # Install dependencies
 npm install
 
-# Compile TypeScript
+# Compile TypeScript for the language server package
 npm run compile
 
 # Watch mode for development

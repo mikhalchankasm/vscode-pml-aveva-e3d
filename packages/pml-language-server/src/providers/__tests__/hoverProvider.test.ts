@@ -50,6 +50,46 @@ describe('HoverProvider', () => {
 		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 5, character: 1 } }, document)).resolves.not.toBeNull();
 	});
 
+	it('does not treat comment markers inside strings as active hover comments', async () => {
+		const document = TextDocument.create(
+			'file:///hover-string-comment-markers.pml',
+			'pml',
+			1,
+			[
+				'!text = "-- not a comment" !current = !!CE',
+				'!macro = "$* not a comment" !current = !!CE',
+				'!block = "$( not a comment $)" !current = !!CE'
+			].join('\n')
+		);
+		const provider = new HoverProvider({} as any);
+
+		const dashHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 40 } }, document);
+		const dollarHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 41 } }, document);
+		const blockHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 44 } }, document);
+
+		expect(String((dashHover?.contents as any).value)).toContain('`!!CE`');
+		expect(String((dollarHover?.contents as any).value)).toContain('`!!CE`');
+		expect(String((blockHover?.contents as any).value)).toContain('`!!CE`');
+	});
+
+	it('does not show hover help inside string literals', async () => {
+		const document = TextDocument.create(
+			'file:///hover-inactive-strings.pml',
+			'pml',
+			1,
+			[
+				'!text = "!!CE"',
+				'!pipe = |!item.Attribute(|',
+				'!quote = \'!!collectallfor\''
+			].join('\n')
+		);
+		const provider = new HoverProvider({} as any);
+
+		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 0, character: 11 } }, document)).resolves.toBeNull();
+		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 1, character: 15 } }, document)).resolves.toBeNull();
+		await expect(provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 12 } }, document)).resolves.toBeNull();
+	});
+
 	it('shows PDMS command hover for dollar-prefixed starters', async () => {
 		const document = TextDocument.create(
 			'file:///pdms-hover-dollar.pml',

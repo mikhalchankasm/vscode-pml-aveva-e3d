@@ -9,10 +9,19 @@ import * as fs from 'fs/promises';
 import { SymbolIndex } from '../index/symbolIndex';
 import { computeLineOffsets, offsetToPosition } from '../utils/offsetUtils';
 import {
+	escapeRegex,
 	MethodReferencePatternCache,
 	isMethodDeclarationReference
 } from '../utils/methodReferencePatterns';
-import { collectPmlMethodReferenceIgnoredRanges, isOffsetInTextRanges, TextRange } from '../utils/pmlCommentRanges';
+import {
+	collectPmlInactiveTextRanges,
+	collectPmlMethodReferenceIgnoredRanges,
+	findTextRangeContaining,
+	isOffsetInTextRanges,
+	TextRange
+} from '../utils/pmlCommentRanges';
+import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
 
 export interface ReferencePreview {
 	location: Location;
@@ -32,10 +41,16 @@ export class ReferencesProvider {
 		if (!document) return null;
 
 		// Get word at position
-		const wordRange = this.getWordRangeAtPosition(document, params.position);
+		const globalSymbol = getPmlGlobalSymbolAtPosition(document, params.position);
+		const wordRange = globalSymbol?.range ?? this.getWordRangeAtPosition(document, params.position);
 		if (!wordRange) return null;
 
-		const word = document.getText(wordRange);
+		const word = globalSymbol?.text ?? document.getText(wordRange);
+		const text = document.getText();
+		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
 
 		// Extract method name: handle patterns like !obj.method, !this.method, .method
 		// Take only the part after the last dot
@@ -49,11 +64,12 @@ export class ReferencesProvider {
 		if (symbolName.length === 0) return null;
 
 		const references: Location[] = [];
-		const isGlobalFunctionCall = word.startsWith('!!') && !word.includes('.');
+		const isGlobalFunctionCall = word.startsWith('!!') && !word.includes('.') && !globalSymbol?.hasMemberAccess;
+		const isObjectConstructorSyntax = this.isObjectConstructorSymbolAt(document, wordRange);
 
 		// Find definition
 		const functions = isGlobalFunctionCall ? this.symbolIndex.findFunction(symbolName) : [];
-		const methods = functions.length > 0 ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
+		const methods = functions.length > 0 || globalSymbol || isObjectConstructorSyntax ? [] : this.symbolIndex.findMethodsInFile(document.uri, symbolName);
 		const objects = methods.length > 0 ? [] : this.symbolIndex.findObject(symbolName);
 		const forms = methods.length > 0 ? [] : this.symbolIndex.findForm(symbolName);
 
@@ -78,6 +94,10 @@ export class ReferencesProvider {
 		// callback strings and parser recovery gaps that are not represented as expressions.
 		if (functions.length > 0) {
 			references.push(...this.findFunctionReferencesInWorkspace(symbolName));
+		} else if (forms.length > 0) {
+			references.push(...await this.findFormReferencesInWorkspace(symbolName, false));
+		} else if (objects.length > 0) {
+			references.push(...await this.findObjectReferencesInWorkspace(symbolName, false));
 		} else if (methods.length > 0 || objects.length > 0 || forms.length > 0) {
 			// Indexed definitions are added above, so text scanning must not add declaration matches again.
 			const workspaceRefs = methods.length > 0 && objects.length === 0 && forms.length === 0
@@ -187,6 +207,140 @@ export class ReferencesProvider {
 			.map(reference => Location.create(reference.uri, reference.range));
 	}
 
+	private async findFormReferencesInWorkspace(symbolName: string, includeDeclaration = true): Promise<Location[]> {
+		const references: Location[] = [];
+		const allFileUris = this.symbolIndex.getAllFileUris();
+
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			const batchResults = await Promise.all(
+				batch.map(async fileUri => {
+					const text = await this.getFileText(fileUri);
+					return text ? this.findFormReferencesInText(text, fileUri, symbolName, includeDeclaration) : [];
+				})
+			);
+			for (const fileRefs of batchResults) {
+				references.push(...fileRefs);
+			}
+		}
+
+		return this.deduplicateLocations(references);
+	}
+
+	private findFormReferencesInText(text: string, fileUri: string, symbolName: string, includeDeclaration = true): Location[] {
+		const references: Location[] = [];
+		const preFilterPattern = new RegExp(`!!${escapeRegex(symbolName)}`, 'i');
+		if (!preFilterPattern.test(text)) {
+			return references;
+		}
+
+		const pattern = new RegExp(`!!${escapeRegex(symbolName)}(?![A-Za-z0-9_])`, 'gi');
+		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
+		const foundOffsets = new Set<number>();
+
+		let match;
+		while ((match = pattern.exec(text)) !== null) {
+			const startOffset = match.index;
+			const endOffset = startOffset + match[0].length;
+			if (!includeDeclaration && this.isFormDeclarationReference(text, startOffset)) {
+				continue;
+			}
+			if (!ignoredRanges) {
+				ignoredRanges = collectPmlInactiveTextRanges(text);
+			}
+			const ignoredRange = findTextRangeContaining(ignoredRanges, startOffset);
+			if (ignoredRange && !this.isPipeFormCallbackReference(text, startOffset, endOffset, ignoredRange)) {
+				continue;
+			}
+			if (foundOffsets.has(startOffset)) {
+				continue;
+			}
+			foundOffsets.add(startOffset);
+
+			if (!lineOffsets) {
+				lineOffsets = computeLineOffsets(text);
+			}
+			references.push(Location.create(fileUri, {
+				start: offsetToPosition(lineOffsets, startOffset),
+				end: offsetToPosition(lineOffsets, endOffset)
+			}));
+		}
+
+		return references;
+	}
+
+	private async findObjectReferencesInWorkspace(symbolName: string, includeDeclaration = true): Promise<Location[]> {
+		const references: Location[] = [];
+		const allFileUris = this.symbolIndex.getAllFileUris();
+
+		const batchSize = 10;
+		for (let i = 0; i < allFileUris.length; i += batchSize) {
+			const batch = allFileUris.slice(i, i + batchSize);
+			const batchResults = await Promise.all(
+				batch.map(async fileUri => {
+					const text = await this.getFileText(fileUri);
+					return text ? this.findObjectReferencesInText(text, fileUri, symbolName, includeDeclaration) : [];
+				})
+			);
+			for (const fileRefs of batchResults) {
+				references.push(...fileRefs);
+			}
+		}
+
+		return this.deduplicateLocations(references);
+	}
+
+	private findObjectReferencesInText(text: string, fileUri: string, symbolName: string, includeDeclaration = true): Location[] {
+		const references: Location[] = [];
+		const preFilterPattern = new RegExp(escapeRegex(symbolName), 'i');
+		if (!preFilterPattern.test(text)) {
+			return references;
+		}
+
+		const symbolBoundary = '(?![A-Za-z0-9_])';
+		const patterns = [
+			new RegExp(`(define\\s+object\\s+)${escapeRegex(symbolName)}${symbolBoundary}`, 'gi'),
+			new RegExp(`(OBJECT\\s+)${escapeRegex(symbolName)}${symbolBoundary}(?=\\s*\\()`, 'gi'),
+			new RegExp(`(\\bis\\s+)${escapeRegex(symbolName)}${symbolBoundary}`, 'gi')
+		];
+		let lineOffsets: number[] | null = null;
+		let ignoredRanges: TextRange[] | null = null;
+		const foundOffsets = new Set<number>();
+
+		for (const pattern of patterns) {
+			let match;
+			while ((match = pattern.exec(text)) !== null) {
+				const startOffset = match.index + match[1].length;
+				const endOffset = startOffset + symbolName.length;
+				if (!includeDeclaration && this.isObjectDeclarationReference(text, startOffset)) {
+					continue;
+				}
+				if (!ignoredRanges) {
+					ignoredRanges = collectPmlInactiveTextRanges(text);
+				}
+				if (isOffsetInTextRanges(ignoredRanges, startOffset)) {
+					continue;
+				}
+				if (foundOffsets.has(startOffset)) {
+					continue;
+				}
+				foundOffsets.add(startOffset);
+
+				if (!lineOffsets) {
+					lineOffsets = computeLineOffsets(text);
+				}
+				references.push(Location.create(fileUri, {
+					start: offsetToPosition(lineOffsets, startOffset),
+					end: offsetToPosition(lineOffsets, endOffset)
+				}));
+			}
+		}
+
+		return references;
+	}
+
 	private findIndexedReferences(symbolName: string, fileUri?: string): Location[] {
 		const references = fileUri
 			? this.symbolIndex.findMethodReferencesInFile(fileUri, symbolName)
@@ -221,14 +375,14 @@ export class ReferencesProvider {
 	}
 
 	private async getFileText(fileUri: string): Promise<string | undefined> {
-		const cachedText = this.symbolIndex.getDocumentText(fileUri);
-		if (cachedText) {
-			return cachedText;
-		}
-
 		const openDoc = this.documents.get(fileUri);
 		if (openDoc) {
 			return openDoc.getText();
+		}
+
+		const cachedText = this.symbolIndex.getDocumentText(fileUri);
+		if (cachedText) {
+			return cachedText;
 		}
 
 		return this.readFileFromDisk(fileUri);
@@ -310,35 +464,53 @@ export class ReferencesProvider {
 		return this.referencePatternCache.get(symbolName);
 	}
 
+	private isFormDeclarationReference(text: string, startOffset: number): boolean {
+		const lineStart = text.lastIndexOf('\n', startOffset - 1) + 1;
+		const prefix = text.slice(lineStart, startOffset);
+		return /^\s*(?:setup|layout)\s+form\s+$/i.test(prefix);
+	}
+
+	private isObjectDeclarationReference(text: string, startOffset: number): boolean {
+		const lineStart = text.lastIndexOf('\n', startOffset - 1) + 1;
+		const prefix = text.slice(lineStart, startOffset);
+		return /^\s*define\s+object\s+$/i.test(prefix);
+	}
+
+	private isPipeFormCallbackReference(text: string, startOffset: number, endOffset: number, range: TextRange): boolean {
+		if (text[range.startOffset] !== '|') {
+			return false;
+		}
+
+		const prefix = text.slice(range.startOffset + 1, startOffset);
+		if (prefix.trim().length > 0) {
+			return false;
+		}
+
+		let nextOffset = endOffset;
+		while (nextOffset < range.endOffset && /\s/.test(text[nextOffset])) {
+			nextOffset++;
+		}
+
+		return text[nextOffset] === '.' || text[nextOffset] === '(';
+	}
+
 	/**
 	 * Get word range at position
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }) {
-		const text = document.getText();
-		const offset = document.offsetAt(position);
-
-		let start = offset;
-		let end = offset;
-
-		while (start > 0 && this.isWordChar(text[start - 1])) {
-			start--;
-		}
-
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
+		return getProviderWordRangeAtPosition(document, position, {
+			includeVariablePrefixes: true,
+			includeSlash: true
+		});
 	}
 
-	private isWordChar(char: string): boolean {
-		// Include ! $ / . for PML expressions like !var, !!global, $/attr.method
-		return /[a-zA-Z0-9_.]/.test(char) || char === '!' || char === '$' || char === '/';
+	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: Range): boolean {
+		const text = document.getText();
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
+
+		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
 	private deduplicateLocations(locations: Location[]): Location[] {

@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import { workspace, ExtensionContext } from 'vscode';
+import { workspace, window, ExtensionContext } from 'vscode';
 import {
 	LanguageClient,
 	LanguageClientOptions,
@@ -72,10 +72,20 @@ export function activateLanguageServer(context: ExtensionContext): LanguageClien
 		clientOptions
 	);
 
-	// Start the client. This will also launch the server
-	client.start();
-
-	console.log('PML Language Server client activated');
+	// Start the client. This will also launch the server.
+	const startingClient = client;
+	void startingClient.start()
+		.then(() => {
+			console.log('PML Language Server client activated');
+		})
+		.catch((error: unknown) => {
+			const message = error instanceof Error ? error.message : String(error);
+			console.error('Failed to start PML Language Server:', message);
+			void window.showErrorMessage(`Failed to start PML Language Server: ${message}`);
+			if (client === startingClient) {
+				client = undefined;
+			}
+		});
 
 	return client;
 }

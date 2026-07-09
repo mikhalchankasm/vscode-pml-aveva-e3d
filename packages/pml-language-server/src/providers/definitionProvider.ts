@@ -5,6 +5,9 @@
 import { Definition, DefinitionParams, Location, TextDocuments } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
+import { getPmlGlobalSymbolAtPosition } from '../utils/pmlGlobalSymbol';
+import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
+import { getProviderWordRangeAtPosition } from './providerWordRange';
 
 export class DefinitionProvider {
 	constructor(
@@ -17,12 +20,37 @@ export class DefinitionProvider {
 		if (!document) return null;
 
 		// Get word at position
-		const wordRange = this.getWordRangeAtPosition(document, params.position);
+		const globalSymbol = getPmlGlobalSymbolAtPosition(document, params.position);
+		const wordRange = globalSymbol?.range ?? this.getWordRangeAtPosition(document, params.position);
 		if (!wordRange) return null;
 
-		const word = document.getText(wordRange);
+		const word = globalSymbol?.text ?? document.getText(wordRange);
 		const text = document.getText();
 		const wordStartOffset = document.offsetAt(wordRange.start);
+		if (isOffsetInTextRanges(collectPmlInactiveTextRanges(text), wordStartOffset)) {
+			return null;
+		}
+
+		if (this.isObjectConstructorSymbolAt(document, wordRange)) {
+			const objects = this.symbolIndex.findObject(word);
+			if (objects.length > 0) {
+				return Location.create(objects[0].uri, objects[0].range);
+			}
+		}
+
+		if (globalSymbol) {
+			const globalName = word.substring(2);
+			if (!globalSymbol.hasMemberAccess) {
+				const functionDefinition = this.findFunctionDefinition(globalName);
+				if (functionDefinition) {
+					return functionDefinition;
+				}
+			}
+			const forms = this.symbolIndex.findForm(globalName);
+			if (forms.length > 0) {
+				return Location.create(forms[0].uri, forms[0].range);
+			}
+		}
 
 		if (!word.includes('.') && wordStartOffset >= 2 && text.slice(wordStartOffset - 2, wordStartOffset) === '!!') {
 			return this.findFunctionDefinition(word);
@@ -106,43 +134,18 @@ export class DefinitionProvider {
 	 * Get word range at position (simple implementation)
 	 */
 	private getWordRangeAtPosition(document: TextDocument, position: { line: number; character: number }) {
+		return getProviderWordRangeAtPosition(document, position, {
+			stopBackwardAtSpecialCharacters: true
+		});
+	}
+
+	private isObjectConstructorSymbolAt(document: TextDocument, wordRange: { start: { line: number; character: number } }): boolean {
 		const text = document.getText();
-		const offset = document.offsetAt(position);
+		const startOffset = document.offsetAt(wordRange.start);
+		const lineStart = text.lastIndexOf('\n', Math.max(0, startOffset - 1)) + 1;
+		const linePrefix = text.slice(lineStart, startOffset);
 
-		// Find word boundaries
-		let start = offset;
-		let end = offset;
-
-		// Expand backwards - stop at special characters like !, $, operators, etc.
-		while (start > 0 && this.isWordChar(text[start - 1]) && !this.isStopChar(text[start - 1])) {
-			start--;
-		}
-
-		// Expand forwards - include method name with dot
-		while (end < text.length && this.isWordChar(text[end])) {
-			end++;
-		}
-
-		if (start === end) return null;
-
-		return {
-			start: document.positionAt(start),
-			end: document.positionAt(end)
-		};
+		return /\bOBJECT\s+$/i.test(linePrefix);
 	}
 
-	/**
-	 * Check if character is part of word (including dot for methods)
-	 */
-	private isWordChar(char: string): boolean {
-		return /[a-zA-Z0-9_.]/.test(char);
-	}
-
-	/**
-	 * Check if character should stop backwards word expansion
-	 * Stops at variable prefixes (!, $), operators, delimiters, whitespace
-	 */
-	private isStopChar(char: string): boolean {
-		return /[!$:=+\-*/<>()[\]{},;\s]/.test(char);
-	}
 }

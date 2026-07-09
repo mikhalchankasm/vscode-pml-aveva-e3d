@@ -36,6 +36,7 @@ import { RenameProvider } from './providers/renameProvider';
 import { SemanticTokensProvider, semanticTokensLegend } from './providers/semanticTokensProvider';
 import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
 import { FormReferenceValidator } from './analysis/formReferenceValidator';
+import { limitDiagnostics } from './utils/diagnosticLimits';
 
 // Create a connection for the server
 const connection = createConnection(ProposedFeatures.all);
@@ -48,7 +49,7 @@ const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 // Symbol index for workspace
 const symbolIndex = new SymbolIndex();
-const workspaceIndexer = new WorkspaceIndexer(symbolIndex, connection);
+const workspaceIndexer = new WorkspaceIndexer(symbolIndex, connection, uri => documents.get(uri) !== undefined);
 
 // Providers
 const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
@@ -65,6 +66,7 @@ let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hasDiagnosticRelatedInformationCapability = false;
+let pendingWorkspaceRefresh: { reason: string; progressMessage: string } | undefined;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -133,52 +135,81 @@ connection.onInitialized(async () => {
 	}
 
 	if (hasWorkspaceFolderCapability) {
-		connection.workspace.onDidChangeWorkspaceFolders(_event => {
+		connection.workspace.onDidChangeWorkspaceFolders(event => {
 			connection.console.log('Workspace folder change event received.');
+			void refreshWorkspaceIndex(
+				`workspace folders changed: +${event.added.length}, -${event.removed.length}`,
+				'Re-indexing workspace...'
+			);
 		});
 	}
 
 	// Index workspace on startup with progress indicator
-	let startupProgress: WorkDoneProgressServerReporter | undefined;
+	await refreshWorkspaceIndex('startup', 'Scanning workspace...');
+
+	connection.console.log('PML Language Server initialized');
+});
+
+function workspaceFolderToPath(folder: { uri: string }): string {
+	// Parse URI properly to handle both local paths and UNC paths.
+	// file:///d:/path -> d:\path (Windows local)
+	// file://server/share/path -> \\server\share\path (UNC)
+	return URI.parse(folder.uri).fsPath;
+}
+
+async function refreshWorkspaceIndex(reason: string, progressMessage: string): Promise<void> {
+	if (workspaceIndexer.isIndexing()) {
+		connection.console.warn(`Skipped workspace re-index (${reason}): indexing already in progress`);
+		pendingWorkspaceRefresh = { reason, progressMessage };
+		return;
+	}
+
+	let progress: WorkDoneProgressServerReporter | undefined;
+	let workspaceScanCompleted = false;
 	try {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
+		symbolIndex.clear();
+
 		if (workspaceFolders && workspaceFolders.length > 0) {
-			const folders = workspaceFolders.map(f => {
-				// Parse URI properly to handle both local paths and UNC paths
-				// file:///d:/path -> d:\path (Windows local)
-				// file://server/share/path -> \\server\share\path (UNC)
-				const uri = URI.parse(f.uri);
-				return uri.fsPath;  // Handles all cases correctly cross-platform
-			});
-			connection.console.log(`Indexing workspace: ${folders.join(', ')}`);
+			const folders = workspaceFolders.map(workspaceFolderToPath);
+			connection.console.log(`Indexing workspace (${reason}): ${folders.join(', ')}`);
 
-			startupProgress = await connection.window.createWorkDoneProgress();
-			startupProgress.begin('PML', 0, 'Scanning workspace...', false);
+			progress = await connection.window.createWorkDoneProgress();
+			progress.begin('PML', 0, progressMessage, false);
 
-			// Index workspace with progress reporting
-			await workspaceIndexer.indexWorkspace(folders, startupProgress);
-			const stats = symbolIndex.getStats();
-
-			startupProgress.done();
-			startupProgress = undefined;
-
-			connection.console.log(`Workspace indexed: ${stats.methods} methods, ${stats.functions} functions, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
+			await workspaceIndexer.indexWorkspace(folders, progress);
+		} else {
+			connection.console.log(`No workspace folders to index (${reason})`);
 		}
+
+		workspaceScanCompleted = true;
 	} catch (error: unknown) {
-		// Ensure any progress indicator is closed on error
-		if (startupProgress) {
+		const message = error instanceof Error ? error.message : String(error);
+		connection.console.error(`Failed to index workspace (${reason}): ${message}`);
+	} finally {
+		for (const document of documents.all()) {
+			workspaceIndexer.indexDocument(document);
+		}
+
+		const stats = symbolIndex.getStats();
+		const status = workspaceScanCompleted ? 'Workspace indexed' : 'Open documents re-indexed after workspace indexing failure';
+		connection.console.log(`${status} (${reason}): ${stats.methods} methods, ${stats.functions} functions, ${stats.objects} objects, ${stats.forms} forms in ${stats.files} files`);
+
+		if (progress) {
 			try {
-				startupProgress.done();
+				progress.done();
 			} catch {
 				// ignore secondary errors
 			}
 		}
-		const message = error instanceof Error ? error.message : String(error);
-		connection.console.error(`Failed to index workspace: ${message}`);
-	}
 
-	connection.console.log('PML Language Server initialized');
-});
+		const pendingRefresh = pendingWorkspaceRefresh;
+		pendingWorkspaceRefresh = undefined;
+		if (pendingRefresh) {
+			void refreshWorkspaceIndex(pendingRefresh.reason, pendingRefresh.progressMessage);
+		}
+	}
+}
 
 /**
  * File Watcher - Handle changes to files on disk (not opened in editor)
@@ -268,6 +299,7 @@ function getDocumentSettings(resource: string): Thenable<PMLSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => {
 	documentSettings.delete(e.document.uri);
+	connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 	// Cancel pending validation for closed document
 	const timer = validationTimers.get(e.document.uri);
 	if (timer) {
@@ -321,10 +353,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const text = textDocument.getText();
 
 	const diagnostics: Diagnostic[] = [];
+	let maxNumberOfProblems = defaultSettings.maxNumberOfProblems;
 
 	try {
 		const parseResult = parseAndIndexDocument(textDocument, text);
 		const settings = await getDocumentSettings(textDocument.uri);
+		maxNumberOfProblems = settings.maxNumberOfProblems ?? defaultSettings.maxNumberOfProblems;
 
 		// Convert parse errors to diagnostics. Form files use a broader DSL, so
 		// diagnostics stay opt-in until the form parser is first-class.
@@ -404,7 +438,10 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 
 	// Send diagnostics to client
-	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+	connection.sendDiagnostics({
+		uri: textDocument.uri,
+		diagnostics: limitDiagnostics(diagnostics, maxNumberOfProblems)
+	});
 }
 
 function parseAndIndexDocument(textDocument: TextDocument, text = textDocument.getText()): ReturnType<Parser['parse']> {
