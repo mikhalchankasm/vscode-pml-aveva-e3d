@@ -24,14 +24,14 @@ This file is the short release snapshot for the current public build. Full histo
 - Completion performance budget: passed with a 100-file workspace model and typed chained call.
 - External read-only Claude review: passed with no blocking findings; the confirmed built-in/user-method collision was fixed and regression-tested.
 - Quick Actions validation, extension smoke, and activated extension-host smoke: passed.
-- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.40.vsix` contains 16 files (422,561 bytes).
+- VSIX packaging and validation: passed; the canonical CI artifact `pml-aveva-e3d-0.12.40.vsix` contains 16 files (422,153 bytes).
 - Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.40`.
 - Local installation: passed in both VS Code and Cursor, each reporting version `0.12.40`.
 
 ### Assets
 
 - VSIX: `pml-aveva-e3d-0.12.40.vsix`
-- SHA256: `a82cc9cbbdb54e5824864e11224b2d19221ccc1f571316959418a5086ce05e28`
+- SHA256: `9010907ef88c4d5e17e51c2c3f0639bb4a4d00f973b47f23571d164bd4269b21`
 
 ## Previous Release - v0.12.39
 
