@@ -31,7 +31,7 @@ This file is the short release snapshot for the current public build. Full histo
 ### Assets
 
 - VSIX: `pml-aveva-e3d-0.12.40.vsix`
-- SHA256: `9010907ef88c4d5e17e51c2c3f0639bb4a4d00f973b47f23571d164bd4269b21`
+- SHA256: `719fe5bfeb2cb754edf786b5f176f623bfd74b38a17ef7457a18d182c535bce0`
 
 ## Previous Release - v0.12.39
 
