@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Add curated Quick Actions presets for form callbacks, arrays, file output, and PML.NET namespaces.
 - Make unknown form member diagnostics explain the immediate corrective action.
 - Make missing form callback diagnostics explain the immediate corrective action.
 - Report unknown static form members even when they are followed by indexed access.

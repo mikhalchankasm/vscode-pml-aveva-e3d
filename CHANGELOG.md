@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Add curated Quick Actions presets for form callbacks, arrays, file output, and PML.NET namespaces.
 - Make unknown form member diagnostics explain the immediate corrective action.
 - Make missing form callback diagnostics explain the immediate corrective action.
 - Report unknown static form members even when they are followed by indexed access.
