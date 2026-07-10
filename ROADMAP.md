@@ -1350,7 +1350,7 @@ Development plans and progress tracking.
 - ✅ **Agent Kit Setup Smoke Coverage** - Extension-host smoke validation verifies actionable setup guidance across review, health, and live-status commands when no valid Agent Kit repository is configured.
 
 **Next Stabilization Plan:**
-- **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.
+- ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
 - ✅ **Workspace Indexing Status** - Progress now reports discovered PML file counts and final indexing duration; next use measured performance baselines to tune hotspots.
 - **Completions:** receiver inference follows the latest prior direct local and typed form-member aliases without using inactive comments or string text, in addition to obvious declarations and constructors; next add further safe AST-backed cases and curated AVEVA/E3D command presets.
 - **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings and delimiter-adjacent bare callbacks. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
