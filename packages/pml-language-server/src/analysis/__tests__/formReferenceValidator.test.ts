@@ -89,4 +89,26 @@ endmethod
 
 		expect(diagnostics).toHaveLength(0);
 	});
+
+	it('should report an unknown form member before an indexed access', () => {
+		const source = `
+setup form !!ReferenceForm
+exit
+
+define method .apply()
+	!this.missingItems[1].active = true
+endmethod
+		`.trim();
+
+		const parseResult = new Parser().parse(source);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const diagnostics = new FormReferenceValidator().check(parseResult.ast);
+
+		expect(diagnostics).toHaveLength(1);
+		expect(diagnostics[0]).toMatchObject({
+			code: 'unknown-form-member',
+			message: "Unknown form member or gadget '!this.missingItems'"
+		});
+	});
 });
