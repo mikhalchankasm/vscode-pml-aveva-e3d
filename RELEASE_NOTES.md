@@ -6,7 +6,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 **Release Date:** 2026-07-10
 
-**GitHub Release:** Pending explicit `confirm publish`.
+**GitHub Release:** [v0.12.37](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.37)
 
 ### What Changed
 
