@@ -12,7 +12,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
 import { Lexer } from '../parser/lexer';
 import { TokenType } from '../parser/tokens';
-import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText } from '../utils/pmlCommentRanges';
+import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText, TextRange } from '../utils/pmlCommentRanges';
 
 type LightweightMethod = {
 	name: string;
@@ -54,7 +54,8 @@ export class CompletionProvider {
 		const position = params.position;
 		const text = document.getText();
 		const cursorOffset = document.offsetAt(position);
-		if (isCursorInsidePmlInactiveText(text, collectPmlInactiveTextRanges(text), cursorOffset)) {
+		const inactiveRanges = collectPmlInactiveTextRanges(text);
+		if (isCursorInsidePmlInactiveText(text, inactiveRanges, cursorOffset)) {
 			return [];
 		}
 
@@ -78,7 +79,7 @@ export class CompletionProvider {
 				];
 			}
 
-			const receiverType = this.inferReceiverType(document, position, textBeforeCursor);
+			const receiverType = this.inferReceiverType(document, position, textBeforeCursor, inactiveRanges);
 			const builtInItems = this.getBuiltInMethodCompletions(receiverType);
 			return [...currentMethods, ...builtInItems];
 		}
@@ -714,7 +715,8 @@ export class CompletionProvider {
 	private inferReceiverType(
 		document: TextDocument,
 		position: { line: number; character: number },
-		textBeforeCursor: string
+		textBeforeCursor: string,
+		inactiveRanges: readonly TextRange[]
 	): ReceiverType | undefined {
 		const thisMemberType = this.inferThisMemberReceiverType(document, textBeforeCursor);
 		if (thisMemberType) {
@@ -731,8 +733,29 @@ export class CompletionProvider {
 			start: { line: 0, character: 0 },
 			end: position
 		});
-		const lines = textBeforePosition.split(/\r?\n/);
+		const lines = this.maskInactiveText(textBeforePosition, inactiveRanges).split(/\r?\n/);
 		return this.inferReceiverTypeFromLines(receiverName, lines, document);
+	}
+
+	private maskInactiveText(text: string, inactiveRanges: readonly TextRange[]): string {
+		const characters = text.split('');
+		for (const range of inactiveRanges) {
+			const startOffset = Math.max(range.startOffset, 0);
+			const endOffset = Math.min(range.endOffset, characters.length);
+			const delimiter = characters[startOffset];
+			const preservesStringDelimiters = (delimiter === '|' || delimiter === '\'' || delimiter === '"') &&
+				characters[endOffset - 1] === delimiter;
+			for (let offset = startOffset; offset < endOffset; offset++) {
+				if (preservesStringDelimiters && (offset === startOffset || offset === endOffset - 1)) {
+					continue;
+				}
+				if (characters[offset] !== '\r' && characters[offset] !== '\n') {
+					characters[offset] = ' ';
+				}
+			}
+		}
+
+		return characters.join('');
 	}
 
 	private inferReceiverTypeFromLines(
