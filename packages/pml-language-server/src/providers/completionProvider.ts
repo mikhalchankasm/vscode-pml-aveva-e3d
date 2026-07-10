@@ -748,7 +748,10 @@ export class CompletionProvider {
 
 		const receiverPatterns = this.createReceiverTypePatterns(receiverName);
 
-		for (const line of lines) {
+		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=\\s*`;
+		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?)\\s*$`, 'i');
+		for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
+			const line = lines[lineIndex];
 			if (line.trim().startsWith('--')) {
 				continue;
 			}
@@ -756,15 +759,6 @@ export class CompletionProvider {
 			const declaredType = this.matchReceiverType(line, receiverPatterns);
 			if (declaredType) {
 				return declaredType;
-			}
-		}
-
-		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=\\s*`;
-		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?)\\s*$`, 'i');
-		for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
-			const line = lines[lineIndex];
-			if (line.trim().startsWith('--')) {
-				continue;
 			}
 
 			const match = line.match(aliasAssignment);
