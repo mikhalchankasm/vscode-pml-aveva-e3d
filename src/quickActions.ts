@@ -188,6 +188,46 @@ const PRESET_ACTIONS: QuickAction[] = [
             '!elements = !!collectallfor(!types, !filter, !place)',
             '$0'
         ].join('\n'))
+    },
+    {
+        label: '$(symbol-event) Preset: Form Callback Method',
+        description: 'Forms and callbacks',
+        detail: 'Insert a callback method skeleton for a form gadget.',
+        snippet: new vscode.SnippetString([
+            'define method .${1:onAction}()',
+            '    ${0:-- Handle form callback}',
+            'endmethod'
+        ].join('\n'))
+    },
+    {
+        label: '$(list-ordered) Preset: Array Declaration',
+        description: 'Arrays',
+        detail: 'Insert an empty PML ARRAY variable ready for values.',
+        snippet: new vscode.SnippetString([
+            '!${1:items} = ARRAY()',
+            '$0'
+        ].join('\n'))
+    },
+    {
+        label: '$(file) Preset: Write File',
+        description: 'File IO',
+        detail: 'Insert a compact FILE write/close block.',
+        snippet: new vscode.SnippetString([
+            '!file = object FILE(|${1:filepath}|)',
+            '!file.open(\'write\')',
+            '!file.writeline(|${2:content}|)',
+            '!file.close()',
+            '$0'
+        ].join('\n'))
+    },
+    {
+        label: '$(extensions) Preset: PML.NET Namespace',
+        description: 'PML.NET',
+        detail: 'Insert a namespace import for PML.NET interop.',
+        snippet: new vscode.SnippetString([
+            'using namespace \'${1:namespace}\'',
+            '$0'
+        ].join('\n'))
     }
 ];
 
