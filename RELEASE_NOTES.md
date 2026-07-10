@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Make unknown form member diagnostics explain the immediate corrective action.
 - Make missing form callback diagnostics explain the immediate corrective action.
 - Report unknown static form members even when they are followed by indexed access.
 - Keep opt-in form-reference diagnostics from flagging dynamic `!this` member paths as unknown members.

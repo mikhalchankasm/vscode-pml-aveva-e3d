@@ -41,8 +41,8 @@ endmethod
 		expect(sortedDiagnostics.map(diagnostic => diagnostic.message)).toEqual([
 			"Form callback 'this.quitcall' references missing method '.missingQuit()'. Define it or update the callback target.",
 			"Gadget '.missingButton' callback references missing method '.missingButtonCallback()'. Define it or update the callback target.",
-			"Unknown form member or gadget '!this.missingSkip'",
-			"Unknown form member or gadget '!this.unknownGadget'"
+			"Unknown form member or gadget '!this.missingSkip'. Declare it or correct the reference.",
+			"Unknown form member or gadget '!this.unknownGadget'. Declare it or correct the reference."
 		]);
 	});
 
@@ -108,7 +108,7 @@ endmethod
 		expect(diagnostics).toHaveLength(1);
 		expect(diagnostics[0]).toMatchObject({
 			code: 'unknown-form-member',
-			message: "Unknown form member or gadget '!this.missingItems'"
+			message: "Unknown form member or gadget '!this.missingItems'. Declare it or correct the reference."
 		});
 	});
 });
