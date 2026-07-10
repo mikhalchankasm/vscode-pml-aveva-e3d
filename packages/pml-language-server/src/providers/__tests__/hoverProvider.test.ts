@@ -278,6 +278,8 @@ describe('HoverProvider', () => {
 							end: { line: 1, character: 9 }
 						},
 						parameters: ['target'],
+						parameterTypes: [{ kind: 'STRING' }],
+						returnType: { kind: 'BOOLEAN' },
 						documentation: [
 							'End of method definition for .RunCommand() ----------------------------------------------------------------------',
 							'Method: NavigateTo',
@@ -316,14 +318,14 @@ describe('HoverProvider', () => {
 		const callHover = await provider.provide({ textDocument: { uri: document.uri }, position: { line: 2, character: 9 } }, document);
 		const callValue = String((callHover?.contents as any).value);
 
-		expect(value.startsWith('Moves the active selection to the requested target.')).toBe(true);
-		expect(value.startsWith('Moves the active selection to the requested target.\n\n`USAGES` 1 location')).toBe(true);
+		expect(value.startsWith('`.NavigateTo(!target is STRING) is BOOLEAN`\n\nMoves the active selection to the requested target.')).toBe(true);
+		expect(value).toContain('Moves the active selection to the requested target.\n\n`USAGES` 1 location');
 		expect(value).toContain('`USAGES` 1 location');
 		expect(value).toContain('[Main.pmlfrm:3]');
 		expect(value).toContain('`!this.NavigateTo(!target)`');
 		expect(value).not.toContain('[Other.pmlfrm');
 		expect(previewScopeUri).toBe(document.uri);
-		expect(value).not.toContain('`.NavigateTo(!target)`');
+		expect(value).toContain('`.NavigateTo(!target is STRING) is BOOLEAN`');
 		expect(value).not.toContain('`PARAMS`');
 		expect(value).not.toContain('`DOC`');
 		expect(value).not.toContain('`DEFINED`');
@@ -332,7 +334,7 @@ describe('HoverProvider', () => {
 		expect(value).not.toContain('Method: NavigateTo');
 		expect(value).not.toContain('$P');
 		expect(value).not.toContain('@target');
-		expect(callValue).toBe('Moves the active selection to the requested target.');
+		expect(callValue).toBe('`.NavigateTo(!target is STRING) is BOOLEAN`\n\nMoves the active selection to the requested target.');
 		expect(callValue).not.toContain('`DEFINED`');
 		expect(callValue).not.toContain('`USAGES`');
 		expect(value).not.toContain('###');
@@ -380,7 +382,7 @@ describe('HoverProvider', () => {
 		const uri = 'file:///functions.pmlfnc';
 		const source = [
 			'-- $P Description: Builds report data.',
-			'define function !!BuildReport(!items is ARRAY)',
+			'define function !!BuildReport(!items is ARRAY) is ARRAY',
 			'	return !items',
 			'endfunction',
 			'',
@@ -411,8 +413,29 @@ describe('HoverProvider', () => {
 		const callValue = String((callHover?.contents as any).value);
 
 		expect(declarationValue).toContain('Builds report data.');
+		expect(declarationValue).toContain('`!!BuildReport(!items is ARRAY) is ARRAY`');
 		expect(declarationValue).toContain('`USAGES` 1 location');
 		expect(declarationValue).toContain('[functions.pmlfnc:6]');
-		expect(callValue).toBe('Builds report data.');
+		expect(callValue).toBe('`!!BuildReport(!items is ARRAY) is ARRAY`\n\nBuilds report data.');
+	});
+
+	it('shows an indexed typed signature even without documentation', async () => {
+		const uri = 'file:///typed-signature-hover.pml';
+		const source = [
+			'define method .items(!limit is REAL) is ARRAY',
+			'endmethod',
+			'.items(10)'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const hover = await new HoverProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.lastIndexOf('items'))
+		}, document);
+
+		expect(String((hover?.contents as any).value)).toBe('`.items(!limit is REAL) is ARRAY`');
 	});
 });

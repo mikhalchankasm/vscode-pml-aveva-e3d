@@ -560,8 +560,8 @@ function getCallableSignatureFingerprint(uri: string): string {
 	const fileSymbols = symbolIndex.getFileSymbols(uri);
 	if (!fileSymbols) return '';
 	return [
-		...fileSymbols.methods.map(method => `m:${method.name.toLowerCase()}:${method.parameters.join(',').toLowerCase()}`),
-		...fileSymbols.functions.map(func => `f:${func.name.toLowerCase()}:${func.parameters.join(',').toLowerCase()}`)
+		...fileSymbols.methods.map(method => `m:${method.signature.toLowerCase()}`),
+		...fileSymbols.functions.map(func => `f:${func.signature.toLowerCase()}`)
 	].sort().join('|');
 }
 

@@ -12,12 +12,15 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { PMLType } from '../ast/nodes';
 import { SymbolIndex } from '../index/symbolIndex';
 import { Lexer } from '../parser/lexer';
-import { TokenType } from '../parser/tokens';
+import { Token, TokenType } from '../parser/tokens';
 import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText, TextRange } from '../utils/pmlCommentRanges';
+import { formatCallableDetail } from '../utils/callableSignature';
 
 type LightweightMethod = {
 	name: string;
 	parameters: string[];
+	parameterTypes?: Array<PMLType | undefined>;
+	returnType?: PMLType;
 	documentation?: string;
 };
 
@@ -48,6 +51,15 @@ type ReceiverTypePatterns = {
 	numberLiteral: RegExp;
 	userCall: RegExp;
 	anyAssignment: RegExp;
+};
+
+const BUILT_IN_CHAIN_RETURN_TYPES: Record<ReceiverType, Partial<Record<string, ReceiverType>>> = {
+	STRING: { upcase: 'STRING', lowcase: 'STRING', trim: 'STRING', length: 'REAL', substring: 'STRING', real: 'REAL' },
+	REAL: { abs: 'REAL', round: 'REAL', floor: 'REAL', ceiling: 'REAL', string: 'STRING', sin: 'REAL', cos: 'REAL', sqrt: 'REAL' },
+	ARRAY: { size: 'REAL' },
+	DBREF: { query: 'STRING', qreal: 'REAL', attributes: 'ARRAY', mcount: 'REAL' },
+	ELEMENTTYPE: { systemattributes: 'ARRAY', dbtypes: 'ARRAY', changetype: 'STRING', systemtype: 'ELEMENTTYPE', udets: 'ARRAY', membertypes: 'ARRAY', parenttypes: 'ARRAY' },
+	ATTRIBUTE: { units: 'STRING', category: 'STRING', elementtypes: 'ARRAY', validvalues: 'ARRAY', defaultvalue: 'STRING', querytext: 'STRING' }
 };
 
 export class CompletionProvider {
@@ -354,7 +366,7 @@ export class CompletionProvider {
 			items.push({
 				label: `.${method.name}`,
 				kind: CompletionItemKind.Method,
-				detail: `Method (${this.formatParameterList(method.parameters)})`,
+				detail: `Method ${formatCallableDetail(method.parameters, method.parameterTypes, method.returnType)}`,
 				documentation: method.documentation,
 				filterText: method.name,
 				sortText: `0${method.name}` // Sort workspace methods first
@@ -394,6 +406,8 @@ export class CompletionProvider {
 				methodMap.set(method.name.toLowerCase(), {
 					name: method.name,
 					parameters: method.parameters,
+					parameterTypes: method.parameterTypes,
+					returnType: method.returnType,
 					documentation: method.documentation
 				});
 			}
@@ -419,8 +433,8 @@ export class CompletionProvider {
 		return methods.map(method => ({
 			label: `.${method.name}`,
 			kind: methodKind,
-			detail: method.parameters.length
-				? `${detailPrefix} (${this.formatParameterList(method.parameters)})`
+			detail: method.parameters.length || method.returnType
+				? `${detailPrefix} ${formatCallableDetail(method.parameters, method.parameterTypes, method.returnType)}`
 				: detailPrefix,
 			documentation: method.documentation,
 			insertText: method.name,
@@ -436,7 +450,7 @@ export class CompletionProvider {
 			.map(func => ({
 				label: `!!${func.name}`,
 				kind: CompletionItemKind.Function,
-				detail: `Function (${this.formatParameterList(func.parameters)})`,
+				detail: `Function ${formatCallableDetail(func.parameters, func.parameterTypes, func.returnType)}`,
 				documentation: func.documentation,
 				insertText: `!!${func.name}`,
 				filterText: `!!${func.name}`,
@@ -662,28 +676,46 @@ export class CompletionProvider {
 	 */
 	private extractMethodsFromDocument(document: TextDocument): LightweightMethod[] {
 		const text = document.getText();
-		const methodRegex = /^\s*define\s+method\s+\.([A-Za-z0-9_]+)\s*(\(([^)]*)\))?/gim;
+		const methodRegex = /^[ \t]*define[ \t]+method[ \t]+\.([A-Za-z0-9_]+)[ \t]*(\(([^)]*)\))?[ \t]*(?:is[ \t]+(STRING|REAL|INTEGER|BOOLEAN|ARRAY|DBREF|ANY))?/gim;
 		const methods: LightweightMethod[] = [];
 
 		let match: RegExpExecArray | null;
 		while ((match = methodRegex.exec(text)) !== null) {
-			const params = (match[3] || '')
+			const parsedParameters = (match[3] || '')
 				.split(',')
 				.map(param => param.trim())
 				.filter(Boolean)
 				.map(param => {
-					// Parameter name always starts with !
 					const nameMatch = param.match(/!([A-Za-z0-9_]+)/);
-					return nameMatch ? nameMatch[1] : param;
+					const typeMatch = param.match(/\bis\s+(STRING|REAL|INTEGER|BOOLEAN|ARRAY|DBREF|ANY)\b/i);
+					return {
+						name: nameMatch ? nameMatch[1] : param,
+						type: this.pmlTypeFromName(typeMatch?.[1])
+					};
 				});
 
 			methods.push({
 				name: match[1],
-				parameters: params
+				parameters: parsedParameters.map(parameter => parameter.name),
+				parameterTypes: parsedParameters.map(parameter => parameter.type),
+				returnType: this.pmlTypeFromName(match[4])
 			});
 		}
 
 		return methods;
+	}
+
+	private pmlTypeFromName(typeName?: string): PMLType | undefined {
+		switch (typeName?.toUpperCase()) {
+			case 'STRING': return { kind: 'STRING' };
+			case 'REAL': return { kind: 'REAL' };
+			case 'INTEGER': return { kind: 'INTEGER' };
+			case 'BOOLEAN': return { kind: 'BOOLEAN' };
+			case 'ARRAY': return { kind: 'ARRAY', elementType: { kind: 'ANY' } };
+			case 'DBREF': return { kind: 'DBREF' };
+			case 'ANY': return { kind: 'ANY' };
+			default: return undefined;
+		}
 	}
 
 	private isMemberCompletionContext(textBeforeCursor: string): boolean {
@@ -721,6 +753,11 @@ export class CompletionProvider {
 		textBeforeCursor: string,
 		inactiveRanges: readonly TextRange[]
 	): ReceiverType | undefined {
+		const trailingCallType = this.inferTrailingCallType(textBeforeCursor, document, position, inactiveRanges);
+		if (trailingCallType) {
+			return trailingCallType;
+		}
+
 		const thisMemberType = this.inferThisMemberReceiverType(document, textBeforeCursor);
 		if (thisMemberType) {
 			return thisMemberType;
@@ -738,6 +775,92 @@ export class CompletionProvider {
 		});
 		const lines = this.maskInactiveText(textBeforePosition, inactiveRanges).split(/\r?\n/);
 		return this.inferReceiverTypeFromLines(receiverName, lines, document);
+	}
+
+	private inferTrailingCallType(
+		textBeforeCursor: string,
+		document: TextDocument,
+		position: { line: number; character: number },
+		inactiveRanges: readonly TextRange[]
+	): ReceiverType | undefined {
+		const tokens = new Lexer(textBeforeCursor.trimEnd()).tokenize()
+			.filter(token => token.type !== TokenType.EOF && token.type !== TokenType.NEWLINE);
+		if (tokens.at(-1)?.type !== TokenType.DOT) {
+			return undefined;
+		}
+		const textBeforePosition = document.getText({ start: { line: 0, character: 0 }, end: position });
+		const typeLines = this.maskInactiveText(textBeforePosition, inactiveRanges).split(/\r?\n/);
+		return this.inferCallResultType(tokens, tokens.length - 2, document, typeLines);
+	}
+
+	private inferCallResultType(tokens: Token[], endIndex: number, document: TextDocument, typeLines: string[]): ReceiverType | undefined {
+		if (endIndex < 0 || tokens[endIndex]?.type !== TokenType.RPAREN) {
+			return undefined;
+		}
+
+		const openIndex = this.findMatchingOpenParenthesis(tokens, endIndex);
+		if (openIndex <= 0) {
+			return undefined;
+		}
+
+		const callee = tokens[openIndex - 1];
+		if (callee.type === TokenType.GLOBAL_VAR) {
+			return this.resolveFunctionReturnType(callee.value.replace(/^!!/, ''));
+		}
+
+		const constructorType = this.receiverTypeFromConstructorToken(callee.type);
+		if (constructorType) {
+			return constructorType;
+		}
+
+		if (callee.type !== TokenType.METHOD) {
+			return undefined;
+		}
+
+		const methodName = callee.value.replace(/^\./, '');
+		const receiverEndIndex = openIndex - 2;
+		const receiverToken = tokens[receiverEndIndex];
+		const receiverType = receiverToken?.type === TokenType.RPAREN
+			? this.inferCallResultType(tokens, receiverEndIndex, document, typeLines)
+			: this.inferVariableTokenType(receiverToken, typeLines, document);
+		if (receiverType) {
+			const builtIn = this.getBuiltInMethodCompletions(receiverType)
+				.find(item => String(item.label).toLowerCase() === methodName.toLowerCase());
+			return builtIn ? BUILT_IN_CHAIN_RETURN_TYPES[receiverType][methodName.toLowerCase()] : undefined;
+		}
+
+		return this.resolveMethodReturnType(document.uri, methodName);
+	}
+
+	private inferVariableTokenType(token: Token | undefined, lines: string[], document: TextDocument): ReceiverType | undefined {
+		if (!token || ![TokenType.LOCAL_VAR, TokenType.GLOBAL_VAR].includes(token.type)) {
+			return undefined;
+		}
+		return this.inferReceiverTypeFromLines(token.value.toLowerCase(), lines, document);
+	}
+
+	private findMatchingOpenParenthesis(tokens: Token[], closeIndex: number): number {
+		let depth = 0;
+		for (let index = closeIndex; index >= 0; index--) {
+			if (tokens[index].type === TokenType.RPAREN) {
+				depth++;
+			} else if (tokens[index].type === TokenType.LPAREN) {
+				depth--;
+				if (depth === 0) return index;
+			}
+		}
+		return -1;
+	}
+
+	private receiverTypeFromConstructorToken(type: TokenType): ReceiverType | undefined {
+		switch (type) {
+			case TokenType.STRING_TYPE: return 'STRING';
+			case TokenType.REAL_TYPE:
+			case TokenType.INTEGER_TYPE: return 'REAL';
+			case TokenType.ARRAY_TYPE: return 'ARRAY';
+			case TokenType.DBREF_TYPE: return 'DBREF';
+			default: return undefined;
+		}
 	}
 
 	private maskInactiveText(text: string, inactiveRanges: readonly TextRange[]): string {
@@ -891,6 +1014,9 @@ export class CompletionProvider {
 	}
 
 	private normalizeReceiverType(typeName?: string): ReceiverType | undefined {
+		if (typeName?.endsWith('[]')) {
+			return 'ARRAY';
+		}
 		switch (typeName?.toUpperCase()) {
 			case 'STRING':
 			case 'ARRAY':
@@ -910,7 +1036,4 @@ export class CompletionProvider {
 		return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
-	private formatParameterList(parameters: string[]): string {
-		return parameters.map(parameter => parameter.startsWith('!') ? parameter : `!${parameter}`).join(', ');
-	}
 }

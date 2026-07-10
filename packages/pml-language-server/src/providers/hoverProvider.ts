@@ -4,8 +4,10 @@
 
 import { Hover, HoverParams, MarkupKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { PMLType } from '../ast/nodes';
 import { getPdmsCommand } from '../data/pdmsCommands';
 import { SymbolIndex } from '../index/symbolIndex';
+import { formatCallableSignature } from '../utils/callableSignature';
 import { isMethodDeclarationReference } from '../utils/methodReferencePatterns';
 import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
 import { getProviderWordRangeAtPosition } from './providerWordRange';
@@ -302,11 +304,11 @@ export class HoverProvider {
 			return null;
 		}
 
-		// Take first match
+		// Use the first definition for prose while showing every indexed overload signature.
 		const method = methods[0];
 		const isDeclarationHover = this.isMethodDeclarationHover(document, wordRange);
 		const description = this.extractMethodDescription(method.documentation);
-		const sections: string[] = [];
+		const sections: string[] = [this.formatIndexedSignatures(methods, '.')];
 
 		if (description) {
 			sections.push(description);
@@ -317,10 +319,6 @@ export class HoverProvider {
 			if (usages) {
 				sections.push(usages);
 			}
-		}
-
-		if (sections.length === 0) {
-			return null;
 		}
 
 		return {
@@ -365,7 +363,7 @@ export class HoverProvider {
 
 		const func = functions[0];
 		const description = this.extractMethodDescription(func.documentation);
-		const sections: string[] = [];
+		const sections: string[] = [this.formatIndexedSignatures(functions, '!!')];
 		if (description) {
 			sections.push(description);
 		}
@@ -375,10 +373,6 @@ export class HoverProvider {
 			if (usages) {
 				sections.push(usages);
 			}
-		}
-
-		if (sections.length === 0) {
-			return null;
 		}
 
 		return {
@@ -391,6 +385,26 @@ export class HoverProvider {
 				end: wordRange.end
 			}
 		};
+	}
+
+	private formatIndexedSignatures(
+		symbols: Array<{
+			name: string;
+			signature?: string;
+			parameters: string[];
+			parameterTypes?: Array<PMLType | undefined>;
+			returnType?: PMLType;
+		}>,
+		prefix: '.' | '!!'
+	): string {
+		const signatures = new Set(symbols.map(symbol => symbol.signature || formatCallableSignature(
+			prefix,
+			symbol.name,
+			symbol.parameters,
+			symbol.parameterTypes ?? [],
+			symbol.returnType
+		)));
+		return Array.from(signatures, signature => `\`${signature}\``).join('\n\n');
 	}
 
 	private async getFunctionUsagesMarkdown(functionName: string): Promise<string> {

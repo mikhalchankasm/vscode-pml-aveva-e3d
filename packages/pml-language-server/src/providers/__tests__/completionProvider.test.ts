@@ -27,7 +27,7 @@ describe('CompletionProvider', () => {
 		expect(completions.map(item => item.label)).toEqual(['.refresh']);
 		expect(completions[0]).toMatchObject({
 			kind: CompletionItemKind.Event,
-			detail: 'Form method (!target)',
+			detail: 'Form method (!target is STRING)',
 			insertText: 'refresh',
 			filterText: 'refresh'
 		});
@@ -93,6 +93,23 @@ describe('CompletionProvider', () => {
 		});
 		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 		expect(completions.some(item => item.label === 'qreal')).toBe(true);
+	});
+
+	it('preserves typed callable details in the unindexed document fallback', () => {
+		const source = [
+			'define method .build(!name is STRING) is ARRAY',
+			'endmethod',
+			'!receiver.'
+		].join('\n');
+		const document = TextDocument.create('file:///fallback-signature.pml', 'pml', 1, source);
+		const completions = new CompletionProvider(new SymbolIndex()).provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.find(item => item.label === '.build')).toMatchObject({
+			detail: 'Method (!name is STRING) → ARRAY'
+		});
 	});
 
 	it('does not treat DBREF attribute value calls as ATTRIBUTE object receivers', () => {
@@ -470,6 +487,143 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'append')).toBe(false);
 	});
 
+	it('filters member completions directly after a typed global function call', () => {
+		const uri = 'file:///direct-function-result-completion.pml';
+		const source = [
+			'define function !!newItems() is ARRAY',
+			'endfunction',
+			'!!newItems().'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('filters member completions directly after a typed method call with nested arguments', () => {
+		const uri = 'file:///direct-method-result-completion.pml';
+		const source = [
+			'define method .label(!value is REAL) is STRING',
+			'endmethod',
+			'!this.label(.other(1, 2)).'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+	});
+
+	it('propagates receiver types through a typed user call and built-in call chain', () => {
+		const uri = 'file:///chained-call-completion.pml';
+		const source = [
+			'define function !!element() is DBREF',
+			'endfunction',
+			'!!element().query(|NAME|).'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
+	it('uses a known variable receiver type before same-name user methods', () => {
+		const uri = 'file:///built-in-method-collision.pml';
+		const source = [
+			'define method .upcase() is ARRAY',
+			'endmethod',
+			'!value = |name|',
+			'!value.upcase().'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'trim')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+	});
+
+	it('does not chain a line-leading dot onto a call from the previous line', () => {
+		const uri = 'file:///line-leading-dot-completion.pml';
+		const definitions = 'define function !!newItems() is ARRAY\nendfunction';
+		const result = new Parser().parse(definitions);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, definitions);
+		const source = `${definitions}\n!!newItems()\n.`;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions).toEqual([]);
+	});
+
+	it('filters direct constructor-call completions', () => {
+		const source = 'ARRAY().';
+		const document = TextDocument.create('file:///constructor-chain.pml', 'pml', 1, source);
+		const completions = new CompletionProvider(new SymbolIndex()).provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('keeps direct-call completions broad for ambiguous return types', () => {
+		const uri = 'file:///ambiguous-direct-call-completion.pml';
+		const source = [
+			'define function !!load() is STRING',
+			'endfunction',
+			'define function !!load() is ARRAY',
+			'endfunction',
+			'!!load().'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+	});
+
 	it('does not retain a stale receiver type after an ambiguous user call', () => {
 		const uri = 'file:///ambiguous-result-completion.pml';
 		const source = [
@@ -665,7 +819,7 @@ describe('CompletionProvider', () => {
 	it('formats workspace method parameters with PML markers', () => {
 		const uri = 'file:///workspace-completion.pml';
 		const source = [
-			'define method .refresh(!target is STRING, !count is REAL)',
+			'define method .refresh(!target is STRING, !count is REAL) is BOOLEAN',
 			'endmethod',
 			'',
 			're'
@@ -684,7 +838,7 @@ describe('CompletionProvider', () => {
 		}, document);
 
 		expect(completions.find(item => item.label === '.refresh')).toMatchObject({
-			detail: 'Method (!target, !count)'
+			detail: 'Method (!target is STRING, !count is REAL) → BOOLEAN'
 		});
 	});
 
@@ -725,7 +879,7 @@ describe('CompletionProvider', () => {
 	it('suggests indexed global functions only after !! prefix', () => {
 		const uri = 'file:///function-completion.pmlfnc';
 		const source = [
-			'define function !!ProcessItems(!items is ARRAY)',
+			'define function !!ProcessItems(!items is ARRAY) is STRING',
 			'endfunction',
 			'',
 			'!!Pro'
@@ -745,7 +899,7 @@ describe('CompletionProvider', () => {
 
 		expect(functionCompletions.find(item => item.label === '!!ProcessItems')).toMatchObject({
 			kind: CompletionItemKind.Function,
-			detail: 'Function (!items)'
+			detail: 'Function (!items is ARRAY) → STRING'
 		});
 
 		const bareSource = `${source}\n\nPro`;

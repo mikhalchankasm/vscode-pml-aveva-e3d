@@ -11,6 +11,7 @@ import {
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../index/symbolIndex';
 import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText } from '../utils/pmlCommentRanges';
+import { formatCallableParameters, formatCallableSignature } from '../utils/callableSignature';
 
 export class SignatureHelpProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
@@ -47,13 +48,13 @@ export class SignatureHelpProvider {
 		const signatures: SignatureInformation[] = [];
 
 		for (const symbol of signaturesSource) {
-			const parameterLabels = symbol.parameters.map(parameter => this.formatParameterName(parameter));
+			const parameterLabels = formatCallableParameters(symbol.parameters, symbol.parameterTypes);
 			const params = parameterLabels.map(parameter => {
 				return ParameterInformation.create(parameter);
 			});
 
 			const prefix = callContext.kind === 'method' ? '.' : '!!';
-			const label = symbol.signature || `${prefix}${symbol.name}(${parameterLabels.join(', ')})`;
+			const label = symbol.signature || formatCallableSignature(prefix, symbol.name, symbol.parameters, symbol.parameterTypes, symbol.returnType);
 			const documentation = symbol.documentation || `${callContext.kind === 'method' ? 'Method' : 'Function'}: ${prefix}${symbol.name}`;
 
 			signatures.push({
@@ -183,7 +184,4 @@ export class SignatureHelpProvider {
 		return Math.min(Math.max(0, activeParameter), parameterCount - 1);
 	}
 
-	private formatParameterName(parameter: string): string {
-		return parameter.startsWith('!') ? parameter : `!${parameter}`;
-	}
 }

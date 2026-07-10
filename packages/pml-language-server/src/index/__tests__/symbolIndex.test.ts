@@ -57,5 +57,7 @@ describe('SymbolIndex', () => {
 			elementType: { kind: 'ANY' }
 		});
 		expect(symbolIndex.findFunction('name')[0].returnType).toEqual({ kind: 'STRING' });
+		expect(symbolIndex.findMethodsInFile(uri, 'items')[0].signature).toBe('.items() is ARRAY');
+		expect(symbolIndex.findFunction('name')[0].signature).toBe('!!name() is STRING');
 	});
 });

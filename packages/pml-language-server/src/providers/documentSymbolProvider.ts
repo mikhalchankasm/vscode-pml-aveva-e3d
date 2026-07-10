@@ -49,7 +49,7 @@ export class DocumentSymbolProvider {
 
 		for (const func of fileSymbols.functions) {
 			symbols.push({
-				name: func.signature,
+				name: `!!${func.name}(${func.parameters.map(p => '!' + p).join(', ')})`,
 				detail: func.deprecated ? '(deprecated)' : 'function',
 				kind: LSPSymbolKind.Function,
 				range: func.range,

@@ -2,6 +2,21 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.40] - 2026-07-10
+
+### Added
+
+- Show explicit parameter and return types in indexed method/function Hover, Signature Help, and callable completion details.
+- Narrow member completions directly after unambiguous typed user calls such as `!!load().`, `.build().`, and `!this.items().`.
+- Propagate receiver types through supported built-in call chains such as `!!element().query(|NAME|).`.
+
+### Improved
+
+- Keep callable signature refreshes current when only a parameter type or return type changes.
+- Preserve typed completion details in the unindexed current-document fallback.
+- Keep direct-call narrowing conservative for ambiguous symbols, unknown return types, line-leading dots, and built-in/user-method name collisions.
+- Guard typed chained-call completion latency with the existing large-workspace performance budget.
+
 ## [0.12.39] - 2026-07-10
 
 ### Improved

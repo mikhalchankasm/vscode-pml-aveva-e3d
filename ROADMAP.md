@@ -1296,7 +1296,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.39
+**Version:** 0.12.40
 **Released:** 2026-07-10
 
 **Statistics:**
@@ -1306,7 +1306,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **373 passing, 3 skipped by default** (22 client + 351 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
+- Tests: **383 passing, 3 skipped by default** (22 client + 361 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1353,11 +1353,12 @@ Development plans and progress tracking.
 - ✅ **Call Hierarchy** - Indexed method and global-function declarations/call sites expose incoming and outgoing calls while preserving file-scoped methods and workspace-scoped functions.
 - ✅ **Low-Noise Inlay Hints** - Reliable first-assignment types and unambiguous callable parameter names are available with independent settings and cached AST reuse.
 - ✅ **Safe Type Propagation** - Typed parameters, direct reliable aliases, and explicit unambiguous user-call return types improve Inlay Hints and receiver-aware completions without leaking conditional or ambiguous assignments.
+- ✅ **Typed Callable UX** - Hover, Signature Help, and callable completions expose explicit parameter/return types; direct and supported chained calls narrow member completions without crossing ambiguity or line boundaries.
 
 **Next Stabilization Plan:**
 - ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
 - ✅ **Workspace Indexing Status** - Progress now reports discovered PML file counts and final indexing duration; next use measured performance baselines to tune hotspots.
-- **Completions:** receiver inference follows the latest reliable local/form-member alias and explicit unambiguous user-call return type, invalidates stale types after unknown assignments, and ignores inactive text; next add further safe AST-backed cases and curated AVEVA/E3D command presets.
+- **Completions:** receiver inference follows reliable aliases and explicit unambiguous user-call results, including direct/chained call receivers, while invalidating stale or ambiguous types and respecting line/inactive-text boundaries; next add curated AVEVA/E3D command presets.
 - ✅ **Navigation Release Gate:** `.pmlobj` and `.pmlcmd` Outline coverage is guarded; user-defined methods remain file-scoped; global `!!function(...)` symbols remain workspace-scoped; CodeLens and incoming/outgoing Call Hierarchy use the shared index; References/Rename retain text fallback for callback strings and delimiter-adjacent bare callbacks.
 - ✅ **Actionable Form Diagnostics** - Missing callback and unknown member warnings now state the immediate corrective action; keep default `.pmlfrm` noise low with explicit false-positive/false-negative coverage.
 - **Preset packs:** Quick Actions now groups starter patterns for forms/callbacks, arrays, file IO, and PML.NET; next add observed EDG workflows without flooding completion lists.
@@ -1365,6 +1366,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.12.40`: adds typed callable Hover/Signature Help/completion details and direct/chained receiver completion for explicit unambiguous user-call returns.
 - `v0.12.39`: propagates typed parameters, reliable aliases, and explicit user-call return types into Inlay Hints and receiver-aware completions while keeping ambiguous and conditional flow conservative.
 - `v0.12.38`: adds low-noise variable type and callable parameter Inlay Hints with cached AST reuse and signature-sensitive refreshes.
 - `v0.12.37`: adds curated Quick Actions presets, actionable form diagnostics, safer completion inference, reference CodeLens, and indexed incoming/outgoing Call Hierarchy.

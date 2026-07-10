@@ -19,7 +19,8 @@ describe('SignatureHelpProvider', () => {
 
 		const method = symbolIndex.findMethod('resize')[0];
 		expect(method.parameters).toEqual(['width', 'height']);
-		expect(method.signature).toBe('.resize(!width, !height)');
+		expect(method.parameterTypes).toEqual([{ kind: 'REAL' }, { kind: 'REAL' }]);
+		expect(method.signature).toBe('.resize(!width is REAL, !height is REAL)');
 	});
 
 	it('shows PML parameter markers and active argument for indexed method signatures', () => {
@@ -46,10 +47,10 @@ describe('SignatureHelpProvider', () => {
 		expect(help).not.toBeNull();
 		expect(help?.activeParameter).toBe(1);
 		expect(help?.signatures[0]).toMatchObject({
-			label: '.resize(!width, !height)',
+			label: '.resize(!width is REAL, !height is REAL)',
 			parameters: [
-				{ label: '!width' },
-				{ label: '!height' }
+				{ label: '!width is REAL' },
+				{ label: '!height is REAL' }
 			]
 		});
 	});
@@ -57,7 +58,7 @@ describe('SignatureHelpProvider', () => {
 	it('shows PML parameter markers for indexed global function signatures', () => {
 		const uri = 'file:///function-signature.pmlfnc';
 		const definitions = [
-			'define function !!ProcessItems(!items is ARRAY, !mode is STRING)',
+			'define function !!ProcessItems(!items is ARRAY, !mode is STRING) is ARRAY',
 			'endfunction'
 		].join('\n');
 		const result = new Parser().parse(definitions);
@@ -78,10 +79,10 @@ describe('SignatureHelpProvider', () => {
 		expect(help).not.toBeNull();
 		expect(help?.activeParameter).toBe(1);
 		expect(help?.signatures[0]).toMatchObject({
-			label: '!!ProcessItems(!items, !mode)',
+			label: '!!ProcessItems(!items is ARRAY, !mode is STRING) is ARRAY',
 			parameters: [
-				{ label: '!items' },
-				{ label: '!mode' }
+				{ label: '!items is ARRAY' },
+				{ label: '!mode is STRING' }
 			]
 		});
 	});
@@ -118,7 +119,7 @@ describe('SignatureHelpProvider', () => {
 		}, document);
 
 		expect(help?.signatures.map(signature => signature.label)).toEqual([
-			'.refresh(!target)'
+			'.refresh(!target is STRING)'
 		]);
 	});
 
@@ -151,8 +152,8 @@ describe('SignatureHelpProvider', () => {
 		expect(help?.activeSignature).toBe(1);
 		expect(help?.activeParameter).toBe(1);
 		expect(help?.signatures.map(signature => signature.label)).toEqual([
-			'.resize(!width)',
-			'.resize(!width, !height)'
+			'.resize(!width is REAL)',
+			'.resize(!width is REAL, !height is REAL)'
 		]);
 	});
 
@@ -204,7 +205,7 @@ describe('SignatureHelpProvider', () => {
 			position: document.positionAt(source.length)
 		}, document);
 
-		expect(help?.signatures[0].label).toBe('.outer(!first, !second)');
+		expect(help?.signatures[0].label).toBe('.outer(!first is REAL, !second is REAL)');
 		expect(help?.activeParameter).toBe(1);
 	});
 
@@ -229,7 +230,7 @@ describe('SignatureHelpProvider', () => {
 			position: document.positionAt(source.length)
 		}, document);
 
-		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.signatures[0].label).toBe('.resize(!width is STRING, !height is REAL)');
 		expect(help?.activeParameter).toBe(1);
 	});
 
@@ -254,7 +255,7 @@ describe('SignatureHelpProvider', () => {
 			position: document.positionAt(source.length)
 		}, document);
 
-		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.signatures[0].label).toBe('.resize(!width is STRING, !height is REAL)');
 		expect(help?.activeParameter).toBe(1);
 	});
 
@@ -279,7 +280,7 @@ describe('SignatureHelpProvider', () => {
 			position: document.positionAt(source.length)
 		}, document);
 
-		expect(help?.signatures[0].label).toBe('.resize(!width, !height)');
+		expect(help?.signatures[0].label).toBe('.resize(!width is STRING, !height is REAL)');
 		expect(help?.activeParameter).toBe(1);
 	});
 
@@ -337,7 +338,7 @@ describe('SignatureHelpProvider', () => {
 			position: document.positionAt(source.length)
 		}, document);
 
-		expect(help?.signatures[0].label).toBe('.inner(!left, !right)');
+		expect(help?.signatures[0].label).toBe('.inner(!left is REAL, !right is REAL)');
 		expect(help?.activeParameter).toBe(1);
 	});
 

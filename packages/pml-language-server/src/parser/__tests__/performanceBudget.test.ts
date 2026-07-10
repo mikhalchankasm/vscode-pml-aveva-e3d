@@ -144,6 +144,33 @@ describe('performance budget guards', () => {
 		expect(elapsedMs).toBeLessThan(completionBudgetMs);
 	});
 
+	maybeIt('provides typed chained-call completions with a large workspace index within the release budget', () => {
+		const { symbolIndex } = createIndexedWorkspace();
+		const uri = 'file:///workspace/typed-chain.pml';
+		const source = [
+			'define function !!currentElement() is DBREF',
+			'endfunction',
+			'',
+			'!!currentElement().query(|NAME|).'
+		].join('\n');
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const result = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(result.errors).toHaveLength(0);
+		symbolIndex.indexFile(uri, result.ast, document.version, source);
+		const provider = new CompletionProvider(symbolIndex);
+
+		const startedAt = performance.now();
+		const completions = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+		const elapsedMs = performance.now() - startedAt;
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+		expect(elapsedMs).toBeLessThan(completionBudgetMs);
+	});
+
 	maybeIt('finds file-local method references with a 100-file workspace model within the release budget', async () => {
 		const { symbolIndex, documents } = createIndexedWorkspace();
 		const uri = 'file:///workspace/file1.pml';

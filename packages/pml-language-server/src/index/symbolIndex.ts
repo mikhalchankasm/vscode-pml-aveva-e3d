@@ -19,6 +19,7 @@ import {
 	typeToString
 } from '../ast/nodes';
 import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
+import { formatCallableSignature } from '../utils/callableSignature';
 
 /**
  * Symbol information stored in index
@@ -49,6 +50,7 @@ export interface MethodInfo extends SymbolInfo {
 	kind: SymbolKind.Method;
 	selectionRange: Range;
 	parameters: string[]; // Parameter names
+	parameterTypes: Array<PMLType | undefined>;
 	parameterCount: number;
 	signature: string; // .methodName(!param1, !param2)
 	returnType?: PMLType;
@@ -64,6 +66,7 @@ export interface FunctionInfo extends SymbolInfo {
 	kind: SymbolKind.Function;
 	selectionRange: Range;
 	parameters: string[];
+	parameterTypes: Array<PMLType | undefined>;
 	parameterCount: number;
 	signature: string;
 	returnType?: PMLType;
@@ -461,7 +464,8 @@ export class SymbolIndex {
 		containerName?: string
 	): MethodInfo {
 		const parameters = node.parameters.map(p => p.name);
-		const signature = `.${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
+		const parameterTypes = node.parameters.map(p => p.paramType);
+		const signature = formatCallableSignature('.', node.name, parameters, parameterTypes, node.returnType);
 
 		// Extract documentation from comments if available
 		let documentation: string | undefined = node.documentation?.description;
@@ -485,6 +489,7 @@ export class SymbolIndex {
 			deprecated: node.deprecated,
 			documentation,
 			parameters,
+			parameterTypes,
 			parameterCount: parameters.length,
 			signature,
 			returnType: node.returnType
@@ -530,7 +535,8 @@ export class SymbolIndex {
 		documentLines?: string[]
 	): FunctionInfo {
 		const parameters = node.parameters.map(p => p.name);
-		const signature = `!!${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
+		const parameterTypes = node.parameters.map(p => p.paramType);
+		const signature = formatCallableSignature('!!', node.name, parameters, parameterTypes, node.returnType);
 
 		let documentation: string | undefined = node.documentation?.description;
 		if (!documentation && documentText) {
@@ -550,6 +556,7 @@ export class SymbolIndex {
 			deprecated: node.deprecated,
 			documentation,
 			parameters,
+			parameterTypes,
 			parameterCount: parameters.length,
 			signature,
 			returnType: node.returnType

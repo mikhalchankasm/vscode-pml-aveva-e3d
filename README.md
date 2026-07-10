@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.39-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.40-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -20,8 +20,8 @@
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP Server** — Full Language Server Protocol support
-- 📋 **Signature Help** — Parameter hints for method calls
-- 🎯 **Hover Information** — Quick documentation on hover
+- 📋 **Signature Help** — Typed parameters and explicit return types for indexed method/function calls
+- 🎯 **Hover Information** — Typed callable signatures and quick documentation on hover
 - 🗂️ **Workspace Indexing** — Fast symbol search across project
 - 📖 **Examples & Tutorials** — Built-in gadget examples and documentation (Button Gadgets, Frame Gadgets, etc.)
 - 🔢 **Array Tools** — Smart array indexing, reindexing, and manipulation commands
@@ -159,8 +159,8 @@ MIT License - see [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e
 - 🏷️ **Inlay Hints** — Ненавязчивые подсказки типов из надёжных присваиваний, типизированных параметров и явных результатов однозначных вызовов, а также имён параметров
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP сервер** — Полная поддержка Language Server Protocol
-- 📋 **Подсказки параметров** — Помощь при вызове методов
-- 🎯 **Информация при наведении** — Быстрая документация
+- 📋 **Подсказки параметров** — Типы параметров и явные возвращаемые типы индексированных вызовов
+- 🎯 **Информация при наведении** — Типизированные сигнатуры и быстрая документация
 - 🗂️ **Индексация проекта** — Быстрый поиск символов по всему проекту
 - 🖨️ **Инструменты `$P`** — Подсветка print/debug строк, счетчик, переход next/previous, comment/uncomment/delete
 - 🧭 **Совместимость с PDMS-командами** — Редактируемый whitelist стартовых слов PDMS-команд
