@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Make missing form callback diagnostics explain the immediate corrective action.
 - Report unknown static form members even when they are followed by indexed access.
 - Keep opt-in form-reference diagnostics from flagging dynamic `!this` member paths as unknown members.
 - Keep inactive comments and strings from changing inferred member-completion receiver types.

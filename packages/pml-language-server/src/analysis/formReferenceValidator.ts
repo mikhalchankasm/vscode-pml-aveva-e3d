@@ -157,7 +157,7 @@ export class FormReferenceValidator {
 		diagnostics.push({
 			severity,
 			range,
-			message: `${label} references missing method '.${methodName}()'`,
+			message: `${label} references missing method '.${methodName}()'. Define it or update the callback target.`,
 			source: 'pml-form-references',
 			code: 'missing-form-callback'
 		});
