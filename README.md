@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.36-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.37-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -15,7 +15,7 @@
 
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables
-- 🔍 **Navigation** — Go to Definition, Find References, Document Symbols
+- 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols, clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP Server** — Full Language Server Protocol support
@@ -97,6 +97,7 @@ Entries include the first command word, category, and short hover text. Add only
   - `warning`: warn when callbacks target missing methods or `!this.<name>` references an unknown form member/gadget.
   - `error`: report those findings as errors.
   - Runs only after the form parses without parser errors to avoid cascade noise.
+- `pml.codeLens.enabled`: show clickable reference counts above methods and global functions (default: `true`).
 
 ### 📚 Documentation
 
@@ -150,7 +151,7 @@ MIT License - see [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e
 
 - 🎨 **Подсветка синтаксиса** — Полная поддержка PML1/PML2
 - 📝 **IntelliSense** — Умные подсказки для ключевых слов, методов, переменных
-- 🔍 **Навигация** — Переход к определению, поиск ссылок, символы документа
+- 🔍 **Навигация** — Переход к определению, поиск ссылок, символы документа/workspace, кликабельный CodeLens и иерархия входящих/исходящих вызовов
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP сервер** — Полная поддержка Language Server Protocol
 - 📋 **Подсказки параметров** — Помощь при вызове методов
@@ -208,6 +209,7 @@ Whitelist стартовых слов команд лежит здесь:
   - `warning`: предупреждать, если callback указывает на отсутствующий метод или `!this.<name>` ссылается на неизвестный member/gadget.
   - `error`: показывать такие замечания как ошибки.
   - Работает только когда форма парсится без parser errors, чтобы не создавать каскадный шум.
+- `pml.codeLens.enabled`: показывать кликабельное количество ссылок над методами и глобальными функциями (по умолчанию: `true`).
 
 ### 📚 Документация
 

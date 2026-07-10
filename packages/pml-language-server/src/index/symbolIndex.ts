@@ -46,6 +46,7 @@ export enum SymbolKind {
  */
 export interface MethodInfo extends SymbolInfo {
 	kind: SymbolKind.Method;
+	selectionRange: Range;
 	parameters: string[]; // Parameter names
 	parameterCount: number;
 	signature: string; // .methodName(!param1, !param2)
@@ -59,6 +60,7 @@ export interface MethodReferenceInfo {
 
 export interface FunctionInfo extends SymbolInfo {
 	kind: SymbolKind.Function;
+	selectionRange: Range;
 	parameters: string[];
 	parameterCount: number;
 	signature: string;
@@ -168,16 +170,17 @@ export class SymbolIndex {
 			forms: [],
 			lastIndexed: Date.now()
 		};
+		const documentLines = documentText?.split(/\r?\n/);
 
 		// Extract symbols from AST
 		for (const node of ast.body) {
 			if (node.type === 'MethodDefinition') {
-				const methodInfo = this.extractMethodInfo(node, uri, documentText);
+				const methodInfo = this.extractMethodInfo(node, uri, documentText, documentLines);
 				fileSymbols.methods.push(methodInfo);
 				this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
 				this.indexCallReferences(node.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
 			} else if (node.type === 'FunctionDefinition') {
-				const functionInfo = this.extractFunctionInfo(node, uri, documentText);
+				const functionInfo = this.extractFunctionInfo(node, uri, documentText, documentLines);
 				fileSymbols.functions.push(functionInfo);
 				this.addToIndex(this.functionIndex, functionInfo.name.toLowerCase(), functionInfo);
 				this.indexCallReferences(node.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
@@ -188,7 +191,7 @@ export class SymbolIndex {
 
 				// Index methods inside object
 				for (const method of node.members) {
-					const methodInfo = this.extractMethodInfo(method, uri, documentText, objectInfo.name);
+					const methodInfo = this.extractMethodInfo(method, uri, documentText, documentLines, objectInfo.name);
 					fileSymbols.methods.push(methodInfo);
 					this.addToIndex(this.methodIndex, methodInfo.name.toLowerCase(), methodInfo);
 					this.indexCallReferences(method.body, uri, fileSymbols.methodReferences, fileSymbols.functionReferences);
@@ -447,7 +450,13 @@ export class SymbolIndex {
 	/**
 	 * Helper: Extract method info from AST node
 	 */
-	private extractMethodInfo(node: MethodDefinition, uri: string, documentText?: string, containerName?: string): MethodInfo {
+	private extractMethodInfo(
+		node: MethodDefinition,
+		uri: string,
+		documentText?: string,
+		documentLines?: string[],
+		containerName?: string
+	): MethodInfo {
 		const parameters = node.parameters.map(p => p.name);
 		const signature = `.${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
 
@@ -468,6 +477,7 @@ export class SymbolIndex {
 			kind: SymbolKind.Method,
 			uri,
 			range: node.range,
+			selectionRange: this.getCallableSelectionRange(node.range, node.name, '.', documentLines),
 			containerName,
 			deprecated: node.deprecated,
 			documentation,
@@ -509,7 +519,12 @@ export class SymbolIndex {
 		};
 	}
 
-	private extractFunctionInfo(node: FunctionDefinition, uri: string, documentText?: string): FunctionInfo {
+	private extractFunctionInfo(
+		node: FunctionDefinition,
+		uri: string,
+		documentText?: string,
+		documentLines?: string[]
+	): FunctionInfo {
 		const parameters = node.parameters.map(p => p.name);
 		const signature = `!!${node.name}(${parameters.map(p => '!' + p).join(', ')})`;
 
@@ -527,12 +542,28 @@ export class SymbolIndex {
 			kind: SymbolKind.Function,
 			uri,
 			range: node.range,
+			selectionRange: this.getCallableSelectionRange(node.range, node.name, '!!', documentLines),
 			deprecated: node.deprecated,
 			documentation,
 			parameters,
 			parameterCount: parameters.length,
 			signature
 		};
+	}
+
+	private getCallableSelectionRange(
+		range: Range,
+		name: string,
+		prefix: '.' | '!!',
+		documentLines?: string[]
+	): Range {
+		const line = documentLines?.[range.start.line];
+		const markerIndex = line?.toLowerCase().indexOf(`${prefix}${name}`.toLowerCase()) ?? -1;
+		if (markerIndex < 0) {
+			return Range.create(range.start, range.start);
+		}
+		const nameStart = markerIndex + prefix.length;
+		return Range.create(range.start.line, nameStart, range.start.line, nameStart + name.length);
 	}
 
 	private extractFrameInfo(node: FrameDefinition): FrameInfo {

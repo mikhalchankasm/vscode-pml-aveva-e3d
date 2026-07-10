@@ -9,6 +9,11 @@ import { PMLPrintTools } from './printCommands';
 import { registerPMLQuickActions } from './quickActions';
 import { registerAgentKitCommands } from './agentKit';
 
+interface CodeLensPositionArgument {
+    line: number;
+    character: number;
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('✅ PML extension activated');
     console.log('Extension path:', context.extensionPath);
@@ -72,6 +77,26 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register Agent Kit review and help commands
     registerAgentKitCommands(context);
+
+    context.subscriptions.push(vscode.commands.registerCommand(
+        'pml.showCodeLensReferences',
+        async (uriValue: string, positionValue: CodeLensPositionArgument) => {
+            const uri = vscode.Uri.parse(uriValue);
+            const position = new vscode.Position(positionValue.line, positionValue.character);
+            const locations = await vscode.commands.executeCommand<vscode.Location[]>(
+                'vscode.executeReferenceProvider',
+                uri,
+                position
+            ) ?? [];
+
+            if (locations.length === 0) {
+                void vscode.window.showInformationMessage('No references found');
+                return;
+            }
+
+            await vscode.commands.executeCommand('editor.action.showReferences', uri, position, locations);
+        }
+    ));
 
     // Register method commands
     PMLMethodCommands.registerCommands(context);

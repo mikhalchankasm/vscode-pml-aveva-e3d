@@ -174,6 +174,14 @@ export class ReferencesProvider {
 		return { total: locations.length, previews };
 	}
 
+	public async getMethodReferenceLocations(symbolName: string, fileUri: string): Promise<Location[]> {
+		return this.deduplicateLocations(await this.findReferencesInFileScope(fileUri, symbolName, false));
+	}
+
+	public getFunctionReferenceLocations(symbolName: string): Location[] {
+		return this.deduplicateLocations(this.findFunctionReferencesInWorkspace(symbolName));
+	}
+
 	/**
 	 * Find all references to a symbol across the entire workspace
 	 */

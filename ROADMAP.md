@@ -1227,9 +1227,9 @@ Development plans and progress tracking.
   - Different colors for different token types
   - Highlight variable scope
 
-- [ ] **Code Lens**
-  - Show usage count above methods
-  - Show references count
+- [x] **Code Lens** ✅ COMPLETED
+  - Shows clickable reference counts above methods and global functions
+  - Keeps method counts file-scoped and function counts workspace-scoped
 
 - [ ] **Inlay Hints**
   - Show variable types inline
@@ -1295,17 +1295,17 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.36
-**Released:** 2026-06-15
+**Version:** 0.12.37 release candidate
+**Release Candidate:** 2026-07-10
 
 **Statistics:**
 - Extension size: **0.3 MB** (bundled with esbuild)
 - Files in VSIX: 16 files
-- LSP features: 13+ providers (with workspace-wide references)
+- LSP features: 15+ providers (with workspace-wide references, CodeLens, and Call Hierarchy)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **233 tests passing, 3 skipped by default** (parser + provider + typo detector + arrayIndexChecker + print utilities + PDMS data + form fixtures + form references + performance guards + optional corpus snapshot)
+- Tests: **353 passing, 3 skipped by default** (22 client + 331 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1348,18 +1348,21 @@ Development plans and progress tracking.
 - ✅ **Dynamic Callback Navigation** - References and Rename cover dynamic substitute callback paths such as `!this.$!<gadget>.method` without crossing malformed multiline segments.
 - ✅ **Packaged CLI Smoke Coverage** - Extension-host smoke validation executes the bundled PML Assistant CLI and verifies its JSON parse contract.
 - ✅ **Agent Kit Setup Smoke Coverage** - Extension-host smoke validation verifies actionable setup guidance across review, health, and live-status commands when no valid Agent Kit repository is configured.
+- ✅ **Reference CodeLens** - Method and global-function declarations show clickable usage counts, with a setting to disable the annotations.
+- ✅ **Call Hierarchy** - Indexed method and global-function declarations/call sites expose incoming and outgoing calls while preserving file-scoped methods and workspace-scoped functions.
 
 **Next Stabilization Plan:**
 - ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
 - ✅ **Workspace Indexing Status** - Progress now reports discovered PML file counts and final indexing duration; next use measured performance baselines to tune hotspots.
 - **Completions:** receiver inference follows the latest prior direct local and typed form-member aliases without using inactive comments or string text, in addition to obvious declarations and constructors; next add further safe AST-backed cases and curated AVEVA/E3D command presets.
-- **Navigation:** `.pmlobj` and `.pmlcmd` Outline method coverage is guarded; user-defined method navigation is file-scoped, form symbols resolve inside `!!Form.member()` calls, object constructors resolve on the object path, global `!!function(...)` calls have their own index and safe Rename path, and References/Rename use indexed AST call sites first with text fallback for callback strings and delimiter-adjacent bare callbacks. Continue expanding fixtures for additional dynamic PML invocation forms as they are observed.
+- ✅ **Navigation Release Gate:** `.pmlobj` and `.pmlcmd` Outline coverage is guarded; user-defined methods remain file-scoped; global `!!function(...)` symbols remain workspace-scoped; CodeLens and incoming/outgoing Call Hierarchy use the shared index; References/Rename retain text fallback for callback strings and delimiter-adjacent bare callbacks.
 - ✅ **Actionable Form Diagnostics** - Missing callback and unknown member warnings now state the immediate corrective action; keep default `.pmlfrm` noise low with explicit false-positive/false-negative coverage.
 - **Preset packs:** Quick Actions now groups starter patterns for forms/callbacks, arrays, file IO, and PML.NET; next add observed EDG workflows without flooding completion lists.
 - ✅ **Disposable VSIX Install Smoke** - CI and release validation install the newly packaged extension into an isolated VS Code profile and verify its extension ID and version.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.12.37` release candidate: adds curated Quick Actions presets, actionable form diagnostics, safer completion inference, reference CodeLens, and indexed incoming/outgoing Call Hierarchy.
 - `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.
 - `v0.12.35`: moves method References/Rename toward AST/index-backed lookup, adds first-pass type-aware member completions, improves `.pmlfrm` `!this.` completions for members/frames/gadgets, adds a missing callback-stub Quick Fix, and strengthens extension/VSIX smoke validation in CI and release workflows.
 - `v0.12.34`: adds the unified Quick Actions launcher, stable PML Assistant static CLI contract, Agent Kit bridge commands, packaged CLI availability, lower-noise callback array diagnostics, compact user-method hovers, focused `Q ATT` hover help, selected DBREF/ATTRIBUTE method completions and hovers, and separate completion icon kinds for form-local methods.

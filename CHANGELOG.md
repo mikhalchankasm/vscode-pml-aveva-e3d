@@ -2,10 +2,12 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
-## Unreleased
+## [0.12.37] - 2026-07-10
 
 ### Improved
 
+- Add indexed incoming/outgoing Call Hierarchy for file-scoped PML methods and workspace-scoped global functions, available from declarations and direct call sites.
+- Show clickable reference-count CodeLens entries above PML methods and global functions, with file-scoped method counts and workspace-scoped function counts.
 - Add curated Quick Actions presets for form callbacks, arrays, file output, and PML.NET namespaces.
 - Make unknown form member diagnostics explain the immediate corrective action.
 - Make missing form callback diagnostics explain the immediate corrective action.

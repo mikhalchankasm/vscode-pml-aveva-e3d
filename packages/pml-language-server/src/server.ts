@@ -15,6 +15,8 @@ import {
 	InitializeResult,
 	WorkDoneProgressServerReporter,
 	DidChangeWatchedFilesParams,
+	CodeLensParams,
+	CodeLensRefreshRequest,
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -29,6 +31,8 @@ import { DocumentSymbolProvider } from './providers/documentSymbolProvider';
 import { DefinitionProvider } from './providers/definitionProvider';
 import { ReferencesProvider } from './providers/referencesProvider';
 import { WorkspaceSymbolProvider } from './providers/workspaceSymbolProvider';
+import { CodeLensProvider } from './providers/codeLensProvider';
+import { CallHierarchyProvider } from './providers/callHierarchyProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
@@ -56,6 +60,8 @@ const documentSymbolProvider = new DocumentSymbolProvider(symbolIndex);
 const definitionProvider = new DefinitionProvider(symbolIndex, documents);
 const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
+const codeLensProvider = new CodeLensProvider(symbolIndex, referencesProvider);
+const callHierarchyProvider = new CallHierarchyProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
@@ -64,6 +70,7 @@ const semanticTokensProvider = new SemanticTokensProvider(documents);
 
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
+let hasCodeLensRefreshCapability = false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hasDiagnosticRelatedInformationCapability = false;
 let pendingWorkspaceRefresh: { reason: string; progressMessage: string } | undefined;
@@ -78,6 +85,7 @@ connection.onInitialize((params: InitializeParams) => {
 	hasWorkspaceFolderCapability = !!(
 		capabilities.workspace && !!capabilities.workspace.workspaceFolders
 	);
+	hasCodeLensRefreshCapability = capabilities.workspace?.codeLens?.refreshSupport === true;
 	hasDiagnosticRelatedInformationCapability = !!(
 		capabilities.textDocument &&
 		capabilities.textDocument.publishDiagnostics &&
@@ -97,6 +105,10 @@ connection.onInitialize((params: InitializeParams) => {
 			referencesProvider: true,
 			documentSymbolProvider: true,
 			workspaceSymbolProvider: true,
+			codeLensProvider: {
+				resolveProvider: true
+			},
+			callHierarchyProvider: true,
 			// Phase 1.5: Signature Help
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
@@ -209,6 +221,7 @@ async function refreshWorkspaceIndex(reason: string, progressMessage: string): P
 		}
 
 		const pendingRefresh = pendingWorkspaceRefresh;
+		scheduleCodeLensRefresh();
 		pendingWorkspaceRefresh = undefined;
 		if (pendingRefresh) {
 			void refreshWorkspaceIndex(pendingRefresh.reason, pendingRefresh.progressMessage);
@@ -238,6 +251,9 @@ connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
 // PML Settings interface
 interface PMLSettings {
 	maxNumberOfProblems: number;
+	codeLens: {
+		enabled: boolean;
+	};
 	trace: {
 		server: string;
 	};
@@ -254,6 +270,9 @@ interface PMLSettings {
 // Default settings
 const defaultSettings: PMLSettings = {
 	maxNumberOfProblems: 1000,
+	codeLens: {
+		enabled: true
+	},
 	trace: {
 		server: 'off'
 	},
@@ -284,7 +303,26 @@ connection.onDidChangeConfiguration(change => {
 
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
+	scheduleCodeLensRefresh();
 });
+
+let codeLensRefreshTimer: ReturnType<typeof setTimeout> | undefined;
+
+function scheduleCodeLensRefresh(): void {
+	if (!hasCodeLensRefreshCapability) {
+		return;
+	}
+	if (codeLensRefreshTimer) {
+		clearTimeout(codeLensRefreshTimer);
+	}
+	codeLensRefreshTimer = setTimeout(() => {
+		codeLensRefreshTimer = undefined;
+		void connection.sendRequest(CodeLensRefreshRequest.type).catch(error => {
+			const message = error instanceof Error ? error.message : String(error);
+			connection.console.warn(`Unable to refresh CodeLens: ${message}`);
+		});
+	}, 100);
+}
 
 function getDocumentSettings(resource: string): Thenable<PMLSettings> {
 	if (!hasConfigurationCapability) {
@@ -356,14 +394,17 @@ documents.onDidSave(event => {
  */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	const text = textDocument.getText();
+	const wasFileVersionIndexed = symbolIndex.isFileVersionIndexed(textDocument.uri, textDocument.version);
 
 	const diagnostics: Diagnostic[] = [];
 	let maxNumberOfProblems = defaultSettings.maxNumberOfProblems;
+	let codeLensEnabled = defaultSettings.codeLens.enabled;
 
 	try {
 		const parseResult = parseAndIndexDocument(textDocument, text);
 		const settings = await getDocumentSettings(textDocument.uri);
 		maxNumberOfProblems = settings.maxNumberOfProblems ?? defaultSettings.maxNumberOfProblems;
+		codeLensEnabled = settings.codeLens?.enabled ?? defaultSettings.codeLens.enabled;
 
 		// Convert parse errors to diagnostics. Form files use a broader DSL, so
 		// diagnostics stay opt-in until the form parser is first-class.
@@ -447,6 +488,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 		uri: textDocument.uri,
 		diagnostics: limitDiagnostics(diagnostics, maxNumberOfProblems)
 	});
+	if (codeLensEnabled && !wasFileVersionIndexed) {
+		scheduleCodeLensRefresh();
+	}
 }
 
 function parseAndIndexDocument(textDocument: TextDocument, text = textDocument.getText()): ReturnType<Parser['parse']> {
@@ -510,6 +554,39 @@ connection.onReferences(params => {
 connection.onWorkspaceSymbol(params => {
 	return workspaceSymbolProvider.provide(params);
 });
+
+/**
+ * CodeLens Provider (reference counts above methods and functions)
+ */
+connection.onCodeLens(async (params: CodeLensParams) => {
+	const settings = await getDocumentSettings(params.textDocument.uri);
+	if (!(settings.codeLens?.enabled ?? defaultSettings.codeLens.enabled)) {
+		return [];
+	}
+	const document = documents.get(params.textDocument.uri);
+	if (document && !symbolIndex.isFileVersionIndexed(document.uri, document.version)) {
+		parseAndIndexDocument(document);
+	}
+	return codeLensProvider.provide(params.textDocument.uri);
+});
+
+connection.onCodeLensResolve(codeLens => codeLensProvider.resolve(codeLens));
+
+connection.languages.callHierarchy.onPrepare(params => {
+	const document = documents.get(params.textDocument.uri);
+	if (document && !symbolIndex.isFileVersionIndexed(document.uri, document.version)) {
+		parseAndIndexDocument(document);
+	}
+	return callHierarchyProvider.prepare(params.textDocument.uri, params.position);
+});
+
+connection.languages.callHierarchy.onIncomingCalls(params =>
+	callHierarchyProvider.incomingCalls(params.item)
+);
+
+connection.languages.callHierarchy.onOutgoingCalls(params =>
+	callHierarchyProvider.outgoingCalls(params.item)
+);
 
 /**
  * Signature Help Provider (Parameter hints while typing)
