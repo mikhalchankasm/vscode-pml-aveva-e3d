@@ -1334,6 +1334,7 @@ Development plans and progress tracking.
 - ✅ **Parser Recovery Safety** - Malformed statements recover at physical line boundaries so later method/object statements remain available to diagnostics, symbols, and navigation; multiline PML string literal ranges now preserve following expression tails.
 - ✅ **Diagnostics Lifecycle** - Closed documents clear their published diagnostics, and `pml.maxNumberOfProblems` now limits diagnostics sent to the editor.
 - ✅ **Diagnostic Noise Reduction** - Typo diagnostics now suppress ambiguous short-word keyword suggestions, including one- and two-character quoted parser tokens, while preserving clearer keyword typo hints.
+- ✅ **Variable Typo-Diagnostic Safety** - Typo diagnostics ignore sigiled local and global variable names, which may validly resemble PML keywords.
 - ✅ **Language Server Startup Safety** - Asynchronous client startup failures are logged and surfaced once instead of becoming unhandled rejections or duplicate notifications, and unsupported dynamic configuration registration does not abort initialization.
 - ✅ **Extension Context Hygiene** - Bundled examples are loaded from the active extension context rather than a hardcoded Marketplace extension ID.
 - ✅ **Provider Word Extraction** - Hover, Definition, References, and Rename now share a configurable word-range helper instead of maintaining four separate implementations.

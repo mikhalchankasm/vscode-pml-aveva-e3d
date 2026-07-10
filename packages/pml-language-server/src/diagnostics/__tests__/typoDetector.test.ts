@@ -226,6 +226,19 @@ describe('Typo Detector', () => {
 
 			expect(diagnostics).toHaveLength(0);
 		});
+
+		it('should not treat sigiled variable names as keyword typos', () => {
+			const source = '!retrun = 1\n$whiel = 2';
+			const document = createDocument(source);
+			const parseErrors = [
+				createParseError("Unexpected identifier 'retrun'", 1),
+				createParseError("Unexpected identifier 'whiel'", 2)
+			];
+
+			const diagnostics = detectTypos(document, parseErrors);
+
+			expect(diagnostics).toHaveLength(0);
+		});
 	});
 
 	describe('Windows line ending handling', () => {

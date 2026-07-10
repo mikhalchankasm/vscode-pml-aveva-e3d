@@ -96,10 +96,15 @@ function findClosestKeyword(word: string): { keyword: string; distance: number }
  */
 function extractPotentialTypos(errorMessage: string, line: string): string[] {
 	const potentialTypos: string[] = [];
+	const isVariableIdentifier = (startOffset: number): boolean => {
+		const prefix = line[startOffset - 1];
+		return prefix === '!' || prefix === '$';
+	};
 
 	// Try to find quoted word in error message (this is what parser found)
 	const quotedMatch = errorMessage.match(/'([a-zA-Z_][a-zA-Z0-9_]*)'/);
-	if (quotedMatch && quotedMatch[1].length >= 3) {
+	const quotedWordOffset = quotedMatch ? line.toLowerCase().indexOf(quotedMatch[1].toLowerCase()) : -1;
+	if (quotedMatch && quotedMatch[1].length >= 3 && !isVariableIdentifier(quotedWordOffset)) {
 		potentialTypos.push(quotedMatch[1]);
 	}
 
@@ -107,8 +112,9 @@ function extractPotentialTypos(errorMessage: string, line: string): string[] {
 	const identifierMatches = line.matchAll(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g);
 	for (const match of identifierMatches) {
 		const word = match[1];
-		// Skip common variable patterns (!x, $y) and very short words
-		if (word.length >= 3 && !potentialTypos.includes(word)) {
+		const wordOffset = match.index ?? 0;
+		// Variable names can be any identifier, so never treat !name or $name as a keyword typo.
+		if (word.length >= 3 && !isVariableIdentifier(wordOffset) && !potentialTypos.includes(word)) {
 			potentialTypos.push(word);
 		}
 	}
