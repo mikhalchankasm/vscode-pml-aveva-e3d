@@ -169,6 +169,9 @@ export class DocumentSymbolProvider {
 
 			const startPos = this.offsetToPosition(startOffset, lineOffsets);
 			const endPos = this.offsetToPosition(endOffset, lineOffsets);
+			const methodNameOffset = startOffset + match[0].lastIndexOf(`.${methodName}`);
+			const methodNameStart = this.offsetToPosition(methodNameOffset, lineOffsets);
+			const methodNameEnd = this.offsetToPosition(methodNameOffset + methodName.length + 1, lineOffsets);
 			const signature = params.length ? `.${methodName}(${params.map(p => '!' + p).join(', ')})` : `.${methodName}()`;
 
 			fallbackSymbols.push({
@@ -176,7 +179,7 @@ export class DocumentSymbolProvider {
 				detail: 'Method',
 				kind: LSPSymbolKind.Method,
 				range: { start: startPos, end: endPos },
-				selectionRange: { start: startPos, end: startPos },
+				selectionRange: { start: methodNameStart, end: methodNameEnd },
 				children: []
 			});
 
