@@ -426,6 +426,27 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 
+	it('prefers the latest direct alias over an earlier receiver assignment', () => {
+		const source = [
+			'!items = object ARRAY()',
+			'!working = |temporary value|',
+			'!working = !items',
+			'!working.'
+		].join('\n');
+		const document = TextDocument.create('file:///latest-alias-completion.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'size')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+		expect(completions.some(item => item.label === 'qreal')).toBe(false);
+	});
+
 	it('filters built-in member completions through a typed form member alias', () => {
 		const source = [
 			'setup form !!TestForm dialog',
