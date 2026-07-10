@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.38] - 2026-07-10
+
+### Added
+
+- Add low-noise Inlay Hints for variable types inferred from the first reliable assignment in each scope.
+- Add parameter-name Inlay Hints for unambiguous file-scoped method calls and workspace-scoped global-function calls.
+
+### Improved
+
+- Cache parsed ASTs by open-document version so Inlay Hint viewport requests do not repeatedly parse stable documents.
+- Refresh cross-file parameter hints only when indexed callable signatures change, while keeping watched-file and configuration refreshes current.
+
 ## [0.12.37] - 2026-07-10
 
 ### Improved

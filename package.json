@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.12.37",
+  "version": "0.12.38",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -463,6 +463,21 @@
           "type": "boolean",
           "default": true,
           "description": "Show reference counts above PML methods and global functions."
+        },
+        "pml.inlayHints.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show low-noise inline type and parameter hints for PML code."
+        },
+        "pml.inlayHints.variableTypes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show types inferred from the first reliable variable assignment in each scope."
+        },
+        "pml.inlayHints.parameterNames": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show parameter names for unambiguous indexed method and global-function calls."
         },
         "pml.agentKit.enabled": {
           "type": "boolean",

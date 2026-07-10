@@ -33,6 +33,7 @@ import { ReferencesProvider } from './providers/referencesProvider';
 import { WorkspaceSymbolProvider } from './providers/workspaceSymbolProvider';
 import { CodeLensProvider } from './providers/codeLensProvider';
 import { CallHierarchyProvider } from './providers/callHierarchyProvider';
+import { InlayHintProvider } from './providers/inlayHintProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
@@ -47,9 +48,9 @@ const connection = createConnection(ProposedFeatures.all);
 
 // Create a document manager
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
+const documentParseResults = new Map<string, { version: number; result: ReturnType<Parser['parse']> }>();
 
-// Document AST cache - REMOVED: was never used, caused memory leak
-// Providers use symbolIndex instead
+// Cache parse results only for open document versions; entries are removed on close.
 
 // Symbol index for workspace
 const symbolIndex = new SymbolIndex();
@@ -62,6 +63,7 @@ const referencesProvider = new ReferencesProvider(symbolIndex, documents);
 const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const codeLensProvider = new CodeLensProvider(symbolIndex, referencesProvider);
 const callHierarchyProvider = new CallHierarchyProvider(symbolIndex);
+const inlayHintProvider = new InlayHintProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
@@ -71,6 +73,7 @@ const semanticTokensProvider = new SemanticTokensProvider(documents);
 let hasConfigurationCapability = false;
 let hasWorkspaceFolderCapability = false;
 let hasCodeLensRefreshCapability = false;
+let hasInlayHintRefreshCapability = false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hasDiagnosticRelatedInformationCapability = false;
 let pendingWorkspaceRefresh: { reason: string; progressMessage: string } | undefined;
@@ -86,6 +89,7 @@ connection.onInitialize((params: InitializeParams) => {
 		capabilities.workspace && !!capabilities.workspace.workspaceFolders
 	);
 	hasCodeLensRefreshCapability = capabilities.workspace?.codeLens?.refreshSupport === true;
+	hasInlayHintRefreshCapability = capabilities.workspace?.inlayHint?.refreshSupport === true;
 	hasDiagnosticRelatedInformationCapability = !!(
 		capabilities.textDocument &&
 		capabilities.textDocument.publishDiagnostics &&
@@ -109,6 +113,9 @@ connection.onInitialize((params: InitializeParams) => {
 				resolveProvider: true
 			},
 			callHierarchyProvider: true,
+			inlayHintProvider: {
+				resolveProvider: false
+			},
 			// Phase 1.5: Signature Help
 			signatureHelpProvider: {
 				triggerCharacters: ['(', ',']
@@ -222,6 +229,7 @@ async function refreshWorkspaceIndex(reason: string, progressMessage: string): P
 
 		const pendingRefresh = pendingWorkspaceRefresh;
 		scheduleCodeLensRefresh();
+		scheduleInlayHintRefresh();
 		pendingWorkspaceRefresh = undefined;
 		if (pendingRefresh) {
 			void refreshWorkspaceIndex(pendingRefresh.reason, pendingRefresh.progressMessage);
@@ -241,7 +249,10 @@ const watchedFileIndexer = new WatchedFileIndexer({
 });
 const watchedFileChangeDebouncer = new FileChangeDebouncer(
 	FILE_WATCHER_DEBOUNCE_MS,
-	changes => watchedFileIndexer.process(changes)
+	changes => {
+		watchedFileIndexer.process(changes);
+		scheduleInlayHintRefresh();
+	}
 );
 
 connection.onDidChangeWatchedFiles((params: DidChangeWatchedFilesParams) => {
@@ -253,6 +264,11 @@ interface PMLSettings {
 	maxNumberOfProblems: number;
 	codeLens: {
 		enabled: boolean;
+	};
+	inlayHints: {
+		enabled: boolean;
+		variableTypes: boolean;
+		parameterNames: boolean;
 	};
 	trace: {
 		server: string;
@@ -272,6 +288,11 @@ const defaultSettings: PMLSettings = {
 	maxNumberOfProblems: 1000,
 	codeLens: {
 		enabled: true
+	},
+	inlayHints: {
+		enabled: true,
+		variableTypes: true,
+		parameterNames: true
 	},
 	trace: {
 		server: 'off'
@@ -304,6 +325,7 @@ connection.onDidChangeConfiguration(change => {
 	// Revalidate all open text documents
 	documents.all().forEach(validateTextDocument);
 	scheduleCodeLensRefresh();
+	scheduleInlayHintRefresh();
 });
 
 let codeLensRefreshTimer: ReturnType<typeof setTimeout> | undefined;
@@ -324,6 +346,24 @@ function scheduleCodeLensRefresh(): void {
 	}, 100);
 }
 
+let inlayHintRefreshTimer: ReturnType<typeof setTimeout> | undefined;
+
+function scheduleInlayHintRefresh(): void {
+	if (!hasInlayHintRefreshCapability) {
+		return;
+	}
+	if (inlayHintRefreshTimer) {
+		clearTimeout(inlayHintRefreshTimer);
+	}
+	inlayHintRefreshTimer = setTimeout(() => {
+		inlayHintRefreshTimer = undefined;
+		void connection.languages.inlayHint.refresh().catch(error => {
+			const message = error instanceof Error ? error.message : String(error);
+			connection.console.warn(`Unable to refresh Inlay Hints: ${message}`);
+		});
+	}, 150);
+}
+
 function getDocumentSettings(resource: string): Thenable<PMLSettings> {
 	if (!hasConfigurationCapability) {
 		return Promise.resolve(globalSettings);
@@ -342,6 +382,7 @@ function getDocumentSettings(resource: string): Thenable<PMLSettings> {
 // Only keep settings for open documents
 documents.onDidClose(e => {
 	documentSettings.delete(e.document.uri);
+	documentParseResults.delete(e.document.uri);
 	connection.sendDiagnostics({ uri: e.document.uri, diagnostics: [] });
 	// Cancel pending validation for closed document
 	const timer = validationTimers.get(e.document.uri);
@@ -393,7 +434,6 @@ documents.onDidSave(event => {
  * Validate document (AST-based diagnostics)
  */
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
-	const text = textDocument.getText();
 	const wasFileVersionIndexed = symbolIndex.isFileVersionIndexed(textDocument.uri, textDocument.version);
 
 	const diagnostics: Diagnostic[] = [];
@@ -401,7 +441,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	let codeLensEnabled = defaultSettings.codeLens.enabled;
 
 	try {
-		const parseResult = parseAndIndexDocument(textDocument, text);
+		const parseResult = parseAndIndexDocument(textDocument);
 		const settings = await getDocumentSettings(textDocument.uri);
 		maxNumberOfProblems = settings.maxNumberOfProblems ?? defaultSettings.maxNumberOfProblems;
 		codeLensEnabled = settings.codeLens?.enabled ?? defaultSettings.codeLens.enabled;
@@ -493,14 +533,36 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	}
 }
 
-function parseAndIndexDocument(textDocument: TextDocument, text = textDocument.getText()): ReturnType<Parser['parse']> {
+function parseAndIndexDocument(textDocument: TextDocument): ReturnType<Parser['parse']> {
+	const text = textDocument.getText();
+	const cached = documentParseResults.get(textDocument.uri);
+	if (cached?.version === textDocument.version) {
+		if (!symbolIndex.isFileVersionIndexed(textDocument.uri, textDocument.version)) {
+			symbolIndex.indexFile(textDocument.uri, cached.result.ast, textDocument.version, text);
+		}
+		return cached.result;
+	}
+	const previousSignatures = getCallableSignatureFingerprint(textDocument.uri);
 	const parser = new Parser();
 	const parseResult = parser.parse(text, { mode: parserModeFromUri(textDocument.uri) });
 
 	// Keep Outline and navigation responsive before slower diagnostics settings resolve.
 	symbolIndex.indexFile(textDocument.uri, parseResult.ast, textDocument.version, text);
+	documentParseResults.set(textDocument.uri, { version: textDocument.version, result: parseResult });
+	if (previousSignatures !== getCallableSignatureFingerprint(textDocument.uri)) {
+		scheduleInlayHintRefresh();
+	}
 
 	return parseResult;
+}
+
+function getCallableSignatureFingerprint(uri: string): string {
+	const fileSymbols = symbolIndex.getFileSymbols(uri);
+	if (!fileSymbols) return '';
+	return [
+		...fileSymbols.methods.map(method => `m:${method.name.toLowerCase()}:${method.parameters.join(',').toLowerCase()}`),
+		...fileSymbols.functions.map(func => `f:${func.name.toLowerCase()}:${func.parameters.join(',').toLowerCase()}`)
+	].sort().join('|');
 }
 
 /**
@@ -587,6 +649,21 @@ connection.languages.callHierarchy.onIncomingCalls(params =>
 connection.languages.callHierarchy.onOutgoingCalls(params =>
 	callHierarchyProvider.outgoingCalls(params.item)
 );
+
+connection.languages.inlayHint.on(async params => {
+	const document = documents.get(params.textDocument.uri);
+	if (!document) return [];
+	const settings = await getDocumentSettings(document.uri);
+	const inlayHints = settings.inlayHints ?? defaultSettings.inlayHints;
+	if (!(inlayHints.enabled ?? defaultSettings.inlayHints.enabled)) {
+		return [];
+	}
+	const ast = parseAndIndexDocument(document).ast;
+	return inlayHintProvider.provide(document, params.range, {
+		variableTypes: inlayHints.variableTypes ?? defaultSettings.inlayHints.variableTypes,
+		parameterNames: inlayHints.parameterNames ?? defaultSettings.inlayHints.parameterNames
+	}, ast);
+});
 
 /**
  * Signature Help Provider (Parameter hints while typing)

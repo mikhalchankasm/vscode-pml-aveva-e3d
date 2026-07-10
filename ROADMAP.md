@@ -1154,7 +1154,7 @@ Development plans and progress tracking.
 
 - [x] **Dead Settings Cleanup** ✅ COMPLETED
   - Removed non-functional typeInference settings
-  - Removed non-functional inlayHints settings
+  - Removed the then-non-functional inlayHints settings before the provider was implemented in v0.12.38
 
 ---
 
@@ -1231,9 +1231,9 @@ Development plans and progress tracking.
   - Shows clickable reference counts above methods and global functions
   - Keeps method counts file-scoped and function counts workspace-scoped
 
-- [ ] **Inlay Hints**
-  - Show variable types inline
-  - Show parameter names in calls
+- [x] **Inlay Hints** ✅ COMPLETED
+  - Shows reliable variable types inline on the first typed assignment in each scope
+  - Shows parameter names for unambiguous indexed method and global-function calls
 
 - [ ] **Workspace Symbols**
   - Search across all project files
@@ -1295,17 +1295,17 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.37
-**Released:** 2026-07-10
+**Version:** 0.12.38 release candidate
+**Release Candidate:** 2026-07-10
 
 **Statistics:**
-- Extension size: **0.3 MB** (bundled with esbuild)
+- Extension size: **0.4 MB** (bundled with esbuild)
 - Files in VSIX: 16 files
-- LSP features: 15+ providers (with workspace-wide references, CodeLens, and Call Hierarchy)
+- LSP features: 16+ providers (with workspace-wide references, CodeLens, Call Hierarchy, and Inlay Hints)
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **353 passing, 3 skipped by default** (22 client + 331 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
+- Tests: **364 passing, 3 skipped by default** (22 client + 342 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1350,6 +1350,7 @@ Development plans and progress tracking.
 - ✅ **Agent Kit Setup Smoke Coverage** - Extension-host smoke validation verifies actionable setup guidance across review, health, and live-status commands when no valid Agent Kit repository is configured.
 - ✅ **Reference CodeLens** - Method and global-function declarations show clickable usage counts, with a setting to disable the annotations.
 - ✅ **Call Hierarchy** - Indexed method and global-function declarations/call sites expose incoming and outgoing calls while preserving file-scoped methods and workspace-scoped functions.
+- ✅ **Low-Noise Inlay Hints** - Reliable first-assignment types and unambiguous callable parameter names are available with independent settings and cached AST reuse.
 
 **Next Stabilization Plan:**
 - ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
@@ -1362,6 +1363,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.12.38` release candidate: adds low-noise variable type and callable parameter Inlay Hints with cached AST reuse and signature-sensitive refreshes.
 - `v0.12.37`: adds curated Quick Actions presets, actionable form diagnostics, safer completion inference, reference CodeLens, and indexed incoming/outgoing Call Hierarchy.
 - `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.
 - `v0.12.35`: moves method References/Rename toward AST/index-backed lookup, adds first-pass type-aware member completions, improves `.pmlfrm` `!this.` completions for members/frames/gadgets, adds a missing callback-stub Quick Fix, and strengthens extension/VSIX smoke validation in CI and release workflows.
