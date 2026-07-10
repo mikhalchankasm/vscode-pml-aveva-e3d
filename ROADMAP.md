@@ -1295,8 +1295,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.38 release candidate
-**Release Candidate:** 2026-07-10
+**Version:** 0.12.38
+**Released:** 2026-07-10
 
 **Statistics:**
 - Extension size: **0.4 MB** (bundled with esbuild)
@@ -1363,7 +1363,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
-- `v0.12.38` release candidate: adds low-noise variable type and callable parameter Inlay Hints with cached AST reuse and signature-sensitive refreshes.
+- `v0.12.38`: adds low-noise variable type and callable parameter Inlay Hints with cached AST reuse and signature-sensitive refreshes.
 - `v0.12.37`: adds curated Quick Actions presets, actionable form diagnostics, safer completion inference, reference CodeLens, and indexed incoming/outgoing Call Hierarchy.
 - `v0.12.36`: scopes user-defined methods to the current file, adds separate `!!function(...)` indexing/navigation, debounces watcher indexing, avoids unchanged-document re-indexing, improves dynamic callback references, and clarifies the selected-array reindex command.
 - `v0.12.35`: moves method References/Rename toward AST/index-backed lookup, adds first-pass type-aware member completions, improves `.pmlfrm` `!this.` completions for members/frames/gadgets, adds a missing callback-stub Quick Fix, and strengthens extension/VSIX smoke validation in CI and release workflows.

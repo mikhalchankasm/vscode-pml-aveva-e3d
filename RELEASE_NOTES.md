@@ -23,7 +23,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Root and language-server TypeScript/lint validation: passed without warnings.
 - Bundled compile, Quick Actions validation, and extension smoke validation: passed.
 - Extension-host smoke validation: passed with the PML Language Server activated.
-- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.38.vsix` contains 16 files (410.53 KB).
+- VSIX packaging and validation: passed; the published CI artifact `pml-aveva-e3d-0.12.38.vsix` contains 16 files (419,954 bytes).
 - Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.38`.
 - Local installation: passed in both VS Code and Cursor.
 
@@ -31,7 +31,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 - VSIX: `pml-aveva-e3d-0.12.38.vsix`
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
-- SHA256: `a4b49bc2da4c0fef2ae0226c1e3ce8b6f26c86b37eb1cc79d392c0fe24902891`
+- SHA256: `df39e4ab9be108dfdf43c34be3f055a9870a8d99fd3ca2de41281d75523804a7`
 
 ## Previous Release - v0.12.37
 
