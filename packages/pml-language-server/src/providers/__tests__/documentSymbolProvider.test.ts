@@ -176,4 +176,19 @@ endfunction
 		expect(symbol.name).toBe('.live()');
 		expect(symbol.range.end.line).toBeGreaterThan(2);
 	});
+
+	it('selects the fallback method name instead of its declaration prefix', () => {
+		const source = ['define method .live()', 'endmethod'].join('\n');
+		const uri = 'file:///fallback-selection-range.pmlfrm';
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, { body: [] } as any, 1, source);
+
+		const provider = new DocumentSymbolProvider(symbolIndex);
+		const [symbol] = provider.provide({ textDocument: { uri } });
+
+		expect(symbol.selectionRange).toEqual({
+			start: { line: 0, character: 'define method '.length },
+			end: { line: 0, character: 'define method .live'.length }
+		});
+	});
 });
