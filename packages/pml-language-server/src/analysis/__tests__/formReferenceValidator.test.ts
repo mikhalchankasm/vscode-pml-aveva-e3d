@@ -39,8 +39,8 @@ endmethod
 			'unknown-form-member'
 		]);
 		expect(sortedDiagnostics.map(diagnostic => diagnostic.message)).toEqual([
-			"Form callback 'this.quitcall' references missing method '.missingQuit()'",
-			"Gadget '.missingButton' callback references missing method '.missingButtonCallback()'",
+			"Form callback 'this.quitcall' references missing method '.missingQuit()'. Define it or update the callback target.",
+			"Gadget '.missingButton' callback references missing method '.missingButtonCallback()'. Define it or update the callback target.",
 			"Unknown form member or gadget '!this.missingSkip'",
 			"Unknown form member or gadget '!this.unknownGadget'"
 		]);
