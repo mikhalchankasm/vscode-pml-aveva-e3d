@@ -280,6 +280,9 @@ export class FormReferenceValidator {
 		if (expression.type !== 'MemberExpression' || expression.computed || expression.property.type !== 'Identifier') {
 			return undefined;
 		}
+		if (expression.property.name.startsWith('$')) {
+			return undefined;
+		}
 
 		if (expression.object.type === 'Identifier' && expression.object.scope === 'local' && expression.object.name.toLowerCase() === 'this') {
 			return expression.property.name;

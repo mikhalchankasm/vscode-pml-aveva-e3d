@@ -70,4 +70,23 @@ endmethod
 
 		expect(diagnostics).toHaveLength(0);
 	});
+
+	it('should not report dynamic members or external form callbacks as missing local references', () => {
+		const source = `
+setup form !!ReferenceForm
+	button .openOther |Open| call |!!OtherForm.show()|
+exit
+
+define method .apply()
+	!this.$!<activeGadget>.active = true
+endmethod
+		`.trim();
+
+		const parseResult = new Parser().parse(source);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const diagnostics = new FormReferenceValidator().check(parseResult.ast);
+
+		expect(diagnostics).toHaveLength(0);
+	});
 });

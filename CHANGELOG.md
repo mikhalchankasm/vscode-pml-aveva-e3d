@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Keep opt-in form-reference diagnostics from flagging dynamic `!this` member paths as unknown members.
 - Keep inactive comments and strings from changing inferred member-completion receiver types.
 - Let member completion follow the most recent direct receiver alias instead of a stale earlier assignment.
 - Smoke-test setup guidance for every Agent Kit command that requires a configured repository.
