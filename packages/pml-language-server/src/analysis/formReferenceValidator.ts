@@ -277,14 +277,13 @@ export class FormReferenceValidator {
 	}
 
 	private firstThisMember(expression: Expression): string | undefined {
-		if (expression.type !== 'MemberExpression' || expression.computed || expression.property.type !== 'Identifier') {
-			return undefined;
-		}
-		if (expression.property.name.startsWith('$')) {
+		if (expression.type !== 'MemberExpression') {
 			return undefined;
 		}
 
-		if (expression.object.type === 'Identifier' && expression.object.scope === 'local' && expression.object.name.toLowerCase() === 'this') {
+		if (!expression.computed && expression.property.type === 'Identifier' &&
+			expression.object.type === 'Identifier' && expression.object.scope === 'local' &&
+			expression.object.name.toLowerCase() === 'this' && !expression.property.name.startsWith('$')) {
 			return expression.property.name;
 		}
 
