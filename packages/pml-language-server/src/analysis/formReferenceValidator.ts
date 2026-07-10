@@ -241,7 +241,7 @@ export class FormReferenceValidator {
 			diagnostics.push({
 				severity,
 				range: expression.range,
-				message: `Unknown form member or gadget '!this.${firstThisMember}'`,
+				message: `Unknown form member or gadget '!this.${firstThisMember}'. Declare it or correct the reference.`,
 				source: 'pml-form-references',
 				code: 'unknown-form-member'
 			});
