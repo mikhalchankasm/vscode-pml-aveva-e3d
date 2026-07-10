@@ -6,6 +6,7 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ### Improved
 
+- Keep inactive comments and strings from changing inferred member-completion receiver types.
 - Let member completion follow the most recent direct receiver alias instead of a stale earlier assignment.
 - Smoke-test setup guidance for every Agent Kit command that requires a configured repository.
 - Avoid typo-diagnostic suggestions for sigiled local and global variable names.

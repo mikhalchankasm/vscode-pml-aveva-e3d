@@ -526,6 +526,40 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 	});
 
+	it('does not infer receiver types from inactive string content before the cursor', () => {
+		const source = [
+			'!note = | !working is ARRAY |',
+			'!working.'
+		].join('\n');
+		const document = TextDocument.create('file:///inactive-receiver-inference.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+	});
+
+	it('does not infer receiver types from inline comments before the cursor', () => {
+		const source = [
+			'!note = 1 -- !working is ARRAY',
+			'!working.'
+		].join('\n');
+		const document = TextDocument.create('file:///comment-receiver-inference.pml', 'pml', 1, source);
+		const provider = new CompletionProvider(new SymbolIndex());
+
+		const completions = provider.provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+	});
+
 	it('formats workspace method parameters with PML markers', () => {
 		const uri = 'file:///workspace-completion.pml';
 		const source = [
