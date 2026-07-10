@@ -2,7 +2,37 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.38
+## Current Release - v0.12.39
+
+**Release Date:** 2026-07-10
+
+**GitHub Release:** [v0.12.39](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.39)
+
+### What Changed
+
+- Variable type Inlay Hints now follow typed parameters and prior reliable assignments, including direct alias chains.
+- Explicit return types from unambiguous file-local methods and workspace global functions now flow into variable type hints.
+- Receiver-aware completion now narrows built-in methods after assignments from explicitly typed user calls.
+- Unknown, ambiguous, or conditional type flow stays conservative and does not reuse stale types.
+- Equality comparisons no longer resemble assignments during receiver inference.
+
+### Validation
+
+- Client tests: passed with `npm run test:client` (`22 passed`).
+- Language-server tests: passed with `npm run test:server` (`351 passed`, `3 skipped`).
+- Root and language-server TypeScript validation: passed.
+- External read-only Claude review: passed with no blocking findings; its comparison-regex concern was reproduced, fixed, and regression-tested.
+- Bundled compile, Quick Actions validation, extension smoke, and activated extension-host smoke: passed.
+- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.39.vsix` contains 16 files (421,119 bytes).
+- Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.39`.
+- Local installation: passed in both VS Code and Cursor, each reporting version `0.12.39`.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.12.39.vsix`
+- SHA256: `d0cf38db54ac2c14f9251fe09f7cb8b9e618cbb3ef3fe30bf1bf6449ab98e987`
+
+## Previous Release - v0.12.38
 
 **Release Date:** 2026-07-10
 
@@ -33,7 +63,7 @@ This file is the short release snapshot for the current public build. Full histo
 <!-- GitHub Actions replaces this placeholder with the CI-built VSIX checksum when publishing the release. -->
 - SHA256: `df39e4ab9be108dfdf43c34be3f055a9870a8d99fd3ca2de41281d75523804a7`
 
-## Previous Release - v0.12.37
+## Earlier Release - v0.12.37
 
 **Release Date:** 2026-07-10
 

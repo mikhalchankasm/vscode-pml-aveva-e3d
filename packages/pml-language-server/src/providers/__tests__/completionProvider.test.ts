@@ -426,6 +426,108 @@ describe('CompletionProvider', () => {
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 	});
 
+	it('filters member completions from an explicit global function return type', () => {
+		const uri = 'file:///function-result-completion.pml';
+		const source = [
+			'define function !!newItems() is ARRAY',
+			'endfunction',
+			'!items = !!newItems()',
+			'!items.'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('filters member completions from an explicit local method return type', () => {
+		const uri = 'file:///method-result-completion.pml';
+		const source = [
+			'define method .label() is STRING',
+			'endmethod',
+			'!value = !this.label()',
+			'!value.'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+		expect(completions.some(item => item.label === 'append')).toBe(false);
+	});
+
+	it('does not retain a stale receiver type after an ambiguous user call', () => {
+		const uri = 'file:///ambiguous-result-completion.pml';
+		const source = [
+			'define function !!load() is STRING',
+			'endfunction',
+			'define function !!load() is ARRAY',
+			'endfunction',
+			'!value = object ARRAY()',
+			'!value = !!load()',
+			'!value.'
+		].join('\n');
+		const result = new Parser().parse(source);
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const completions = new CompletionProvider(symbolIndex).provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+	});
+
+	it('does not treat equality comparisons as assignments', () => {
+		const source = [
+			'!items = object ARRAY()',
+			'if !items == 2 then',
+			'endif',
+			'!items.'
+		].join('\n');
+		const document = TextDocument.create('file:///comparison-completion.pml', 'pml', 1, source);
+		const completions = new CompletionProvider(new SymbolIndex()).provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(false);
+	});
+
+	it('clears a receiver type after an unrecognized reassignment', () => {
+		const source = [
+			'!value = object ARRAY()',
+			'!value = !value + 1',
+			'!value.'
+		].join('\n');
+		const document = TextDocument.create('file:///unknown-reassignment-completion.pml', 'pml', 1, source);
+		const completions = new CompletionProvider(new SymbolIndex()).provide({
+			textDocument: { uri: document.uri },
+			position: document.positionAt(source.length)
+		}, document);
+
+		expect(completions.some(item => item.label === 'append')).toBe(true);
+		expect(completions.some(item => item.label === 'upcase')).toBe(true);
+	});
+
 	it('prefers the latest direct alias over an earlier receiver assignment', () => {
 		const source = [
 			'!items = object ARRAY()',

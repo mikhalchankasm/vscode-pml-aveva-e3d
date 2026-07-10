@@ -2,6 +2,17 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.39] - 2026-07-10
+
+### Improved
+
+- Propagate explicit parameter types and prior reliable variable types into subsequent variable Inlay Hints.
+- Preserve explicit method and global-function return types in the workspace symbol index and use unambiguous return types for variable Inlay Hints.
+- Narrow receiver-aware member completions after assignments from unambiguous user methods and global functions with explicit return types.
+- Invalidate completion receiver types after unknown or ambiguous reassignments instead of reusing stale earlier types.
+- Keep conditional, loop, and handler assignments from leaking uncertain types into following Inlay Hints.
+- Keep equality comparisons distinct from assignments during completion receiver inference.
+
 ## [0.12.38] - 2026-07-10
 
 ### Added

@@ -15,6 +15,7 @@ import {
 	GadgetDeclaration,
 	Identifier,
 	MemberDeclaration,
+	PMLType,
 	typeToString
 } from '../ast/nodes';
 import { extractPrecedingComments, formatDocumentation } from '../utils/commentExtractor';
@@ -50,6 +51,7 @@ export interface MethodInfo extends SymbolInfo {
 	parameters: string[]; // Parameter names
 	parameterCount: number;
 	signature: string; // .methodName(!param1, !param2)
+	returnType?: PMLType;
 }
 
 export interface MethodReferenceInfo {
@@ -64,6 +66,7 @@ export interface FunctionInfo extends SymbolInfo {
 	parameters: string[];
 	parameterCount: number;
 	signature: string;
+	returnType?: PMLType;
 }
 
 export interface FunctionReferenceInfo {
@@ -483,7 +486,8 @@ export class SymbolIndex {
 			documentation,
 			parameters,
 			parameterCount: parameters.length,
-			signature
+			signature,
+			returnType: node.returnType
 		};
 	}
 
@@ -547,7 +551,8 @@ export class SymbolIndex {
 			documentation,
 			parameters,
 			parameterCount: parameters.length,
-			signature
+			signature,
+			returnType: node.returnType
 		};
 	}
 

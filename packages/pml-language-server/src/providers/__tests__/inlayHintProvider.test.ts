@@ -36,8 +36,62 @@ describe('InlayHintProvider', () => {
 			'endmethod'
 		].join('\n'));
 
-		expect(hints.map(hint => hint.label)).toEqual([': REAL', ': STRING', ': ARRAY', ': BOOLEAN']);
-		expect(hints.map(hint => hint.position.line)).toEqual([1, 3, 4, 7]);
+		expect(hints.map(hint => hint.label)).toEqual([': REAL', ': STRING', ': ARRAY', ': STRING', ': STRING']);
+		expect(hints.map(hint => hint.position.line)).toEqual([1, 3, 4, 5, 6]);
+	});
+
+	it('propagates explicit parameter and user-call return types', () => {
+		const hints = provide([
+			'define function !!loadName() is STRING',
+			'endfunction',
+			'define method .newItems() is ARRAY',
+			'endmethod',
+			'define method .example(!source is DBREF)',
+			'  !copy = !source',
+			'  !name = !!loadName()',
+			'  !items = !this.newItems()',
+			'endmethod'
+		].join('\n'));
+
+		expect(hints.map(hint => hint.label)).toEqual([': DBREF', ': STRING', ': ARRAY']);
+		expect(hints.map(hint => hint.position.line)).toEqual([5, 6, 7]);
+	});
+
+	it('propagates a prior top-level global type into a callable', () => {
+		const hints = provide([
+			'!!shared = |value|',
+			'define method .example()',
+			'  !copy = !!shared',
+			'endmethod'
+		].join('\n'));
+
+		expect(hints.map(hint => hint.label)).toEqual([': STRING', ': STRING']);
+		expect(hints.map(hint => hint.position.line)).toEqual([0, 2]);
+	});
+
+	it('does not leak conditional assignments or guess ambiguous return types', () => {
+		const symbolIndex = new SymbolIndex();
+		indexSource(symbolIndex, 'file:///first.pmlfnc', 'define function !!lookup() is STRING\nendfunction');
+		indexSource(symbolIndex, 'file:///second.pmlfnc', 'define function !!lookup() is ARRAY\nendfunction');
+		const source = [
+			'define method .example()',
+			'  if true then',
+			'    !conditional = |value|',
+			'  endif',
+			'  !after = !conditional',
+			'  !ambiguous = !!lookup()',
+			'endmethod'
+		].join('\n');
+		const uri = 'file:///ambiguous.pml';
+		indexSource(symbolIndex, uri, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const hints = new InlayHintProvider(symbolIndex).provide(document, fullRange, {
+			variableTypes: true,
+			parameterNames: true
+		});
+
+		expect(hints.map(hint => hint.label)).toEqual([': STRING']);
+		expect(hints[0].position.line).toBe(2);
 	});
 
 	it('shows parameter names for unambiguous method and global function calls', () => {

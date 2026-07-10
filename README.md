@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.38-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.39-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -16,7 +16,7 @@
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables
 - 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols, clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy
-- 🏷️ **Inlay Hints** — Low-noise inferred variable types and parameter names for unambiguous indexed calls
+- 🏷️ **Inlay Hints** — Low-noise variable types propagated from reliable assignments, typed parameters, and explicit unambiguous call returns, plus parameter names for indexed calls
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP Server** — Full Language Server Protocol support
@@ -156,7 +156,7 @@ MIT License - see [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e
 - 🎨 **Подсветка синтаксиса** — Полная поддержка PML1/PML2
 - 📝 **IntelliSense** — Умные подсказки для ключевых слов, методов, переменных
 - 🔍 **Навигация** — Переход к определению, поиск ссылок, символы документа/workspace, кликабельный CodeLens и иерархия входящих/исходящих вызовов
-- 🏷️ **Inlay Hints** — Ненавязчивые подсказки выведенных типов переменных и имён параметров для однозначных индексированных вызовов
+- 🏷️ **Inlay Hints** — Ненавязчивые подсказки типов из надёжных присваиваний, типизированных параметров и явных результатов однозначных вызовов, а также имён параметров
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP сервер** — Полная поддержка Language Server Protocol
 - 📋 **Подсказки параметров** — Помощь при вызове методов

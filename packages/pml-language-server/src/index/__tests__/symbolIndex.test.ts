@@ -38,4 +38,24 @@ describe('SymbolIndex', () => {
 		expect(symbolIndex.getDocumentText(uri)).toBeUndefined();
 		expect(symbolIndex.isFileVersionIndexed(uri, 1)).toBe(false);
 	});
+
+	it('preserves explicit callable return types', () => {
+		const source = [
+			'define method .items() is ARRAY',
+			'endmethod',
+			'define function !!name() is STRING',
+			'endfunction'
+		].join('\n');
+		const parseResult = new Parser().parse(source);
+		expect(parseResult.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		const uri = 'file:///returns.pml';
+		symbolIndex.indexFile(uri, parseResult.ast, 1, source);
+
+		expect(symbolIndex.findMethodsInFile(uri, 'items')[0].returnType).toEqual({
+			kind: 'ARRAY',
+			elementType: { kind: 'ANY' }
+		});
+		expect(symbolIndex.findFunction('name')[0].returnType).toEqual({ kind: 'STRING' });
+	});
 });

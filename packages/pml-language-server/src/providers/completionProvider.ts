@@ -9,6 +9,7 @@ import {
 	InsertTextFormat
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { PMLType } from '../ast/nodes';
 import { SymbolIndex } from '../index/symbolIndex';
 import { Lexer } from '../parser/lexer';
 import { TokenType } from '../parser/tokens';
@@ -45,6 +46,8 @@ type ReceiverTypePatterns = {
 	assignment: RegExp;
 	stringLiteral: RegExp;
 	numberLiteral: RegExp;
+	userCall: RegExp;
+	anyAssignment: RegExp;
 };
 
 export class CompletionProvider {
@@ -771,7 +774,7 @@ export class CompletionProvider {
 
 		const receiverPatterns = this.createReceiverTypePatterns(receiverName);
 
-		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=\\s*`;
+		const assignmentPrefix = `(^|[\\s(,])${this.escapeRegex(receiverName)}\\s*=(?!=)\\s*`;
 		const aliasAssignment = new RegExp(`${assignmentPrefix}(!{1,2}[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)?)\\s*$`, 'i');
 		for (let lineIndex = lines.length - 1; lineIndex >= 0; lineIndex--) {
 			const line = lines[lineIndex];
@@ -782,6 +785,13 @@ export class CompletionProvider {
 			const declaredType = this.matchReceiverType(line, receiverPatterns);
 			if (declaredType) {
 				return declaredType;
+			}
+
+			const callMatch = line.match(receiverPatterns.userCall);
+			if (callMatch) {
+				return callMatch[2]
+					? this.resolveFunctionReturnType(callMatch[2])
+					: this.resolveMethodReturnType(document.uri, callMatch[3]);
 			}
 
 			const match = line.match(aliasAssignment);
@@ -795,6 +805,10 @@ export class CompletionProvider {
 				}
 
 				return this.inferReceiverTypeFromLines(sourceName, lines.slice(0, lineIndex), document, visited);
+			}
+
+			if (receiverPatterns.anyAssignment.test(line)) {
+				return undefined;
 			}
 		}
 
@@ -828,13 +842,30 @@ export class CompletionProvider {
 
 	private createReceiverTypePatterns(receiverName: string): ReceiverTypePatterns {
 		const escapedName = this.escapeRegex(receiverName);
-		const assignmentPrefix = `(^|[\\s(,])${escapedName}\\s*=\\s*`;
+		const assignmentPrefix = `(^|[\\s(,])${escapedName}\\s*=(?!=)\\s*`;
 		return {
 			declaration: new RegExp(`(^|[\\s(,])${escapedName}\\s+is\\s+(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\b`, 'i'),
 			assignment: new RegExp(`${assignmentPrefix}(?:object\\s+)?(STRING|REAL|INTEGER|ARRAY|DBREF|ELEMENTTYPE|ATTRIBUTE)\\s*\\(`, 'i'),
 			stringLiteral: new RegExp(`${assignmentPrefix}(?:\\|[^|]*\\||'[^']*')\\s*$`, 'i'),
-			numberLiteral: new RegExp(`${assignmentPrefix}[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*$`, 'i')
+			numberLiteral: new RegExp(`${assignmentPrefix}[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)\\s*$`, 'i'),
+			userCall: new RegExp(`${assignmentPrefix}(?:!!([A-Za-z][A-Za-z0-9_]*)|(?:!this)?\\.([A-Za-z_][A-Za-z0-9_]*))\\s*\\([^()]*\\)\\s*$`, 'i'),
+			anyAssignment: new RegExp(assignmentPrefix, 'i')
 		};
+	}
+
+	private resolveFunctionReturnType(name: string): ReceiverType | undefined {
+		const functions = this.symbolIndex.findFunction(name);
+		return functions.length === 1 ? this.receiverTypeFromPmlType(functions[0].returnType) : undefined;
+	}
+
+	private resolveMethodReturnType(uri: string, name?: string): ReceiverType | undefined {
+		if (!name) return undefined;
+		const methods = this.symbolIndex.findMethodsInFile(uri, name);
+		return methods.length === 1 ? this.receiverTypeFromPmlType(methods[0].returnType) : undefined;
+	}
+
+	private receiverTypeFromPmlType(type?: PMLType): ReceiverType | undefined {
+		return type ? this.normalizeReceiverType(type.kind) : undefined;
 	}
 
 	private matchReceiverType(line: string, patterns: ReceiverTypePatterns): ReceiverType | undefined {
