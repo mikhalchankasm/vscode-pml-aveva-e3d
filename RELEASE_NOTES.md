@@ -4,6 +4,7 @@ This file is the short release snapshot for the current public build. Full histo
 
 ## In Development
 
+- Smoke-test setup guidance for every Agent Kit command that requires a configured repository.
 - Avoid typo-diagnostic suggestions for sigiled local and global variable names.
 - Keep member completions focused when a local variable aliases a typed form member.
 - Rename bare method callback references safely when they are followed by a bracket or chained member delimiter.

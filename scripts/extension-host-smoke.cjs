@@ -84,17 +84,27 @@ async function assertAgentKitSetupError() {
     const configuration = vscode.workspace.getConfiguration('pml.agentKit');
     const originalPath = configuration.inspect('path')?.globalValue;
     const invalidPath = path.join(tempDir, 'missing-agent-kit');
+    const expectedMessage = 'PML Agent Kit is not configured. Set pml.agentKit.path to the e3d-pml-agent-kit repository, or open this workspace next to it.';
+    const reviewPath = path.join(tempDir, 'SmokeReview.pml');
 
     try {
         await configuration.update('path', invalidPath, vscode.ConfigurationTarget.Global);
-        const result = await vscode.commands.executeCommand('pml.agentKit.checkHealth');
+        fs.writeFileSync(reviewPath, 'define method .smokeReview()\nendmethod', 'utf8');
+        const reviewDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(reviewPath));
+        await vscode.window.showTextDocument(reviewDocument);
+        assert.strictEqual(reviewDocument.languageId, 'pml', 'Agent Kit review smoke document was not recognized as PML.');
 
-        assert.strictEqual(
-            result,
-            'PML Agent Kit is not configured. Set pml.agentKit.path to the e3d-pml-agent-kit repository, or open this workspace next to it.',
-            'Agent Kit setup errors should explain how to configure a valid repository path.'
-        );
+        const results = [
+            ['review', await vscode.commands.executeCommand('pml.agentKit.reviewCurrentFile')],
+            ['health check', await vscode.commands.executeCommand('pml.agentKit.checkHealth')],
+            ['live-status check', await vscode.commands.executeCommand('pml.agentKit.checkLiveE3dAvoxStatus')]
+        ];
+
+        for (const [command, result] of results) {
+            assert.strictEqual(result, expectedMessage, `Agent Kit ${command} setup error should explain how to configure a valid repository path.`);
+        }
     } finally {
+        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
         await configuration.update('path', originalPath, vscode.ConfigurationTarget.Global);
         fs.rmSync(tempDir, { recursive: true, force: true });
     }

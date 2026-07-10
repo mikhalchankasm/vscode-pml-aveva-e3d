@@ -1347,6 +1347,7 @@ Development plans and progress tracking.
 - ✅ **Workspace Indexing Stability** - Open-document conflicts, repeated unchanged document indexing, workspace-folder changes, and external file watcher bursts are covered with debounced, tested indexing paths.
 - ✅ **Dynamic Callback Navigation** - References and Rename cover dynamic substitute callback paths such as `!this.$!<gadget>.method` without crossing malformed multiline segments.
 - ✅ **Packaged CLI Smoke Coverage** - Extension-host smoke validation executes the bundled PML Assistant CLI and verifies its JSON parse contract.
+- ✅ **Agent Kit Setup Smoke Coverage** - Extension-host smoke validation verifies actionable setup guidance across review, health, and live-status commands when no valid Agent Kit repository is configured.
 
 **Next Stabilization Plan:**
 - **Performance budgets:** parser, workspace-index, completion, and references guard tests are in place; next use measured baselines to optimize hotspots.

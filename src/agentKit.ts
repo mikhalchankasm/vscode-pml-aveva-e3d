@@ -69,7 +69,7 @@ export function registerAgentKitCommands(context: vscode.ExtensionContext): void
     );
 }
 
-async function reviewCurrentFile(): Promise<void> {
+async function reviewCurrentFile(): Promise<string | void> {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'pml') {
         vscode.window.showErrorMessage('Open a PML file before running Agent Kit review.');
@@ -89,8 +89,7 @@ async function reviewCurrentFile(): Promise<void> {
 
     const agentKitPath = getAgentKitPath(config);
     if (!agentKitPath) {
-        showAgentKitSetupError('review');
-        return;
+        return showAgentKitSetupError('review');
     }
     const filePath = editor.document.uri.fsPath;
     const args = ['run', 'pml:review', '--', filePath, '--json'];
@@ -141,7 +140,7 @@ async function checkHealth(): Promise<string | void> {
     }
 }
 
-async function checkLiveE3dAvoxStatus(): Promise<void> {
+async function checkLiveE3dAvoxStatus(): Promise<string | void> {
     if (!ensureTrustedAgentKitWorkspace('live E3D/Avox status check')) {
         return;
     }
@@ -149,8 +148,7 @@ async function checkLiveE3dAvoxStatus(): Promise<void> {
     const config = vscode.workspace.getConfiguration('pml.agentKit');
     const agentKitPath = getAgentKitPath(config);
     if (!agentKitPath) {
-        showAgentKitSetupError('live E3D/Avox status check');
-        return;
+        return showAgentKitSetupError('live E3D/Avox status check');
     }
 
     appendLine(`Checking live E3D/Avox status through Agent Kit: ${agentKitPath}`);
