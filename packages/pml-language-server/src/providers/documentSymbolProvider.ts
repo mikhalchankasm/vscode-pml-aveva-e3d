@@ -187,7 +187,7 @@ export class DocumentSymbolProvider {
 	}
 
 	private findActiveMethodEndOffset(text: string, startOffset: number, inactiveRanges: ReturnType<typeof collectPmlInactiveTextRanges>): number | undefined {
-		const endmethodPattern = /\bendmethod\b/gi;
+		const endmethodPattern = /^\s*endmethod\b/gmi;
 		endmethodPattern.lastIndex = startOffset;
 
 		let match: RegExpExecArray | null;

@@ -163,6 +163,7 @@ endfunction
 		const source = [
 			'define method .live()',
 			'\t!endmethodology = 1',
+			'\t!endmethod = 2',
 			'endmethod'
 		].join('\n');
 		const uri = 'file:///fallback-endmethod-boundary.pmlfrm';
@@ -173,6 +174,6 @@ endfunction
 		const [symbol] = provider.provide({ textDocument: { uri } });
 
 		expect(symbol.name).toBe('.live()');
-		expect(symbol.range.end.line).toBeGreaterThan(1);
+		expect(symbol.range.end.line).toBeGreaterThan(2);
 	});
 });
