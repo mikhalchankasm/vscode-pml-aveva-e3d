@@ -2,6 +2,16 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Add a conservative callable-signature refactor that removes an unused trailing method/function parameter and removes the matching argument from every direct indexed call.
+
+### Improved
+
+- Reject signature edits when the parameter is used, a callable is ambiguous, an indexed source cannot parse, or any direct call has a different arity.
+
 ## [0.12.45] - 2026-07-11
 
 ### Added

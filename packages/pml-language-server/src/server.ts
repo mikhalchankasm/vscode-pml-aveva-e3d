@@ -35,6 +35,7 @@ import { CodeLensProvider } from './providers/codeLensProvider';
 import { CallHierarchyProvider } from './providers/callHierarchyProvider';
 import { InlayHintProvider } from './providers/inlayHintProvider';
 import { CallStubCodeActionProvider } from './providers/callStubCodeActionProvider';
+import { CallableSignatureRefactorProvider } from './providers/callableSignatureRefactorProvider';
 import { FormAuthoringCodeActionProvider } from './providers/formAuthoringCodeActionProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
@@ -67,6 +68,7 @@ const codeLensProvider = new CodeLensProvider(symbolIndex, referencesProvider);
 const callHierarchyProvider = new CallHierarchyProvider(symbolIndex);
 const inlayHintProvider = new InlayHintProvider(symbolIndex);
 const callStubCodeActionProvider = new CallStubCodeActionProvider(symbolIndex);
+const callableSignatureRefactorProvider = new CallableSignatureRefactorProvider(symbolIndex);
 const formAuthoringCodeActionProvider = new FormAuthoringCodeActionProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
@@ -630,6 +632,12 @@ connection.onCodeAction(params => {
 	if (!document) return [];
 	const ast = parseAndIndexDocument(document).ast;
 	return [
+		...callableSignatureRefactorProvider.provide(
+			document,
+			params.range,
+			ast,
+			params.context.only
+		),
 		...callStubCodeActionProvider.provide(
 			document,
 			params.range,
