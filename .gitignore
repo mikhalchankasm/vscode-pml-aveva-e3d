@@ -24,6 +24,7 @@ pml-aveva-e3d-*.vsix
 .claude/skills/
 .agents/
 .codex/
+.codex-remote-attachments/
 .vscode-test/
 *.local.json
 *.local.*
