@@ -25,7 +25,7 @@ This file is the short release snapshot for the current public build. Full histo
 - Quick Actions validation, extension validation, and activated extension-host smoke: passed.
 - External Claude review was attempted through the required no-tools subscription wrapper, but returned no review text; no API-key fallback was used.
 - Root and language-server dependency audits: passed with no vulnerabilities.
-- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.43.vsix` contains 16 files (426,553 bytes).
+- VSIX packaging and validation: passed; the canonical CI artifact `pml-aveva-e3d-0.12.43.vsix` contains 16 files (426,147 bytes).
 - Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.43`.
 - Local installation: passed in both VS Code and Cursor, each reporting version `0.12.43`.
 - Packaging hygiene now excludes and rejects `.codex-*` remote-attachment directories after the gate caught the current chat attachment before release.
@@ -33,7 +33,7 @@ This file is the short release snapshot for the current public build. Full histo
 ### Assets
 
 - VSIX: `pml-aveva-e3d-0.12.43.vsix`
-- SHA256: `9ccb31897e9986459ddddc0349ae7be1a5f99ce107695797297c5c57bc52cd1a`
+- SHA256: `c6bd494fcc5bbc9ff6d388a02a55db136ed64d7639230d82d8fe3f9f01b63506`
 
 ## Previous Release - v0.12.41
 
