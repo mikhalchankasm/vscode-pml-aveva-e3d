@@ -35,6 +35,7 @@ const criticalCommands = [
 const requiredSourceSnippets = [
     'missing-form-callback',
     'Generate callback method .',
+	'pml.goToCallableDefinition',
     'PMLCodeActionProvider.providedCodeActionKinds',
     'vscode.CodeActionKind.QuickFix'
 ];

@@ -627,7 +627,13 @@ connection.onCodeAction(params => {
 	const document = documents.get(params.textDocument.uri);
 	if (!document) return [];
 	const ast = parseAndIndexDocument(document).ast;
-	return callStubCodeActionProvider.provide(document, params.range, ast, params.context.diagnostics);
+	return callStubCodeActionProvider.provide(
+		document,
+		params.range,
+		ast,
+		params.context.diagnostics,
+		params.context.only
+	);
 });
 
 /**

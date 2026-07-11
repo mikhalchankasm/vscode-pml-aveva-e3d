@@ -2,7 +2,40 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.41
+## Current Release - v0.12.43
+
+**Release Date:** 2026-07-11
+
+**GitHub Release:** [v0.12.43](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.43)
+
+### What Changed
+
+- Direct calls with too few arguments can add the missing trailing arguments from an unambiguous indexed signature.
+- Generated empty method and function stubs can safely adopt a typed signature inferred from an existing call.
+- Direct indexed calls expose an explicit navigation action, and newly generated definitions open automatically after their edit is applied.
+- Method actions remain file-scoped; global-function actions require a unique workspace definition.
+- User-authored empty callables, ambiguous functions, inactive text, and form callback fixes remain protected.
+- Code Action kind filtering keeps Quick Fixes and refactors in their correct editor menus.
+
+### Validation
+
+- Client tests: passed (`22 passed`).
+- Language-server tests: passed (`384 passed`, `3 skipped`).
+- Root and language-server TypeScript validation and ESLint: passed.
+- Quick Actions validation, extension validation, and activated extension-host smoke: passed.
+- External Claude review was attempted through the required no-tools subscription wrapper, but returned no review text; no API-key fallback was used.
+- Root and language-server dependency audits: passed with no vulnerabilities.
+- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.43.vsix` contains 16 files (426,553 bytes).
+- Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.43`.
+- Local installation: passed in both VS Code and Cursor, each reporting version `0.12.43`.
+- Packaging hygiene now excludes and rejects `.codex-*` remote-attachment directories after the gate caught the current chat attachment before release.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.12.43.vsix`
+- SHA256: `9ccb31897e9986459ddddc0349ae7be1a5f99ce107695797297c5c57bc52cd1a`
+
+## Previous Release - v0.12.41
 
 **Release Date:** 2026-07-11
 
@@ -34,7 +67,7 @@ This file is the short release snapshot for the current public build. Full histo
 - VSIX: `pml-aveva-e3d-0.12.41.vsix`
 - SHA256: `f429101931b83133e0d61ec9e0973079cf7410fda14df1e7b3477fc30b10ec4f`
 
-## Previous Release - v0.12.40
+## Earlier Release - v0.12.40
 
 **Release Date:** 2026-07-10
 

@@ -61,6 +61,10 @@ describe('CallStubCodeActionProvider', () => {
 			'endmethod',
 			''
 		].join('\n'));
+		expect(actions[0].command).toMatchObject({
+			command: 'pml.goToCallableDefinition',
+			arguments: ['file:///call-stub.pml', { line: 5, character: 0 }]
+		});
 	});
 
 	it('generates a global function stub and keeps duplicate parameter names unique', () => {
@@ -80,9 +84,10 @@ describe('CallStubCodeActionProvider', () => {
 			'define function !!BuildReport(!items is ARRAY, !items2 is ARRAY, !value is REAL)'
 		);
 		expect(newText).toContain('endfunction');
+		expect(actions[0].command?.arguments?.[0]).toBe('file:///BuildReport.pmlfnc');
 	});
 
-	it('does not offer stubs for existing indexed callables', () => {
+	it('offers navigation but not stub generation for existing indexed callables', () => {
 		const source = [
 			'define method .existing(!value is REAL)',
 			'endmethod',
@@ -92,8 +97,83 @@ describe('CallStubCodeActionProvider', () => {
 			'!!ExistingFunction()'
 		].join('\n');
 
-		expect(provideAt(source, 'existing(1)').actions).toEqual([]);
-		expect(provideAt(source, 'ExistingFunction()').actions).toEqual([]);
+		for (const marker of ['existing', 'ExistingFunction']) {
+			const actions = provideAt(source, marker).actions;
+			expect(actions.some(action => action.title.startsWith('Generate '))).toBe(false);
+			expect(actions.some(action => action.title.startsWith('Go to definition of '))).toBe(true);
+		}
+	});
+
+	it('adds missing arguments from an indexed method signature', () => {
+		const source = [
+			'define method .render(!target is STRING, !count is REAL, !options is ARRAY)',
+			'endmethod',
+			'.render(!target)'
+		].join('\n');
+		const { actions } = provideAt(source, 'render');
+		const action = actions.find(candidate => candidate.title === 'Add missing arguments to .render');
+
+		expect(action?.kind).toBe('quickfix');
+		expect(action?.edit?.changes?.['file:///call-stub.pml']?.[0].newText).toBe(', !count, !options');
+	});
+
+	it('respects requested code action kinds', () => {
+		const source = 'define method .render(!target is STRING)\nendmethod\n.render()';
+		const parsed = new Parser().parse(source);
+		const index = new SymbolIndex();
+		const document = TextDocument.create('file:///kinds.pml', 'pml', 1, source);
+		index.indexFile(document.uri, parsed.ast, 1, source);
+		const position = document.positionAt(source.lastIndexOf('render') + 2);
+		const provider = new CallStubCodeActionProvider(index);
+
+		const quickFixes = provider.provide(document, Range.create(position, position), parsed.ast, [], ['quickfix']);
+		expect(quickFixes.map(action => action.title)).toEqual(['Add missing arguments to .render']);
+		const refactors = provider.provide(document, Range.create(position, position), parsed.ast, [], ['refactor']);
+		expect(refactors.map(action => action.title)).toEqual(['Go to definition of .render']);
+	});
+
+	it('fills an empty indexed global call from its signature', () => {
+		const index = new SymbolIndex();
+		const definitionUri = 'file:///functions/BuildReport.pmlfnc';
+		const definition = 'define function !!BuildReport(!items is ARRAY, !title is STRING)\nendfunction';
+		const parsed = new Parser().parse(definition, { mode: parserModeFromUri(definitionUri) });
+		index.indexFile(definitionUri, parsed.ast, 1, definition);
+		const { actions } = provideAt('!!BuildReport()', 'BuildReport', 'file:///caller.pml', index);
+
+		const action = actions.find(candidate => candidate.title === 'Add missing arguments to !!BuildReport');
+		expect(action?.edit?.changes?.['file:///caller.pml']?.[0].newText).toBe('!items, !title');
+	});
+
+	it('updates only a generated empty method stub signature from a typed call', () => {
+		const source = [
+			'define method .generated()',
+			'  -- TODO: Implement.',
+			'endmethod',
+			'define method .caller(!target is STRING)',
+			'  .generated(!target, 1)',
+			'endmethod'
+		].join('\n');
+		const { actions } = provideAt(source, 'generated');
+		const action = actions.find(candidate => candidate.title === 'Update empty method .generated signature from call');
+
+		expect(action?.kind).toBe('refactor.rewrite');
+		expect(action?.edit?.changes?.['file:///call-stub.pml']?.[0].newText).toBe('!target is STRING, !value is REAL');
+	});
+
+	it('does not rewrite a user-authored empty callable', () => {
+		const source = 'define method .manual()\nendmethod\n.manual(1)';
+		const { actions } = provideAt(source, 'manual(1)');
+		expect(actions.some(candidate => candidate.title.startsWith('Update empty'))).toBe(false);
+	});
+
+	it('does not offer argument edits for ambiguous global functions', () => {
+		const index = new SymbolIndex();
+		for (const uri of ['file:///a.pmlfnc', 'file:///b.pmlfnc']) {
+			const source = 'define function !!Duplicate(!value is REAL)\nendfunction';
+			const parsed = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+			index.indexFile(uri, parsed.ast, 1, source);
+		}
+		expect(provideAt('!!Duplicate()', 'Duplicate', 'file:///caller.pml', index).actions).toEqual([]);
 	});
 
 	it('does not offer a function stub when the definition is indexed in another file', () => {
@@ -105,7 +185,10 @@ describe('CallStubCodeActionProvider', () => {
 		symbolIndex.indexFile(definitionUri, definitionResult.ast, 1, definition);
 
 		const source = '!!BuildReport(!items)';
-		expect(provideAt(source, 'BuildReport', 'file:///caller.pml', symbolIndex).actions).toEqual([]);
+		const actions = provideAt(source, 'BuildReport', 'file:///caller.pml', symbolIndex).actions;
+		expect(actions).toHaveLength(1);
+		expect(actions[0]?.command?.command).toBe('pml.goToCallableDefinition');
+		expect(actions[0]?.command?.arguments?.[0]).toBe(definitionUri);
 	});
 
 	it('uses indexed form member types for generated parameters', () => {
@@ -168,7 +251,7 @@ describe('CallStubCodeActionProvider', () => {
 
 	it('treats existing callable names case-insensitively', () => {
 		const source = 'define method .Existing()\nendmethod\n.existing()';
-		expect(provideAt(source, 'existing()').actions).toEqual([]);
+		expect(provideAt(source, 'existing').actions[0]?.title).toBe('Go to definition of .existing');
 	});
 
 	it('does not detect calls inside inactive text', () => {
@@ -184,7 +267,7 @@ describe('CallStubCodeActionProvider', () => {
 			'.missing(.inner(1))'
 		].join('\n');
 
-		expect(provideAt(source, 'inner(1)').actions).toEqual([]);
+		expect(provideAt(source, 'inner').actions[0]?.title).toBe('Go to definition of .inner');
 		expect(provideAt(source, 'missing').actions[0]?.title).toBe('Generate method .missing(!arg1)');
 	});
 

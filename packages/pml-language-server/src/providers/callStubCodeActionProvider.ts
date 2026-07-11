@@ -18,7 +18,7 @@ import {
 	Program,
 	Statement
 } from '../ast/nodes';
-import { SymbolIndex } from '../index/symbolIndex';
+import { FunctionInfo, MethodInfo, SymbolIndex } from '../index/symbolIndex';
 import { formatCallableParameter } from '../utils/callableSignature';
 
 type StubKind = 'method' | 'function';
@@ -32,6 +32,10 @@ type StubParameter = {
 	name: string;
 	type?: PMLType;
 };
+
+type IndexedCallable = MethodInfo | FunctionInfo;
+
+const GO_TO_CALLABLE_COMMAND = 'pml.goToCallableDefinition';
 
 const BUILT_IN_GLOBAL_FUNCTIONS = new Set([
 	'alert',
@@ -49,9 +53,15 @@ const BUILT_IN_GLOBAL_FUNCTIONS = new Set([
 export class CallStubCodeActionProvider {
 	constructor(private readonly symbolIndex: SymbolIndex) {}
 
-	public provide(document: TextDocument, requestedRange: Range, program: Program, diagnostics: Diagnostic[] = []): CodeAction[] {
+	public provide(
+		document: TextDocument,
+		requestedRange: Range,
+		program: Program,
+		diagnostics: Diagnostic[] = [],
+		onlyKinds?: string[]
+	): CodeAction[] {
 		const callbackActions = this.missingCallbackActions(document, requestedRange, diagnostics);
-		if (callbackActions.length > 0) return callbackActions;
+		if (callbackActions.length > 0) return this.filterRequestedKinds(callbackActions, onlyKinds);
 
 		const calls = this.collectCalls(program.body)
 			.filter(call => this.rangesIntersect(call.callee.range, requestedRange))
@@ -60,7 +70,16 @@ export class CallStubCodeActionProvider {
 		if (!call) return [];
 
 		const target = this.resolveTarget(call.callee);
-		if (!target || !this.isMissingTarget(target, document.uri)) return [];
+		if (!target) return [];
+
+		const indexed = this.resolveIndexedCallable(target, document.uri);
+		if (indexed) {
+			return this.filterRequestedKinds(
+				this.existingCallableActions(document, call, target, indexed, program),
+				onlyKinds
+			);
+		}
+		if (!this.isMissingTarget(target, document.uri)) return [];
 
 		const knownTypes = new Map<string, PMLType>();
 		this.collectTypesUntil(program.body, call.range.start, knownTypes);
@@ -78,12 +97,127 @@ export class CallStubCodeActionProvider {
 			: this.createFunctionFileEdit(document, target, parameters);
 		const titleSuffix = target.kind === 'function' ? ` in ${target.name}.pmlfnc` : '';
 
-		return [{
+		return this.filterRequestedKinds([{
 			title: `Generate ${target.kind} ${signature}${titleSuffix}`,
 			kind: CodeActionKind.QuickFix,
 			isPreferred: true,
-			edit
-		}];
+			edit,
+			command: {
+				title: `Open generated ${target.kind}`,
+				command: GO_TO_CALLABLE_COMMAND,
+				arguments: [
+					target.kind === 'method' ? document.uri : this.functionTargetUri(document, target.name),
+					target.kind === 'method' ? this.appendedMethodPosition(document) : Position.create(0, 0)
+				]
+			}
+		}], onlyKinds);
+	}
+
+	private filterRequestedKinds(actions: CodeAction[], onlyKinds?: string[]): CodeAction[] {
+		if (!onlyKinds || onlyKinds.length === 0) return actions;
+		return actions.filter(action => {
+			const kind = action.kind ?? '';
+			return onlyKinds.some(requested => kind === requested || kind.startsWith(`${requested}.`));
+		});
+	}
+
+	private resolveIndexedCallable(target: StubTarget, uri: string): IndexedCallable | undefined {
+		const matches = target.kind === 'method'
+			? this.symbolIndex.findMethodsInFile(uri, target.name)
+			: this.symbolIndex.findFunction(target.name);
+		return matches.length === 1 ? matches[0] : undefined;
+	}
+
+	private existingCallableActions(
+		document: TextDocument,
+		call: CallExpression,
+		target: StubTarget,
+		indexed: IndexedCallable,
+		program: Program
+	): CodeAction[] {
+		const actions: CodeAction[] = [];
+		actions.push({
+			title: `Go to definition of ${this.targetLabel(target)}`,
+			kind: CodeActionKind.Refactor,
+			command: {
+				title: `Go to definition of ${this.targetLabel(target)}`,
+				command: GO_TO_CALLABLE_COMMAND,
+				arguments: [indexed.uri, indexed.selectionRange.start]
+			}
+		});
+		if (call.arguments.length < indexed.parameterCount) {
+			const missingNames = indexed.parameters.slice(call.arguments.length)
+				.map((name, index) => this.safeArgumentName(name, call.arguments.length + index));
+			const insertion = this.callArgumentInsertion(document, call, missingNames);
+			if (insertion) {
+				actions.push({
+					title: `Add missing arguments to ${this.targetLabel(target)}`,
+					kind: CodeActionKind.QuickFix,
+					isPreferred: true,
+					edit: { changes: { [document.uri]: [insertion] } }
+				});
+			}
+		}
+
+		if (call.arguments.length > 0 && indexed.parameterCount === 0) {
+			const knownTypes = new Map<string, PMLType>();
+			this.collectTypesUntil(program.body, call.range.start, knownTypes);
+			const parameters = this.buildParameters(call.arguments, knownTypes, document.uri);
+			const signatureEdit = this.emptyStubSignatureEdit(indexed, parameters);
+			if (signatureEdit) {
+				actions.push({
+					title: `Update empty ${target.kind} ${this.targetLabel(target)} signature from call`,
+					kind: CodeActionKind.RefactorRewrite,
+					edit: { changes: { [indexed.uri]: [signatureEdit] } }
+				});
+			}
+		}
+		return actions;
+	}
+
+	private callArgumentInsertion(document: TextDocument, call: CallExpression, missingNames: string[]): TextEdit | undefined {
+		const callText = document.getText(call.range);
+		const closingIndex = callText.lastIndexOf(')');
+		if (closingIndex < 0) return undefined;
+		const insertionOffset = document.offsetAt(call.range.start) + closingIndex;
+		const prefix = call.arguments.length > 0 ? ', ' : '';
+		return TextEdit.insert(document.positionAt(insertionOffset), prefix + missingNames.join(', '));
+	}
+
+	private emptyStubSignatureEdit(indexed: IndexedCallable, parameters: StubParameter[]): TextEdit | undefined {
+		const source = this.symbolIndex.getDocumentText(indexed.uri);
+		if (!source) return undefined;
+		const document = TextDocument.create(indexed.uri, 'pml', 0, source);
+		const definitionText = document.getText(indexed.range);
+		const kind = indexed.kind === 'method' ? 'method' : 'function';
+		const endKind = indexed.kind === 'method' ? 'endmethod' : 'endfunction';
+		const emptyPattern = new RegExp(
+			`^\\s*define\\s+${kind}\\b[^\\r\\n]*\\(\\s*\\)\\s*(?:is\\s+[A-Za-z_][A-Za-z0-9_]*\\s*)?(?:\\r?\\n)\\s*-- TODO: Implement\\.\\s*(?:\\r?\\n)\\s*${endKind}\\s*$`,
+			'i'
+		);
+		if (!emptyPattern.test(definitionText)) return undefined;
+		const declarationEnd = definitionText.search(/\r?\n/);
+		const declaration = declarationEnd >= 0 ? definitionText.slice(0, declarationEnd) : definitionText;
+		const openParen = declaration.indexOf('(');
+		const closeParen = declaration.indexOf(')', openParen + 1);
+		if (openParen < 0 || closeParen < 0) return undefined;
+		const definitionOffset = document.offsetAt(indexed.range.start);
+		return TextEdit.replace(
+			Range.create(
+				document.positionAt(definitionOffset + openParen + 1),
+				document.positionAt(definitionOffset + closeParen)
+			),
+			parameters.map(parameter => formatCallableParameter(parameter.name, parameter.type)).join(', ')
+		);
+	}
+
+	private safeArgumentName(name: string, index: number): string {
+		const sanitized = this.sanitizeParameterName(name, index);
+		return `!${sanitized}`;
+	}
+
+	private targetLabel(target: StubTarget): string {
+		return `${target.kind === 'method' ? '.' : '!!'}${target.name}`;
 	}
 
 	private missingCallbackActions(document: TextDocument, requestedRange: Range, diagnostics: Diagnostic[]): CodeAction[] {
@@ -364,7 +498,7 @@ export class CallStubCodeActionProvider {
 	}
 
 	private createFunctionFileEdit(document: TextDocument, target: StubTarget, parameters: StubParameter[]) {
-		const targetUri = Utils.joinPath(Utils.dirname(URI.parse(document.uri)), `${target.name}.pmlfnc`).toString();
+		const targetUri = this.functionTargetUri(document, target.name);
 		return {
 			documentChanges: [
 				CreateFile.create(targetUri, { overwrite: false, ignoreIfExists: false }),
@@ -374,6 +508,18 @@ export class CallStubCodeActionProvider {
 				)
 			]
 		};
+	}
+
+	private functionTargetUri(document: TextDocument, name: string): string {
+		return Utils.joinPath(Utils.dirname(URI.parse(document.uri)), `${name}.pmlfnc`).toString();
+	}
+
+	private appendedMethodPosition(document: TextDocument): Position {
+		const end = document.positionAt(document.getText().length);
+		const source = document.getText();
+		if (source.length === 0) return end;
+		const trailingNewline = source.endsWith('\n');
+		return Position.create(end.line + (trailingNewline ? 1 : 2), 0);
 	}
 
 	private collectCalls(statements: Statement[]): CallExpression[] {

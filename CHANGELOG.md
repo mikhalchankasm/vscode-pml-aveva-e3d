@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.43] - 2026-07-11
+
+### Added
+
+- Add missing trailing call arguments from an unambiguous indexed method or global-function signature.
+- Offer a conservative refactor that synchronizes a generated empty stub signature from typed call arguments.
+- Add explicit callable-definition navigation from direct indexed calls and automatically open newly generated definitions.
+
+### Improved
+
+- Keep call-authoring actions file-scoped for methods and workspace-scoped for globally unique functions.
+- Preserve user-authored empty callables, ambiguous symbols, inactive text, and existing form callback Quick Fix behavior.
+- Respect requested Code Action kinds so Quick Fix and Refactor actions stay in their intended editor surfaces.
+
 ## [0.12.41] - 2026-07-11
 
 ### Added

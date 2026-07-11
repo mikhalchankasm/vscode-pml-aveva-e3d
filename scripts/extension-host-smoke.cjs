@@ -16,7 +16,8 @@ const requiredCommands = [
     'pml.insertMethodDocBlock',
     'pml.generateMethodsSummary',
     'pml.updateMethodsSummary',
-    'pml.formatDocument'
+    'pml.formatDocument',
+    'pml.goToCallableDefinition'
 ];
 
 async function run() {

@@ -117,6 +117,20 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(codeActionProvider);
 
+	context.subscriptions.push(vscode.commands.registerCommand(
+		'pml.goToCallableDefinition',
+		async (uri: string, position: { line: number; character: number }) => {
+			if (typeof uri !== 'string' || !position || !Number.isInteger(position.line) || !Number.isInteger(position.character)) {
+				return;
+			}
+			const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+			const editor = await vscode.window.showTextDocument(document);
+			const target = new vscode.Position(position.line, position.character);
+			editor.selection = new vscode.Selection(target, target);
+			editor.revealRange(new vscode.Range(target, target), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+		}
+	));
+
     // Register format command
     const formatCommand = vscode.commands.registerCommand('pml.formatDocument', async () => {
         const editor = vscode.window.activeTextEditor;
