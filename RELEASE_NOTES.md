@@ -19,14 +19,16 @@ This file is the short release snapshot for the current public build. Full histo
 ### Validation
 
 - Client tests: passed (`22 passed`).
-- Language-server tests: passed (`413 passed`, `3 skipped`; the three existing skips are unchanged from the previous release baseline).
+- Language-server tests: passed (`416 passed`, `3 skipped`; the three existing skips are unchanged from the previous release baseline).
 - Root and language-server TypeScript validation, lint, bundled compile, extension validation, and activated extension-host smoke: passed.
-- Release packaging, disposable VSIX install, local VS Code/Cursor installation, dependency audits, and external Claude review: pending final release gate.
+- External review completed with actionable findings; all confirmed High/Medium findings and relevant test gaps were resolved before release.
+- Dependency audits: passed with no vulnerabilities.
+- CI packaging and validation, disposable VSIX install, and local VS Code/Cursor installation: passed.
 
 ### Assets
 
-- VSIX: `pml-aveva-e3d-0.13.0.vsix` (pending build)
-- SHA256: `pending canonical CI artifact`
+- VSIX: `pml-aveva-e3d-0.13.0.vsix`
+- SHA256: `a682a954fa2185897a4c159813b7bd86e34fc43e05e7fadc1567c64cf4abcad6` (canonical CI artifact)
 
 ## Previous Release - v0.12.45
 
