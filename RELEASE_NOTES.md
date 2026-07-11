@@ -2,6 +2,44 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
+## Current Release - v0.12.45
+
+**Release Date:** 2026-07-11
+
+### What Changed
+
+- Static gadget callbacks now navigate to their file-local methods, including callbacks inside nested frames.
+- Callback methods expose a reverse navigation action to their gadget declaration.
+- `unknown-form-member` diagnostics can declare a member when a direct assignment reliably proves its PML type.
+- Form headers offer an init-lifecycle refactor that adds the standard callback binding and generates `.init()` only when missing.
+- Form headers can batch-generate every missing direct callback method once, preserving source order when callbacks are reused.
+- A lifecycle pack adds missing init, OK, and cancel bindings and handlers without overwriting existing callback targets.
+- Reliably typed missing direct `!this` members can be declared together in one batch, excluding known gadgets, frames, methods, and built-ins.
+- Reused callback methods expose navigation to each declaring gadget; broad form-level callback ranges never shadow precise gadget navigation.
+- Form CodeLens now provides a compact in-editor outline: header actions, member types, callback navigation, and a missing-callback repair entrypoint.
+- Missing-callback repair is consistent for direct `!this`, dotted, and bare callback spellings.
+- Dynamic member paths and untyped gadget/member/control references remain untouched instead of being guessed.
+- Form edits preserve CRLF and Code Action kinds remain scoped to Quick Fix or Refactor surfaces.
+- The opt-in form-reference validation now reports a declared member only when its direct reliable assignments consistently prove a different built-in PML type.
+- A preferred Quick Fix changes just that member declaration; the form-header batch action applies only independently safe alignments and skips conflicting or dynamic values.
+
+### Validation
+
+- Client tests: passed (`22 passed`).
+- Language-server tests: passed (`406 passed`, `3 skipped`).
+- Root and language-server TypeScript validation and ESLint: passed.
+- Quick Actions validation, extension validation, activated extension-host smoke, and Form Authoring performance guard: passed.
+- External Claude review was attempted through the required no-tools subscription wrapper, but returned no review text; no API-key fallback was used.
+- Root and language-server dependency audits: passed with no vulnerabilities.
+- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.45.vsix` contains 16 files (431,656 bytes).
+- Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.45`.
+- Local installation: passed in both VS Code and Cursor, each reporting version `0.12.45`.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.12.45.vsix`
+- Local SHA256: `41644115a9545bc8a0a765102183cdd1cc6865f7919d1a3b9e86cc95e3b8dade` (replaced with the canonical CI artifact checksum after release)
+
 ## Current Release - v0.12.43
 
 **Release Date:** 2026-07-11

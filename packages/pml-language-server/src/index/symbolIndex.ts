@@ -114,6 +114,7 @@ export interface GadgetInfo {
 	name: string;
 	gadgetType: string;
 	range: Range;
+	callback?: string;
 }
 
 /**
@@ -591,7 +592,8 @@ export class SymbolIndex {
 		return {
 			name: node.name,
 			gadgetType: node.gadgetType,
-			range: node.range
+			range: node.range,
+			callback: typeof node.properties.call === 'string' ? node.properties.call : undefined
 		};
 	}
 

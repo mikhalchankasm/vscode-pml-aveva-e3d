@@ -17,7 +17,10 @@ const requiredCommands = [
     'pml.generateMethodsSummary',
     'pml.updateMethodsSummary',
     'pml.formatDocument',
-    'pml.goToCallableDefinition'
+    'pml.goToCallableDefinition',
+	'pml.showFormAuthoringRefactors',
+	'pml.showFormAuthoringQuickFixes',
+	'pml.showFormMemberInfo'
 ];
 
 async function run() {
@@ -80,6 +83,25 @@ async function assertFormCallbackQuickFix() {
         actions?.some(action => action.title === 'Generate callback method .apply()'),
         'Missing form callback Quick Fix was not provided.'
     );
+
+	const formActions = await vscode.commands.executeCommand(
+		'vscode.executeCodeActionProvider',
+		document.uri,
+		new vscode.Range(0, 0, 0, 10),
+		vscode.CodeActionKind.Refactor.value
+	);
+	assert(
+		formActions?.some(action => action.title === 'Add form init callback'),
+		'Form init authoring action was not provided.'
+	);
+	assert(
+		formActions?.some(action => action.title === 'Generate all missing callback methods (1)'),
+		'Batch callback generation action was not provided.'
+	);
+	assert(
+		formActions?.some(action => action.title === 'Add form lifecycle pack (init, OK, cancel)'),
+		'Form lifecycle pack action was not provided.'
+	);
 
     diagnostics.dispose();
     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');

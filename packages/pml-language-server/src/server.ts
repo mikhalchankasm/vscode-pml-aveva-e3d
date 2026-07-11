@@ -35,6 +35,7 @@ import { CodeLensProvider } from './providers/codeLensProvider';
 import { CallHierarchyProvider } from './providers/callHierarchyProvider';
 import { InlayHintProvider } from './providers/inlayHintProvider';
 import { CallStubCodeActionProvider } from './providers/callStubCodeActionProvider';
+import { FormAuthoringCodeActionProvider } from './providers/formAuthoringCodeActionProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
@@ -66,6 +67,7 @@ const codeLensProvider = new CodeLensProvider(symbolIndex, referencesProvider);
 const callHierarchyProvider = new CallHierarchyProvider(symbolIndex);
 const inlayHintProvider = new InlayHintProvider(symbolIndex);
 const callStubCodeActionProvider = new CallStubCodeActionProvider(symbolIndex);
+const formAuthoringCodeActionProvider = new FormAuthoringCodeActionProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
@@ -627,13 +629,22 @@ connection.onCodeAction(params => {
 	const document = documents.get(params.textDocument.uri);
 	if (!document) return [];
 	const ast = parseAndIndexDocument(document).ast;
-	return callStubCodeActionProvider.provide(
-		document,
-		params.range,
-		ast,
-		params.context.diagnostics,
-		params.context.only
-	);
+	return [
+		...callStubCodeActionProvider.provide(
+			document,
+			params.range,
+			ast,
+			params.context.diagnostics,
+			params.context.only
+		),
+		...formAuthoringCodeActionProvider.provide(
+			document,
+			params.range,
+			ast,
+			params.context.diagnostics,
+			params.context.only
+		)
+	];
 });
 
 /**

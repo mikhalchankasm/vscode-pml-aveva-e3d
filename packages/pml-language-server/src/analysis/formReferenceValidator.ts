@@ -5,6 +5,7 @@ import {
 	FrameDefinition,
 	GadgetDeclaration,
 	MethodDefinition,
+	PMLType,
 	Program,
 	Statement
 } from '../ast/nodes';
@@ -50,6 +51,10 @@ export class FormReferenceValidator {
 			if (statement.type === 'MethodDefinition') {
 				this.validateMethodReferences(statement, knownThisMembers, severity, diagnostics);
 			}
+		}
+
+		for (const form of forms) {
+			this.validateReliableMemberAssignments(form, program.body, severity, diagnostics);
 		}
 
 		return diagnostics;
@@ -176,6 +181,84 @@ export class FormReferenceValidator {
 	): void {
 		for (const statement of method.body) {
 			this.validateStatementReferences(statement, knownThisMembers, severity, diagnostics);
+		}
+	}
+
+	private validateReliableMemberAssignments(
+		form: FormDefinition,
+		statements: Statement[],
+		severity: DiagnosticSeverity,
+		diagnostics: Diagnostic[]
+	): void {
+		const members = new Map(form.members.map(member => [member.name.toLowerCase(), member]));
+		const assignments = new Map<string, { type: PMLType; range: Diagnostic['range'] }[]>();
+		const visit = (items: Statement[]): void => {
+			for (const statement of items) {
+				if (statement.type === 'ExpressionStatement' && statement.expression.type === 'AssignmentExpression') {
+					const left = statement.expression.left;
+					if (left.type === 'MemberExpression' && !left.computed &&
+						left.object.type === 'Identifier' && left.object.name.toLowerCase() === 'this' &&
+						left.property.type === 'Identifier') {
+						const type = this.reliableExpressionType(statement.expression.right);
+						const key = left.property.name.toLowerCase();
+						if (type && members.has(key)) {
+							const values = assignments.get(key) ?? [];
+							values.push({ type, range: statement.expression.range });
+							assignments.set(key, values);
+						}
+					}
+				}
+				this.statementChildren(statement).forEach(visit);
+			}
+		};
+		visit(statements);
+
+		for (const [key, values] of assignments) {
+			const member = members.get(key);
+			if (!member || !this.isConcreteMemberType(member.memberType)) continue;
+			const inferredKinds = new Set(values.map(value => value.type.kind));
+			if (inferredKinds.size !== 1 || inferredKinds.has(member.memberType.kind)) continue;
+			const inferredType = values[0].type;
+			for (const value of values) {
+				diagnostics.push({
+					severity,
+					range: value.range,
+					message: `Form member '.${member.name}' is ${member.memberType.kind} but assignment is ${inferredType.kind}. Change the declaration or assignment.`,
+					source: 'pml-form-references',
+					code: 'form-member-type-mismatch'
+				});
+			}
+		}
+	}
+
+	private reliableExpressionType(expression: Expression): PMLType | undefined {
+		if (expression.type === 'Literal') return expression.pmlType;
+		if (expression.type === 'ArrayExpression') return { kind: 'ARRAY', elementType: { kind: 'ANY' } };
+		if (expression.type === 'CallExpression' && expression.callee.type === 'Identifier' && expression.callee.objectConstructor) {
+			switch (expression.callee.name.toUpperCase()) {
+				case 'STRING': return { kind: 'STRING' };
+				case 'REAL': return { kind: 'REAL' };
+				case 'INTEGER': return { kind: 'INTEGER' };
+				case 'BOOLEAN': return { kind: 'BOOLEAN' };
+				case 'ARRAY': return { kind: 'ARRAY', elementType: { kind: 'ANY' } };
+				case 'DBREF': return { kind: 'DBREF' };
+			}
+		}
+		return undefined;
+	}
+
+	private isConcreteMemberType(type: PMLType): boolean {
+		return type.kind !== 'ANY' && type.kind !== 'UNDEFINED' && type.kind !== 'UNION';
+	}
+
+	private statementChildren(statement: Statement): Statement[][] {
+		switch (statement.type) {
+			case 'MethodDefinition':
+			case 'FunctionDefinition': return [statement.body];
+			case 'IfStatement': return [statement.consequent, ...(Array.isArray(statement.alternate) ? [statement.alternate] : statement.alternate ? [[statement.alternate]] : [])];
+			case 'DoStatement': return [statement.body];
+			case 'HandleStatement': return [statement.body, ...(statement.alternate ? [statement.alternate] : [])];
+			default: return [];
 		}
 	}
 

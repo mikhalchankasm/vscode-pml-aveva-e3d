@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.43-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.45-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -16,6 +16,7 @@
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables, and typed callable argument snippets
 - 🛠️ **Call Authoring** — Complete missing arguments, generate safe stubs, synchronize generated signatures, and navigate directly between calls and definitions
+- 🧩 **Form Authoring** — A visual CodeLens outline for form actions, members and callbacks; batch-generate missing handlers, add init/OK/cancel lifecycle wiring, declare reliably typed missing form members, and safely align declared member types with consistent direct assignments
 - 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols, clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy
 - 🏷️ **Inlay Hints** — Low-noise variable types propagated from reliable assignments, typed parameters, and explicit unambiguous call returns, plus parameter names for indexed calls
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
@@ -96,7 +97,7 @@ Entries include the first command word, category, and short hover text. Add only
   - `error`: show form parser diagnostics as errors.
 - `pml.diagnostics.formReferences`: opt-in callback/gadget reference validation for `.pmlfrm` files.
   - `off` (default): do not validate references.
-  - `warning`: warn when callbacks target missing methods or `!this.<name>` references an unknown form member/gadget.
+  - `warning`: warn when callbacks target missing methods, `!this.<name>` references an unknown form member/gadget, or a declared member conflicts with consistent direct reliable assignments.
   - `error`: report those findings as errors.
   - Runs only after the form parses without parser errors to avoid cascade noise.
 - `pml.codeLens.enabled`: show clickable reference counts above methods and global functions (default: `true`).
@@ -212,7 +213,7 @@ Whitelist стартовых слов команд лежит здесь:
   - `error`: показывать parser diagnostics для форм как ошибки.
 - `pml.diagnostics.formReferences`: опциональная проверка callback/gadget references для `.pmlfrm`.
   - `off` (по умолчанию): не проверять ссылки.
-  - `warning`: предупреждать, если callback указывает на отсутствующий метод или `!this.<name>` ссылается на неизвестный member/gadget.
+  - `warning`: предупреждать, если callback указывает на отсутствующий метод, `!this.<name>` ссылается на неизвестный member/gadget или объявленный member расходится с согласованными прямыми надёжными присваиваниями.
   - `error`: показывать такие замечания как ошибки.
   - Работает только когда форма парсится без parser errors, чтобы не создавать каскадный шум.
 - `pml.codeLens.enabled`: показывать кликабельное количество ссылок над методами и глобальными функциями (по умолчанию: `true`).

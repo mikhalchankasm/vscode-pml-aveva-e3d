@@ -5,6 +5,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../../index/symbolIndex';
 import { CompletionProvider } from '../../providers/completionProvider';
 import { CallStubCodeActionProvider } from '../../providers/callStubCodeActionProvider';
+import { FormAuthoringCodeActionProvider } from '../../providers/formAuthoringCodeActionProvider';
 import { ReferencesProvider } from '../../providers/referencesProvider';
 import { Parser, parserModeFromUri } from '../parser';
 
@@ -190,6 +191,24 @@ describe('performance budget guards', () => {
 		const elapsedMs = performance.now() - startedAt;
 
 		expect(actions[0]?.title).toBe('Generate method .missingCallable(!text is STRING)');
+		expect(elapsedMs).toBeLessThan(codeActionBudgetMs);
+	});
+
+	maybeIt('offers form authoring actions in a large form document within the release budget', () => {
+		const uri = 'file:///workspace/large-form-actions.pmlfrm';
+		const source = `setup form !!Large dialog\nexit\n\n${createLargePMLFunction()}`;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const result = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const provider = new FormAuthoringCodeActionProvider(symbolIndex);
+
+		const startedAt = performance.now();
+		const actions = provider.provide(document, Range.create(0, 2, 0, 2), result.ast);
+		const elapsedMs = performance.now() - startedAt;
+
+		expect(actions.some(action => action.title === 'Add form init callback')).toBe(true);
 		expect(elapsedMs).toBeLessThan(codeActionBudgetMs);
 	});
 

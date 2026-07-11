@@ -2,6 +2,39 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.45] - 2026-07-11
+
+### Added
+
+- Add `form-member-type-mismatch` diagnostics when a declared form member disagrees with one consistent type proven by direct reliable assignments.
+- Add a preferred Quick Fix that changes only the declared member type to the proven type.
+- Add a form-header refactor that aligns every independently safe member declaration in one edit set.
+
+### Improved
+
+- Treat conflicting, dynamic, unknown, conditional-by-value, or custom/`ANY` member types as ambiguous and leave them unchanged.
+- Extend the Form Authoring Toolkit into a type-assisted editing flow without broad rewrites or completion noise.
+
+## [0.12.44] - 2026-07-11
+
+### Added
+
+- Navigate from static gadget callback declarations to their file-local methods and back from callback methods to the declaring gadget.
+- Add a conservative Quick Fix that declares a missing form member when a direct assignment provides a reliable PML type.
+- Add a form-header refactor that inserts the standard init callback binding and generates an `init` method only when needed.
+- Generate every missing direct callback method in one stable, deduplicated batch from the form header.
+- Add a lifecycle pack for init, OK, and cancel bindings/methods without replacing existing lifecycle targets.
+- Declare every reliably typed missing direct `!this` member in one batch while excluding built-ins, gadgets, frames, and methods.
+
+### Improved
+
+- Cover callbacks in nested frames and direct `!this.method()`, `.method()`, and `method()` callback spellings.
+- Preserve dynamic member paths and avoid guessing whether an untyped `!this` reference is a member, gadget, frame, or PMLNET control.
+- Guard Form Authoring Code Action latency on a large form document and preserve CRLF edits.
+- Expose every gadget declaration when one callback method is intentionally reused, while keeping form-level callbacks out of imprecise navigation.
+- Add visual Form Outline CodeLens entries for form actions, member types, working callbacks, and missing callback repair entrypoints.
+- Keep missing-callback repair available from visual lenses for `!this.method()`, `.method()`, and `method()` callback spellings.
+
 ## [0.12.43] - 2026-07-11
 
 ### Added

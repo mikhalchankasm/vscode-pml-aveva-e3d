@@ -42,6 +42,22 @@ describe('CallStubCodeActionProvider', () => {
 		expect(lineActions[0]?.title).toBe('Generate callback method .apply()');
 	});
 
+	it('recognizes bare and dotted gadget callbacks without diagnostics', () => {
+		for (const callback of ['.apply()', 'apply()']) {
+			const source = `setup form !!Example dialog\n  button .apply |Apply| callback |${callback}|\nexit`;
+			const parsed = new Parser().parse(source, { mode: parserModeFromUri('file:///callback-style.pmlfrm') });
+			const index = new SymbolIndex();
+			const document = TextDocument.create('file:///callback-style.pmlfrm', 'pml', 1, source);
+			index.indexFile(document.uri, parsed.ast, 1, source);
+			const actions = new CallStubCodeActionProvider(index).provide(
+				document,
+				Range.create(1, 2, 1, 2),
+				parsed.ast
+			);
+			expect(actions[0]?.title, callback).toBe('Generate callback method .apply()');
+		}
+	});
+
 	it('generates a typed file-local method stub from safe argument evidence', () => {
 		const source = [
 			'define method .caller(!target is STRING)',

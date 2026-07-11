@@ -111,4 +111,30 @@ endmethod
 			message: "Unknown form member or gadget '!this.missingItems'. Declare it or correct the reference."
 		});
 	});
+
+	it('reports a type mismatch only when reliable assignments agree', () => {
+		const source = `
+setup form !!ReferenceForm
+	member .count is STRING
+	member .mixed is STRING
+exit
+
+define method .init()
+	!this.count = 1
+	!this.mixed = |first|
+	!this.mixed = 2
+endmethod
+		`.trim();
+
+		const parseResult = new Parser().parse(source);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const diagnostics = new FormReferenceValidator().check(parseResult.ast);
+
+		expect(diagnostics).toHaveLength(1);
+		expect(diagnostics[0]).toMatchObject({
+			code: 'form-member-type-mismatch',
+			message: "Form member '.count' is STRING but assignment is REAL. Change the declaration or assignment."
+		});
+	});
 });

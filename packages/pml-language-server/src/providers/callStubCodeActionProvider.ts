@@ -225,7 +225,7 @@ export class CallStubCodeActionProvider {
 		const actions: CodeAction[] = [];
 		const relevantDiagnostics = diagnostics.filter(diagnostic => String(diagnostic.code) === 'missing-form-callback');
 		const line = document.getText(Range.create(requestedRange.start.line, 0, requestedRange.start.line + 1, 0));
-		const lineCallback = line.match(/\bcallback\s+\|\s*!this\.([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)\s*\|/i)?.[1];
+		const lineCallback = line.match(/\b(?:callback|call)\s+\|\s*(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)\s*\|/i)?.[1];
 		const candidates: Array<{ name?: string; diagnostic?: Diagnostic }> = relevantDiagnostics.length > 0
 			? relevantDiagnostics.map(diagnostic => ({
 				name: diagnostic.message.match(/missing method '\.([A-Za-z_][A-Za-z0-9_]*)\(\)'/i)?.[1],

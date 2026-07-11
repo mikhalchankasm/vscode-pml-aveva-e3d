@@ -72,4 +72,36 @@ describe('CodeLensProvider', () => {
 		expect(resolvedFirst.command?.title).toBe('1 reference');
 		expect(resolvedSecond.command?.title).toBe('2 references');
 	});
+
+	it('provides visual form authoring lenses for summaries, members, and callbacks', async () => {
+		const uri = 'file:///workspace/Example.pmlfrm';
+		const source = [
+			'setup form !!Example dialog',
+			'  member .caption is STRING',
+			'  button .apply |Apply| callback |!this.apply()|',
+			'  frame .tools',
+			'    button .missing |Missing| callback |!this.onMissing()|',
+			'  exit',
+			'exit',
+			'define method .apply()',
+			'endmethod'
+		].join('\n');
+		const symbolIndex = new SymbolIndex();
+		indexSource(symbolIndex, uri, source);
+		const provider = new CodeLensProvider(
+			symbolIndex,
+			new ReferencesProvider(symbolIndex, new TextDocuments(TextDocument))
+		);
+
+		const lenses = provider.provide(uri);
+		const summary = lenses.find(lens => (lens.data as any)?.kind === 'form-summary');
+		const member = lenses.find(lens => (lens.data as any)?.kind === 'form-member');
+		const existing = lenses.find(lens => (lens.data as any)?.kind === 'form-callback');
+		const missing = lenses.find(lens => (lens.data as any)?.kind === 'missing-form-callback');
+
+		expect(await provider.resolve(summary!)).toMatchObject({ command: { title: 'Form actions · 2 callbacks', command: 'pml.showFormAuthoringRefactors' } });
+		expect(await provider.resolve(member!)).toMatchObject({ command: { title: 'member: STRING' } });
+		expect(await provider.resolve(existing!)).toMatchObject({ command: { title: 'callback → .apply', command: 'pml.goToCallableDefinition' } });
+		expect(await provider.resolve(missing!)).toMatchObject({ command: { title: 'missing callback .onMissing', command: 'pml.showFormAuthoringQuickFixes' } });
+	});
 });

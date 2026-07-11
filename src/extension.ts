@@ -117,6 +117,45 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(codeActionProvider);
 
+	const selectFormAuthoringPosition = async (uri: string, position: { line: number; character: number }) => {
+		if (typeof uri !== 'string' || !position || !Number.isInteger(position.line) || !Number.isInteger(position.character)) {
+			return false;
+		}
+		const document = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+		const editor = await vscode.window.showTextDocument(document);
+		const target = new vscode.Position(position.line, position.character);
+		editor.selection = new vscode.Selection(target, target);
+		editor.revealRange(new vscode.Range(target, target), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+		return true;
+	};
+
+	context.subscriptions.push(vscode.commands.registerCommand(
+		'pml.showFormAuthoringRefactors',
+		async (uri: string, position: { line: number; character: number }) => {
+			if (await selectFormAuthoringPosition(uri, position)) {
+				await vscode.commands.executeCommand('editor.action.refactor');
+			}
+		}
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(
+		'pml.showFormAuthoringQuickFixes',
+		async (uri: string, position: { line: number; character: number }) => {
+			if (await selectFormAuthoringPosition(uri, position)) {
+				await vscode.commands.executeCommand('editor.action.quickFix');
+			}
+		}
+	));
+
+	context.subscriptions.push(vscode.commands.registerCommand(
+		'pml.showFormMemberInfo',
+		(memberName: string, memberType: string) => {
+			if (typeof memberName === 'string' && typeof memberType === 'string') {
+				void vscode.window.showInformationMessage(`Form member .${memberName}: ${memberType}`);
+			}
+		}
+	));
+
 	context.subscriptions.push(vscode.commands.registerCommand(
 		'pml.goToCallableDefinition',
 		async (uri: string, position: { line: number; character: number }) => {
