@@ -67,6 +67,30 @@ describe('CallableSignatureRefactorProvider', () => {
 			.toEqual([]);
 	});
 
+	it('refuses dynamic receivers, string substitutions, overlapping edits, and unparsable references', () => {
+		expect(actionAtDeclaration('define method .render(!unused is REAL)\nendmethod\n!ref.render(1)').actions).toEqual([]);
+		expect(actionAtDeclaration('define method .render(!unused is REAL)\n  !message = |value: $!unused|\nendmethod\n.render(1)').actions).toEqual([]);
+		expect(actionAtDeclaration('define method .render(!first is REAL, !unused is REAL)\nendmethod\n.render(1, .render(2, 3))').actions).toEqual([]);
+
+		const index = new SymbolIndex();
+		const malformedUri = 'file:///malformed-caller.pml';
+		const malformed = '!!BuildReport(1)\n!broken = ('; // Deliberately indexed despite parser recovery errors.
+		const parsed = new Parser().parse(malformed, { mode: parserModeFromUri(malformedUri) });
+		index.indexFile(malformedUri, parsed.ast, 1, malformed);
+		expect(actionAtDeclaration('define function !!BuildReport(!unused is REAL)\nendfunction', 'file:///definition.pmlfnc', index).actions).toEqual([]);
+	});
+
+	it('supports methods declared inside objects but only offers the refactor on the signature line', () => {
+		const uri = 'file:///object.pmlobj';
+		const source = 'define object Sample\n  define method .render(!unused is REAL)\n  endmethod\nendobject\n.render(1)';
+		const fixture = indexedDocument(source, uri);
+		const provider = new CallableSignatureRefactorProvider(fixture.index);
+		const signature = fixture.document.positionAt(source.indexOf('define method') + 8);
+		const body = { line: 2, character: 2 };
+		expect(provider.provide(fixture.document, Range.create(signature, signature), fixture.parsed.ast)).toHaveLength(1);
+		expect(provider.provide(fixture.document, Range.create(body, body), fixture.parsed.ast)).toEqual([]);
+	});
+
 	it('respects requested Code Action kinds', () => {
 		const source = 'define method .render(!unused is REAL)\nendmethod\n.render(1)';
 		const fixture = indexedDocument(source);

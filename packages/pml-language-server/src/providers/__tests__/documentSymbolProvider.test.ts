@@ -66,6 +66,18 @@ exit
 		]);
 		expect(children[0].detail).toBe('form member');
 		expect(children[2].children?.[0].name).toBe('callback → .onApply');
+		expect(children[1].selectionRange.start.line).toBe(2);
+	});
+
+	it('shows a direct callback nested in a frame', () => {
+		const source = 'setup form !!Example dialog\n  frame .tools\n    button .apply |Apply| callback |!this.onApply()|\n  exit\nexit';
+		const uri = 'file:///nested-outline.pmlfrm';
+		const parsed = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		const index = new SymbolIndex();
+		index.indexFile(uri, parsed.ast, 1, source);
+
+		const [form] = new DocumentSymbolProvider(index).provide({ textDocument: { uri } });
+		expect(form.children?.[0].children?.[0].children?.[0].name).toBe('callback → .onApply');
 	});
 
 	it('should expose object methods as top-level outline entries in .pmlobj files', () => {

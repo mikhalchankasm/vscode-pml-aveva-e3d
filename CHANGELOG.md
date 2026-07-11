@@ -13,7 +13,9 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 ### Improved
 
 - Reject signature edits when the parameter is used, a callable is ambiguous, an indexed source cannot parse, or any direct call has a different arity.
+- Refuse signature cleanup when an indexed method reference is dynamic or when its edits would overlap; recognise `$!parameter` substitutions in string literals as parameter use.
 - Keep form navigation direct-only: dynamic callback strings remain outside Outline links and Call Hierarchy instead of being guessed.
+- Use the precise lifecycle callback assignment range for Outline, Workspace Symbols, and Call Hierarchy instead of selecting the enclosing form.
 
 ## [0.12.45] - 2026-07-11
 

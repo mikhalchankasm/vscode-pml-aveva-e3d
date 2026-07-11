@@ -154,5 +154,7 @@ describe('CallHierarchyProvider', () => {
 		const method = provider.prepare(uri, { line: 8, character: 16 })?.[0];
 		const incoming = provider.incomingCalls(method!);
 		expect(incoming?.map(call => call.from.name)).toEqual(['!!Example · .apply callback']);
+		expect(provider.prepare(uri, { line: 4, character: 2 })).toEqual(null);
+		expect(provider.prepare(uri, { line: 1, character: 4 })?.[0].name).toBe('!!Example · this.callback callback');
 	});
 });

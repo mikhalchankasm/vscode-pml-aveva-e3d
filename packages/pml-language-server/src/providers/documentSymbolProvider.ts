@@ -5,6 +5,7 @@
 import { DocumentSymbol, DocumentSymbolParams, SymbolKind as LSPSymbolKind } from 'vscode-languageserver/node';
 import { FrameInfo, GadgetInfo, SymbolIndex } from '../index/symbolIndex';
 import { collectPmlInactiveTextRanges, isOffsetInTextRanges } from '../utils/pmlCommentRanges';
+import { directCallbackTarget } from '../utils/directCallbackTarget';
 
 export class DocumentSymbolProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
@@ -102,7 +103,7 @@ export class DocumentSymbolProvider {
 						selectionRange: member.range,
 						children: []
 					})),
-					...this.createFormCallbackSymbols(form.callbacks, form.range),
+					...this.createFormCallbackSymbols(form.callbacks, form.callbackRanges),
 					...form.frames.map(frame => this.createFrameSymbol(frame)),
 					...form.gadgets.map(gadget => this.createGadgetSymbol(gadget))
 				]
@@ -129,7 +130,7 @@ export class DocumentSymbolProvider {
 	}
 
 	private createGadgetSymbol(gadget: GadgetInfo): DocumentSymbol {
-		const callback = this.directCallbackTarget(gadget.callback);
+		const callback = directCallbackTarget(gadget.callback);
 		return {
 			name: `.${gadget.name}`,
 			detail: gadget.gadgetType,
@@ -147,10 +148,11 @@ export class DocumentSymbolProvider {
 		};
 	}
 
-	private createFormCallbackSymbols(callbacks: Record<string, string>, range: DocumentSymbol['range']): DocumentSymbol[] {
+	private createFormCallbackSymbols(callbacks: Record<string, string>, ranges: Record<string, DocumentSymbol['range']>): DocumentSymbol[] {
 		return Object.entries(callbacks).flatMap(([property, callback]) => {
-			const target = this.directCallbackTarget(callback);
-			return target ? [{
+			const target = directCallbackTarget(callback);
+			const range = ranges[property];
+			return target && range ? [{
 				name: `${property} → .${target}`,
 				detail: 'form callback',
 				kind: LSPSymbolKind.Event,
@@ -161,9 +163,6 @@ export class DocumentSymbolProvider {
 		});
 	}
 
-	private directCallbackTarget(callback?: string): string | undefined {
-		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
-	}
 
 	private extractMethodsFromText(uri: string, existing: Set<string>): DocumentSymbol[] {
 		const text = this.symbolIndex.getDocumentText(uri);

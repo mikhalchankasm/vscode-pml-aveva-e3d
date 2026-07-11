@@ -33,7 +33,7 @@ export class CallableSignatureRefactorProvider {
 
 	public provide(document: TextDocument, requestedRange: Range, program: Program, onlyKinds?: string[]): CodeAction[] {
 		const definition = this.definitionAt(program, requestedRange.start);
-		if (!definition || !this.rangeContains(definition.range, requestedRange.end)) return [];
+		if (!definition || requestedRange.start.line !== definition.range.start.line || requestedRange.end.line !== definition.range.start.line) return [];
 		const target: CallableTarget = {
 			kind: definition.type === 'MethodDefinition' ? 'method' : 'function',
 			name: definition.name
@@ -53,6 +53,7 @@ export class CallableSignatureRefactorProvider {
 			if (!edit) return [];
 			(changes[site.document.uri] ??= []).push(edit);
 		}
+		if (this.hasOverlappingEdits(changes)) return [];
 
 		const label = `${target.kind === 'method' ? '.' : '!!'}${target.name}`;
 		const action: CodeAction = {
@@ -65,10 +66,14 @@ export class CallableSignatureRefactorProvider {
 	}
 
 	private definitionAt(program: Program, position: Position): CallableDefinition | undefined {
-		return program.body.find((statement): statement is CallableDefinition =>
-			(statement.type === 'MethodDefinition' || statement.type === 'FunctionDefinition') &&
-			this.rangeContains(statement.range, position)
-		);
+		for (const statement of program.body) {
+			if ((statement.type === 'MethodDefinition' || statement.type === 'FunctionDefinition') && this.rangeContains(statement.range, position)) return statement;
+			if (statement.type === 'ObjectDefinition') {
+				const method = statement.members.find(candidate => this.rangeContains(candidate.range, position));
+				if (method) return method;
+			}
+		}
+		return undefined;
 	}
 
 	private isUnambiguous(target: CallableTarget, uri: string): boolean {
@@ -96,7 +101,7 @@ export class CallableSignatureRefactorProvider {
 				}
 			}
 		}
-		return callSites;
+		return callSites.length === references.length ? callSites : undefined;
 	}
 
 	private directTarget(callee: Expression): CallableTarget | undefined {
@@ -117,13 +122,14 @@ export class CallableSignatureRefactorProvider {
 		const uses = (expression: Expression): boolean => {
 			switch (expression.type) {
 				case 'Identifier': return expression.name.toLowerCase() === name.toLowerCase();
+				case 'Literal': return expression.literalType === 'string' && typeof expression.value === 'string' && new RegExp(`\\$!${name}\\b`, 'i').test(expression.value);
 				case 'CallExpression': return uses(expression.callee) || expression.arguments.some(uses);
 				case 'MemberExpression': return uses(expression.object) || (expression.computed && uses(expression.property));
 				case 'BinaryExpression':
 				case 'AssignmentExpression': return uses(expression.left) || uses(expression.right);
 				case 'UnaryExpression': return uses(expression.argument);
 				case 'ArrayExpression': return expression.elements.some(uses);
-				default: return false;
+				default: return true;
 			}
 		};
 		const visit = (items: Statement[]): boolean => items.some(statement => {
@@ -136,7 +142,7 @@ export class CallableSignatureRefactorProvider {
 				case 'HandleStatement': return visit(statement.body) || Boolean(statement.alternate && visit(statement.alternate));
 				case 'BreakStatement':
 				case 'ContinueStatement': return Boolean(statement.condition && uses(statement.condition));
-				default: return false;
+				default: return true;
 			}
 		});
 		return visit(statements);
@@ -147,6 +153,13 @@ export class CallableSignatureRefactorProvider {
 		if (!last) return undefined;
 		const start = items.length === 1 ? last.range.start : items[items.length - 2].range.end;
 		return TextEdit.replace(Range.create(start, last.range.end), '');
+	}
+
+	private hasOverlappingEdits(changes: Record<string, TextEdit[]>): boolean {
+		return Object.values(changes).some(edits => {
+			const sorted = [...edits].sort((left, right) => this.compare(left.range.start, right.range.start));
+			return sorted.some((edit, index) => index > 0 && this.compare(sorted[index - 1].range.end, edit.range.start) > 0);
+		});
 	}
 
 	private collectCalls(statements: Statement[]): CallExpression[] {

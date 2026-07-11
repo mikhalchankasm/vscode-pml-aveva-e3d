@@ -14,6 +14,7 @@ import {
 	SymbolIndex,
 	SymbolKind
 } from '../index/symbolIndex';
+import { directCallbackTarget } from '../utils/directCallbackTarget';
 
 type CallableSymbol = MethodInfo | FunctionInfo;
 
@@ -217,7 +218,7 @@ export class CallHierarchyProvider {
 	private formCallbackItems(form: FormInfo): CallHierarchyItem[] {
 		const items: CallHierarchyItem[] = [];
 		const add = (name: string, detail: string, range: Range, callback?: string): void => {
-			const methodName = this.directCallbackMethod(callback);
+			const methodName = directCallbackTarget(callback);
 			if (!methodName) return;
 			items.push({
 				name: `${form.name} · ${name} callback`,
@@ -235,13 +236,13 @@ export class CallHierarchyProvider {
 			frame.frames.forEach(visitFrame);
 		};
 		form.frames.forEach(visitFrame);
-		Object.entries(form.callbacks).forEach(([property, callback]) => add(property, 'form', form.range, callback));
+		Object.entries(form.callbacks).forEach(([property, callback]) => {
+			const range = form.callbackRanges[property];
+			if (range) add(property, 'form', range, callback);
+		});
 		return items;
 	}
 
-	private directCallbackMethod(callback?: string): string | undefined {
-		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
-	}
 
 	private rangeContainsPosition(range: Range, position: Position): boolean {
 		return this.comparePositions(range.start, position) <= 0 && this.comparePositions(position, range.end) < 0;

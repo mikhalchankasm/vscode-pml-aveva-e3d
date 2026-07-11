@@ -2,17 +2,19 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Release Candidate - v0.13.0
+## Current Release - v0.13.0
 
-**Prepared:** 2026-07-11
+**Release Date:** 2026-07-11
 
 ### What Changed
 
 - Directly refactor an unambiguous method or global function by removing an unused trailing parameter and the matching trailing argument from every indexed direct call.
 - Refuse the signature change if a parameter is used, a callable is ambiguous, a referenced document cannot parse, or a direct call has a different arity.
+- Also refuse it for dynamic receivers or overlapping edit ranges, and treat `$!parameter` string substitutions as real parameter uses.
 - Show typed form members and direct gadget/lifecycle callback relationships in the Outline.
 - Make form members, nested gadgets, and callback targets searchable through Workspace Symbols across the indexed project.
 - Start Call Hierarchy from a direct gadget or lifecycle callback and navigate its outgoing edge to the file-local method; methods also show direct form callbacks as incoming callers.
+- Lifecycle callback navigation selects its assignment rather than the entire enclosing form.
 
 ### Validation
 
@@ -26,7 +28,7 @@ This file is the short release snapshot for the current public build. Full histo
 - VSIX: `pml-aveva-e3d-0.13.0.vsix` (pending build)
 - SHA256: pending canonical CI artifact
 
-## Current Release - v0.12.45
+## Previous Release - v0.12.45
 
 **Release Date:** 2026-07-11
 
@@ -64,7 +66,7 @@ This file is the short release snapshot for the current public build. Full histo
 - VSIX: `pml-aveva-e3d-0.12.45.vsix`
 - SHA256: `c441aac192f4ef19edad377935f293dd7cd6b413182561b3739e7cc24607b684` (canonical CI artifact)
 
-## Current Release - v0.12.43
+## Earlier Release - v0.12.43
 
 **Release Date:** 2026-07-11
 

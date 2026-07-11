@@ -95,6 +95,7 @@ export interface FormInfo extends SymbolInfo {
 	members: FormMemberInfo[];
 	gadgets: GadgetInfo[]; // Top-level form gadgets
 	callbacks: Record<string, string>; // gadget -> method
+	callbackRanges: Record<string, Range>;
 }
 
 export interface FormMemberInfo {
@@ -525,8 +526,28 @@ export class SymbolIndex {
 			gadgets: node.body
 				.filter((statement): statement is GadgetDeclaration => statement.type === 'GadgetDeclaration')
 				.map(gadget => this.extractGadgetInfo(gadget)),
-			callbacks: node.callbacks
+			callbacks: node.callbacks,
+			callbackRanges: this.extractFormCallbackRanges(node)
 		};
+	}
+
+	private extractFormCallbackRanges(node: FormDefinition): Record<string, Range> {
+		const ranges: Record<string, Range> = {};
+		for (const statement of node.body) {
+			if (statement.type !== 'ExpressionStatement' || statement.expression.type !== 'AssignmentExpression') continue;
+			const path = this.expressionPath(statement.expression.left);
+			if (path && node.callbacks[path]) ranges[path] = statement.range;
+		}
+		return ranges;
+	}
+
+	private expressionPath(expression: Expression): string | undefined {
+		if (expression.type === 'Identifier') return expression.name;
+		if (expression.type === 'MemberExpression' && !expression.computed && expression.property.type === 'Identifier') {
+			const object = this.expressionPath(expression.object);
+			return object ? `${object}.${expression.property.name}` : undefined;
+		}
+		return undefined;
 	}
 
 	private extractFunctionInfo(
