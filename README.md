@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.45-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.13.0-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -15,9 +15,9 @@
 
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables, and typed callable argument snippets
-- 🛠️ **Call Authoring** — Complete missing arguments, generate safe stubs, synchronize generated signatures, and navigate directly between calls and definitions
+- 🛠️ **Call Authoring** — Complete missing arguments, generate safe stubs, synchronize generated signatures, navigate directly between calls and definitions, and safely remove unused trailing API parameters with matching direct-call updates
 - 🧩 **Form Authoring** — A visual CodeLens outline for form actions, members and callbacks; batch-generate missing handlers, add init/OK/cancel lifecycle wiring, declare reliably typed missing form members, and safely align declared member types with consistent direct assignments
-- 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols, clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy
+- 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols (including form members/gadgets/callbacks), clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy including direct form callbacks
 - 🏷️ **Inlay Hints** — Low-noise variable types propagated from reliable assignments, typed parameters, and explicit unambiguous call returns, plus parameter names for indexed calls
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks

@@ -2,7 +2,7 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
-## [Unreleased]
+## [0.13.0] - 2026-07-11
 
 ### Added
 
