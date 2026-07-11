@@ -2,6 +2,20 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.12.41] - 2026-07-11
+
+### Added
+
+- Insert indexed methods and global functions as typed argument snippets, with a plain call fallback for clients that do not support snippets.
+- Offer an AST-backed Quick Fix for missing direct `.method(...)`, `!this.method(...)`, and `!!function(...)` calls.
+- Infer conservative stub parameter names and types from typed parameters, reliable prior assignments, literals, constructors, arrays, and indexed form members.
+- Create missing global functions in their own sibling `.pmlfnc` file while appending missing methods to the current supported source file.
+
+### Improved
+
+- Suppress stub actions for inactive text, arbitrary receivers, constructors, known system functions, existing case-insensitive symbols, indexed forms, and macro files.
+- Invalidate inferred stub parameter types after conditional, loop, or handler assignments and guard code-action latency with the large-document performance budget.
+
 ## [0.12.40] - 2026-07-10
 
 ### Added

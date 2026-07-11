@@ -1296,8 +1296,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.12.40
-**Released:** 2026-07-10
+**Version:** 0.12.41
+**Released:** 2026-07-11
 
 **Statistics:**
 - Extension size: **0.4 MB** (bundled with esbuild)
@@ -1306,7 +1306,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **383 passing, 3 skipped by default** (22 client + 361 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
+- Tests: **400 passing, 3 skipped by default** (22 client + 378 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1354,6 +1354,7 @@ Development plans and progress tracking.
 - ✅ **Low-Noise Inlay Hints** - Reliable first-assignment types and unambiguous callable parameter names are available with independent settings and cached AST reuse.
 - ✅ **Safe Type Propagation** - Typed parameters, direct reliable aliases, and explicit unambiguous user-call return types improve Inlay Hints and receiver-aware completions without leaking conditional or ambiguous assignments.
 - ✅ **Typed Callable UX** - Hover, Signature Help, and callable completions expose explicit parameter/return types; direct and supported chained calls narrow member completions without crossing ambiguity or line boundaries.
+- ✅ **Call Authoring UX** - Indexed callables insert typed argument snippets, and supported unresolved direct calls offer conservative method or sibling global-function stub generation.
 
 **Next Stabilization Plan:**
 - ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
@@ -1366,6 +1367,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.12.41`: adds typed callable snippets and safe AST-backed missing method/global-function stub generation.
 - `v0.12.40`: adds typed callable Hover/Signature Help/completion details and direct/chained receiver completion for explicit unambiguous user-call returns.
 - `v0.12.39`: propagates typed parameters, reliable aliases, and explicit user-call return types into Inlay Hints and receiver-aware completions while keeping ambiguous and conditional flow conservative.
 - `v0.12.38`: adds low-noise variable type and callable parameter Inlay Hints with cached AST reuse and signature-sensitive refreshes.

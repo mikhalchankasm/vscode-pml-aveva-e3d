@@ -1,8 +1,10 @@
 import { performance } from 'node:perf_hooks';
 import { describe, expect, it } from 'vitest';
+import { Range } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { SymbolIndex } from '../../index/symbolIndex';
 import { CompletionProvider } from '../../providers/completionProvider';
+import { CallStubCodeActionProvider } from '../../providers/callStubCodeActionProvider';
 import { ReferencesProvider } from '../../providers/referencesProvider';
 import { Parser, parserModeFromUri } from '../parser';
 
@@ -10,6 +12,7 @@ const maybeIt = process.env.PML_PERF_GUARDS === 'off' ? it.skip : it;
 const parseBudgetMs = Number(process.env.PML_PERF_PARSE_BUDGET_MS ?? 5000);
 const indexBudgetMs = Number(process.env.PML_PERF_INDEX_BUDGET_MS ?? 7000);
 const completionBudgetMs = Number(process.env.PML_PERF_COMPLETION_BUDGET_MS ?? 200);
+const codeActionBudgetMs = Number(process.env.PML_PERF_CODE_ACTION_BUDGET_MS ?? 200);
 const referencesBudgetMs = Number(process.env.PML_PERF_REFERENCES_BUDGET_MS ?? 1000);
 
 function createLargePMLFunction(methodCount = 250): string {
@@ -169,6 +172,25 @@ describe('performance budget guards', () => {
 		expect(completions.some(item => item.label === 'upcase')).toBe(true);
 		expect(completions.some(item => item.label === 'qreal')).toBe(false);
 		expect(elapsedMs).toBeLessThan(completionBudgetMs);
+	});
+
+	maybeIt('offers a missing-call stub in a large document within the release budget', () => {
+		const uri = 'file:///workspace/large-call-actions.pml';
+		const source = `${createLargePMLFunction()}\n\n.missingCallable(|value|)`;
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const result = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(result.errors).toHaveLength(0);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, result.ast, 1, source);
+		const provider = new CallStubCodeActionProvider(symbolIndex);
+		const position = document.positionAt(source.lastIndexOf('missingCallable') + 2);
+
+		const startedAt = performance.now();
+		const actions = provider.provide(document, Range.create(position, position), result.ast);
+		const elapsedMs = performance.now() - startedAt;
+
+		expect(actions[0]?.title).toBe('Generate method .missingCallable(!text is STRING)');
+		expect(elapsedMs).toBeLessThan(codeActionBudgetMs);
 	});
 
 	maybeIt('finds file-local method references with a 100-file workspace model within the release budget', async () => {

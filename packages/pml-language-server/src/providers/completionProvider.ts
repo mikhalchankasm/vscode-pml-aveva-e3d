@@ -14,7 +14,7 @@ import { SymbolIndex } from '../index/symbolIndex';
 import { Lexer } from '../parser/lexer';
 import { Token, TokenType } from '../parser/tokens';
 import { collectPmlInactiveTextRanges, isCursorInsidePmlInactiveText, TextRange } from '../utils/pmlCommentRanges';
-import { formatCallableDetail } from '../utils/callableSignature';
+import { formatCallableDetail, formatCallableSnippet } from '../utils/callableSignature';
 
 type LightweightMethod = {
 	name: string;
@@ -63,7 +63,13 @@ const BUILT_IN_CHAIN_RETURN_TYPES: Record<ReceiverType, Partial<Record<string, R
 };
 
 export class CompletionProvider {
+	private snippetSupport = true;
+
 	constructor(private symbolIndex: SymbolIndex) {}
+
+	public setSnippetSupport(supported: boolean): void {
+		this.snippetSupport = supported;
+	}
 
 	public provide(params: CompletionParams, document: TextDocument): CompletionItem[] {
 		const position = params.position;
@@ -368,6 +374,7 @@ export class CompletionProvider {
 				kind: CompletionItemKind.Method,
 				detail: `Method ${formatCallableDetail(method.parameters, method.parameterTypes, method.returnType)}`,
 				documentation: method.documentation,
+				...this.callableInsertText('.', method.name, method.parameters),
 				filterText: method.name,
 				sortText: `0${method.name}` // Sort workspace methods first
 			});
@@ -437,7 +444,7 @@ export class CompletionProvider {
 				? `${detailPrefix} ${formatCallableDetail(method.parameters, method.parameterTypes, method.returnType)}`
 				: detailPrefix,
 			documentation: method.documentation,
-			insertText: method.name,
+			...this.callableInsertText('', method.name, method.parameters),
 			filterText: method.name,
 			sortText: `0${method.name}`
 		}));
@@ -452,7 +459,7 @@ export class CompletionProvider {
 				kind: CompletionItemKind.Function,
 				detail: `Function ${formatCallableDetail(func.parameters, func.parameterTypes, func.returnType)}`,
 				documentation: func.documentation,
-				insertText: `!!${func.name}`,
+				...this.callableInsertText('!!', func.name, func.parameters),
 				filterText: `!!${func.name}`,
 				sortText: `0${func.name}`
 			}));
@@ -703,6 +710,12 @@ export class CompletionProvider {
 		}
 
 		return methods;
+	}
+
+	private callableInsertText(prefix: '.' | '!!' | '', name: string, parameters: string[]): Pick<CompletionItem, 'insertText' | 'insertTextFormat'> {
+		return this.snippetSupport
+			? { insertText: formatCallableSnippet(prefix, name, parameters), insertTextFormat: InsertTextFormat.Snippet }
+			: { insertText: `${prefix}${name}()`, insertTextFormat: InsertTextFormat.PlainText };
 	}
 
 	private pmlTypeFromName(typeName?: string): PMLType | undefined {

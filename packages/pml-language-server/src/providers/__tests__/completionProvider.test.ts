@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CompletionItemKind } from 'vscode-languageserver/node';
+import { CompletionItemKind, InsertTextFormat } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { CompletionProvider } from '../completionProvider';
 import { SymbolIndex } from '../../index/symbolIndex';
@@ -28,7 +28,8 @@ describe('CompletionProvider', () => {
 		expect(completions[0]).toMatchObject({
 			kind: CompletionItemKind.Event,
 			detail: 'Form method (!target is STRING)',
-			insertText: 'refresh',
+			insertText: 'refresh(${1:!target})$0',
+			insertTextFormat: InsertTextFormat.Snippet,
 			filterText: 'refresh'
 		});
 		expect(completions.some(item => item.label === 'upcase')).toBe(false);
@@ -838,7 +839,9 @@ describe('CompletionProvider', () => {
 		}, document);
 
 		expect(completions.find(item => item.label === '.refresh')).toMatchObject({
-			detail: 'Method (!target is STRING, !count is REAL) → BOOLEAN'
+			detail: 'Method (!target is STRING, !count is REAL) → BOOLEAN',
+			insertText: '.refresh(${1:!target}, ${2:!count})$0',
+			insertTextFormat: InsertTextFormat.Snippet
 		});
 	});
 
@@ -899,7 +902,9 @@ describe('CompletionProvider', () => {
 
 		expect(functionCompletions.find(item => item.label === '!!ProcessItems')).toMatchObject({
 			kind: CompletionItemKind.Function,
-			detail: 'Function (!items is ARRAY) → STRING'
+			detail: 'Function (!items is ARRAY) → STRING',
+			insertText: '!!ProcessItems(${1:!items})$0',
+			insertTextFormat: InsertTextFormat.Snippet
 		});
 
 		const bareSource = `${source}\n\nPro`;
@@ -910,6 +915,27 @@ describe('CompletionProvider', () => {
 		}, bareDocument);
 
 		expect(bareCompletions.some(item => item.label === '!!ProcessItems')).toBe(false);
+	});
+
+	it('uses plain callable text when the client does not support snippets', () => {
+		const uri = 'file:///plain-function-completion.pmlfnc';
+		const source = 'define function !!ProcessItems(!items is ARRAY)\nendfunction\n!!Pro';
+		const parsed = new Parser().parse(source);
+		const symbolIndex = new SymbolIndex();
+		symbolIndex.indexFile(uri, parsed.ast, 1, source);
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new CompletionProvider(symbolIndex);
+		provider.setSnippetSupport(false);
+
+		const completion = provider.provide({
+			textDocument: { uri },
+			position: document.positionAt(source.length)
+		}, document).find(item => item.label === '!!ProcessItems');
+
+		expect(completion).toMatchObject({
+			insertText: '!!ProcessItems()',
+			insertTextFormat: InsertTextFormat.PlainText
+		});
 	});
 
 

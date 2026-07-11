@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.12.40-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.12.41-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -14,7 +14,8 @@
 ### ✨ Features
 
 - 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
-- 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables
+- 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables, and typed callable argument snippets
+- 🛠️ **Call Authoring** — Generate safe missing method stubs or sibling global-function files directly from supported calls
 - 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols, clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy
 - 🏷️ **Inlay Hints** — Low-noise variable types propagated from reliable assignments, typed parameters, and explicit unambiguous call returns, plus parameter names for indexed calls
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links

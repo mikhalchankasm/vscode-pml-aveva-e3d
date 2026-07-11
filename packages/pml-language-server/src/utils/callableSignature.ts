@@ -36,3 +36,11 @@ export function formatCallableDetail(
 	const returnLabel = formatPmlTypeLabel(returnType);
 	return `(${formatCallableParameters(parameters, parameterTypes).join(', ')})${returnLabel ? ` → ${returnLabel}` : ''}`;
 }
+
+export function formatCallableSnippet(prefix: '.' | '!!' | '', name: string, parameters: string[]): string {
+	const argumentsText = parameters.map((parameter, index) => {
+		const parameterName = parameter.startsWith('!') ? parameter : `!${parameter}`;
+		return `\${${index + 1}:${parameterName}}`;
+	}).join(', ');
+	return `${prefix}${name}(${argumentsText})$0`;
+}

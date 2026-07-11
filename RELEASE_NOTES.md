@@ -2,7 +2,39 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.12.40
+## Current Release - v0.12.41
+
+**Release Date:** 2026-07-11
+
+**GitHub Release:** [v0.12.41](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases/tag/v0.12.41)
+
+### What Changed
+
+- Indexed method and global-function completions now insert typed argument snippets and place the final cursor after the call.
+- Clients without snippet support receive a safe plain `call()` insertion instead of snippet syntax.
+- A new AST-backed Quick Fix generates missing direct method and global-function stubs with conservative parameter names and types.
+- Missing methods append to supported current files; missing global functions are created as sibling `<name>.pmlfnc` files.
+- Built-ins, forms, arbitrary receivers, inactive text, existing symbols, and macro files are excluded from inappropriate stub actions.
+
+### Validation
+
+- Client tests: passed with `npm run test:client` (`22 passed`).
+- Language-server tests: passed with `npm run test:server` (`378 passed`, `3 skipped`).
+- Targeted completion, Quick Fix, and performance tests: passed (`62 passed`).
+- Root and language-server TypeScript validation: passed.
+- External read-only Claude review: completed; verified findings were addressed with regression coverage.
+- Lint, bundled compile, Quick Actions validation, extension validation, and activated extension-host smoke: passed.
+- Root and language-server dependency audits: passed with no vulnerabilities.
+- VSIX packaging and validation: passed; `pml-aveva-e3d-0.12.41.vsix` contains 16 files (425,402 bytes).
+- Disposable VSIX install smoke: passed for `mikhalchankasm.pml-aveva-e3d@0.12.41`.
+- Local installation: passed in both VS Code and Cursor, each reporting version `0.12.41`.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.12.41.vsix`
+- SHA256: `bfa1bc29981190375c1c31f55b3720ec7e06c6189afad8681c28649c2f258f7c`
+
+## Previous Release - v0.12.40
 
 **Release Date:** 2026-07-10
 
@@ -33,7 +65,7 @@ This file is the short release snapshot for the current public build. Full histo
 - VSIX: `pml-aveva-e3d-0.12.40.vsix`
 - SHA256: `719fe5bfeb2cb754edf786b5f176f623bfd74b38a17ef7457a18d182c535bce0`
 
-## Previous Release - v0.12.39
+## Earlier Release - v0.12.39
 
 **Release Date:** 2026-07-10
 

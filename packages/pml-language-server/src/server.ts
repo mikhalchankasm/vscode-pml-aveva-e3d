@@ -34,6 +34,7 @@ import { WorkspaceSymbolProvider } from './providers/workspaceSymbolProvider';
 import { CodeLensProvider } from './providers/codeLensProvider';
 import { CallHierarchyProvider } from './providers/callHierarchyProvider';
 import { InlayHintProvider } from './providers/inlayHintProvider';
+import { CallStubCodeActionProvider } from './providers/callStubCodeActionProvider';
 import { HoverProvider } from './providers/hoverProvider';
 import { CompletionProvider } from './providers/completionProvider';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
@@ -64,6 +65,7 @@ const workspaceSymbolProvider = new WorkspaceSymbolProvider(symbolIndex);
 const codeLensProvider = new CodeLensProvider(symbolIndex, referencesProvider);
 const callHierarchyProvider = new CallHierarchyProvider(symbolIndex);
 const inlayHintProvider = new InlayHintProvider(symbolIndex);
+const callStubCodeActionProvider = new CallStubCodeActionProvider(symbolIndex);
 const hoverProvider = new HoverProvider(symbolIndex, referencesProvider);
 const completionProvider = new CompletionProvider(symbolIndex);
 const signatureHelpProvider = new SignatureHelpProvider(symbolIndex);
@@ -80,6 +82,9 @@ let pendingWorkspaceRefresh: { reason: string; progressMessage: string } | undef
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
+	completionProvider.setSnippetSupport(
+		capabilities.textDocument?.completion?.completionItem?.snippetSupport === true
+	);
 
 	// Check client capabilities
 	hasConfigurationCapability = !!(
@@ -113,6 +118,7 @@ connection.onInitialize((params: InitializeParams) => {
 				resolveProvider: true
 			},
 			callHierarchyProvider: true,
+			codeActionProvider: true,
 			inlayHintProvider: {
 				resolveProvider: false
 			},
@@ -615,6 +621,13 @@ connection.onReferences(params => {
  */
 connection.onWorkspaceSymbol(params => {
 	return workspaceSymbolProvider.provide(params);
+});
+
+connection.onCodeAction(params => {
+	const document = documents.get(params.textDocument.uri);
+	if (!document) return [];
+	const ast = parseAndIndexDocument(document).ast;
+	return callStubCodeActionProvider.provide(document, params.range, ast, params.context.diagnostics);
 });
 
 /**
