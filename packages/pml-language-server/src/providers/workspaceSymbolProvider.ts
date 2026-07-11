@@ -3,7 +3,7 @@
  */
 
 import { WorkspaceSymbolParams, SymbolInformation, SymbolKind } from 'vscode-languageserver/node';
-import { SymbolIndex, SymbolInfo } from '../index/symbolIndex';
+import { FrameInfo, GadgetInfo, SymbolIndex, SymbolInfo } from '../index/symbolIndex';
 
 export class WorkspaceSymbolProvider {
 	constructor(private symbolIndex: SymbolIndex) {}
@@ -28,7 +28,48 @@ export class WorkspaceSymbolProvider {
 			});
 		}
 
+		for (const file of this.symbolIndex.getAllFileSymbols()) {
+			for (const form of file.forms) {
+				const containerName = form.name;
+				for (const member of form.members) {
+					this.addIfMatches(symbols, query, `.${member.name}`, SymbolKind.Property, file.uri, member.range, `${containerName} · member ${member.memberType}`);
+				}
+				const addGadget = (gadget: GadgetInfo): void => {
+					this.addIfMatches(symbols, query, `.${gadget.name}`, SymbolKind.Field, file.uri, gadget.range, `${containerName} · ${gadget.gadgetType}`);
+					const callback = this.directCallbackTarget(gadget.callback);
+					if (callback) this.addIfMatches(symbols, query, `.${callback}`, SymbolKind.Event, file.uri, gadget.range, `${containerName} · .${gadget.name} callback`);
+				};
+				form.gadgets.forEach(addGadget);
+				const visitFrame = (frame: FrameInfo): void => {
+					frame.gadgets.forEach(addGadget);
+					frame.frames.forEach(visitFrame);
+				};
+				form.frames.forEach(visitFrame);
+				for (const [property, callbackValue] of Object.entries(form.callbacks)) {
+					const callback = this.directCallbackTarget(callbackValue);
+					if (callback) this.addIfMatches(symbols, query, `.${callback}`, SymbolKind.Event, file.uri, form.range, `${containerName} · ${property}`);
+				}
+			}
+		}
+
 		return symbols;
+	}
+
+	private addIfMatches(
+		symbols: SymbolInformation[],
+		query: string,
+		name: string,
+		kind: SymbolKind,
+		uri: string,
+		range: SymbolInformation['location']['range'],
+		containerName: string
+	): void {
+		if (query && !name.toLowerCase().includes(query)) return;
+		symbols.push({ name, kind, location: { uri, range }, containerName });
+	}
+
+	private directCallbackTarget(callback?: string): string | undefined {
+		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
 	}
 
 	private getSymbolKind(kind: SymbolInfo['kind']): SymbolKind {

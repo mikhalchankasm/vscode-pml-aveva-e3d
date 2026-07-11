@@ -564,6 +564,11 @@ export class SymbolIndex {
 		};
 	}
 
+	/** Returns indexed file snapshots for project-level navigation providers. */
+	public getAllFileSymbols(): FileSymbols[] {
+		return Array.from(this.fileSymbols.values());
+	}
+
 	private getCallableSelectionRange(
 		range: Range,
 		name: string,

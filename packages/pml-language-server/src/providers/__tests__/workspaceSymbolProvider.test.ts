@@ -40,4 +40,28 @@ describe('WorkspaceSymbolProvider', () => {
 		]);
 		expect(symbols.every(symbol => symbol.location.uri === uri)).toBe(true);
 	});
+
+	it('searches form members, nested gadgets, and direct callbacks across the project', () => {
+		const uri = 'file:///workspace/forms/Report.pmlfrm';
+		const source = [
+			'setup form !!Report dialog',
+			'  member .reportTitle is STRING',
+			'  frame .tools',
+			'    button .export |Export| callback |!this.exportReport()|',
+			'  exit',
+			'exit'
+		].join('\n');
+		const parsed = new Parser().parse(source);
+		expect(parsed.errors).toHaveLength(0);
+		const index = new SymbolIndex();
+		index.indexFile(uri, parsed.ast, 1, source);
+
+		const provider = new WorkspaceSymbolProvider(index);
+		expect(provider.provide({ query: 'report' }).map(symbol => ({ name: symbol.name, kind: symbol.kind, containerName: symbol.containerName })))
+			.toEqual([
+				{ name: '!!Report', kind: SymbolKind.Interface, containerName: undefined },
+				{ name: '.reportTitle', kind: SymbolKind.Property, containerName: '!!Report · member STRING' },
+				{ name: '.exportReport', kind: SymbolKind.Event, containerName: '!!Report · .export callback' }
+			]);
+	});
 });

@@ -7,10 +7,13 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 ### Added
 
 - Add a conservative callable-signature refactor that removes an unused trailing method/function parameter and removes the matching argument from every direct indexed call.
+- Expand Form Outline with typed members plus direct gadget and lifecycle callback relationships.
+- Make form members, nested gadgets, and callback targets discoverable through Workspace Symbols, and expose callback bindings as Call Hierarchy entrypoints.
 
 ### Improved
 
 - Reject signature edits when the parameter is used, a callable is ambiguous, an indexed source cannot parse, or any direct call has a different arity.
+- Keep form navigation direct-only: dynamic callback strings remain outside Outline links and Call Hierarchy instead of being guessed.
 
 ## [0.12.45] - 2026-07-11
 

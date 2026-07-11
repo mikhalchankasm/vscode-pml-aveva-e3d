@@ -128,4 +128,31 @@ describe('CallHierarchyProvider', () => {
 
 		expect(provider.outgoingCalls(caller!)?.[0].to.name).toBe('.target');
 	});
+
+	it('treats form gadgets and lifecycle bindings as callback hierarchy entrypoints', () => {
+		const uri = 'file:///workspace/form.pmlfrm';
+		const source = [
+			'setup form !!Example dialog',
+			"  !this.callback = '!this.init()'",
+			'  frame .tools',
+			'    button .apply |Apply| callback |!this.onApply()|',
+			'  exit',
+			'exit',
+			'define method .init()',
+			'endmethod',
+			'define method .onApply()',
+			'endmethod'
+		].join('\n');
+		const index = new SymbolIndex();
+		indexSource(index, uri, source);
+		const provider = new CallHierarchyProvider(index);
+
+		const callback = provider.prepare(uri, { line: 3, character: 8 })?.[0];
+		expect(callback?.name).toBe('!!Example · .apply callback');
+		expect(provider.outgoingCalls(callback!)?.[0].to.name).toBe('.onApply');
+
+		const method = provider.prepare(uri, { line: 8, character: 16 })?.[0];
+		const incoming = provider.incomingCalls(method!);
+		expect(incoming?.map(call => call.from.name)).toEqual(['!!Example · .apply callback']);
+	});
 });

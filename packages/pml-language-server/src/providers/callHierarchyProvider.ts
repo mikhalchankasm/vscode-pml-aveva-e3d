@@ -8,6 +8,8 @@ import {
 } from 'vscode-languageserver/node';
 import {
 	FunctionInfo,
+	FormInfo,
+	FrameInfo,
 	MethodInfo,
 	SymbolIndex,
 	SymbolKind
@@ -15,10 +17,17 @@ import {
 
 type CallableSymbol = MethodInfo | FunctionInfo;
 
-interface PmlCallHierarchyData {
+interface CallableCallHierarchyData {
 	name: string;
 	kind: 'method' | 'function';
 }
+
+interface FormCallbackCallHierarchyData {
+	kind: 'form-callback';
+	methodName: string;
+}
+
+type PmlCallHierarchyData = CallableCallHierarchyData | FormCallbackCallHierarchyData;
 
 export class CallHierarchyProvider {
 	constructor(private readonly symbolIndex: SymbolIndex) {}
@@ -51,12 +60,15 @@ export class CallHierarchyProvider {
 			return functions.length > 0 ? functions.map(func => this.createItem(func)) : null;
 		}
 
+		const formCallbacks = this.formCallbackItemsAt(uri, position);
+		if (formCallbacks.length > 0) return formCallbacks;
+
 		return null;
 	}
 
 	public incomingCalls(item: CallHierarchyItem): CallHierarchyIncomingCall[] | null {
 		const target = this.getItemData(item);
-		if (!target) {
+		if (!target || target.kind === 'form-callback') {
 			return null;
 		}
 
@@ -79,11 +91,22 @@ export class CallHierarchyProvider {
 				grouped.set(key, { from: callerItem, fromRanges: [reference.range] });
 			}
 		}
+		if (target.kind === 'method') {
+			for (const callback of this.formCallbackItemsForMethod(item.uri, target.name)) {
+				const key = this.itemKey(callback);
+				grouped.set(key, { from: callback, fromRanges: [callback.selectionRange] });
+			}
+		}
 
 		return grouped.size > 0 ? Array.from(grouped.values()) : null;
 	}
 
 	public outgoingCalls(item: CallHierarchyItem): CallHierarchyOutgoingCall[] | null {
+		const data = this.getItemData(item);
+		if (data?.kind === 'form-callback') {
+			const targets = this.symbolIndex.findMethodsInFile(item.uri, data.methodName);
+			return targets.length === 1 ? [{ to: this.createItem(targets[0]), fromRanges: [item.selectionRange] }] : null;
+		}
 		const caller = this.findItemSymbol(item);
 		if (!caller) {
 			return null;
@@ -139,7 +162,7 @@ export class CallHierarchyProvider {
 
 	private findItemSymbol(item: CallHierarchyItem): CallableSymbol | undefined {
 		const data = this.getItemData(item);
-		if (!data) {
+		if (!data || data.kind === 'form-callback') {
 			return undefined;
 		}
 		const candidates = data.kind === 'method'
@@ -176,7 +199,48 @@ export class CallHierarchyProvider {
 
 	private getItemData(item: CallHierarchyItem): PmlCallHierarchyData | undefined {
 		const data = item.data as PmlCallHierarchyData | undefined;
-		return data && (data.kind === 'method' || data.kind === 'function') ? data : undefined;
+		return data && (data.kind === 'method' || data.kind === 'function' || data.kind === 'form-callback') ? data : undefined;
+	}
+
+	private formCallbackItemsAt(uri: string, position: Position): CallHierarchyItem[] {
+		const fileSymbols = this.symbolIndex.getFileSymbols(uri);
+		return (fileSymbols?.forms ?? []).flatMap(form => this.formCallbackItems(form)
+			.filter(item => this.rangeContainsPosition(item.range, position)));
+	}
+
+	private formCallbackItemsForMethod(uri: string, methodName: string): CallHierarchyItem[] {
+		const fileSymbols = this.symbolIndex.getFileSymbols(uri);
+		return (fileSymbols?.forms ?? []).flatMap(form => this.formCallbackItems(form)
+			.filter(item => (item.data as FormCallbackCallHierarchyData).methodName.toLowerCase() === methodName.toLowerCase()));
+	}
+
+	private formCallbackItems(form: FormInfo): CallHierarchyItem[] {
+		const items: CallHierarchyItem[] = [];
+		const add = (name: string, detail: string, range: Range, callback?: string): void => {
+			const methodName = this.directCallbackMethod(callback);
+			if (!methodName) return;
+			items.push({
+				name: `${form.name} · ${name} callback`,
+				kind: LspSymbolKind.Event,
+				detail: `${detail} → .${methodName}`,
+				uri: form.uri,
+				range,
+				selectionRange: range,
+				data: { kind: 'form-callback', methodName } satisfies FormCallbackCallHierarchyData
+			});
+		};
+		form.gadgets.forEach(gadget => add(`.${gadget.name}`, gadget.gadgetType, gadget.range, gadget.callback));
+		const visitFrame = (frame: FrameInfo): void => {
+			frame.gadgets.forEach(gadget => add(`.${gadget.name}`, gadget.gadgetType, gadget.range, gadget.callback));
+			frame.frames.forEach(visitFrame);
+		};
+		form.frames.forEach(visitFrame);
+		Object.entries(form.callbacks).forEach(([property, callback]) => add(property, 'form', form.range, callback));
+		return items;
+	}
+
+	private directCallbackMethod(callback?: string): string | undefined {
+		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
 	}
 
 	private rangeContainsPosition(range: Range, position: Position): boolean {

@@ -1371,8 +1371,9 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
-- **v0.13.0 program (in progress):** complete safe callable API editing with direct-call updates, then deliver cross-form project navigation across forms, frames, gadgets, callbacks, and members before the next major feature release.
+- **v0.13.0 program (in progress):** safe callable API editing and cross-form project navigation now have their first complete guarded slices; next extend the callable workflow beyond trailing-parameter cleanup, then consolidate the release UX and final gates.
 - **Callable API Editing (in progress):** the first safe refactor can remove an unused trailing parameter and its matching direct-call argument; used, dynamic, ambiguous, unparsable, and arity-mismatched cases are intentionally refused.
+- **Cross-Form Navigation (in progress):** Outline presents typed members and direct callback links; Workspace Symbols find members, nested gadgets, and callbacks project-wide; Call Hierarchy starts from gadget/lifecycle callbacks and shows their method edge.
 - `v0.12.45` (release candidate): completes the current Form Authoring slice with safe type-assisted member diagnostics and declaration alignment, on top of callback/lifecycle/member generation and visual actions.
 - `v0.12.44` (folded into v0.12.45): Form Authoring Toolkit plus visual CodeLens outline/actions for form structure and callback repair.
 - `v0.12.43`: combines the planned v0.12.42/v0.12.43 Call Authoring and Navigation/Refactoring work into one release.

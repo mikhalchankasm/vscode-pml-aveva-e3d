@@ -44,6 +44,30 @@ exit
 		expect(innerChildren[0].detail).toBe('container');
 	});
 
+	it('shows form members and direct callback relationships in the outline', () => {
+		const source = [
+			'setup form !!OutlineForm dialog',
+			'  member .title is STRING',
+			"  !this.callback = '!this.init()'",
+			'  button .apply |Apply| callback |!this.onApply()|',
+			'exit'
+		].join('\n');
+		const uri = 'file:///outline-callbacks.pmlfrm';
+		const parsed = new Parser().parse(source, { mode: parserModeFromUri(uri) });
+		expect(parsed.errors).toHaveLength(0);
+		const index = new SymbolIndex();
+		index.indexFile(uri, parsed.ast, 1, source);
+
+		const children = new DocumentSymbolProvider(index).provide({ textDocument: { uri } })[0].children ?? [];
+		expect(children.map(child => child.name)).toEqual([
+			'.title is STRING',
+			'this.callback → .init',
+			'.apply'
+		]);
+		expect(children[0].detail).toBe('form member');
+		expect(children[2].children?.[0].name).toBe('callback → .onApply');
+	});
+
 	it('should expose object methods as top-level outline entries in .pmlobj files', () => {
 		const source = `
 define object SAMPLE

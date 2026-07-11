@@ -94,6 +94,15 @@ export class DocumentSymbolProvider {
 				range: form.range,
 				selectionRange: form.range,
 				children: [
+					...form.members.map(member => ({
+						name: `.${member.name} is ${member.memberType}`,
+						detail: 'form member',
+						kind: LSPSymbolKind.Property,
+						range: member.range,
+						selectionRange: member.range,
+						children: []
+					})),
+					...this.createFormCallbackSymbols(form.callbacks, form.range),
 					...form.frames.map(frame => this.createFrameSymbol(frame)),
 					...form.gadgets.map(gadget => this.createGadgetSymbol(gadget))
 				]
@@ -120,14 +129,40 @@ export class DocumentSymbolProvider {
 	}
 
 	private createGadgetSymbol(gadget: GadgetInfo): DocumentSymbol {
+		const callback = this.directCallbackTarget(gadget.callback);
 		return {
 			name: `.${gadget.name}`,
 			detail: gadget.gadgetType,
 			kind: LSPSymbolKind.Field,
 			range: gadget.range,
 			selectionRange: gadget.range,
-			children: []
+			children: callback ? [{
+				name: `callback → .${callback}`,
+				detail: 'form callback',
+				kind: LSPSymbolKind.Event,
+				range: gadget.range,
+				selectionRange: gadget.range,
+				children: []
+			}] : []
 		};
+	}
+
+	private createFormCallbackSymbols(callbacks: Record<string, string>, range: DocumentSymbol['range']): DocumentSymbol[] {
+		return Object.entries(callbacks).flatMap(([property, callback]) => {
+			const target = this.directCallbackTarget(callback);
+			return target ? [{
+				name: `${property} → .${target}`,
+				detail: 'form callback',
+				kind: LSPSymbolKind.Event,
+				range,
+				selectionRange: range,
+				children: []
+			}] : [];
+		});
+	}
+
+	private directCallbackTarget(callback?: string): string | undefined {
+		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
 	}
 
 	private extractMethodsFromText(uri: string, existing: Set<string>): DocumentSymbol[] {
