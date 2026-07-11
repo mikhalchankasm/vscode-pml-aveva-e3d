@@ -62,12 +62,18 @@ async function assertFormCallbackQuickFix() {
     const diagnostics = vscode.languages.createDiagnosticCollection('pml-extension-smoke');
     diagnostics.set(document.uri, [diagnostic]);
 
-    const actions = await vscode.commands.executeCommand(
-        'vscode.executeCodeActionProvider',
-        document.uri,
-        diagnostic.range,
-        vscode.CodeActionKind.QuickFix.value
-    );
+    let actions;
+    const deadline = Date.now() + 5000;
+    do {
+        actions = await vscode.commands.executeCommand(
+            'vscode.executeCodeActionProvider',
+            document.uri,
+            diagnostic.range,
+            vscode.CodeActionKind.QuickFix.value
+        );
+        if (actions?.some(action => action.title === 'Generate callback method .apply()')) break;
+        await new Promise(resolve => setTimeout(resolve, 100));
+    } while (Date.now() < deadline);
 
     assert(
         actions?.some(action => action.title === 'Generate callback method .apply()'),
