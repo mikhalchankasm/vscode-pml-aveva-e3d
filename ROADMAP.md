@@ -1299,7 +1299,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.14.0 release candidate; unified post-0.13 cycle complete
+**Version:** 0.14.0 published; unified post-0.13 cycle complete
 **Prepared:** 2026-07-12
 
 **Statistics:**
@@ -1379,7 +1379,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
-- `v0.14.0` (release candidate): combines Enhanced Reload Form, E3D/PMLLIB settings, precise form diagnostics, bounded indexing, batch callable cleanup, filesystem coverage, PML.NET presets, and richer semantic tokens.
+- `v0.14.0` (published): combines Enhanced Reload Form, E3D/PMLLIB settings, precise form diagnostics, bounded indexing, batch callable cleanup, filesystem coverage, PML.NET presets, and richer semantic tokens.
 - `v0.13.1` (published): expands safe callable signature cleanup to every parameter position, adds user-controlled type-hint UI plus EDG picker/packet presets, hardens watcher and VSIX packaging behavior, and records targeted audit follow-ups.
 - **Post-v0.13 callable API editing (complete):** signature cleanup covers unused leading, middle, and trailing parameters plus contiguous trailing suffixes with matching direct-call updates.
 - **Callable API Editing (complete for v0.14.0):** signature cleanup refuses used, dynamic, ambiguous, unparsable, arity-mismatched, and nested direct-call cases rather than making uncertain edits.

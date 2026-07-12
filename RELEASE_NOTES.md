@@ -28,7 +28,7 @@ This file is the short release snapshot for the current public build. Full histo
 ### Assets
 
 - VSIX: `pml-aveva-e3d-0.14.0.vsix`
-- SHA256: `RELEASE_SHA256` (canonical CI artifact)
+- SHA256: `9d27ef6397b25876c5360de85fc3bb4c0cdfaaea64287f40351de8919c18f776` (canonical CI artifact)
 
 ## Previous Release - v0.13.1
 
