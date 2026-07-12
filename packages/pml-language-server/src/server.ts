@@ -45,6 +45,7 @@ import { SemanticTokensProvider, semanticTokensLegend } from './providers/semant
 import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
 import { FormReferenceValidator } from './analysis/formReferenceValidator';
 import { limitDiagnostics } from './utils/diagnosticLimits';
+import { normalizeWorkspaceEnvironment, workspaceEnvironmentFingerprint } from './utils/workspaceEnvironment';
 
 // Create a connection for the server
 const connection = createConnection(ProposedFeatures.all);
@@ -83,6 +84,7 @@ let hasInlayHintRefreshCapability = false;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let hasDiagnosticRelatedInformationCapability = false;
 let pendingWorkspaceRefresh: { reason: string; progressMessage: string } | undefined;
+let lastWorkspaceEnvironmentFingerprint: string | undefined;
 
 connection.onInitialize((params: InitializeParams) => {
 	const capabilities = params.capabilities;
@@ -203,9 +205,19 @@ async function refreshWorkspaceIndex(reason: string, progressMessage: string): P
 	try {
 		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
 		symbolIndex.clear();
+		const workspaceRoots = (workspaceFolders ?? []).map(workspaceFolderToPath);
+		const rawEnvironment = hasConfigurationCapability
+			? await connection.workspace.getConfiguration('pml')
+			: globalSettings;
+		const environment = normalizeWorkspaceEnvironment(rawEnvironment, workspaceRoots[0]);
+		lastWorkspaceEnvironmentFingerprint = workspaceEnvironmentFingerprint(environment);
+		const folders = Array.from(new Set([...workspaceRoots, ...environment.pmllibPaths]));
+		connection.console.log(
+			`PML environment: E3D ${environment.e3dVersion || 'unspecified'}, ` +
+			`UIC ${environment.uicPath || 'unspecified'}, additional PMLLIB roots ${environment.pmllibPaths.length}`
+		);
 
-		if (workspaceFolders && workspaceFolders.length > 0) {
-			const folders = workspaceFolders.map(workspaceFolderToPath);
+		if (folders.length > 0) {
 			connection.console.log(`Indexing workspace (${reason}): ${folders.join(', ')}`);
 
 			progress = await connection.window.createWorkDoneProgress();
@@ -213,7 +225,7 @@ async function refreshWorkspaceIndex(reason: string, progressMessage: string): P
 
 			await workspaceIndexer.indexWorkspace(folders, progress);
 		} else {
-			connection.console.log(`No workspace folders to index (${reason})`);
+			connection.console.log(`No workspace or configured PMLLIB folders to index (${reason})`);
 		}
 
 		workspaceScanCompleted = true;
@@ -336,7 +348,26 @@ connection.onDidChangeConfiguration(change => {
 	documents.all().forEach(validateTextDocument);
 	scheduleCodeLensRefresh();
 	scheduleInlayHintRefresh();
+	void refreshWorkspaceIndexIfEnvironmentChanged();
 });
+
+async function refreshWorkspaceIndexIfEnvironmentChanged(): Promise<void> {
+	try {
+		const workspaceFolders = await connection.workspace.getWorkspaceFolders();
+		const workspaceRoots = (workspaceFolders ?? []).map(workspaceFolderToPath);
+		const rawEnvironment = hasConfigurationCapability
+			? await connection.workspace.getConfiguration('pml')
+			: globalSettings;
+		const environment = normalizeWorkspaceEnvironment(rawEnvironment, workspaceRoots[0]);
+		const fingerprint = workspaceEnvironmentFingerprint(environment);
+		if (lastWorkspaceEnvironmentFingerprint !== undefined && fingerprint !== lastWorkspaceEnvironmentFingerprint) {
+			await refreshWorkspaceIndex('E3D environment settings changed', 'Re-indexing configured PMLLIB paths...');
+		}
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		connection.console.warn(`Unable to refresh configured PMLLIB paths: ${message}`);
+	}
+}
 
 let codeLensRefreshTimer: ReturnType<typeof setTimeout> | undefined;
 

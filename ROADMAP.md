@@ -429,15 +429,16 @@ Development plans and progress tracking.
   - ⏳ Gadget autocomplete in form context (deferred to v0.9.x)
   - ⏳ Callback validation (deferred to v0.9.x)
 
-- [ ] **Enhanced Reload Form Command**
-  - Detect form files automatically
-  - Better error messages
-  - Integration with AVEVA (if possible)
+- [x] **Enhanced Reload Form Command** ✅ COMPLETED
+  - Detect active setup/layout form declarations while ignoring comments.
+  - Select the target explicitly in multi-form documents and save dirty files first.
+  - Copy the exact AVEVA `kill`/`show` handoff with file-specific errors.
 
-- [ ] **Settings for Paths**
-  - `pml.pmllibPaths` - library paths for imports
-  - `pml.uicPath` - UIC path
-  - `pml.e3dVersion` - E3D version
+- [x] **Settings for Paths** ✅ COMPLETED
+  - `pml.pmllibPaths` adds external libraries to symbol indexing.
+  - `pml.uicPath` records the local UIC environment.
+  - `pml.e3dVersion` records the selected E3D version.
+  - Environment-only changes trigger a focused workspace re-index.
 
 ### Testing & Quality
 
@@ -1134,7 +1135,8 @@ Development plans and progress tracking.
 
 - [x] **Semantic Highlighting** ✅ COMPLETED
   - Variables highlighted distinctly (`!local`, `!!global`)
-  - Method names with definition detection
+  - Form/object definitions and method/global-function symbols use distinct standard LSP classes
+  - Form members, gadgets, and property access are separated from callable tokens
   - Parameters in method signatures
   - Type keywords (STRING, REAL, BOOLEAN, etc.)
   - Control flow keywords highlighted
@@ -1201,10 +1203,10 @@ Development plans and progress tracking.
   - ✅ Registered Pline `EDGPACKET` template in Quick Actions.
   - ⏳ Additional common EDG patterns.
 
-- [ ] **PML.NET Snippets**
-  - Template for PML↔.NET bridge
-  - C# class stub reference
-  - Common .NET interop patterns
+- [~] **PML.NET Snippets**
+  - ✅ Namespace import Quick Action.
+  - ✅ Observed `PMLNETCONTROL`/`NETGRIDCONTROL` declaration and initialization patterns.
+  - ⏳ C# class stub reference remains documentation-only future work.
 
 - [ ] **Form Snippets**
   - Form template
@@ -1223,9 +1225,10 @@ Development plans and progress tracking.
 
 ### Advanced Quality & Community (v1.0 focus)
 
-- [ ] **Semantic Highlighting**
-  - Different colors for different token types
-  - Highlight variable scope
+- [~] **Semantic Highlighting**
+  - ✅ Standard LSP token classes keep symbol categories theme-controlled.
+  - ✅ Forms/objects, callables, members/gadgets, properties, variables, parameters, and types are distinct.
+  - ⏳ Deeper AST-backed variable-scope modifiers remain future work.
 
 - [x] **Code Lens** ✅ COMPLETED
   - Shows clickable reference counts above methods and global functions
@@ -1296,7 +1299,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.13.1 published
+**Version:** 0.14.0 release candidate; unified post-0.13 cycle complete
 **Prepared:** 2026-07-12
 
 **Statistics:**
@@ -1306,10 +1309,10 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **439 passing, 3 skipped by default** (22 client + 417 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
+- Tests: **451 passing, 3 skipped by default** (25 client + 426 language-server tests covering parser, providers, diagnostics, tools, filesystem fallbacks, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Current Focus (v0.12.x):**
+**Current Focus (v0.14.x):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 16 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval, historical release checksums remain immutable, and release automation runs TypeScript, language-server tests, extension smoke, extension-host smoke, and VSIX validation before release publication.
@@ -1358,6 +1361,7 @@ Development plans and progress tracking.
 - ✅ **Call Authoring UX** - Indexed callables insert typed argument snippets, and supported unresolved direct calls offer conservative method or sibling global-function stub generation.
 - ✅ **Callable Refactoring UX** - Direct indexed calls can fill missing trailing arguments, synchronize generated empty stub signatures, and navigate to existing or newly generated definitions without crossing scope or ambiguity boundaries.
 - ✅ **Callable Signature Cleanup** - Unused method/function parameters can be removed from any signature position together with same-position direct-call arguments; line-command references and nested same-callable edits remain conservatively refused.
+- ✅ **Batch Trailing Signature Cleanup** - A contiguous suffix of multiple unused parameters can be removed in one guarded signature/call edit set without guessing replacements.
 - ✅ **Form Authoring Toolkit** - Static and reused gadget callbacks navigate in both directions; missing handlers, init/OK/cancel lifecycle wiring, and reliably typed members support safe individual or batch generation without guessing dynamic controls.
 - ✅ **Visual Form Outline/Actions** - CodeLens shows form-action entrypoints, member types, callback navigation, and missing callback repair without adding completion noise.
 - ✅ **Type-Assisted Form Member Editing** - Opt-in form-reference checks flag only consistently proven type mismatches; preferred Quick Fix and batch alignment skip dynamic, custom, `ANY`, and conflicting assignments.
@@ -1365,18 +1369,21 @@ Development plans and progress tracking.
 **Next Stabilization Plan:**
 - ✅ **Performance Budget Baseline** - Current local guard measurements are parser 24 ms, workspace parse/index 40 ms, completion 60 ms, and references 55 ms; all remain well below their release budgets, so no speculative optimization is planned until a real hotspot appears.
 - ✅ **Workspace Indexing Status** - Progress now reports discovered PML file counts and final indexing duration; next use measured performance baselines to tune hotspots.
+- ✅ **Bounded Workspace Indexing** - Disk reads now run in measured batches of 12 with a regression guard that proves concurrency and its upper bound.
 - **Completions:** receiver inference follows reliable aliases and explicit unambiguous user-call results, including direct/chained call receivers, while invalidating stale or ambiguous types and respecting line/inactive-text boundaries; next add curated AVEVA/E3D command presets.
 - ✅ **Navigation Release Gate:** `.pmlobj` and `.pmlcmd` Outline coverage is guarded; user-defined methods remain file-scoped; global `!!function(...)` symbols remain workspace-scoped; CodeLens and incoming/outgoing Call Hierarchy use the shared index; References/Rename retain text fallback for callback strings and delimiter-adjacent bare callbacks.
 - ✅ **Actionable Form Diagnostics** - Missing callback and unknown member warnings now state the immediate corrective action; keep default `.pmlfrm` noise low with explicit false-positive/false-negative coverage.
+- ✅ **Precise Form Reference Coverage** - Direct setup-body references and `do from/to/by` expressions are validated, while lifecycle callback diagnostics select their assignment instead of the enclosing form.
 - **Preset packs:** Quick Actions now groups starter patterns for forms/callbacks, arrays, file IO, PML.NET, and observed EDG picker/packet workflows; next add another common EDG pattern without flooding completion lists.
 - ✅ **Disposable VSIX Install Smoke** - CI and release validation install the newly packaged extension into an isolated VS Code profile and verify its extension ID and version.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.14.0` (release candidate): combines Enhanced Reload Form, E3D/PMLLIB settings, precise form diagnostics, bounded indexing, batch callable cleanup, filesystem coverage, PML.NET presets, and richer semantic tokens.
 - `v0.13.1` (published): expands safe callable signature cleanup to every parameter position, adds user-controlled type-hint UI plus EDG picker/packet presets, hardens watcher and VSIX packaging behavior, and records targeted audit follow-ups.
-- **Post-v0.13 callable API editing (in progress):** signature cleanup now covers unused leading, middle, and trailing parameters with matching direct-call updates; next consolidate the release UX and final gates.
-- **Callable API Editing (in progress):** signature cleanup refuses used, dynamic, ambiguous, unparsable, arity-mismatched, and nested direct-call cases rather than making uncertain edits.
-- **Cross-Form Navigation (in progress):** Outline presents typed members and direct callback links; Workspace Symbols find members, nested gadgets, and callbacks project-wide; Call Hierarchy starts from gadget/lifecycle callbacks and shows their method edge.
+- **Post-v0.13 callable API editing (complete):** signature cleanup covers unused leading, middle, and trailing parameters plus contiguous trailing suffixes with matching direct-call updates.
+- **Callable API Editing (complete for v0.14.0):** signature cleanup refuses used, dynamic, ambiguous, unparsable, arity-mismatched, and nested direct-call cases rather than making uncertain edits.
+- **Cross-Form Navigation (complete for the current scope):** Outline presents typed members and direct callback links; Workspace Symbols find members, nested gadgets, and callbacks project-wide; Call Hierarchy starts from gadget/lifecycle callbacks and shows their method edge.
 - `v0.13.0` (published): combines safe direct-call signature cleanup with project-level form presentation and callback navigation across Outline, Workspace Symbols, and Call Hierarchy.
 - `v0.12.45`: completes the current Form Authoring slice with safe type-assisted member diagnostics and declaration alignment, on top of callback/lifecycle/member generation and visual actions.
 - `v0.12.44` (folded into v0.12.45): Form Authoring Toolkit plus visual CodeLens outline/actions for form structure and callback repair.

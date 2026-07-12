@@ -44,6 +44,26 @@ export class CallableSignatureRefactorProvider {
 		if (!calls || calls.some(site => site.call.arguments.length !== definition.parameters.length) || this.hasNestedCallSites(calls)) return [];
 		const label = `${target.kind === 'method' ? '.' : '!!'}${target.name}`;
 		const actions: CodeAction[] = [];
+		let unusedTrailingCount = 0;
+		for (let index = definition.parameters.length - 1; index >= 0; index--) {
+			if (this.parameterIsUsed(definition.body, definition.parameters[index].name)) break;
+			unusedTrailingCount++;
+		}
+		if (unusedTrailingCount >= 2) {
+			const definitionEdit = this.removeTrailingItemsEdit(definition.parameters, unusedTrailingCount);
+			const changes: Record<string, TextEdit[]> = { [document.uri]: [definitionEdit] };
+			for (const site of calls) {
+				(changes[site.document.uri] ??= []).push(this.removeTrailingItemsEdit(site.call.arguments, unusedTrailingCount));
+			}
+			if (!this.hasOverlappingEdits(changes)) {
+				actions.push({
+					title: `Remove ${unusedTrailingCount} unused trailing parameters from ${label} and update ${calls.length} direct call${calls.length === 1 ? '' : 's'}`,
+					kind: CodeActionKind.RefactorRewrite,
+					isPreferred: true,
+					edit: { changes }
+				});
+			}
+		}
 		for (const [parameterIndex, parameter] of definition.parameters.entries()) {
 			if (this.parameterIsUsed(definition.body, parameter.name)) continue;
 			const definitionEdit = this.removeItemEdit(definition.parameters, parameterIndex);
@@ -159,6 +179,12 @@ export class CallableSignatureRefactorProvider {
 		if (items.length === 1) return TextEdit.replace(item.range, '');
 		if (index === 0) return TextEdit.replace(Range.create(item.range.start, items[1].range.start), '');
 		return TextEdit.replace(Range.create(items[index - 1].range.end, item.range.end), '');
+	}
+
+	private removeTrailingItemsEdit(items: Array<Parameter | Expression>, count: number): TextEdit {
+		const firstRemovedIndex = items.length - count;
+		const start = firstRemovedIndex === 0 ? items[0].range.start : items[firstRemovedIndex - 1].range.end;
+		return TextEdit.replace(Range.create(start, items[items.length - 1].range.end), '');
 	}
 
 	private hasOverlappingEdits(changes: Record<string, TextEdit[]>): boolean {

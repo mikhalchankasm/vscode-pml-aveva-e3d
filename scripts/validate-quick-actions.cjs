@@ -14,6 +14,13 @@ const contributedCommands = new Set(
     (packageJson.contributes?.commands ?? []).map(command => command.command)
 );
 const registeredCommands = new Set();
+const requiredQuickActionMarkers = [
+    'Preset: PML.NET Grid Declaration',
+    'PMLNETCONTROL',
+    'member .${4:gridControl} is NETGRIDCONTROL',
+    'Preset: PML.NET Grid Initialization',
+    'object NETGRIDCONTROL()'
+];
 
 for (const filePath of collectTypeScriptFiles(srcDir)) {
     const source = fs.readFileSync(filePath, 'utf8');
@@ -24,16 +31,23 @@ for (const filePath of collectTypeScriptFiles(srcDir)) {
 
 const missing = quickActionCommands
     .filter(command => !contributedCommands.has(command) && !registeredCommands.has(command));
+const missingMarkers = requiredQuickActionMarkers.filter(marker => !quickActionsSource.includes(marker));
 
-if (missing.length > 0) {
+if (missing.length > 0 || missingMarkers.length > 0) {
     console.error('Quick Actions reference command IDs that are not contributed or registered:');
     for (const command of missing) {
         console.error(`- ${command}`);
     }
+    if (missingMarkers.length > 0) {
+        console.error('Required Quick Actions templates are missing source markers:');
+        for (const marker of missingMarkers) {
+            console.error(`- ${marker}`);
+        }
+    }
     process.exit(1);
 }
 
-console.log(`Quick Actions command validation passed (${quickActionCommands.length} references).`);
+console.log(`Quick Actions validation passed (${quickActionCommands.length} command references, ${requiredQuickActionMarkers.length} template markers).`);
 
 function collectMatches(source, pattern) {
     const matches = [];

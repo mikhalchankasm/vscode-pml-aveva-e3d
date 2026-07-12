@@ -44,6 +44,32 @@ endmethod
 			"Unknown form member or gadget '!this.missingSkip'. Declare it or correct the reference.",
 			"Unknown form member or gadget '!this.unknownGadget'. Declare it or correct the reference."
 		]);
+		const lifecycle = diagnostics.find(diagnostic => diagnostic.message.startsWith("Form callback 'this.quitcall'"));
+		expect(lifecycle?.range.start.line).toBe(4);
+	});
+
+	it('reports unknown direct form-body members and do range expressions', () => {
+		const source = `
+setup form !!ReferenceForm
+	!this.missingSetup.active = true
+exit
+
+define method .apply()
+	do !i from !this.missingFrom.val to !this.missingTo.val by !this.missingBy.val
+	enddo
+endmethod
+		`.trim();
+
+		const parseResult = new Parser().parse(source);
+		expect(parseResult.errors).toHaveLength(0);
+
+		const diagnostics = new FormReferenceValidator().check(parseResult.ast);
+		expect(diagnostics.map(diagnostic => diagnostic.message).sort()).toEqual([
+			"Unknown form member or gadget '!this.missingBy'. Declare it or correct the reference.",
+			"Unknown form member or gadget '!this.missingFrom'. Declare it or correct the reference.",
+			"Unknown form member or gadget '!this.missingSetup'. Declare it or correct the reference.",
+			"Unknown form member or gadget '!this.missingTo'. Declare it or correct the reference."
+		]);
 	});
 
 	it('should accept declared members, nested gadgets, and existing methods', () => {

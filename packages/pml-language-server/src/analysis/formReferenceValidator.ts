@@ -45,6 +45,9 @@ export class FormReferenceValidator {
 		for (const form of forms) {
 			this.validateFormCallbacks(form, methods, severity, diagnostics);
 			this.validateGadgetCallbacks(form, methods, severity, diagnostics);
+			for (const statement of form.body) {
+				this.validateStatementReferences(statement, knownThisMembers, severity, diagnostics);
+			}
 		}
 
 		for (const statement of program.body) {
@@ -100,8 +103,31 @@ export class FormReferenceValidator {
 		diagnostics: Diagnostic[]
 	): void {
 		for (const [property, callback] of Object.entries(form.callbacks)) {
-			this.validateCallbackTarget(callback, methods, form.range, severity, diagnostics, `Form callback '${property}'`);
+			const range = this.findFormCallbackAssignmentRange(form, property, callback) ?? form.range;
+			this.validateCallbackTarget(callback, methods, range, severity, diagnostics, `Form callback '${property}'`);
 		}
+	}
+
+	private findFormCallbackAssignmentRange(
+		form: FormDefinition,
+		property: string,
+		callback: string
+	): Diagnostic['range'] | undefined {
+		for (const statement of form.body) {
+			if (statement.type !== 'ExpressionStatement' || statement.expression.type !== 'AssignmentExpression') continue;
+			const assignment = statement.expression;
+			if (assignment.right.type !== 'Literal' || assignment.right.literalType !== 'string' || assignment.right.value !== callback) continue;
+			const path = this.directMemberPath(assignment.left);
+			if (path?.toLowerCase() === property.toLowerCase()) return assignment.range;
+		}
+		return undefined;
+	}
+
+	private directMemberPath(expression: Expression): string | undefined {
+		if (expression.type === 'Identifier') return expression.name;
+		if (expression.type !== 'MemberExpression' || expression.computed || expression.property.type !== 'Identifier') return undefined;
+		const object = this.directMemberPath(expression.object);
+		return object ? `${object}.${expression.property.name}` : undefined;
 	}
 
 	private validateGadgetCallbacks(
@@ -287,11 +313,8 @@ export class FormReferenceValidator {
 				}
 				break;
 			case 'DoStatement':
-				if (statement.collection) {
-					this.validateExpressionReferences(statement.collection, knownThisMembers, severity, diagnostics);
-				}
-				if (statement.condition) {
-					this.validateExpressionReferences(statement.condition, knownThisMembers, severity, diagnostics);
+				for (const expression of [statement.collection, statement.from, statement.to, statement.by, statement.condition]) {
+					if (expression) this.validateExpressionReferences(expression, knownThisMembers, severity, diagnostics);
 				}
 				statement.body.forEach(child => this.validateStatementReferences(child, knownThisMembers, severity, diagnostics));
 				break;

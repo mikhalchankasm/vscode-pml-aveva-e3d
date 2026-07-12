@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { URI } from 'vscode-uri';
 import { SymbolIndex } from '../symbolIndex';
-import { WorkspaceIndexer } from '../workspaceIndexer';
+import { WORKSPACE_INDEX_BATCH_SIZE, WorkspaceIndexer } from '../workspaceIndexer';
 
 function createConnectionStub(): Connection {
 	return {
@@ -91,6 +91,55 @@ describe('WorkspaceIndexer', () => {
 			expect(report).toHaveBeenCalledWith(0, 'Found 2 PML files. Indexing...');
 			expect(report).toHaveBeenCalledWith(100, 'Indexed 2/2 files');
 			expect(report).toHaveBeenLastCalledWith(100, expect.stringMatching(/^Indexed 2 PML files in (?:\d+ ms|\d+\.\d s)\.$/));
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it('indexes files concurrently without exceeding the bounded batch size', async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pml-workspace-indexer-batch-'));
+		let activeReads = 0;
+		let maxActiveReads = 0;
+		const readFile = async (filePath: string, encoding: BufferEncoding): Promise<string> => {
+			activeReads++;
+			maxActiveReads = Math.max(maxActiveReads, activeReads);
+			await new Promise(resolve => setTimeout(resolve, 5));
+			const content = await fs.readFile(filePath, encoding);
+			activeReads--;
+			return content;
+		};
+
+		try {
+			for (let index = 0; index < WORKSPACE_INDEX_BATCH_SIZE + 3; index++) {
+				await fs.writeFile(path.join(tempDir, `method-${index}.pml`), `define method .method${index}()\nendmethod`, 'utf-8');
+			}
+			const symbolIndex = new SymbolIndex();
+			const indexer = new WorkspaceIndexer(symbolIndex, createConnectionStub(), () => false, readFile);
+			await indexer.indexWorkspace([tempDir]);
+
+			expect(maxActiveReads).toBeGreaterThan(1);
+			expect(maxActiveReads).toBeLessThanOrEqual(WORKSPACE_INDEX_BATCH_SIZE);
+			expect(symbolIndex.getStats().files).toBe(WORKSPACE_INDEX_BATCH_SIZE + 3);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it('deduplicates files when configured roots overlap the workspace', async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pml-workspace-indexer-overlap-'));
+		const nestedDir = path.join(tempDir, 'pmllib');
+		await fs.mkdir(nestedDir);
+		const filePath = path.join(nestedDir, 'shared.pml');
+		await fs.writeFile(filePath, 'define method .shared()\nendmethod', 'utf-8');
+		const readFile = vi.fn(async (candidate: string, encoding: BufferEncoding) => fs.readFile(candidate, encoding));
+
+		try {
+			const symbolIndex = new SymbolIndex();
+			const indexer = new WorkspaceIndexer(symbolIndex, createConnectionStub(), () => false, readFile);
+			await indexer.indexWorkspace([tempDir, nestedDir]);
+
+			expect(readFile).toHaveBeenCalledTimes(1);
+			expect(symbolIndex.getStats().files).toBe(1);
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}

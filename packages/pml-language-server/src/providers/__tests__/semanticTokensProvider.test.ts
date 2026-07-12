@@ -137,4 +137,29 @@ describe('SemanticTokensProvider', () => {
 			token.type === 'keyword'
 		)).toBe(false);
 	});
+
+	it('distinguishes form, callable, and property symbols', () => {
+		const uri = 'file:///semantic-symbols.pmlfrm';
+		const source = [
+			'setup form !!Sample',
+			'  member .title is STRING',
+			'  button .apply |Apply|',
+			'exit',
+			'define method .apply()',
+			'  !this.title.val = !!BuildTitle()',
+			'endmethod'
+		].join('\n');
+		const document = TextDocument.create(uri, 'pml', 1, source);
+		const provider = new SemanticTokensProvider({ get: () => document } as any);
+		const tokens = decodeTokens(provider.provideFull({ textDocument: { uri } }).data);
+		const tokenAt = (line: number, text: string) => tokens.find(token => token.line === line && token.start === source.split('\n')[line].indexOf(text));
+
+		expect(tokenAt(0, '!!Sample')?.type).toBe('class');
+		expect(tokenAt(1, '.title')?.type).toBe('property');
+		expect(tokenAt(2, '.apply')?.type).toBe('property');
+		expect(tokenAt(4, '.apply')?.type).toBe('function');
+		expect(tokenAt(5, '.title')?.type).toBe('property');
+		expect(tokenAt(5, '.val')?.type).toBe('property');
+		expect(tokenAt(5, '!!BuildTitle')?.type).toBe('function');
+	});
 });

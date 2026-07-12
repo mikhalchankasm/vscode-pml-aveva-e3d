@@ -1,6 +1,6 @@
 # PML for AVEVA E3D — VS Code Extension
 
-[![Version](https://img.shields.io/badge/version-0.13.0-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
+[![Version](https://img.shields.io/badge/version-0.14.0-blue.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/blob/main/LICENSE)
 
 > Full-featured Language Server Protocol (LSP) extension for **AVEVA E3D PML** (Programmable Macro Language) in Visual Studio Code.
@@ -13,10 +13,11 @@
 
 ### ✨ Features
 
-- 🎨 **Syntax Highlighting** — Full PML1/PML2 syntax support
+- 🎨 **Syntax Highlighting** — PML1/PML2 syntax plus semantic distinctions for forms/objects, callables, members/gadgets, properties, variables, and types
 - 📝 **IntelliSense** — Smart autocomplete for keywords, methods, variables, and typed callable argument snippets
-- 🛠️ **Call Authoring** — Complete missing arguments, generate safe stubs, synchronize generated signatures, navigate directly between calls and definitions, and safely remove unused trailing API parameters with matching direct-call updates
+- 🛠️ **Call Authoring** — Complete missing arguments, generate safe stubs, synchronize generated signatures, navigate directly between calls and definitions, and safely remove individual unused parameters or a contiguous unused trailing suffix with matching direct-call updates
 - 🧩 **Form Authoring** — A visual CodeLens outline for form actions, members and callbacks; batch-generate missing handlers, add init/OK/cancel lifecycle wiring, declare reliably typed missing form members, and safely align declared member types with consistent direct assignments
+- 🔄 **Reload Form** — Detect active setup/layout forms, choose between multiple declarations, save the document, and copy the matching AVEVA `kill`/`show` command with actionable errors
 - 🔍 **Navigation** — Go to Definition, Find References, Document/Workspace Symbols (including form members/gadgets/callbacks), clickable reference-count CodeLens, and incoming/outgoing Call Hierarchy including direct form callbacks
 - 🏷️ **Inlay Hints** — Low-noise variable types propagated from reliable assignments, typed parameters, and explicit unambiguous call returns, plus parameter names for indexed calls
 - 🧭 **Method Usage Preview** — Hover a `define method .name(...)` declaration to see the first usage locations with file/line links
@@ -104,8 +105,12 @@ Entries include the first command word, category, and short hover text. Add only
 - `pml.inlayHints.enabled`: master switch for PML type and parameter hints (default: `true`).
 - `pml.inlayHints.variableTypes`: infer types from the first reliable assignment in each scope (default: `true`).
 - `pml.inlayHints.parameterNames`: show parameter names for unambiguous indexed calls (default: `true`).
+- `pml.pmllibPaths`: additional AVEVA PMLLIB directories included in workspace indexing; relative paths resolve from the first workspace folder.
+- `pml.uicPath`: optional local AVEVA UIC installation path recorded with the active environment.
+- `pml.e3dVersion`: optional E3D version label such as `2.10` or `3.1`.
 - `PML: Toggle Variable Type Hints`: quickly show or hide inferred variable type hints from the Command Palette or PML Quick Actions without changing parameter hints.
 - PML Quick Actions include EDG single- and multiple-element pick templates plus a registered Pline `EDGPACKET` template. They require the E3D EDG library and insert callback skeletons.
+- PML Quick Actions include observed PML.NET namespace, grid declaration, and `NETGRIDCONTROL` initialization patterns.
 
 ### 📚 Documentation
 
@@ -157,9 +162,10 @@ MIT License - see [LICENSE](https://github.com/mikhalchankasm/vscode-pml-aveva-e
 
 ### ✨ Возможности
 
-- 🎨 **Подсветка синтаксиса** — Полная поддержка PML1/PML2
+- 🎨 **Подсветка синтаксиса** — PML1/PML2 и semantic distinctions для forms/objects, callables, members/gadgets, properties, variables и типов
 - 📝 **IntelliSense** — Умные подсказки для ключевых слов, методов, переменных
 - 🔍 **Навигация** — Переход к определению, поиск ссылок, символы документа/workspace, кликабельный CodeLens и иерархия входящих/исходящих вызовов
+- 🔄 **Reload Form** — Находит активные setup/layout forms, предлагает выбор при нескольких декларациях, сохраняет документ и копирует соответствующую AVEVA-команду `kill`/`show`
 - 🏷️ **Inlay Hints** — Ненавязчивые подсказки типов из надёжных присваиваний, типизированных параметров и явных результатов однозначных вызовов, а также имён параметров
 - 🐛 **Diagnostics** — Real-time parser and configurable semantic checks
 - 🔧 **LSP сервер** — Полная поддержка Language Server Protocol
@@ -222,8 +228,12 @@ Whitelist стартовых слов команд лежит здесь:
 - `pml.inlayHints.enabled`: общий переключатель type/parameter hints (по умолчанию: `true`).
 - `pml.inlayHints.variableTypes`: выводить тип по первому надёжному присваиванию в области (по умолчанию: `true`).
 - `pml.inlayHints.parameterNames`: показывать имена параметров для однозначных индексированных вызовов (по умолчанию: `true`).
+- `pml.pmllibPaths`: дополнительные каталоги AVEVA PMLLIB для workspace indexing; относительные пути считаются от первой workspace folder.
+- `pml.uicPath`: необязательный путь к локальной установке AVEVA UIC.
+- `pml.e3dVersion`: необязательная метка версии E3D, например `2.10` или `3.1`.
 - `PML: Toggle Variable Type Hints`: быстро показать или скрыть подсказки типов переменных из Command Palette или PML Quick Actions, не затрагивая подсказки параметров.
 - PML Quick Actions содержат шаблоны EDG для выбора одного или нескольких элементов, а также зарегистрированного Pline `EDGPACKET`. Им требуется библиотека E3D EDG; они вставляют каркас callback-функции.
+- PML Quick Actions содержат проверенные по PMLLIB шаблоны PML.NET namespace, grid declaration и инициализации `NETGRIDCONTROL`.
 
 ### 📚 Документация
 

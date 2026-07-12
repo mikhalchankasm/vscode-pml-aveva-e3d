@@ -9,6 +9,7 @@ const contributedCommands = new Set(
     (packageJson.contributes?.commands ?? []).map(command => command.command)
 );
 const packageScripts = packageJson.scripts ?? {};
+const configurationProperties = packageJson.contributes?.configuration?.properties ?? {};
 const source = collectTypeScriptFiles(srcDir)
     .map(filePath => fs.readFileSync(filePath, 'utf8'))
     .join('\n');
@@ -51,16 +52,24 @@ const requiredScripts = [
     'validate:vsix'
 ];
 
+const requiredConfiguration = [
+    'pml.pmllibPaths',
+    'pml.uicPath',
+    'pml.e3dVersion'
+];
+
 const missingContributions = criticalCommands.filter(command => !contributedCommands.has(command));
 const missingSourceReferences = criticalCommands.filter(command => !source.includes(command));
 const missingSourceSnippets = requiredSourceSnippets.filter(snippet => !source.includes(snippet));
 const missingScripts = requiredScripts.filter(script => typeof packageScripts[script] !== 'string');
+const missingConfiguration = requiredConfiguration.filter(key => configurationProperties[key] === undefined);
 
 if (
     missingContributions.length > 0 ||
     missingSourceReferences.length > 0 ||
     missingSourceSnippets.length > 0 ||
-    missingScripts.length > 0
+    missingScripts.length > 0 ||
+    missingConfiguration.length > 0
 ) {
     if (missingContributions.length > 0) {
         console.error('Critical commands are missing package.json contributions:');
@@ -90,10 +99,17 @@ if (
         }
     }
 
+    if (missingConfiguration.length > 0) {
+        console.error('Required configuration properties are missing:');
+        for (const key of missingConfiguration) {
+            console.error(`- ${key}`);
+        }
+    }
+
     process.exit(1);
 }
 
-console.log(`Extension smoke validation passed (${criticalCommands.length} commands, ${requiredScripts.length} scripts, ${requiredSourceSnippets.length} source markers).`);
+console.log(`Extension smoke validation passed (${criticalCommands.length} commands, ${requiredScripts.length} scripts, ${requiredSourceSnippets.length} source markers, ${requiredConfiguration.length} configuration properties).`);
 
 function collectTypeScriptFiles(dir) {
     const files = [];

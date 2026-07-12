@@ -2,6 +2,22 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [Unreleased]
+
+## [0.14.0] - 2026-07-12
+
+### Improved
+
+- Make Reload Form detect active setup/layout declarations, ignore commented declarations, offer an explicit choice for multi-form documents, save dirty files, and provide form-specific error messages before copying the AVEVA command.
+- Add `pml.pmllibPaths`, `pml.uicPath`, and `pml.e3dVersion`; configured PMLLIB roots participate in indexing and refresh only when the environment configuration changes.
+- Extend form-reference validation to direct setup-body references and every `do` range expression, and point lifecycle callback diagnostics at the exact assignment when available.
+- Index workspace files with bounded batches of 12 concurrent reads; regression coverage proves concurrency without allowing unbounded filesystem pressure.
+- Deduplicate indexed files when configured PMLLIB roots overlap workspace folders.
+- Add one guarded callable refactor that removes a contiguous suffix of two or more unused trailing parameters and the matching suffix from every direct indexed call.
+- Add filesystem-backed References coverage for closed indexed documents whose source text is not cached.
+- Add observed PML.NET Quick Actions for a `PMLNETCONTROL`/`NETGRIDCONTROL` form declaration and matching grid initialization.
+- Improve semantic tokens so form/object definitions, methods/global functions, members/gadgets, and property access use distinct standard LSP token classes.
+
 ## [0.13.1] - 2026-07-12
 
 ### Improved

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { addToArrayText, reindexArrayText } from './arrayCommandsCore';
+import { buildReloadFormCommand, findFormReloadTargets } from './reloadFormUtils';
 import {
     leadingSpacesToTabsText,
     removeConsecutiveDuplicateLinesText,
@@ -601,22 +602,43 @@ export class PMLToolsProvider implements vscode.Disposable {
         if (!editor) return;
 
         const text = editor.document.getText();
-        
-        // Find a setup or layout form declaration.
-        const formRegex = /(?:setup|layout)\s+form\s+(!!?[a-zA-Z_][a-zA-Z0-9_]*)/i;
-        const match = text.match(formRegex);
-
-        if (!match) {
-            vscode.window.showErrorMessage('This is not a form file. No "setup form" or "layout form" declaration was found.');
+        const targets = findFormReloadTargets(text);
+        if (targets.length === 0) {
+            const extension = path.extname(editor.document.uri.fsPath).toLowerCase();
+            const message = extension === '.pmlfrm'
+                ? 'This .pmlfrm file has no active "setup form" or "layout form" declaration.'
+                : 'Reload Form requires a PML form document with an active "setup form" or "layout form" declaration.';
+            vscode.window.showErrorMessage(message);
             return;
         }
 
-        const formName = match[1];
-        const reloadCommand = `kill  ${formName}\nshow  ${formName}`;
+        let target = targets[0];
+        if (targets.length > 1) {
+            const picked = await vscode.window.showQuickPick(
+                targets.map(candidate => ({
+                    label: candidate.name,
+                    description: `Line ${candidate.line + 1}`,
+                    target: candidate
+                })),
+                {
+                    title: 'Select Form to Reload',
+                    placeHolder: 'Choose the form whose AVEVA reload command should be copied'
+                }
+            );
+            if (!picked) {
+                return;
+            }
+            target = picked.target;
+        }
 
-        // Copy the command to the clipboard.
+        if (editor.document.isDirty && !(await editor.document.save())) {
+            vscode.window.showErrorMessage(`Could not save ${path.basename(editor.document.uri.fsPath)} before preparing the reload command.`);
+            return;
+        }
+
+        const reloadCommand = buildReloadFormCommand(target.name);
         await vscode.env.clipboard.writeText(reloadCommand);
-        vscode.window.showInformationMessage(`Reload command for form ${formName} copied to the clipboard.`);
+        vscode.window.showInformationMessage(`AVEVA reload command for ${target.name} copied to the clipboard.`);
     };
 
     // Array helpers

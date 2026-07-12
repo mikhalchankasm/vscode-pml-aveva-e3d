@@ -236,6 +236,27 @@ const PRESET_ACTIONS: QuickAction[] = [
         ].join('\n'))
     },
     {
+        label: '$(extensions) Preset: PML.NET Grid Declaration',
+        description: 'PML.NET form',
+        detail: 'Insert an observed PMLNETCONTROL container and NETGRIDCONTROL member declaration.',
+        snippet: new vscode.SnippetString([
+            'using namespace \'Aveva.Core.Presentation\'',
+            'container .${1:gridContainer} nobox PMLNETCONTROL \'NET\' width ${2:60} height ${3:12}',
+            'member .${4:gridControl} is NETGRIDCONTROL',
+            '$0'
+        ].join('\n'))
+    },
+    {
+        label: '$(extensions) Preset: PML.NET Grid Initialization',
+        description: 'PML.NET method',
+        detail: 'Insert an observed NETGRIDCONTROL construction pattern for a form member.',
+        snippet: new vscode.SnippetString([
+            'using namespace \'Aveva.Core.Presentation\'',
+            '!this.${1:gridControl} = object NETGRIDCONTROL()',
+            '$0'
+        ].join('\n'))
+    },
+    {
         label: '$(symbol-event) Preset: EDG Single Element Pick',
         description: 'EDG',
         detail: 'Insert an E3D EDG single-element pick call and callback function.',

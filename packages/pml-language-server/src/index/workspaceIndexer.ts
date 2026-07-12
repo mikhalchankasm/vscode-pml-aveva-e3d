@@ -11,6 +11,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { minimatch } from 'minimatch';
 
+export const WORKSPACE_INDEX_BATCH_SIZE = 12;
+
 export class WorkspaceIndexer {
 	private symbolIndex: SymbolIndex;
 	private connection: Connection;
@@ -18,11 +20,18 @@ export class WorkspaceIndexer {
 	private indexingInProgress: boolean = false;
 	private excludePatterns: string[] = [];
 	private isDocumentOpen: (uri: string) => boolean;
+	private readFile: (filePath: string, encoding: BufferEncoding) => Promise<string>;
 
-	constructor(symbolIndex: SymbolIndex, connection: Connection, isDocumentOpen: (uri: string) => boolean = () => false) {
+	constructor(
+		symbolIndex: SymbolIndex,
+		connection: Connection,
+		isDocumentOpen: (uri: string) => boolean = () => false,
+		readFile: (filePath: string, encoding: BufferEncoding) => Promise<string> = async (filePath, encoding) => fs.readFile(filePath, encoding)
+	) {
 		this.symbolIndex = symbolIndex;
 		this.connection = connection;
 		this.isDocumentOpen = isDocumentOpen;
+		this.readFile = readFile;
 	}
 
 	/**
@@ -124,11 +133,15 @@ export class WorkspaceIndexer {
 			this.connection.console.log('Starting workspace indexing...');
 
 			// First pass: collect all files to get total count
-			const allFiles: string[] = [];
+			const filesByIdentity = new Map<string, string>();
 			for (const folder of workspaceFolders) {
 				const files = await this.findPMLFiles(folder);
-				allFiles.push(...files);
+				for (const file of files) {
+					const identity = process.platform === 'win32' ? path.resolve(file).toLowerCase() : path.resolve(file);
+					filesByIdentity.set(identity, file);
+				}
 			}
+			const allFiles = Array.from(filesByIdentity.values());
 
 			const totalFiles = allFiles.length;
 			this.connection.console.log(`Found ${totalFiles} PML files to index`);
@@ -140,12 +153,12 @@ export class WorkspaceIndexer {
 
 			// Second pass: index files with progress reporting
 			let indexedCount = 0;
-			for (const file of allFiles) {
-				await this.indexFile(file);
-				indexedCount++;
+			for (let start = 0; start < allFiles.length; start += WORKSPACE_INDEX_BATCH_SIZE) {
+				const batch = allFiles.slice(start, start + WORKSPACE_INDEX_BATCH_SIZE);
+				await Promise.all(batch.map(file => this.indexFile(file)));
+				indexedCount += batch.length;
 
-				// Report progress every 10 files or at completion
-				if (progress && (indexedCount % 10 === 0 || indexedCount === totalFiles)) {
+				if (progress) {
 					const percentage = Math.round((indexedCount / totalFiles) * 100);
 					progress.report(percentage, `Indexed ${indexedCount}/${totalFiles} files`);
 				}
@@ -266,7 +279,7 @@ export class WorkspaceIndexer {
 				return;
 			}
 
-			const content = await fs.readFile(filePath, 'utf-8');
+			const content = await this.readFile(filePath, 'utf-8');
 
 			const parseResult = this.parser.parse(content, { mode: parserModeFromUri(uri) });
 			if (parseResult.ast) {

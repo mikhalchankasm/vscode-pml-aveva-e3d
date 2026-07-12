@@ -79,6 +79,26 @@ describe('CallableSignatureRefactorProvider', () => {
 		]);
 	});
 
+	it('offers one batch edit for a contiguous unused trailing parameter suffix', () => {
+		const source = [
+			'define method .render(!title is STRING, !unusedCount is REAL, !unusedFlag is BOOLEAN)',
+			'  $P !title',
+			'endmethod',
+			'.render(|One|, 2, true)',
+			'!this.render(|Two|, 3, false)'
+		].join('\n');
+		const { document, actions } = actionAtDeclaration(source);
+		const batch = actions.find(action => action.title.startsWith('Remove 2 unused trailing parameters'));
+
+		expect(batch?.title).toBe('Remove 2 unused trailing parameters from .render and update 2 direct calls');
+		const edits = batch?.edit?.changes?.['file:///signature.pml'] ?? [];
+		expect(edits.map(edit => document.getText(edit.range))).toEqual([
+			', !unusedCount is REAL, !unusedFlag is BOOLEAN',
+			', 2, true',
+			', 3, false'
+		]);
+	});
+
 	it('does not offer an edit for used, ambiguous, or arity-mismatched APIs', () => {
 		expect(actionAtDeclaration('define method .render(!title is STRING, !unused is REAL)\n  !label = !title\n  !value = !unused\nendmethod\n.render(|One|, 1)').actions)
 			.toEqual([]);

@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -500,6 +500,27 @@
           "type": "boolean",
           "default": false,
           "description": "Show the raw Agent Kit JSON report in the PML Agent Kit output channel."
+        },
+        "pml.pmllibPaths": {
+          "type": "array",
+          "scope": "machine-overridable",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional AVEVA PMLLIB directories to include in workspace symbol indexing. Relative paths are resolved from the first workspace folder."
+        },
+        "pml.uicPath": {
+          "type": "string",
+          "scope": "machine-overridable",
+          "default": "",
+          "description": "Optional AVEVA UIC installation path used to describe the active local E3D environment."
+        },
+        "pml.e3dVersion": {
+          "type": "string",
+          "scope": "machine-overridable",
+          "default": "",
+          "description": "Optional AVEVA E3D version label for environment-aware PML tooling (for example, 2.10 or 3.1)."
         },
         "pml.diagnostics.typoDetection": {
           "type": "string",

@@ -93,6 +93,10 @@ const OPERATOR_KEYWORDS = new Set([
 	'true', 'false', 'unset'
 ]);
 
+const GADGET_DECLARATION_KEYWORDS = new Set([
+	'button', 'text', 'combo', 'option', 'toggle', 'container', 'frame', 'menu', 'list', 'view', 'paragraph'
+]);
+
 export class SemanticTokensProvider {
 	constructor(private documents: TextDocuments<TextDocument>) {}
 
@@ -236,12 +240,19 @@ export class SemanticTokensProvider {
 			if (line[pos] === '!' && line[pos + 1] === '!') {
 				const match = line.substring(pos).match(/^!![A-Za-z_][A-Za-z0-9_]*/);
 				if (match) {
-					// Check if it's a declaration/definition
-					const beforeText = line.substring(0, pos).trim();
-					const isDeclaration = beforeText === '' || beforeText.endsWith('=');
-					const modifier = isDeclaration ? MOD.DECLARATION : 0;
+					const beforeText = line.substring(0, pos).trim().toLowerCase();
+					const afterText = line.substring(pos + match[0].length);
+					const isFormDefinition = /(?:setup|layout)\s+form$/.test(beforeText);
+					const isFunctionDefinition = /define\s+function$/.test(beforeText);
+					const isFunctionCall = /^\s*\(/.test(afterText);
+					const tokenType = isFormDefinition
+						? TOKEN.CLASS
+						: isFunctionDefinition || isFunctionCall ? TOKEN.FUNCTION : TOKEN.NAMESPACE;
+					const modifier = isFormDefinition || isFunctionDefinition
+						? MOD.DEFINITION
+						: beforeText === '' || beforeText.endsWith('=') ? MOD.DECLARATION : 0;
 
-					builder.push(lineIndex, pos, match[0].length, TOKEN.NAMESPACE, modifier);
+					builder.push(lineIndex, pos, match[0].length, tokenType, modifier);
 					pos += match[0].length;
 					continue;
 				}
@@ -271,16 +282,20 @@ export class SemanticTokensProvider {
 			if (line[pos] === '.') {
 				const match = line.substring(pos).match(/^\.[A-Za-z_][A-Za-z0-9_]*/);
 				if (match) {
-					// Check if it's a definition
 					const beforeText = line.substring(0, pos).trim().toLowerCase();
-					const isDefinition = beforeText.endsWith('method') || beforeText.endsWith('member');
+					const afterText = line.substring(pos + match[0].length);
+					const isMethodDefinition = beforeText.endsWith('method');
+					const declarationKeyword = beforeText.split(/\s+/)[0] ?? '';
+					const isPropertyDeclaration = beforeText.endsWith('member') || GADGET_DECLARATION_KEYWORDS.has(declarationKeyword);
+					const isCall = /^\s*\(/.test(afterText);
+					const tokenType = isMethodDefinition || isCall ? TOKEN.FUNCTION : TOKEN.PROPERTY;
 
 					builder.push(
 						lineIndex,
 						pos,
 						match[0].length,
-						TOKEN.FUNCTION,
-						isDefinition ? MOD.DEFINITION : 0
+						tokenType,
+						isMethodDefinition ? MOD.DEFINITION : isPropertyDeclaration ? MOD.DECLARATION : 0
 					);
 					pos += match[0].length;
 					continue;
@@ -315,7 +330,7 @@ export class SemanticTokensProvider {
 					// Check if it's a class name (after 'object' or 'is')
 					const beforeText = line.substring(0, pos).trim().toLowerCase();
 					if (beforeText.endsWith('object') || beforeText.endsWith('is')) {
-						builder.push(lineIndex, pos, word.length, TOKEN.CLASS, 0);
+						builder.push(lineIndex, pos, word.length, TOKEN.CLASS, beforeText.endsWith('define object') ? MOD.DEFINITION : 0);
 					}
 					// Otherwise don't highlight - let TextMate handle it
 				}

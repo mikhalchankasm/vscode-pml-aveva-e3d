@@ -2,7 +2,35 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.13.1
+## Current Release - v0.14.0
+
+**Release Date:** 2026-07-12
+
+### What Changed
+
+- Enhance Reload Form with active declaration detection, multi-form selection, dirty-document saving, and actionable errors.
+- Add E3D/PMLLIB environment settings and index configured external PMLLIB roots.
+- Make form-reference diagnostics more precise and cover setup-body plus `do from/to/by` references.
+- Use bounded concurrent workspace indexing and add filesystem/benchmark regression coverage.
+- Add guarded batch cleanup for contiguous unused trailing callable parameters.
+- Add practical PML.NET grid declaration and initialization Quick Actions.
+- Distinguish form/object, callable, member/gadget, and property semantic tokens using standard theme-controlled LSP classes.
+
+### Validation
+
+- Client tests: passed (`25 passed`).
+- Language-server tests: passed (`426 passed`, `3 skipped`; the three existing skips are unchanged).
+- Root and language-server TypeScript validation, lint, bundled compile, extension validation, Quick Actions validation, and activated extension-host smoke: passed.
+- VSIX packaging, validation, disposable install smoke, and local VS Code/Cursor installation: passed.
+- Root and language-server dependency audits: passed with no vulnerabilities.
+- External Claude review was attempted through the required no-tools wrapper but completed without review text; final review was completed in Codex, including a confirmed overlapping-root indexing fix.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.14.0.vsix`
+- SHA256: `RELEASE_SHA256` (canonical CI artifact)
+
+## Previous Release - v0.13.1
 
 **Release Date:** 2026-07-12
 
