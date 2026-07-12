@@ -1296,7 +1296,7 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.13.1 release candidate
+**Version:** 0.13.1 published
 **Prepared:** 2026-07-12
 
 **Statistics:**
@@ -1373,6 +1373,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.13.1` (published): expands safe callable signature cleanup to every parameter position, adds user-controlled type-hint UI plus EDG picker/packet presets, hardens watcher and VSIX packaging behavior, and records targeted audit follow-ups.
 - **Post-v0.13 callable API editing (in progress):** signature cleanup now covers unused leading, middle, and trailing parameters with matching direct-call updates; next consolidate the release UX and final gates.
 - **Callable API Editing (in progress):** signature cleanup refuses used, dynamic, ambiguous, unparsable, arity-mismatched, and nested direct-call cases rather than making uncertain edits.
 - **Cross-Form Navigation (in progress):** Outline presents typed members and direct callback links; Workspace Symbols find members, nested gadgets, and callbacks project-wide; Call Hierarchy starts from gadget/lifecycle callbacks and shows their method edge.
