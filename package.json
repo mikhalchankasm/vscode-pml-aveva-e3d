@@ -2,7 +2,7 @@
   "name": "pml-aveva-e3d",
   "displayName": "PML for AVEVA E3D",
   "description": "Language support for PML (Programmable Macro Language) AVEVA E3D with full LSP and IntelliSense",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "publisher": "mikhalchankasm",
   "author": {
     "name": "MIKHALCHANKA SIARHEI"
@@ -100,6 +100,12 @@
         "title": "Quick Actions and Presets...",
         "category": "PML",
         "icon": "$(zap)"
+      },
+      {
+        "command": "pml.toggleVariableTypeHints",
+        "title": "Toggle Variable Type Hints",
+        "category": "PML",
+        "icon": "$(symbol-variable)"
       },
       {
         "command": "pml.agentKit.reviewCurrentFile",
@@ -799,6 +805,10 @@
         },
         {
           "command": "pml.quickActions.open",
+          "when": "editorLangId == pml"
+        },
+        {
+          "command": "pml.toggleVariableTypeHints",
           "when": "editorLangId == pml"
         },
         {

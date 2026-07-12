@@ -403,7 +403,7 @@ documents.onDidClose(e => {
 });
 
 // Debounce validation to avoid excessive revalidation (max 3-5/s)
-const validationTimers: Map<string, NodeJS.Timeout> = new Map();
+const validationTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 const VALIDATION_DEBOUNCE_MS = 200; // 200ms = max 5 validations/second
 
 // The content of a text document has changed

@@ -41,6 +41,7 @@ scripts/**
 test.pml
 test-*.js
 ARCHITECTURE_ANALYSIS.md
+*_AUDIT.md
 RELEASE_NOTES.md
 ROADMAP.md
 TROUBLESHOOTING.md

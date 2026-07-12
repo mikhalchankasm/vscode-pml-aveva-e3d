@@ -96,4 +96,18 @@ describe('WatchedFileIndexer', () => {
 		expect(readFileSync).not.toHaveBeenCalled();
 		expect(symbolIndex.getStats().files).toBe(0);
 	});
+
+	it('ignores watched URIs without a file extension', () => {
+		const readFileSync = vi.fn();
+		const indexer = new WatchedFileIndexer({
+			symbolIndex: new SymbolIndex(),
+			isDocumentOpen: () => false,
+			logger: createLogger(),
+			readFileSync
+		});
+
+		indexer.process([{ uri: 'file:///workspace/extensionless-file', type: FileChangeType.Changed }]);
+
+		expect(readFileSync).not.toHaveBeenCalled();
+	});
 });

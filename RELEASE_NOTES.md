@@ -2,7 +2,35 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.13.0
+## Current Release - v0.13.1
+
+**Release Date:** 2026-07-12
+
+### What Changed
+
+- Expand safe callable-signature cleanup beyond trailing parameters: an unused leading or middle parameter can now be removed with its same-position argument in every direct indexed call.
+- Keep the action conservative: parameter references inside line commands such as `$P !parameter` count as uses, and nested calls of the same callable are refused before edits are created.
+- Add a Command Palette and Quick Actions toggle for inferred variable type hints; parameter hints remain unchanged.
+- Add Quick Actions presets for E3D EDG single- and multiple-element picks with callback skeletons.
+- Add a Quick Actions preset for a registered E3D Pline `EDGPACKET` with an action callback.
+- Harden watched-file indexing and clarify invalid JSON returned by Agent Kit commands.
+- Exclude local technical-audit files from the packaged VSIX.
+
+### Validation
+
+- Client tests: passed (`22 passed`).
+- Language-server tests: passed (`418 passed`, `3 skipped`; the three existing skips are unchanged).
+- Root and language-server TypeScript validation, lint, bundled compile, extension validation, and activated extension-host smoke: passed.
+- VSIX packaging, validation, disposable install smoke, and local VS Code/Cursor installation: passed.
+- Root and language-server dependency audits: passed with no vulnerabilities.
+- External Claude review was attempted twice through the required no-tools wrapper, but exceeded the local timeout without producing review text; final review was completed in Codex.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.13.1.vsix`
+- SHA256: `pending CI artifact`
+
+## Previous Release - v0.13.0
 
 **Release Date:** 2026-07-11
 

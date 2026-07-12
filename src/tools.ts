@@ -602,21 +602,21 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         const text = editor.document.getText();
         
-        // Ищем setup form или layout form
+        // Find a setup or layout form declaration.
         const formRegex = /(?:setup|layout)\s+form\s+(!!?[a-zA-Z_][a-zA-Z0-9_]*)/i;
         const match = text.match(formRegex);
 
         if (!match) {
-            vscode.window.showErrorMessage('Это не файл формы. Не найдено "setup form" или "layout form".');
+            vscode.window.showErrorMessage('This is not a form file. No "setup form" or "layout form" declaration was found.');
             return;
         }
 
         const formName = match[1];
         const reloadCommand = `kill  ${formName}\nshow  ${formName}`;
 
-        // Копируем в буфер обмена
+        // Copy the command to the clipboard.
         await vscode.env.clipboard.writeText(reloadCommand);
-        vscode.window.showInformationMessage(`Команда перезагрузки формы ${formName} скопирована в буфер обмена`);
+        vscode.window.showInformationMessage(`Reload command for form ${formName} copied to the clipboard.`);
     };
 
     // Array helpers
@@ -643,35 +643,35 @@ export class PMLToolsProvider implements vscode.Disposable {
         const selected = this.getSelectedTextOrShowError(editor);
         if (!selected) return;
 
-        // Запрашиваем имя переменной
+        // Request the variable name.
         const varName = await vscode.window.showInputBox({
-            prompt: 'Введите имя переменной для массива',
+            prompt: 'Enter a variable name for the array',
             placeHolder: 'list',
             value: 'list'
         });
 
         if (!varName) {
-            return; // Пользователь отменил ввод
+            return; // The user cancelled the input.
         }
 
-        // Обработка строк
+        // Normalize selected lines.
         const lines = splitTextLines(selected.text).lines
             .map(line => line.trim())
-            .filter(line => line.length > 0); // Убираем пустые строки
+            .filter(line => line.length > 0); // Ignore empty lines.
 
         if (lines.length === 0) {
-            vscode.window.showErrorMessage('Нет строк для обработки');
+            vscode.window.showErrorMessage('No lines to process.');
             return;
         }
 
-        // Определяем максимальную длину индекса для выравнивания
+        // Determine the maximum index length for alignment.
         const maxIndexLength = lines.length.toString().length;
 
-        // Генерируем массив
+        // Generate the array assignments.
         const result = lines.map((line, index) => {
             const idx = (index + 1).toString().padEnd(maxIndexLength);
             
-            // Определяем формат значения
+            // Determine the value format.
             let value: string;
             if (prefix === '/') {
                 value = `/${line}`;
@@ -709,7 +709,7 @@ export class PMLToolsProvider implements vscode.Disposable {
     };
 
     /**
-     * Add to Array - добавляет выделенные строки как новые элементы массива
+     * Add selected lines as new array elements.
      */
     private addToArray = async () => {
         const editor = this.getActiveEditor();
@@ -720,12 +720,12 @@ export class PMLToolsProvider implements vscode.Disposable {
 
         const result = addToArrayText(selected.text);
         if (result === null) {
-            vscode.window.showErrorMessage('Не найдено массивов в выделенном тексте');
+            vscode.window.showErrorMessage('No array assignments found in the selection.');
             return;
         }
 
         if (result.added === 0) {
-            vscode.window.showInformationMessage('Нет строк для добавления в массив');
+            vscode.window.showInformationMessage('No lines to add to the array.');
             return;
         }
 

@@ -104,6 +104,8 @@ Entries include the first command word, category, and short hover text. Add only
 - `pml.inlayHints.enabled`: master switch for PML type and parameter hints (default: `true`).
 - `pml.inlayHints.variableTypes`: infer types from the first reliable assignment in each scope (default: `true`).
 - `pml.inlayHints.parameterNames`: show parameter names for unambiguous indexed calls (default: `true`).
+- `PML: Toggle Variable Type Hints`: quickly show or hide inferred variable type hints from the Command Palette or PML Quick Actions without changing parameter hints.
+- PML Quick Actions include EDG single- and multiple-element pick templates plus a registered Pline `EDGPACKET` template. They require the E3D EDG library and insert callback skeletons.
 
 ### 📚 Documentation
 
@@ -220,6 +222,8 @@ Whitelist стартовых слов команд лежит здесь:
 - `pml.inlayHints.enabled`: общий переключатель type/parameter hints (по умолчанию: `true`).
 - `pml.inlayHints.variableTypes`: выводить тип по первому надёжному присваиванию в области (по умолчанию: `true`).
 - `pml.inlayHints.parameterNames`: показывать имена параметров для однозначных индексированных вызовов (по умолчанию: `true`).
+- `PML: Toggle Variable Type Hints`: быстро показать или скрыть подсказки типов переменных из Command Palette или PML Quick Actions, не затрагивая подсказки параметров.
+- PML Quick Actions содержат шаблоны EDG для выбора одного или нескольких элементов, а также зарегистрированного Pline `EDGPACKET`. Им требуется библиотека E3D EDG; они вставляют каркас callback-функции.
 
 ### 📚 Документация
 

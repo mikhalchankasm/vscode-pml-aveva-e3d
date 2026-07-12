@@ -2,6 +2,18 @@
 
 All notable changes to the "PML for AVEVA E3D" extension will be documented in this file.
 
+## [0.13.1] - 2026-07-12
+
+### Improved
+
+- Extend the conservative callable-signature refactor to remove an unused parameter from the beginning, middle, or end of a method/function signature and remove the corresponding argument from every direct indexed call.
+- Treat line-command parameter references such as `$P !parameter` as real uses, and refuse nested direct calls of the same callable so a signature edit never depends on overlapping call ranges.
+- Add `PML: Toggle Variable Type Hints` to Command Palette and PML Quick Actions so users can show or hide inferred type hints without disabling parameter hints.
+- Add EDG single- and multiple-element pick templates with callback skeletons to PML Quick Actions.
+- Add an EDG Pline pick packet template that registers an `EDGPACKET` with `!!edgCntrl`.
+- Harden watched-file extension checks, modernize the validation timer type, and make Agent Kit invalid-JSON failures actionable.
+- Exclude local technical-audit files from VSIX packages and enforce that packaging rule during validation.
+
 ## [0.13.0] - 2026-07-11
 
 ### Added

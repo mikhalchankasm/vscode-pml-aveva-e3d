@@ -1,6 +1,7 @@
 import { FileChangeType, FileEvent } from 'vscode-languageserver/node';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs';
+import * as path from 'path';
 import { Parser, parserModeFromUri } from '../parser/parser';
 import { SymbolIndex } from './symbolIndex';
 
@@ -66,7 +67,7 @@ export class WatchedFileIndexer {
 	}
 
 	private isPmlUri(uri: string): boolean {
-		const ext = uri.substring(uri.lastIndexOf('.')).toLowerCase();
+		const ext = path.extname(URI.parse(uri).path).toLowerCase();
 		return this.pmlExtensions.includes(ext);
 	}
 }

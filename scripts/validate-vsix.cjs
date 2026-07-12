@@ -27,7 +27,7 @@ if (missing.length > 0) {
 }
 
 const blockedPattern = /(^|\/)(src|node_modules|manuals|objects|\.agents|\.codex(?:-[^/]+)?|\.claude|\.release-check)\//;
-const blocked = entries.filter(entry => blockedPattern.test(entry) || /\.tsx?$/.test(entry) || /\.map$/.test(entry));
+const blocked = entries.filter(entry => blockedPattern.test(entry) || /\.tsx?$/.test(entry) || /\.map$/.test(entry) || /^extension\/[^/]*_AUDIT\.md$/i.test(entry));
 if (blocked.length > 0) {
     fail(`VSIX contains blocked development files:\n${blocked.map(entry => `- ${entry}`).join('\n')}`);
 }

@@ -1196,10 +1196,10 @@ Development plans and progress tracking.
 
 ### Snippets
 
-- [ ] **EDG Snippets** (Event Driven Graphics)
-  - EDG packet snippet
-  - Picks + handlers templates
-  - Common EDG patterns
+- [~] **EDG Snippets** (Event Driven Graphics)
+  - ✅ Single- and multiple-element picks plus callback templates in Quick Actions.
+  - ✅ Registered Pline `EDGPACKET` template in Quick Actions.
+  - ⏳ Additional common EDG patterns.
 
 - [ ] **PML.NET Snippets**
   - Template for PML↔.NET bridge
@@ -1296,8 +1296,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.13.0 release candidate
-**Prepared:** 2026-07-11
+**Version:** 0.13.1 release candidate
+**Prepared:** 2026-07-12
 
 **Statistics:**
 - Extension size: **0.4 MB** (bundled with esbuild)
@@ -1306,7 +1306,7 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **425 passing, 3 skipped by default** (22 client + 403 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
+- Tests: **439 passing, 3 skipped by default** (22 client + 417 language-server tests covering parser, providers, diagnostics, tools, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
 **Current Focus (v0.12.x):**
@@ -1321,6 +1321,7 @@ Development plans and progress tracking.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 - ✅ **Quick UX Presets** - A single discoverable launcher now groups common cleanup actions, debug-print actions, documentation helpers, and practical starter blocks.
+- ✅ **Type Hint Toggle** - Command Palette and Quick Actions can show or hide inferred variable type hints independently from parameter hints.
 - ✅ **DBREF and ATTRIBUTE Method Assistance** - Selected DBREF and ATTRIBUTE object method completions and hover docs are available from reviewed AVEVA help slices while avoiding generic method noise.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
 - ✅ **Agent Kit Execution Safety** - Agent Kit commands require trusted workspaces, run npm without Windows shell parsing so file paths remain literal, and only auto-discover a sibling `e3d-pml-agent-kit` folder unless configured explicitly.
@@ -1356,6 +1357,7 @@ Development plans and progress tracking.
 - ✅ **Typed Callable UX** - Hover, Signature Help, and callable completions expose explicit parameter/return types; direct and supported chained calls narrow member completions without crossing ambiguity or line boundaries.
 - ✅ **Call Authoring UX** - Indexed callables insert typed argument snippets, and supported unresolved direct calls offer conservative method or sibling global-function stub generation.
 - ✅ **Callable Refactoring UX** - Direct indexed calls can fill missing trailing arguments, synchronize generated empty stub signatures, and navigate to existing or newly generated definitions without crossing scope or ambiguity boundaries.
+- ✅ **Callable Signature Cleanup** - Unused method/function parameters can be removed from any signature position together with same-position direct-call arguments; line-command references and nested same-callable edits remain conservatively refused.
 - ✅ **Form Authoring Toolkit** - Static and reused gadget callbacks navigate in both directions; missing handlers, init/OK/cancel lifecycle wiring, and reliably typed members support safe individual or batch generation without guessing dynamic controls.
 - ✅ **Visual Form Outline/Actions** - CodeLens shows form-action entrypoints, member types, callback navigation, and missing callback repair without adding completion noise.
 - ✅ **Type-Assisted Form Member Editing** - Opt-in form-reference checks flag only consistently proven type mismatches; preferred Quick Fix and batch alignment skip dynamic, custom, `ANY`, and conflicting assignments.
@@ -1366,15 +1368,15 @@ Development plans and progress tracking.
 - **Completions:** receiver inference follows reliable aliases and explicit unambiguous user-call results, including direct/chained call receivers, while invalidating stale or ambiguous types and respecting line/inactive-text boundaries; next add curated AVEVA/E3D command presets.
 - ✅ **Navigation Release Gate:** `.pmlobj` and `.pmlcmd` Outline coverage is guarded; user-defined methods remain file-scoped; global `!!function(...)` symbols remain workspace-scoped; CodeLens and incoming/outgoing Call Hierarchy use the shared index; References/Rename retain text fallback for callback strings and delimiter-adjacent bare callbacks.
 - ✅ **Actionable Form Diagnostics** - Missing callback and unknown member warnings now state the immediate corrective action; keep default `.pmlfrm` noise low with explicit false-positive/false-negative coverage.
-- **Preset packs:** Quick Actions now groups starter patterns for forms/callbacks, arrays, file IO, and PML.NET; next add observed EDG workflows without flooding completion lists.
+- **Preset packs:** Quick Actions now groups starter patterns for forms/callbacks, arrays, file IO, PML.NET, and observed EDG picker/packet workflows; next add another common EDG pattern without flooding completion lists.
 - ✅ **Disposable VSIX Install Smoke** - CI and release validation install the newly packaged extension into an isolated VS Code profile and verify its extension ID and version.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
-- **v0.13.0 program (in progress):** safe callable API editing and cross-form project navigation now have their first complete guarded slices; next extend the callable workflow beyond trailing-parameter cleanup, then consolidate the release UX and final gates.
-- **Callable API Editing (in progress):** the first safe refactor can remove an unused trailing parameter and its matching direct-call argument; used, dynamic, ambiguous, unparsable, and arity-mismatched cases are intentionally refused.
+- **Post-v0.13 callable API editing (in progress):** signature cleanup now covers unused leading, middle, and trailing parameters with matching direct-call updates; next consolidate the release UX and final gates.
+- **Callable API Editing (in progress):** signature cleanup refuses used, dynamic, ambiguous, unparsable, arity-mismatched, and nested direct-call cases rather than making uncertain edits.
 - **Cross-Form Navigation (in progress):** Outline presents typed members and direct callback links; Workspace Symbols find members, nested gadgets, and callbacks project-wide; Call Hierarchy starts from gadget/lifecycle callbacks and shows their method edge.
-- `v0.13.0` (release candidate): combines safe direct-call signature cleanup with project-level form presentation and callback navigation across Outline, Workspace Symbols, and Call Hierarchy.
+- `v0.13.0` (published): combines safe direct-call signature cleanup with project-level form presentation and callback navigation across Outline, Workspace Symbols, and Call Hierarchy.
 - `v0.12.45`: completes the current Form Authoring slice with safe type-assisted member diagnostics and declaration alignment, on top of callback/lifecycle/member generation and visual actions.
 - `v0.12.44` (folded into v0.12.45): Form Authoring Toolkit plus visual CodeLens outline/actions for form structure and callback repair.
 - `v0.12.43`: combines the planned v0.12.42/v0.12.43 Call Authoring and Navigation/Refactoring work into one release.

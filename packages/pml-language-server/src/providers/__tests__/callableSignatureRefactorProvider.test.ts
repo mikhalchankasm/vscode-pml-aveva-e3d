@@ -35,7 +35,7 @@ describe('CallableSignatureRefactorProvider', () => {
 		const { actions } = actionAtDeclaration(source);
 		const action = actions[0];
 
-		expect(action?.title).toBe('Remove unused trailing parameter !unused from .render and update 2 direct calls');
+		expect(action?.title).toBe('Remove unused parameter !unused from .render and update 2 direct calls');
 		expect(action?.kind).toBe('refactor.rewrite');
 		expect(action?.edit?.changes?.['file:///signature.pml']).toHaveLength(3);
 		expect(action?.edit?.changes?.['file:///signature.pml']?.map(edit => edit.newText)).toEqual(['', '', '']);
@@ -50,13 +50,37 @@ describe('CallableSignatureRefactorProvider', () => {
 		const { actions } = actionAtDeclaration(definition, definitionUri, index);
 		const action = actions[0];
 
-		expect(action?.title).toBe('Remove unused trailing parameter !unused from !!BuildReport and update 1 direct call');
+		expect(action?.title).toBe('Remove unused parameter !unused from !!BuildReport and update 1 direct call');
 		expect(action?.edit?.changes?.[definitionUri]).toHaveLength(1);
 		expect(action?.edit?.changes?.[callerUri]).toHaveLength(1);
 	});
 
+	it('removes an unused leading or middle parameter together with its matching direct-call argument', () => {
+		const source = [
+			'define method .render(!unusedFirst is REAL, !title is STRING, !unusedMiddle is REAL)',
+			'  $P !title',
+			'endmethod',
+			'.render(1, |One|, 2)',
+			'!this.render(3, |Two|, 4)'
+		].join('\n');
+		const { document, actions } = actionAtDeclaration(source);
+
+		expect(actions.map(action => action.title)).toEqual([
+			'Remove unused parameter !unusedFirst from .render and update 2 direct calls',
+			'Remove unused parameter !unusedMiddle from .render and update 2 direct calls'
+		]);
+		const leadingEdits = actions[0].edit?.changes?.['file:///signature.pml'] ?? [];
+		const middleEdits = actions[1].edit?.changes?.['file:///signature.pml'] ?? [];
+		expect(leadingEdits.map(edit => document.getText(edit.range))).toEqual([
+			'!unusedFirst is REAL, ', '1, ', '3, '
+		]);
+		expect(middleEdits.map(edit => document.getText(edit.range))).toEqual([
+			', !unusedMiddle is REAL', ', 2', ', 4'
+		]);
+	});
+
 	it('does not offer an edit for used, ambiguous, or arity-mismatched APIs', () => {
-		expect(actionAtDeclaration('define method .render(!title is STRING, !unused is REAL)\n  !value = !unused\nendmethod\n.render(|One|, 1)').actions)
+		expect(actionAtDeclaration('define method .render(!title is STRING, !unused is REAL)\n  !label = !title\n  !value = !unused\nendmethod\n.render(|One|, 1)').actions)
 			.toEqual([]);
 		expect(actionAtDeclaration('define method .render(!title is STRING, !unused is REAL)\nendmethod\n.render(|One|)').actions)
 			.toEqual([]);

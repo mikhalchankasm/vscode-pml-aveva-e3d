@@ -40,29 +40,33 @@ export class CallableSignatureRefactorProvider {
 		};
 		if (!this.isUnambiguous(target, document.uri) || definition.parameters.length === 0) return [];
 
-		const parameter = definition.parameters[definition.parameters.length - 1];
-		if (this.parameterIsUsed(definition.body, parameter.name)) return [];
 		const calls = this.directCallSites(target, document.uri);
-		if (!calls || calls.some(site => site.call.arguments.length !== definition.parameters.length)) return [];
-
-		const definitionEdit = this.removeTrailingItemEdit(document, definition.parameters);
-		if (!definitionEdit) return [];
-		const changes: Record<string, TextEdit[]> = { [document.uri]: [definitionEdit] };
-		for (const site of calls) {
-			const edit = this.removeTrailingItemEdit(site.document, site.call.arguments);
-			if (!edit) return [];
-			(changes[site.document.uri] ??= []).push(edit);
-		}
-		if (this.hasOverlappingEdits(changes)) return [];
-
+		if (!calls || calls.some(site => site.call.arguments.length !== definition.parameters.length) || this.hasNestedCallSites(calls)) return [];
 		const label = `${target.kind === 'method' ? '.' : '!!'}${target.name}`;
-		const action: CodeAction = {
-			title: `Remove unused trailing parameter !${parameter.name} from ${label} and update ${calls.length} direct call${calls.length === 1 ? '' : 's'}`,
-			kind: CodeActionKind.RefactorRewrite,
-			isPreferred: true,
-			edit: { changes }
-		};
-		return this.filterRequestedKinds([action], onlyKinds);
+		const actions: CodeAction[] = [];
+		for (const [parameterIndex, parameter] of definition.parameters.entries()) {
+			if (this.parameterIsUsed(definition.body, parameter.name)) continue;
+			const definitionEdit = this.removeItemEdit(definition.parameters, parameterIndex);
+			if (!definitionEdit) continue;
+			const changes: Record<string, TextEdit[]> = { [document.uri]: [definitionEdit] };
+			let safe = true;
+			for (const site of calls) {
+				const edit = this.removeItemEdit(site.call.arguments, parameterIndex);
+				if (!edit) {
+					safe = false;
+					break;
+				}
+				(changes[site.document.uri] ??= []).push(edit);
+			}
+			if (!safe || this.hasOverlappingEdits(changes)) continue;
+			actions.push({
+				title: `Remove unused parameter !${parameter.name} from ${label} and update ${calls.length} direct call${calls.length === 1 ? '' : 's'}`,
+				kind: CodeActionKind.RefactorRewrite,
+				isPreferred: true,
+				edit: { changes }
+			});
+		}
+		return this.filterRequestedKinds(actions, onlyKinds);
 	}
 
 	private definitionAt(program: Program, position: Position): CallableDefinition | undefined {
@@ -121,7 +125,8 @@ export class CallableSignatureRefactorProvider {
 	private parameterIsUsed(statements: Statement[], name: string): boolean {
 		const uses = (expression: Expression): boolean => {
 			switch (expression.type) {
-				case 'Identifier': return expression.name.toLowerCase() === name.toLowerCase();
+				case 'Identifier': return expression.name.toLowerCase() === name.toLowerCase() ||
+					new RegExp(`(?:^|[^A-Za-z0-9_])!?${this.escapeRegExp(name)}(?![A-Za-z0-9_])`, 'i').test(expression.name);
 				case 'Literal': return expression.literalType === 'string' && typeof expression.value === 'string' && new RegExp(`\\$!${name}\\b`, 'i').test(expression.value);
 				case 'CallExpression': return uses(expression.callee) || expression.arguments.some(uses);
 				case 'MemberExpression': return uses(expression.object) || (expression.computed && uses(expression.property));
@@ -148,11 +153,12 @@ export class CallableSignatureRefactorProvider {
 		return visit(statements);
 	}
 
-	private removeTrailingItemEdit(document: TextDocument, items: Array<Parameter | Expression>): TextEdit | undefined {
-		const last = items[items.length - 1];
-		if (!last) return undefined;
-		const start = items.length === 1 ? last.range.start : items[items.length - 2].range.end;
-		return TextEdit.replace(Range.create(start, last.range.end), '');
+	private removeItemEdit(items: Array<Parameter | Expression>, index: number): TextEdit | undefined {
+		const item = items[index];
+		if (!item) return undefined;
+		if (items.length === 1) return TextEdit.replace(item.range, '');
+		if (index === 0) return TextEdit.replace(Range.create(item.range.start, items[1].range.start), '');
+		return TextEdit.replace(Range.create(items[index - 1].range.end, item.range.end), '');
 	}
 
 	private hasOverlappingEdits(changes: Record<string, TextEdit[]>): boolean {
@@ -160,6 +166,18 @@ export class CallableSignatureRefactorProvider {
 			const sorted = [...edits].sort((left, right) => this.compare(left.range.start, right.range.start));
 			return sorted.some((edit, index) => index > 0 && this.compare(sorted[index - 1].range.end, edit.range.start) > 0);
 		});
+	}
+
+	private hasNestedCallSites(calls: CallSite[]): boolean {
+		return calls.some((outer, outerIndex) => calls.some((inner, innerIndex) =>
+			outerIndex !== innerIndex && outer.document.uri === inner.document.uri &&
+			this.compare(outer.call.range.start, inner.call.range.start) <= 0 &&
+			this.compare(inner.call.range.end, outer.call.range.end) <= 0
+		));
+	}
+
+	private escapeRegExp(value: string): string {
+		return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
 	private collectCalls(statements: Statement[]): CallExpression[] {

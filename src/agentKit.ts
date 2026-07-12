@@ -99,7 +99,7 @@ async function reviewCurrentFile(): Promise<string | void> {
 
     try {
         const result = await runNpm(args, agentKitPath);
-        const review = JSON.parse(result.stdout) as AgentKitReview;
+        const review = parseAgentKitJson<AgentKitReview>(result.stdout, 'review');
         const findings = getFindings(review);
         publishDiagnostics(editor.document.uri, findings);
         writeReviewSummary(review, findings);
@@ -154,7 +154,7 @@ async function checkLiveE3dAvoxStatus(): Promise<string | void> {
     appendLine(`Checking live E3D/Avox status through Agent Kit: ${agentKitPath}`);
     try {
         const result = await runNpm(['run', 'pml:live-status', '--', '--json'], agentKitPath);
-        const liveStatus = JSON.parse(result.stdout) as AgentKitLiveStatus;
+        const liveStatus = parseAgentKitJson<AgentKitLiveStatus>(result.stdout, 'live status');
         writeLiveStatusSummary(liveStatus);
         if (config.get<boolean>('showRawReport', false)) {
             appendLine('');
@@ -243,6 +243,15 @@ function runNpm(args: string[], cwd: string): Promise<{ stdout: string; stderr: 
             resolve({ stdout, stderr });
         });
     });
+}
+
+function parseAgentKitJson<T>(output: string, operation: string): T {
+	try {
+		return JSON.parse(output) as T;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new Error(`Agent Kit returned invalid JSON for ${operation}: ${message}`);
+	}
 }
 
 function writeLiveStatusSummary(liveStatus: AgentKitLiveStatus): void {

@@ -12,6 +12,12 @@ const DOCUMENT_ACTIONS: QuickAction[] = [
         description: 'Document',
         detail: 'Run the PML formatter on the active document.',
         command: 'pml.formatDocument'
+    },
+    {
+        label: '$(symbol-variable) Toggle Variable Type Hints',
+        description: 'Editor display',
+        detail: 'Show or hide inferred variable type hints without changing parameter hints.',
+        command: 'pml.toggleVariableTypeHints'
     }
 ];
 
@@ -228,6 +234,55 @@ const PRESET_ACTIONS: QuickAction[] = [
             'using namespace \'${1:namespace}\'',
             '$0'
         ].join('\n'))
+    },
+    {
+        label: '$(symbol-event) Preset: EDG Single Element Pick',
+        description: 'EDG',
+        detail: 'Insert an E3D EDG single-element pick call and callback function.',
+        snippet: new vscode.SnippetString([
+            '-- Requires the E3D EDG library.',
+            '!started = !!edg3DPick(|!!${1:onElementPicked}|, |${2:EQUI}|)',
+            '',
+            'define function !!${1:onElementPicked}(!elements is ARRAY)',
+            '    !element = !elements[1]',
+            '    ${0:-- Handle the selected element.}',
+            'endfunction'
+        ].join('\n'))
+    },
+    {
+        label: '$(symbol-event) Preset: EDG Multiple Element Pick',
+        description: 'EDG',
+        detail: 'Insert an E3D EDG multiple-element pick call and callback function.',
+        snippet: new vscode.SnippetString([
+            '-- Requires the E3D EDG library.',
+            '!started = !!edg3DPicks(|!!${1:onElementsPicked}|, |${2:EQUI}|)',
+            '',
+            'define function !!${1:onElementsPicked}(!elements is ARRAY)',
+            '    do !element values !elements',
+            '        ${0:-- Handle each selected element.}',
+            '    enddo',
+            'endfunction'
+        ].join('\n'))
+    },
+    {
+        label: '$(symbol-event) Preset: EDG Pline Pick Packet',
+        description: 'EDG',
+        detail: 'Insert a registered E3D EDGPACKET for picking a Pline.',
+        snippet: new vscode.SnippetString([
+            '-- Requires the E3D EDG library.',
+            '!packet = object EDGPACKET()',
+            '!packet.pLinePick(|${1:Identify Pline}|)',
+            '!packet.description = |${2:Pline Pick}|',
+            '!packet.action = |!!${3:onPlinePicked}(!this.return[1])|',
+            '!packet.type = |Picking|',
+            '!packet.key = |${4:PickPline}|',
+            '',
+            '!!edgCntrl.add(!packet)',
+            '',
+            'define function !!${3:onPlinePicked}(!pickData is ANY)',
+            '    ${0:-- Handle the picked Pline.}',
+            'endfunction'
+        ].join('\n'))
     }
 ];
 
@@ -252,9 +307,55 @@ function separator(label: string): QuickAction {
 }
 
 export function registerPMLQuickActions(context: vscode.ExtensionContext): void {
-    context.subscriptions.push(
-        vscode.commands.registerCommand('pml.quickActions.open', openQuickActions)
-    );
+	const typeHintsStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 79);
+	typeHintsStatusBar.command = 'pml.toggleVariableTypeHints';
+	context.subscriptions.push(
+		typeHintsStatusBar,
+		vscode.commands.registerCommand('pml.quickActions.open', openQuickActions),
+		vscode.commands.registerCommand('pml.toggleVariableTypeHints', toggleVariableTypeHints),
+		vscode.window.onDidChangeActiveTextEditor(() => updateVariableTypeHintsStatusBar(typeHintsStatusBar)),
+		vscode.workspace.onDidChangeConfiguration(event => {
+			if (event.affectsConfiguration('pml.inlayHints.variableTypes') || event.affectsConfiguration('pml.inlayHints.enabled')) {
+				updateVariableTypeHintsStatusBar(typeHintsStatusBar);
+			}
+		})
+	);
+	updateVariableTypeHintsStatusBar(typeHintsStatusBar);
+}
+
+async function toggleVariableTypeHints(): Promise<void> {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor || !isPMLDocument(editor.document)) {
+		vscode.window.showErrorMessage('Open a PML file to toggle variable type hints');
+		return;
+	}
+
+	const configuration = vscode.workspace.getConfiguration('pml', editor.document.uri);
+	const variableTypesEnabled = configuration.get<boolean>('inlayHints.variableTypes', true);
+	const inlayHintsEnabled = configuration.get<boolean>('inlayHints.enabled', true);
+	const showTypeHints = !variableTypesEnabled || !inlayHintsEnabled;
+	if (showTypeHints && !inlayHintsEnabled) {
+		await configuration.update('inlayHints.enabled', true, vscode.ConfigurationTarget.Global);
+	}
+	await configuration.update('inlayHints.variableTypes', showTypeHints, vscode.ConfigurationTarget.Global);
+	void vscode.window.showInformationMessage(`PML variable type hints ${showTypeHints ? 'shown' : 'hidden'}.`);
+}
+
+function updateVariableTypeHintsStatusBar(statusBarItem: vscode.StatusBarItem): void {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor || !isPMLDocument(editor.document)) {
+		statusBarItem.hide();
+		return;
+	}
+
+	const configuration = vscode.workspace.getConfiguration('pml', editor.document.uri);
+	const enabled = configuration.get<boolean>('inlayHints.enabled', true) &&
+		configuration.get<boolean>('inlayHints.variableTypes', true);
+	statusBarItem.text = `$(symbol-variable) Types: ${enabled ? 'On' : 'Off'}`;
+	statusBarItem.tooltip = enabled
+		? 'Hide inferred PML variable type hints'
+		: 'Show inferred PML variable type hints';
+	statusBarItem.show();
 }
 
 async function openQuickActions(): Promise<void> {
