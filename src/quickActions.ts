@@ -22,6 +22,13 @@ const DOCUMENT_ACTIONS: QuickAction[] = [
 ];
 
 const SELECTION_ACTIONS: QuickAction[] = [
+	{
+		label: '$(selection) Surround With...',
+		description: 'Selection',
+		detail: 'Wrap selected lines in a predefined PML block.',
+		command: 'pml.surroundWith',
+		requiresSelection: true
+	},
     {
         label: '$(symbol-numeric) Smart Natural Sort',
         description: 'Selection',

@@ -8,6 +8,7 @@ import { sortMethodsAscending, sortMethodsDescending } from './commands/sortMeth
 import { PMLPrintTools } from './printCommands';
 import { registerPMLQuickActions } from './quickActions';
 import { registerAgentKitCommands } from './agentKit';
+import { registerPmlSurroundWith } from './surroundWith';
 
 interface CodeLensPositionArgument {
     line: number;
@@ -74,6 +75,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Register the unified action launcher
     registerPMLQuickActions(context);
+
+    // Register line-oriented block wrappers
+    registerPmlSurroundWith(context);
 
     // Register Agent Kit review and help commands
     registerAgentKitCommands(context);

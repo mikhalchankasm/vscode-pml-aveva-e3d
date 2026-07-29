@@ -4,6 +4,19 @@ All notable changes to the "PML for AVEVA E3D" extension will be documented in t
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-07-29
+
+### Added
+
+- Add `PML: Surround With...` to Command Palette, the editor context menu, and Quick Actions. The first extensible presets wrap selected lines in `MARKDB ''`/`ENDMARKDB` or `DO`/`ENDDO` while preserving indentation and line endings.
+
+### Fixed
+
+- Allow `[0]` indices without diagnostics by default because AVEVA form callbacks and external collections legitimately expose zero-based payloads; keep the former native-array check available only as an explicit opt-in heuristic.
+- Remove `array-index-zero` from the static PML Assistant CLI diagnostic contract, while keeping the editor's native-array heuristic available as an explicit setting; cover the installed AVEVA `.netPopup(!array is ARRAY)` pattern with a regression test.
+- Resolve direct form callback CodeLens targets by both method name and argument count, avoiding false `missing callback` annotations and incorrect navigation when methods are overloaded.
+- Pin patched `brace-expansion` transitively under affected runtime consumers for `GHSA-3jxr-9vmj-r5cp` and `GHSA-mh99-v99m-4gvg`; root and language-server production audits return zero vulnerabilities.
+
 ## [0.14.0] - 2026-07-12
 
 ### Improved

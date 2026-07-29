@@ -1,5 +1,6 @@
 import { CodeLens, Command, Range } from 'vscode-languageserver/node';
-import { FormInfo, GadgetInfo, SymbolIndex } from '../index/symbolIndex';
+import { FormInfo, GadgetInfo, MethodInfo, SymbolIndex } from '../index/symbolIndex';
+import { directCallbackReference, directCallbackTarget } from '../utils/directCallbackTarget';
 import { ReferencesProvider } from './referencesProvider';
 
 const SHOW_REFERENCES_COMMAND = 'pml.showCodeLensReferences';
@@ -18,6 +19,7 @@ interface FormCodeLensData {
 	uri: string;
 	range: Range;
 	methodName?: string;
+	argumentCount?: number;
 	memberName?: string;
 	memberType?: string;
 	callbackCount?: number;
@@ -58,7 +60,15 @@ export class CodeLensProvider {
 
 	private formLenses(uri: string, form: FormInfo): CodeLens[] {
 		const gadgets = this.formGadgets(form);
-		const callbackGadgets = gadgets.filter(gadget => this.callbackMethod(gadget.callback));
+		const callbackGadgets = gadgets.flatMap(gadget => {
+			const reference = directCallbackReference(gadget.callback);
+			const methodName = reference?.name ?? directCallbackTarget(gadget.callback);
+			return methodName ? [{
+				gadget,
+				methodName,
+				argumentCount: reference?.argumentCount
+			}] : [];
+		});
 		const lenses: CodeLens[] = [{
 			range: form.range,
 			data: { kind: 'form-summary', uri, range: form.range, callbackCount: callbackGadgets.length } satisfies FormCodeLensData
@@ -69,17 +79,20 @@ export class CodeLensProvider {
 				data: { kind: 'form-member', uri, range: member.range, memberName: member.name, memberType: member.memberType } satisfies FormCodeLensData
 			});
 		}
-		for (const gadget of callbackGadgets) {
-			const methodName = this.callbackMethod(gadget.callback)!;
+		for (const callback of callbackGadgets) {
+			const method = this.callbackMethod(uri, callback.methodName, callback.argumentCount);
+			const sameNameMethods = this.symbolIndex.findMethodsInFile(uri, callback.methodName);
+			if (!method && sameNameMethods.length > 0) {
+				continue;
+			}
 			lenses.push({
-				range: gadget.range,
+				range: callback.gadget.range,
 				data: {
-					kind: this.symbolIndex.findMethodsInFile(uri, methodName).length === 1
-						? 'form-callback'
-						: 'missing-form-callback',
+					kind: method ? 'form-callback' : 'missing-form-callback',
 					uri,
-					range: gadget.range,
-					methodName
+					range: callback.gadget.range,
+					methodName: callback.methodName,
+					argumentCount: callback.argumentCount
 				} satisfies FormCodeLensData
 			});
 		}
@@ -108,7 +121,7 @@ export class CodeLensProvider {
 					}
 				};
 			case 'form-callback': {
-				const method = this.symbolIndex.findMethodsInFile(data.uri, data.methodName ?? '')[0];
+				const method = this.callbackMethod(data.uri, data.methodName ?? '', data.argumentCount);
 				if (!method) return codeLens;
 				return {
 					...codeLens,
@@ -139,8 +152,16 @@ export class CodeLensProvider {
 		return [...form.gadgets, ...form.frames.flatMap(collectFrame)];
 	}
 
-	private callbackMethod(callback?: string): string | undefined {
-		return callback?.trim().match(/^(?:!this\.|\.)?([A-Za-z_][A-Za-z0-9_]*)\s*\(/i)?.[1];
+	private callbackMethod(uri: string, methodName: string, argumentCount?: number): MethodInfo | undefined {
+		const methods = this.symbolIndex.findMethodsInFile(uri, methodName);
+		if (argumentCount === undefined) {
+			return methods.length === 1 ? methods[0] : undefined;
+		}
+		const matchingMethods = methods.filter(method => method.parameterCount === argumentCount);
+		if (matchingMethods.length === 1) {
+			return matchingMethods[0];
+		}
+		return methods.length === 1 ? methods[0] : undefined;
 	}
 
 	private createResolvedCodeLens(codeLens: CodeLens, uri: string, count: number): CodeLens {

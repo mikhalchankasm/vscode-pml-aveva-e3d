@@ -145,6 +145,20 @@ exit
 			expect(diagnostics).toHaveLength(0);
 		});
 
+		it('should allow the AVEVA netPopup ARRAY payload pattern', () => {
+			const source = `
+define method .netPopup(!array is ARRAY)
+	!this.netFrame.popup = !this.defPopUp
+	!this.netFrame.showPopup(!array[0], !array[1])
+endmethod
+			`.trim();
+			const result = parser.parse(source);
+			const diagnostics = checker.check(result.ast, source);
+
+			expect(result.errors).toHaveLength(0);
+			expect(diagnostics).toHaveLength(0);
+		});
+
 		it('should still flag zero indexes on ordinary ARRAY parameters', () => {
 			const source = `
 define method .ProcessData(!data is ARRAY)

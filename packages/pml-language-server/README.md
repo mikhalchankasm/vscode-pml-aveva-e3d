@@ -178,7 +178,7 @@ LSP server respects these VS Code settings:
 ```json
 {
   "pml.diagnostics.typoDetection": "error",  // "off" | "warning" | "error"
-  "pml.diagnostics.arrayIndexZero": true,     // Warn on arr[0]
+  "pml.diagnostics.arrayIndexZero": "off",    // "off" | "warning" | "error" native-array heuristic
   "pml.indexing.exclude": [                   // Exclude from indexing
     "**/node_modules/**",
     "**/out/**"

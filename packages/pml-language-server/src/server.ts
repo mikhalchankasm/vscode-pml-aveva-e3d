@@ -322,7 +322,7 @@ const defaultSettings: PMLSettings = {
 	diagnostics: {
 		typeChecking: 'error',
 		unusedVariables: 'warning',
-		arrayIndexZero: 'error',
+		arrayIndexZero: 'off',
 		typoDetection: 'off',  // Default off; when enabled, uses Levenshtein distance on parse errors
 		formErrors: 'off',
 		formReferences: 'off'
@@ -524,7 +524,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 			diagnostics.push(...typoDiagnostics);
 		}
 
-		// Array index checking (arr[0] error)
+		// Optional native-array heuristic; disabled by default because AVEVA/external payloads can be zero-based.
 		if (settings.diagnostics.arrayIndexZero !== 'off') {
 			const arrayChecker = new ArrayIndexChecker();
 			const arrayDiagnostics = arrayChecker.check(parseResult.ast, textDocument.getText());

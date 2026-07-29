@@ -9,6 +9,7 @@ const extensionId = 'mikhalchankasm.pml-aveva-e3d';
 
 const requiredCommands = [
     'pml.quickActions.open',
+    'pml.surroundWith',
     'pml.prints.actions',
     'pml.prints.next',
     'pml.prints.previous',

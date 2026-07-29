@@ -35,6 +35,8 @@ File commands also include:
 
 `pml:scope` uses 1-based `--line` and `--column` inputs and returns the innermost document symbol containing that position.
 
+The static CLI diagnostic contract intentionally excludes the editor-only `array-index-zero` heuristic. Users who know that a project uses only native 1-based PML arrays can enable `pml.diagnostics.arrayIndexZero` in the VS Code extension.
+
 ## Ownership Boundary
 
 This CLI reports extension-owned parser, diagnostics, and symbol information. Agent Kit remains responsible for review policy, normalized multi-source findings, DB/PMLLIB checks, security/performance policy, MCP orchestration, and optional live E3D context through Avox.

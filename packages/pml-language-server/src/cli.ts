@@ -6,7 +6,6 @@ import { URI } from 'vscode-uri';
 import { Parser, ParserMode, parserModeFromUri } from './parser/parser';
 import { SymbolIndex, SymbolInfo } from './index/symbolIndex';
 import { DocumentSymbolProvider } from './providers/documentSymbolProvider';
-import { ArrayIndexChecker } from './analysis/arrayIndexChecker';
 import { FormReferenceValidator } from './analysis/formReferenceValidator';
 
 const PML_EXTENSIONS = new Set(['.pml', '.pmlobj', '.pmlfnc', '.pmlfrm', '.pmlmac', '.pmlcmd']);
@@ -184,8 +183,8 @@ function parseFile(filePath: string) {
 	};
 }
 
-export function createCliSemanticDiagnostics(ast: ReturnType<Parser['parse']>['ast'], text: string, fileKind: string, hasParseErrors: boolean): Diagnostic[] {
-	const diagnostics: Diagnostic[] = new ArrayIndexChecker().check(ast, text);
+export function createCliSemanticDiagnostics(ast: ReturnType<Parser['parse']>['ast'], _text: string, fileKind: string, hasParseErrors: boolean): Diagnostic[] {
+	const diagnostics: Diagnostic[] = [];
 	if (fileKind === 'pmlfrm' && !hasParseErrors) {
 		diagnostics.push(...new FormReferenceValidator().check(ast, DiagnosticSeverity.Warning));
 	}
@@ -208,7 +207,6 @@ function normalizeDiagnosticCode(code: Diagnostic['code']): string | undefined {
 	}
 	const raw = String(code);
 	const known: Record<string, string> = {
-		'array-index-zero': 'PML_ARRAY_INDEX_ZERO',
 		'missing-form-callback': 'PML_FORM_CALLBACK_TARGET_MISSING',
 		'unknown-form-member': 'PML_FORM_UNKNOWN_MEMBER'
 	};

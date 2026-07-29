@@ -1299,8 +1299,8 @@ Development plans and progress tracking.
 
 ## 📊 Current Status
 
-**Version:** 0.14.0 published; unified post-0.13 cycle complete
-**Prepared:** 2026-07-12
+**Version:** 0.15.0 release candidate; user-facing compatibility and editing cycle complete
+**Prepared:** 2026-07-29
 
 **Statistics:**
 - Extension size: **0.4 MB** (bundled with esbuild)
@@ -1309,21 +1309,23 @@ Development plans and progress tracking.
 - Commands: 35+ (with array manipulation and print-output tools)
 - Diagnostics: 5 types (configurable severity levels)
 - Form support: First-class foundation for frame nesting, outline symbols, callback assignments, opt-in form reference validation, PML attribute member access, dynamic substitute member access, import workflows, and common form gadgets
-- Tests: **451 passing, 3 skipped by default** (25 client + 426 language-server tests covering parser, providers, diagnostics, tools, filesystem fallbacks, and performance guards)
+- Tests: **464 passing, 3 skipped by default** (28 client + 436 language-server tests covering parser, providers, diagnostics, tools, filesystem fallbacks, and performance guards)
 - VSIX Storage: **GitHub Releases only**; repository stays clean
 
-**Current Focus (v0.14.x):**
+**Current Focus (v0.15.0):**
 - ✅ **Form Parser Foundation** - Chained calls, callback assignments, nested frames, outline symbols, common form gadgets, guarded reference diagnostics, PML attribute member access, dynamic substitute member access, import wrappers, and form fixture smoke tests are in place.
 - ✅ **Stable Packaging** - VSIX ships 16 runtime/user-facing files and stays in GitHub Releases only.
 - ✅ **Release Safety** - Marketplace publication is gated behind explicit workflow-dispatch approval, historical release checksums remain immutable, and release automation runs TypeScript, language-server tests, extension smoke, extension-host smoke, and VSIX validation before release publication.
 - ✅ **Reproducible Build Inputs** - npm lockfiles are tracked, CI runs on all push branches, VSIX packaging uses pinned local `@vscode/vsce`, and local reinstall packaging cannot fall back to a registry download.
 - ✅ **Dependency Audit Hygiene** - Root and language-server npm audits are clean after lockfile refresh.
+- ✅ **Transitive Glob Security** - Patched `brace-expansion` is pinned under affected runtime consumers, with brace-pattern indexing regression coverage.
 - ✅ **Validation Documentation Hygiene** - Generated Vitest config output was removed, docs distinguish bundled compile from TypeScript validation, and `compile:tsc` performs no-emit checks without polluting bundle output directories.
 - ✅ **Test Layer Separation** - Client transform, print-command, and Agent Kit helper tests run from the root project while language-server tests remain package-local, with both suites enforced in CI and release validation.
 - ✅ **VSIX Package Hygiene** - Local release-check artifacts are excluded from packaged VSIX files and blocked by VSIX validation.
 - ✅ **Print Debug Workflow** - `$P` highlighting, navigation, comment/uncomment, and delete commands are available.
 - ✅ **Parser Hardening** - Real PML/PMLFNC compatibility cases and installed AVEVA `.pmlcmd` command-controller syntax are covered with regression tests.
 - ✅ **Quick UX Presets** - A single discoverable launcher now groups common cleanup actions, debug-print actions, documentation helpers, and practical starter blocks.
+- ✅ **Surround With Presets** - Selected PML lines can be wrapped from Command Palette, the editor context menu, or Quick Actions using an extensible preset registry; initial blocks cover MARKDB and generic DO constructs.
 - ✅ **Type Hint Toggle** - Command Palette and Quick Actions can show or hide inferred variable type hints independently from parameter hints.
 - ✅ **DBREF and ATTRIBUTE Method Assistance** - Selected DBREF and ATTRIBUTE object method completions and hover docs are available from reviewed AVEVA help slices while avoiding generic method noise.
 - ✅ **PML Assistant Static Contract** - The extension ships a bundled CLI for parse, diagnostics, symbols, and scope queries. Live E3D readiness remains external and must not be inferred from static validation.
@@ -1339,6 +1341,7 @@ Development plans and progress tracking.
 - ✅ **Parser Recovery Safety** - Malformed statements recover at physical line boundaries so later method/object statements remain available to diagnostics, symbols, and navigation; multiline PML string literal ranges now preserve following expression tails.
 - ✅ **Diagnostics Lifecycle** - Closed documents clear their published diagnostics, and `pml.maxNumberOfProblems` now limits diagnostics sent to the editor.
 - ✅ **Diagnostic Noise Reduction** - Typo diagnostics now suppress ambiguous short-word keyword suggestions, including one- and two-character quoted parser tokens, while preserving clearer keyword typo hints.
+- ✅ **Zero-Based Payload Compatibility** - `[0]` is accepted by default for AVEVA callbacks and external collections; the native 1-based array check remains an explicit opt-in heuristic instead of a default runtime-error claim.
 - ✅ **Variable Typo-Diagnostic Safety** - Typo diagnostics ignore sigiled local and global variable names, which may validly resemble PML keywords.
 - ✅ **Language Server Startup Safety** - Asynchronous client startup failures are logged and surfaced once instead of becoming unhandled rejections or duplicate notifications, and unsupported dynamic configuration registration does not abort initialization.
 - ✅ **Extension Context Hygiene** - Bundled examples are loaded from the active extension context rather than a hardcoded Marketplace extension ID.
@@ -1364,6 +1367,7 @@ Development plans and progress tracking.
 - ✅ **Batch Trailing Signature Cleanup** - A contiguous suffix of multiple unused parameters can be removed in one guarded signature/call edit set without guessing replacements.
 - ✅ **Form Authoring Toolkit** - Static and reused gadget callbacks navigate in both directions; missing handlers, init/OK/cancel lifecycle wiring, and reliably typed members support safe individual or batch generation without guessing dynamic controls.
 - ✅ **Visual Form Outline/Actions** - CodeLens shows form-action entrypoints, member types, callback navigation, and missing callback repair without adding completion noise.
+- ✅ **Overload-Aware Callback Navigation** - Direct form callbacks resolve by name and argument count; ambiguous overloads are left untouched instead of showing a false missing-handler action or navigating to the wrong method.
 - ✅ **Type-Assisted Form Member Editing** - Opt-in form-reference checks flag only consistently proven type mismatches; preferred Quick Fix and batch alignment skip dynamic, custom, `ANY`, and conflicting assignments.
 
 **Next Stabilization Plan:**
@@ -1379,6 +1383,7 @@ Development plans and progress tracking.
 - ✅ **Release Guide Hygiene** - Internal release commands and checklist now keep VSIX artifacts out of Git and point to the canonical release notes and SHA-256 checksum workflow.
 
 **Recent Release Summary:**
+- `v0.15.0` (release candidate): adds extensible Surround With presets, makes zero-based AVEVA payload access valid by default, and fixes overloaded form callback CodeLens resolution.
 - `v0.14.0` (published): combines Enhanced Reload Form, E3D/PMLLIB settings, precise form diagnostics, bounded indexing, batch callable cleanup, filesystem coverage, PML.NET presets, and richer semantic tokens.
 - `v0.13.1` (published): expands safe callable signature cleanup to every parameter position, adds user-controlled type-hint UI plus EDG picker/packet presets, hardens watcher and VSIX packaging behavior, and records targeted audit follow-ups.
 - **Post-v0.13 callable API editing (complete):** signature cleanup covers unused leading, middle, and trailing parameters plus contiguous trailing suffixes with matching direct-call updates.
@@ -1453,5 +1458,5 @@ Have ideas or want to contribute?
 
 ---
 
-*Last updated: 2026-05-31*
+*Last updated: 2026-07-29*
 *Roadmap may change based on feedback and priorities*

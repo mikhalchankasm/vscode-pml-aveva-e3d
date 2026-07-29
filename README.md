@@ -109,6 +109,7 @@ Entries include the first command word, category, and short hover text. Add only
 - `pml.uicPath`: optional local AVEVA UIC installation path recorded with the active environment.
 - `pml.e3dVersion`: optional E3D version label such as `2.10` or `3.1`.
 - `PML: Toggle Variable Type Hints`: quickly show or hide inferred variable type hints from the Command Palette or PML Quick Actions without changing parameter hints.
+- `PML: Surround With...`: wrap selected lines with an extensible PML block preset from Command Palette, the editor context menu, or Quick Actions. Initial presets provide `MARKDB ''`/`ENDMARKDB` and `DO`/`ENDDO`.
 - PML Quick Actions include EDG single- and multiple-element pick templates plus a registered Pline `EDGPACKET` template. They require the E3D EDG library and insert callback skeletons.
 - PML Quick Actions include observed PML.NET namespace, grid declaration, and `NETGRIDCONTROL` initialization patterns.
 
@@ -232,6 +233,7 @@ Whitelist стартовых слов команд лежит здесь:
 - `pml.uicPath`: необязательный путь к локальной установке AVEVA UIC.
 - `pml.e3dVersion`: необязательная метка версии E3D, например `2.10` или `3.1`.
 - `PML: Toggle Variable Type Hints`: быстро показать или скрыть подсказки типов переменных из Command Palette или PML Quick Actions, не затрагивая подсказки параметров.
+- `PML: Surround With...`: обернуть выделенные строки готовым PML-блоком из Command Palette, контекстного меню или Quick Actions. Первые варианты: `MARKDB ''`/`ENDMARKDB` и `DO`/`ENDDO`.
 - PML Quick Actions содержат шаблоны EDG для выбора одного или нескольких элементов, а также зарегистрированного Pline `EDGPACKET`. Им требуется библиотека E3D EDG; они вставляют каркас callback-функции.
 - PML Quick Actions содержат проверенные по PMLLIB шаблоны PML.NET namespace, grid declaration и инициализации `NETGRIDCONTROL`.
 

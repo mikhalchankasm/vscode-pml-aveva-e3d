@@ -2,7 +2,33 @@
 
 This file is the short release snapshot for the current public build. Full historical details live in [CHANGELOG.md](CHANGELOG.md), and downloadable VSIX artifacts live in [GitHub Releases](https://github.com/mikhalchankasm/vscode-pml-aveva-e3d/releases).
 
-## Current Release - v0.14.0
+## Current Release - v0.15.0
+
+**Release Date:** 2026-07-29
+
+### What Changed
+
+- Add `PML: Surround With...` to Command Palette, the editor context menu, and Quick Actions with extensible `MARKDB` and `DO` block presets.
+- Accept `[0]` by default for AVEVA callback payloads and external collections while retaining the native 1-based array check as an explicit opt-in heuristic.
+- Remove the misleading `array-index-zero` finding from the static PML Assistant CLI contract; the editor retains its explicit native-array heuristic setting.
+- Match direct form callbacks to overloaded methods by argument count, eliminating false `missing callback` annotations such as `.mirrorPlane()`.
+- Apply the patched transitive glob expansion runtime for two high-severity denial-of-service advisories, with brace-pattern indexing coverage.
+
+### Validation
+
+- Client tests: passed (`28 passed`).
+- Language-server tests: passed (`436 passed`, `3 skipped`; the three existing skips are unchanged).
+- Root and language-server TypeScript validation, lint, bundled compile, Quick Actions validation, extension validation, and activated extension-host smoke: passed.
+- VSIX packaging, validation, disposable install smoke, and local VS Code/Cursor installation: passed.
+- Root and language-server production dependency audits: passed with no vulnerabilities under the CI npm 10 toolchain.
+- External Claude review completed; confirmed findings were fixed and regression-tested before the final gate.
+
+### Assets
+
+- VSIX: `pml-aveva-e3d-0.15.0.vsix`
+- SHA256: `908c85c58541393304f621c0dec03f23fd4ec4e1af34f80650732200a9062ec3` (local release candidate; the release workflow records the canonical CI artifact)
+
+## Previous Release - v0.14.0
 
 **Release Date:** 2026-07-12
 

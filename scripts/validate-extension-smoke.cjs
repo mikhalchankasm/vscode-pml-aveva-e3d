@@ -16,6 +16,7 @@ const source = collectTypeScriptFiles(srcDir)
 
 const criticalCommands = [
     'pml.quickActions.open',
+    'pml.surroundWith',
     'pml.agentKit.reviewCurrentFile',
     'pml.agentKit.explainCurrentFinding',
     'pml.agentKit.openHelpForFinding',

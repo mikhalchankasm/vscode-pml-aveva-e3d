@@ -9,7 +9,7 @@ import { URI } from 'vscode-uri';
 import { SymbolIndex } from '../symbolIndex';
 import { WORKSPACE_INDEX_BATCH_SIZE, WorkspaceIndexer } from '../workspaceIndexer';
 
-function createConnectionStub(): Connection {
+function createConnectionStub(exclude: string[] = []): Connection {
 	return {
 		console: {
 			log: vi.fn(),
@@ -17,7 +17,7 @@ function createConnectionStub(): Connection {
 			error: vi.fn()
 		},
 		workspace: {
-			getConfiguration: vi.fn()
+			getConfiguration: vi.fn().mockResolvedValue({ exclude })
 		}
 	} as unknown as Connection;
 }
@@ -140,6 +140,30 @@ describe('WorkspaceIndexer', () => {
 
 			expect(readFile).toHaveBeenCalledTimes(1);
 			expect(symbolIndex.getStats().files).toBe(1);
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true });
+		}
+	});
+
+	it('applies brace expansion in configured exclusion patterns', async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'pml-workspace-indexer-braces-'));
+		const generatedDir = path.join(tempDir, 'generated');
+		const sourceDir = path.join(tempDir, 'source');
+		await fs.mkdir(generatedDir);
+		await fs.mkdir(sourceDir);
+		await fs.writeFile(path.join(generatedDir, 'hidden.pml'), 'define method .hidden()\nendmethod', 'utf-8');
+		await fs.writeFile(path.join(sourceDir, 'visible.pml'), 'define method .visible()\nendmethod', 'utf-8');
+
+		try {
+			const symbolIndex = new SymbolIndex();
+			const indexer = new WorkspaceIndexer(
+				symbolIndex,
+				createConnectionStub(['**/{generated,vendor}/**'])
+			);
+			await indexer.indexWorkspace([tempDir]);
+
+			expect(symbolIndex.findMethod('hidden')).toHaveLength(0);
+			expect(symbolIndex.findMethod('visible')).toHaveLength(1);
 		} finally {
 			await fs.rm(tempDir, { recursive: true, force: true });
 		}

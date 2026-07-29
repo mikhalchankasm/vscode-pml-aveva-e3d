@@ -104,4 +104,89 @@ describe('CodeLensProvider', () => {
 		expect(await provider.resolve(existing!)).toMatchObject({ command: { title: 'callback → .apply', command: 'pml.goToCallableDefinition' } });
 		expect(await provider.resolve(missing!)).toMatchObject({ command: { title: 'missing callback .onMissing', command: 'pml.showFormAuthoringQuickFixes' } });
 	});
+
+	it('resolves a direct callback to the overload with matching arity', async () => {
+		const uri = 'file:///workspace/OverloadedCallbacks.pmlfrm';
+		const source = [
+			'setup form !!OverloadedCallbacks dialog',
+			"  button .mirrorPlane |Mirror| callback |!this.mirrorPlane()|",
+			'exit',
+			'define method .mirrorPlane()',
+			'endmethod',
+			'define method .mirrorPlane(!plane is PLANE)',
+			'endmethod'
+		].join('\n');
+		const symbolIndex = new SymbolIndex();
+		indexSource(symbolIndex, uri, source);
+		const provider = new CodeLensProvider(
+			symbolIndex,
+			new ReferencesProvider(symbolIndex, new TextDocuments(TextDocument))
+		);
+
+		const lenses = provider.provide(uri);
+		const callback = lenses.find(lens => (lens.data as any)?.kind === 'form-callback');
+		const missing = lenses.find(lens => (lens.data as any)?.kind === 'missing-form-callback');
+
+		expect(missing).toBeUndefined();
+		expect(await provider.resolve(callback!)).toMatchObject({
+			command: {
+				title: 'callback → .mirrorPlane',
+				command: 'pml.goToCallableDefinition',
+				arguments: [uri, { line: 3, character: 15 }]
+			}
+		});
+	});
+
+	it('keeps navigation when the only same-name method has a different arity', async () => {
+		const uri = 'file:///workspace/SingleCallback.pmlfrm';
+		const source = [
+			'setup form !!SingleCallback dialog',
+			"  button .apply |Apply| callback |!this.apply(!value)|",
+			'exit',
+			'define method .apply()',
+			'endmethod'
+		].join('\n');
+		const symbolIndex = new SymbolIndex();
+		indexSource(symbolIndex, uri, source);
+		const provider = new CodeLensProvider(
+			symbolIndex,
+			new ReferencesProvider(symbolIndex, new TextDocuments(TextDocument))
+		);
+
+		const callback = provider.provide(uri).find(lens => (lens.data as any)?.kind === 'form-callback');
+
+		expect(await provider.resolve(callback!)).toMatchObject({
+			command: {
+				title: 'callback → .apply',
+				command: 'pml.goToCallableDefinition',
+				arguments: [uri, { line: 3, character: 15 }]
+			}
+		});
+	});
+
+	it('keeps name-only navigation for a callback with trailing text', async () => {
+		const uri = 'file:///workspace/CommentedCallback.pmlfrm';
+		const source = [
+			'setup form !!CommentedCallback dialog',
+			"  button .apply |Apply| callback |!this.apply() $* callback note|",
+			'exit',
+			'define method .apply()',
+			'endmethod'
+		].join('\n');
+		const symbolIndex = new SymbolIndex();
+		indexSource(symbolIndex, uri, source);
+		const provider = new CodeLensProvider(
+			symbolIndex,
+			new ReferencesProvider(symbolIndex, new TextDocuments(TextDocument))
+		);
+
+		const callback = provider.provide(uri).find(lens => (lens.data as any)?.kind === 'form-callback');
+
+		expect(await provider.resolve(callback!)).toMatchObject({
+			command: {
+				title: 'callback → .apply',
+				command: 'pml.goToCallableDefinition'
+			}
+		});
+	});
 });

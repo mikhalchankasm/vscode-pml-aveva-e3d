@@ -13,7 +13,7 @@ const MEMBER_DECLARATION_PATTERN = /\bmember\s+\.([A-Za-z_][\w$]*)\s+is\s+([A-Za
 const PMLNET_GADGET_PATTERN = /\b[A-Za-z_][\w$]*\s+\.([A-Za-z_][\w$]*)\b[^\r\n]*(?:PMLNETCONTROL|\bNET[A-Za-z_]*CONTROL\b)/gi;
 const EXTERNAL_ASSIGNMENT_PATTERN = /!([A-Za-z_][\w$]*)\s*=\s*(?:object\s+)?(?:!!)?([A-Za-z_][\w$.]*?(?:NET|DotNet|CSharp|Control|Grid|DataTable|DataSet)[A-Za-z_\w$.]*)\s*\(/gi;
 const UI_CALLBACK_METHOD_PATTERN = /(?:^on[A-Za-z0-9_]*(?:callback|click|popup)|(?:callback|rightclick|leftclick|doubleclick|popup)(?:$|[A-Z_]))/i;
-const UI_CALLBACK_PAYLOAD_PARAMETER_PATTERN = /^(?:data|event|args|arguments|callbackdata)$/i;
+const UI_CALLBACK_PAYLOAD_PARAMETER_PATTERN = /^(?:array|data|event|args|arguments|callbackdata)$/i;
 
 type ArrayIndexCheckContext = {
 	zeroBasedCallbackPayloads: Set<string>;
